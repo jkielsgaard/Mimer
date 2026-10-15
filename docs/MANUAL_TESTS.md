@@ -301,7 +301,7 @@ Prepare a note with a heading, bold text, a table, a task list, a code block, an
 - [ ] Point at a **?** (settings, chat "Include current note", search modes, Images tab, import dialog, toolbar, file tree): a bubble explains it. It also opens with the keyboard (Tab to it) and by clicking, and Esc closes it.
 - [ ] **Read more in the guide** in a bubble opens the guide at the right topic.
 
-### 30. A new note is named by its title
+### 30. A new note is named by its title (replaced in 0.7.1, see section 36)
 
 - [ ] Press `Ctrl/Cmd+N`: a new note opens with the cursor after `# `. Type a title and pause: within about three seconds the file in the tree has that name. The cursor stays where it was.
 - [ ] **Name follows title** shows above the note. Click it: the name stays when you change the heading.
@@ -378,3 +378,14 @@ Prepare a note with a heading, bold text, a table, a task list, a code block, an
 - [ ] Project settings have no "Local AI only"; an old project file with `"localOnly": true` still opens.
 - [ ] Inline AI (`Ctrl/Cmd+K`) and the project dialog's **Ask AI** use the local provider.
 - [ ] Network check: while you chat with Mimer, nothing goes to a cloud host; Raven only talks to its own provider.
+
+### 36. Names and name clashes (0.7.1)
+
+- [ ] `Ctrl/Cmd+N`, **New → Note**, and right-click a folder → **New note** all open the same "New note" window, asking for a name. It starts as `Untitled` (or `Untitled 1` when that exists).
+- [ ] **Create** opens the note with `# <name>` as its first line, and the file has that name. Nothing is renamed while you type.
+- [ ] Type the name of an existing note in the same folder (also in other upper/lower case, for example `plan` for `Plan`): a red box says "A note called “Plan” already exists in “Work”. Choose another name." while you type, and **Create** is greyed out. Enter does nothing.
+- [ ] The same in the vault root, and for **New folder**, **New → Project…** and **Rename**. A folder `Docs` and a note `Docs` also clash. Renaming `plan` to `Plan` (only the case) works.
+- [ ] **Make project** on a folder whose name is already used by another project: the project window says so and **Save** is greyed out.
+- [ ] Drag a note onto a folder that already has a note with that name: a window opens that you have to close (OK), saying what exists where. Nothing moved.
+- [ ] Tick three items, **Move to…** a folder where two of them clash: the third is moved, and one window lists the two clashes.
+- [ ] A vault that already has `Docs` and `docs` still opens; the clash is only checked when you create, rename or move.

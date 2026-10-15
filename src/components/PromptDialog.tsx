@@ -1,3 +1,4 @@
+import { AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +16,7 @@ interface Props {
   label?: string;
   initialValue?: string;
   confirmLabel?: string;
-  /** Return an error message to keep the dialog open, or null to accept. */
+  /** Return an error message to keep the dialog open, or null to accept. It runs while typing. */
   validate?: (value: string) => string | null;
   onSubmit: (value: string) => void;
   onCancel: () => void;
@@ -33,14 +34,19 @@ export function PromptDialog({
   onCancel,
 }: Props) {
   const [value, setValue] = useState(initialValue);
-  const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
 
   useEffect(() => {
     if (open) {
       setValue(initialValue);
-      setError(null);
+      setTouched(false);
     }
   }, [open, initialValue]);
+
+  // Checked while typing, so a name that cannot be used is explained before Create is pressed.
+  const problem = validate ? validate(value) : null;
+  // An empty box is not an error until the user has typed or pressed Create.
+  const shown = problem !== null && (value.trim() !== "" || touched) ? problem : null;
 
   return (
     <Dialog
@@ -54,9 +60,8 @@ export function PromptDialog({
           className="flex flex-col gap-3"
           onSubmit={(e) => {
             e.preventDefault();
-            const msg = validate ? validate(value) : null;
-            if (msg) setError(msg);
-            else onSubmit(value);
+            setTouched(true);
+            if (problem === null) onSubmit(value);
           }}
         >
           <DialogHeader>
@@ -73,18 +78,29 @@ export function PromptDialog({
             value={value}
             onChange={(e) => {
               setValue(e.target.value);
-              setError(null);
+              setTouched(true);
             }}
+            aria-invalid={shown !== null}
             onFocus={(e) => {
               e.currentTarget.select();
             }}
           />
-          {error && <p className="text-xs text-destructive">{error}</p>}
+          {shown && (
+            <p
+              role="alert"
+              className="flex items-start gap-2 rounded-md border border-destructive/60 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive"
+            >
+              <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+              {shown}
+            </p>
+          )}
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={onCancel}>
               Cancel
             </Button>
-            <Button type="submit">{confirmLabel}</Button>
+            <Button type="submit" disabled={problem !== null}>
+              {confirmLabel}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -1,5 +1,7 @@
 # Proposal 15 – Name the note by typing its title
 
+> **Note (0.7.1):** new notes are now named in a window, in every place (see DECISIONS, Version 0.7.1). The title-first flow described here is no longer started.
+>
 > **Status: implemented (see below).** **Built in 0.5.0** as option A. For question 2: no, only notes still called `Untitled` follow the heading. See DECISIONS.md, _Version 0.5.0_.
 
 ## The problem

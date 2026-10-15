@@ -6,6 +6,22 @@ use crate::git::{CommitKind, CommitReason};
 use crate::vault::OpenVault;
 use uuid::Uuid;
 
+/// Fails when another project already has this name (ignoring upper/lower case): two projects
+/// with the same name look the same under Projects.
+fn ensure_unique_name(projects: &[Project], name: &str, except_id: Option<&str>) -> AppResult<()> {
+    let wanted = name.trim().to_lowercase();
+    match projects
+        .iter()
+        .find(|p| Some(p.id.as_str()) != except_id && p.name.trim().to_lowercase() == wanted)
+    {
+        Some(p) => Err(AppError::AlreadyExists(format!(
+            "A project called “{}” already exists (folder {}).",
+            p.name, p.folder
+        ))),
+        None => Ok(()),
+    }
+}
+
 /// Creates a project for a folder and commits it.
 pub fn create(
     v: &OpenVault,
@@ -20,6 +36,7 @@ pub fn create(
     }
     let folder = folder.trim_matches('/').to_string();
     validate_new(&v.root, &v.project_list(), &folder, None)?;
+    ensure_unique_name(&v.project_list(), &name, None)?;
     let stamp = now();
     let project = Project {
         schema_version: 1,
@@ -44,6 +61,7 @@ pub fn update(v: &OpenVault, project: Project) -> AppResult<Project> {
         .into_iter()
         .find(|p| p.id == project.id)
         .ok_or_else(|| AppError::NotFound("Project not found".into()))?;
+    ensure_unique_name(&v.project_list(), &project.name, Some(&project.id))?;
     let updated = Project {
         folder: existing.folder,
         created_at: existing.created_at,
@@ -125,5 +143,22 @@ mod tests {
             updated_at: String::new(),
         };
         assert!(matches!(update(&v, ghost), Err(AppError::NotFound(_))));
+    }
+
+    #[test]
+    fn two_projects_cannot_have_the_same_name() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        std::fs::create_dir_all(v.root.join("Work")).unwrap();
+        std::fs::create_dir_all(v.root.join("Home")).unwrap();
+        let first = create(&v, "Work", "Docs", String::new(), None).unwrap();
+        let err = create(&v, "Home", " docs ", String::new(), None).unwrap_err();
+        assert!(matches!(err, AppError::AlreadyExists(m) if m.contains("“Docs” already exists")));
+        let other = create(&v, "Home", "Home", String::new(), None).unwrap();
+        let mut clash = other.clone();
+        clash.name = "DOCS".into();
+        assert!(matches!(update(&v, clash), Err(AppError::AlreadyExists(_))));
+        // Saving a project under its own name is fine.
+        assert!(update(&v, first).is_ok());
     }
 }

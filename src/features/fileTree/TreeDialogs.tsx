@@ -1,9 +1,10 @@
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PromptDialog } from "@/components/PromptDialog";
+import { nameError } from "@/lib/nameConflict";
 import { dirname, isMarkdown, joinPath } from "@/lib/utils";
 import { useTreeStore } from "@/stores/treeStore";
 import { useVaultStore } from "@/stores/vaultStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -81,32 +82,24 @@ interface Props {
 
 /** The dialogs behind the tree's menus: new note, new folder, rename and delete. */
 export function TreeDialogs({ action, close }: Props) {
+  const tree = useVaultStore((s) => s.tree);
+  const projects = useVaultStore((s) => s.projects);
+  // "New note" in the tree's menus uses the same name dialog as Mod+N and New → Note.
+  useEffect(() => {
+    if (action?.kind !== "newNote") return;
+    useUiStore.getState().openNewNoteDialog(action.folder);
+    close();
+  }, [action, close]);
   return (
     <>
-      <PromptDialog
-        open={action?.kind === "newNote"}
-        title="New note"
-        label="Name"
-        confirmLabel="Create"
-        initialValue="Untitled"
-        onCancel={close}
-        onSubmit={(name) => {
-          if (action?.kind !== "newNote") return;
-          const folder = action.folder;
-          close();
-          void useVaultStore
-            .getState()
-            .createNote(folder, name.trim() || undefined)
-            .then(() => {
-              if (folder !== "") useTreeStore.getState().expand(folder);
-            });
-        }}
-      />
       <PromptDialog
         open={action?.kind === "newFolder"}
         title="New folder"
         label="Name"
         confirmLabel="Create"
+        validate={(v) =>
+          nameError(tree, projects, action?.kind === "newFolder" ? action.folder : "", v, true)
+        }
         onCancel={close}
         onSubmit={(name) => {
           if (action?.kind !== "newFolder") return;
@@ -114,7 +107,7 @@ export function TreeDialogs({ action, close }: Props) {
           close();
           void useVaultStore
             .getState()
-            .createFolder(folder, name)
+            .createFolder(folder, name.trim())
             .then(() => {
               if (folder !== "") useTreeStore.getState().expand(folder);
             });
@@ -126,7 +119,18 @@ export function TreeDialogs({ action, close }: Props) {
         label="New name"
         confirmLabel="Rename"
         initialValue={action?.kind === "rename" ? displayName(action.node) : ""}
-        validate={(v) => (v.trim() === "" || /[\\/:*?"<>|]/.test(v) ? "Enter a valid name" : null)}
+        validate={(v) =>
+          action?.kind === "rename"
+            ? nameError(
+                tree,
+                projects,
+                dirname(action.node.path),
+                v,
+                action.node.isDir,
+                action.node.path,
+              )
+            : null
+        }
         onCancel={close}
         onSubmit={(name) => {
           if (action?.kind !== "rename") return;

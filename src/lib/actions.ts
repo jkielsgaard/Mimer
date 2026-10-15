@@ -21,12 +21,12 @@ export async function saveActiveNote(): Promise<void> {
   }
 }
 
-/** Mod+N: a new untitled note in the current folder. */
-export async function newNoteInCurrentFolder(): Promise<void> {
+/** Mod+N, New → Note and the menus: asks for the name of a new note in the current folder. */
+export function newNoteInCurrentFolder(): void {
   const vault = useVaultStore.getState();
   const configured = vault.vault?.config.newNoteFolder ?? "";
   const folder = currentFolder(vault) || configured;
-  await vault.createNote(folder);
+  useUiStore.getState().openNewNoteDialog(folder);
 }
 
 /**

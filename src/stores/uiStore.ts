@@ -13,6 +13,15 @@ export interface Toast {
   message: string;
 }
 
+/** A message that must not be overlooked: shown in a dialog until the user closes it. */
+export interface Notice {
+  title: string;
+  /** What went wrong, one line each (several when more than one item failed). */
+  details: string[];
+  /** What the user can do about it. */
+  hint: string;
+}
+
 export interface ProjectDialogState {
   folder: string;
   project: Project | null;
@@ -31,6 +40,12 @@ export interface ImagePreview {
 }
 
 interface UiState {
+  notice: Notice | null;
+  /** Shows a message in a dialog (not a toast that disappears). */
+  showNotice: (notice: Notice | null) => void;
+  /** The folder a new note is being named for, or null when the dialog is closed. */
+  newNoteDialog: { folder: string } | null;
+  openNewNoteDialog: (folder: string | null) => void;
   imagePreview: ImagePreview | null;
   /** Shows a picture large, or closes the view with `null`. */
   openImagePreview: (preview: ImagePreview | null) => void;
@@ -91,6 +106,24 @@ interface UiState {
 let toastId = 1;
 
 export const useUiStore = create<UiState>((set, get) => ({
+  notice: null,
+  showNotice: (notice) => {
+    set((s) => {
+      // Several items that fail one after the other (moving many at once) share one dialog.
+      if (notice !== null && s.notice?.title === notice.title) {
+        const merged = [
+          ...s.notice.details,
+          ...notice.details.filter((d) => !s.notice?.details.includes(d)),
+        ];
+        return { notice: { ...s.notice, details: merged } };
+      }
+      return { notice };
+    });
+  },
+  newNoteDialog: null,
+  openNewNoteDialog: (folder) => {
+    set({ newNoteDialog: folder === null ? null : { folder } });
+  },
   leftTab: "files",
   rightTab: "assistant",
   leftCollapsed: false,
@@ -216,7 +249,19 @@ export const useUiStore = create<UiState>((set, get) => ({
   },
 }));
 
-/** Shows any error as a toast. */
+/**
+ * Shows an error. A name that is already taken gets a dialog, because a toast is easy to miss;
+ * everything else is a toast.
+ */
 export function reportError(e: unknown): void {
-  useUiStore.getState().toast(toApiError(e).message, "error");
+  const err = toApiError(e);
+  if (err.code === "AlreadyExists") {
+    useUiStore.getState().showNotice({
+      title: "That name is already taken",
+      details: [err.message],
+      hint: "Nothing was changed for these. Rename one of them, or choose another name, and try again.",
+    });
+    return;
+  }
+  useUiStore.getState().toast(err.message, "error");
 }

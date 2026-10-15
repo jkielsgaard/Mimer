@@ -39,8 +39,11 @@ interface VaultState {
   refreshProjects: () => Promise<void>;
   openNote: (path: string | null) => Promise<void>;
   select: (path: string | null) => void;
-  /** Creates a note. Without a name it starts as `# ` and takes the name of the title typed. */
-  createNote: (folder: string, name?: string) => Promise<string | null>;
+  /**
+   * Creates a note. With a name it is empty, or starts with the name as its heading when
+   * `withHeading` is set. Without a name it starts as `# ` and takes the name of the title typed.
+   */
+  createNote: (folder: string, name?: string, withHeading?: boolean) => Promise<string | null>;
   /** Renames a new note to match its title: no commit, no link prompt, the editor keeps its state. */
   renameNewNote: (from: string, to: string) => Promise<boolean>;
   createFolder: (parent: string, name: string) => Promise<string | null>;
@@ -182,10 +185,12 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     set({ selectedPath: path });
   },
 
-  createNote: async (folder, name) => {
+  createNote: async (folder, name, withHeading = false) => {
     try {
       const path = await api.createNote(folder, name);
-      if (name === undefined) {
+      if (name !== undefined && withHeading) {
+        await api.writeNote(path, `# ${name.replace(/\.md$/i, "")}\n\n`);
+      } else if (name === undefined) {
         // A note without a name starts on its title line and is named after what is typed there.
         await api.writeNote(path, "# ");
         useTitleFollow.getState().start(path);

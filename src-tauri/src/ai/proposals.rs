@@ -247,11 +247,15 @@ pub fn apply(
                     commit_paths.push(p.path.clone());
                 }
                 ProposalAction::Create => {
-                    if paths::resolve(&v.root, &p.path, None)?.exists() {
+                    let target = paths::resolve(&v.root, &p.path, None)?;
+                    if target.exists() {
                         return Err(AppError::AlreadyExists(format!(
                             "{} already exists",
                             p.path
                         )));
+                    }
+                    if let (Some(dir), Some(name)) = (target.parent(), target.file_name()) {
+                        fs_ops::ensure_name_free(dir, &name.to_string_lossy(), false, None)?;
                     }
                     ops::write_note(v, &p.path, p.content.as_deref().unwrap_or(""))?;
                     v.refresh_files();

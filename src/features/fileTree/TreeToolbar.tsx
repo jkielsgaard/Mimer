@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { newNoteInCurrentFolder, revealInTree } from "@/lib/actions";
 import { formatShortcut } from "@/lib/shortcuts";
+import { nameError, projectNameError } from "@/lib/nameConflict";
 import { isInside } from "@/lib/utils";
 import { useTreeStore } from "@/stores/treeStore";
 import { useUiStore } from "@/stores/uiStore";
@@ -80,7 +81,7 @@ export function TreeToolbar() {
         <DropdownMenuContent align="start" className="w-60">
           <DropdownMenuItem
             onSelect={() => {
-              void newNoteInCurrentFolder();
+              newNoteInCurrentFolder();
             }}
           >
             <span className="flex items-center gap-2">
@@ -222,9 +223,13 @@ export function TreeToolbar() {
         title={asking === "project" ? "New project" : "New folder"}
         label={asking === "project" ? "Project folder name" : "Folder name"}
         confirmLabel="Create"
-        validate={(v) =>
-          v.trim() === "" || /[\\/:*?"<>|]/.test(v) ? "Enter a valid folder name" : null
-        }
+        validate={(v) => {
+          const state = useVaultStore.getState();
+          const problem = nameError(state.tree, state.projects, currentFolder(state), v, true);
+          if (problem !== null || asking !== "project") return problem;
+          // A project is shown by its name under Projects, so two projects cannot share one.
+          return projectNameError(state.projects, v);
+        }}
         onCancel={() => {
           setAsking(null);
         }}

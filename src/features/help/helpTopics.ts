@@ -40,7 +40,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   {
     id: "title",
     title: "Naming a note",
-    summary: "Type the title, the file follows",
+    summary: "One name window, and names that clash",
     body: titleMd,
   },
   {

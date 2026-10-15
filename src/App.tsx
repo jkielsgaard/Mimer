@@ -28,6 +28,8 @@ import {
 } from "@/lib/actions";
 import { api } from "@/lib/api";
 import { onCloseRequested, onEmbeddingStatus, onFileChanged, onIndexUpdated } from "@/lib/events";
+import { NoticeDialog } from "@/components/NoticeDialog";
+import { NewNoteDialog } from "@/features/fileTree/NewNoteDialog";
 import { useEmbeddingStore } from "@/stores/embeddingStore";
 import { flushPendingWrites } from "@/lib/flush";
 import { useShortcuts } from "@/lib/shortcuts";
@@ -136,7 +138,9 @@ export function App() {
   const bindings = useMemo(
     () => ({
       "Mod+s": () => void saveActiveNote(),
-      "Mod+n": () => void newNoteInCurrentFolder(),
+      "Mod+n": () => {
+        newNoteInCurrentFolder();
+      },
       "Mod+p": () => {
         useUiStore.getState().setQuickOpen(true);
       },
@@ -212,6 +216,8 @@ export function App() {
       <ImportDialog />
       <AppContextMenu />
       <ImageLightbox />
+      <NoticeDialog />
+      <NewNoteDialog />
       <ResearchDialog />
       <ImportAnswerDialog />
       <AboutDialog />

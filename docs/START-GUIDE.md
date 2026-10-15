@@ -187,7 +187,7 @@ On Windows replace the `cargo` line with the same command; it works in PowerShel
 pnpm tauri build
 ```
 
-- **Windows:** the installer is `src-tauri\target\release\bundle\nsis\Mimer_0.7.0_x64-setup.exe`. It installs for the current user only and needs no administrator rights.
+- **Windows:** the installer is `src-tauri\target\release\bundle\nsis\Mimer_0.7.1_x64-setup.exe`. It installs for the current user only and needs no administrator rights.
 - **Linux:** `src-tauri/target/release/bundle/` contains an `.AppImage` and an `.rpm`.
 
 ---
@@ -230,7 +230,7 @@ Semantic search only uses a provider on your own computer, so no note is sent to
 | Index page              | Right-click a folder → **Create index page**.                                                                                                  |
 | Link to a note          | The link button in the toolbar, or `Ctrl/Cmd+Shift+K`.                                                                                         |
 | How-to guide            | **File → How to use Mimer**, or press `F1`. Small **?** buttons explain settings and tools.                                                    |
-| Name a note             | `Ctrl/Cmd+N`, then type the title on the first line: the file is named after it.                                                               |
+| Name a note             | `Ctrl/Cmd+N`, then type the name in the window that opens; it becomes the first line.                                                          |
 | Pictures                | Paste, drag, or the **Insert image** button. The **Images** tab on the right lists them.                                                       |
 | Folder in chat          | Type `/` in the **Mimer** tab and pick a folder or a project: Mimer works on its notes.                                                        |
 | Tasks                   | The **Tasks** button over the message box: merge, structure proposal, summarise and more.                                                      |

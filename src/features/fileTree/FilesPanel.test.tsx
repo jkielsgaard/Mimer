@@ -17,6 +17,7 @@ import { FilesPanel } from "./FilesPanel";
 import { useRecent } from "@/stores/recentStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import type { Settings } from "@/bindings/Settings";
+import { useUiStore } from "@/stores/uiStore";
 import { useTreeStore } from "@/stores/treeStore";
 import { useVaultStore } from "@/stores/vaultStore";
 
@@ -133,7 +134,8 @@ describe("FilesPanel", () => {
     await userEvent
       .setup()
       .click(screen.getByRole("button", { name: "New note in Security docs" }));
-    expect(await screen.findByRole("dialog", { name: "New note" })).toBeInTheDocument();
+    // The name dialog is shared by every way of making a note (see NewNoteDialog).
+    expect(useUiStore.getState().newNoteDialog).toEqual({ folder: "Work/Security" });
   });
 
   it("dropping a note on a project moves it into the project folder", () => {

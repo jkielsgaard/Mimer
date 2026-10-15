@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { api, toApiError } from "@/lib/api";
+import { projectNameError } from "@/lib/nameConflict";
 import { basename } from "@/lib/utils";
 import { reportError, type ProjectDialogState, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
@@ -50,6 +51,9 @@ export function ProjectForm({
   const raw = useRef("");
 
   const isNew = state.project === null;
+  const allProjects = useVaultStore((s) => s.projects);
+  // Two projects with the same name look the same under Projects, so the name must be unique.
+  const nameProblem = name.trim() === "" ? null : projectNameError(allProjects, name, p0?.id);
   const globalDefault = settings.ai.providers.find((p) => p.id === settings.ai.defaultProviderId);
 
   const save = async (): Promise<void> => {
@@ -131,10 +135,19 @@ export function ProjectForm({
               <Input
                 id="proj-name"
                 value={name}
+                aria-invalid={nameProblem !== null}
                 onChange={(e) => {
                   setName(e.target.value);
                 }}
               />
+              {nameProblem && (
+                <p
+                  role="alert"
+                  className="rounded-md border border-destructive/60 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive"
+                >
+                  {nameProblem}
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1.5">
@@ -247,7 +260,7 @@ export function ProjectForm({
               Cancel
             </Button>
             <Button
-              disabled={name.trim() === ""}
+              disabled={name.trim() === "" || nameProblem !== null}
               onClick={() => {
                 void save();
               }}

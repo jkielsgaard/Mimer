@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-10-15
+
+### Changed
+
+- **A new note is named in the same way everywhere.** Ctrl/Cmd+N, **New → Note** and the file tree's menus all open the same small window that asks for the name (it starts with `Untitled`, or `Untitled 1` … when that is taken). The note then opens with the name as its first line. Before, the New menu made an untitled note and the name was typed on its first line, which looked different from the other ways.
+- A name that is taken is explained **while you type**, in a red box with an icon, and **Create** / **Rename** cannot be pressed: "A note called “Plan” already exists in “Work”." This goes for new notes, new folders, renaming and new projects.
+- Moving something (drag and drop, or Move to…) onto a name that is already taken stops with a **window you have to close**, not a toast that disappears. Moving several items collects all the clashes in one window. Nothing is changed for the items that clash.
+
+### Fixed
+
+- **Two things could have the same name in one folder.** Only an exact match was refused, so `Docs` and `docs`, or a note `Work` next to a folder `Work`, were allowed. They look the same in the file tree, and a project and a folder with the same name caused trouble. Now a name counts as taken when it matches ignoring upper/lower case, with a note counting without `.md`. The check is in the backend (new notes and folders, renaming, moving, notes created by Mimer), so it is the same on Linux and Windows. A case-only rename (`plan` → `Plan`) still works. Existing vaults are not changed.
+- **Two projects could have the same name.** The project name must now be unique (ignoring case), and the project window says so.
+
 ## [0.7.0] - 2026-10-15
 
 ### Added

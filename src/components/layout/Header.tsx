@@ -65,7 +65,7 @@ export function Header() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
-          {item("New note", "Mod+N", () => void newNoteInCurrentFolder())}
+          {item("New note", "Mod+N", newNoteInCurrentFolder)}
           {item("New note from template…", null, () => {
             ui.setTemplatePickerOpen(true);
           })}
