@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The message about a missing Windows runtime now says to install the **64-bit (x64)** Visual C++ Redistributable, not x86, gives the direct link, and names the files that come with it (`vcruntime140_1.dll`, `msvcp140.dll`).
 - The Store package is called **Mimer: Markdown Notes** (the name reserved in Partner Center); the tile and the Start menu show the short name Mimer.
 
 ## [0.8.1] - 2026-10-15

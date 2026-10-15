@@ -155,7 +155,8 @@ pub fn diagnose(exit_code: Option<i32>, log: &[String], ctx: &Context) -> Proble
         return problem(
             "A Windows runtime file is missing",
             &[
-                "Install \"Microsoft Visual C++ Redistributable 2015-2022 (x64)\" from Microsoft and try again.",
+                "Install \"Microsoft Visual C++ Redistributable 2015-2022\", the 64-bit (x64) version, not x86: https://aka.ms/vs/17/release/vc_redist.x64.exe . The message may name vcruntime140_1.dll or msvcp140.dll; both are in that package. If it is already installed, choose Repair.",
+                "Check in Settings → Apps that the list has \"Microsoft Visual C++ 2015-2022 Redistributable (x64)\" with version 14.3 or higher, then press Wake Mimer again.",
                 "If you use an Nvidia engine, update the Nvidia driver too.",
                 "If it still fails, use Remove files, then download the engine again: an antivirus program may have removed part of it.",
             ],
@@ -374,6 +375,8 @@ mod tests {
         let p = diagnose(Some(0xC000_0135u32 as i32), &[], &ctx());
         assert_eq!(p.title, "A Windows runtime file is missing");
         assert!(p.steps[0].contains("Visual C++"));
+        assert!(p.steps[0].contains("x64") && p.steps[0].contains("not x86"));
+        assert!(p.steps[0].contains("vc_redist.x64.exe"));
         assert!(p.details.contains("0xC0000135"));
     }
 
