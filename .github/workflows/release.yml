@@ -65,7 +65,8 @@ jobs:
             -IdentityName "${{ vars.MSIX_IDENTITY_NAME || 'Jkielsgaard.Mimer' }}" `
             -DisplayName "${{ vars.MSIX_DISPLAY_NAME || 'Mimer: Markdown Notes' }}" `
             -Publisher "${{ vars.MSIX_PUBLISHER || 'CN=00000000-0000-0000-0000-000000000000' }}" `
-            -PublisherDisplayName "${{ vars.MSIX_PUBLISHER_DISPLAY_NAME || 'Jesper Ahasverusen Kielsgaard' }}"
+            -PublisherDisplayName "${{ vars.MSIX_PUBLISHER_DISPLAY_NAME || 'Jesper Ahasverusen Kielsgaard' }}" `
+            -TestSign
 
       - name: Keep the Microsoft Store package
         if: matrix.platform == 'windows-latest'
@@ -74,5 +75,19 @@ jobs:
         with:
           name: mimer-msix
           path: |
-            msix-out/*.msix
+            msix-out/Mimer_*_x64.msix
+          if-no-files-found: warn
+
+      # The copy for trying the package on a test Windows (Sandbox or a virtual machine), signed
+      # with a throw-away certificate that is NOT valid in the Store. See docs/MSIX.md.
+      - name: Keep the test copy of the Microsoft Store package
+        if: matrix.platform == 'windows-latest'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: mimer-msix-test
+          path: |
+            msix-out/*_test.msix
+            msix-out/mimer-test.cer
+            msix-out/Install-TestMsix.ps1
           if-no-files-found: warn

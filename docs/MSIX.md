@@ -15,7 +15,11 @@ The package is built by `scripts/msix/Build-Msix.ps1` on Windows. The release wo
    - the **name you reserved** (`Mimer: Markdown Notes`): it is the name the package shows in the Start menu and the Store, and Microsoft checks it against the reserved name
 4. In the GitHub repository, **Settings → Secrets and variables → Actions → Variables**, add `MSIX_IDENTITY_NAME`, `MSIX_PUBLISHER`, `MSIX_PUBLISHER_DISPLAY_NAME` and `MSIX_DISPLAY_NAME` (the reserved name) with those values. (They are not secrets.) Without them the workflow uses placeholders, which is fine for test packages only.
 
-## 2. Build a test package and try it (Windows)
+## 2. Try the package on a test Windows
+
+**The easy way:** every release has an artifact called **`mimer-msix-test`** (GitHub → Actions → the release run → Artifacts). It holds the test-signed package, the test certificate and `Install-TestMsix.ps1`. Unpack it into a folder, then follow "Windows Sandbox" or "A virtual machine" below with that folder as `msix-out`.
+
+**Building it yourself** (not needed if you use the artifact):
 
 On a Windows computer with the Windows SDK, Node, Rust and pnpm:
 
