@@ -73,7 +73,7 @@ $manifest = $manifest.Replace("{{NAME}}", (Escape-Xml $IdentityName)).
   Replace("{{PUBLISHER}}", (Escape-Xml $Publisher)).
   Replace("{{PUBLISHER_DISPLAY}}", (Escape-Xml $PublisherDisplayName)).
   Replace("{{VERSION}}", $msixVersion)
-if ($manifest -match '\{\{') { throw "The manifest still has an unfilled value." }
+if ($manifest -match '\{\{[A-Z_]+\}\}') { throw "The manifest still has an unfilled value: $($Matches[0])" }
 [System.IO.File]::WriteAllText((Join-Path $stage "AppxManifest.xml"), $manifest, (New-Object System.Text.UTF8Encoding($false)))
 
 # Pack. makeappx also checks the manifest, so a mistake in it stops here.

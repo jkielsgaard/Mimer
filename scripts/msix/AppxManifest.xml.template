@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Manifest of the Microsoft Store (MSIX) package. Build-Msix.ps1 fills in the {{...}} values.
+  Manifest of the Microsoft Store (MSIX) package. Build-Msix.ps1 fills in the values written in double curly braces.
   Name and Publisher must be the ones Partner Center shows under Product identity for the app.
 -->
 <Package
