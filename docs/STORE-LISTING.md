@@ -44,6 +44,8 @@ Mimer is a notes app for people who want to own their notes. Your notes are ordi
 - No account, no telemetry, no ads. API keys are stored in the Windows Credential Manager.
 - Open source (Apache-2.0): https://github.com/jkielsgaard/Mimer
 
+**Live generative AI.** Mimer shows answers that an AI model writes in response to what you type. The model is one you connect yourself (it runs on your own computer, or is a cloud service you choose). You can report inappropriate AI content from inside the app: the flag button in the Mimer and Raven tabs, or File → Report inappropriate AI content.
+
 Mimer is a beta version. The app is in English; the assistant answers in the language you write in.
 
 ## What's new in this version
@@ -82,6 +84,8 @@ How to try it: start the app, choose "Open folder as vault" and pick or create a
 
 The AI features need a local AI server (LM Studio) that is not part of the package. Without one, the app is a normal Markdown editor with version history. The "Raven" tab is off until the user enters an API key for a cloud AI provider of their own. No data is sent anywhere unless the user does that.
 
+The app shows AI-generated answers (live generative AI). The model is one the user connects themselves. To report inappropriate AI content, use the flag button at the top of the Mimer tab (or the Raven tab), or File > "Report inappropriate AI content…": it opens a pre-filled issue on the developer's GitHub page, and reports are read and acted on.
+
 The Microsoft Store build does not download or run any additional programs. The built-in AI engine that the GitHub installer offers is disabled in this build.
 
 The app does not collect any data. Privacy policy: https://github.com/jkielsgaard/Mimer/blob/main/PRIVACY.md
@@ -93,8 +97,17 @@ The app does not collect any data. Privacy policy: https://github.com/jkielsgaar
 Mimer is a classic desktop application. It reads and writes the Markdown files and Git repositories in folders the user opens anywhere on their disk (for example Documents or a synced folder), watches those folders for changes, and starts nothing else. These operations are not possible from a sandboxed UWP app, so the package uses the full-trust (desktop bridge) model.
 ```
 
+## Required for apps with AI content (Store policy 11.16, "Live Generative AI Content")
+
+Microsoft's policy says a product that contains content that a generative AI model creates in response to user input must do four things. Mimer does:
+
+1. **Disclose it in the metadata**: the paragraph "Live generative AI." in the description above. Keep it.
+2. **Note it in Partner Center** during the submission: tick the box or answer the question that says the product uses live generative AI.
+3. **Follow the other Store policies**: the user chooses the model, and every change the AI proposes is shown for review before anything is written.
+4. **Give users a way to report inappropriate content to the developer**: the flag button in the Mimer and Raven tabs and **File → Report inappropriate AI content…** open a pre-filled issue at https://github.com/jkielsgaard/Mimer/issues. Read the reports there and act on them. Say in the certification notes where the button is.
+
 ## Things Microsoft may ask about
 
-- **AI content:** the app contains no AI model of its own in this build. It lets the user connect to an AI of their choice. If asked about safeguards, say that the user is in control of the model and that every change the AI proposes is reviewed by the user before it is written.
+- **AI content:** see the four points above. The app contains no AI model of its own in this build. It lets the user connect to an AI of their choice.
 - **WebView2:** Windows 11 includes it. On Windows 10 the Edge WebView2 runtime may have to be installed.
 - If the review is rejected, read the message, fix the cause, and submit a new package: the version number must be higher each time.

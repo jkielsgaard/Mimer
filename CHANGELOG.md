@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Report inappropriate AI content**: a flag button in the Mimer and Raven tabs and **File → Report inappropriate AI content…** open a pre-filled issue on the project's GitHub page (nothing from your notes or chat is added). The Microsoft Store requires apps with live generative AI to offer this (policy 11.16). The Store listing texts now disclose the use of live generative AI.
+
 ## [0.8.2] - 2026-10-15
 
 ### Changed

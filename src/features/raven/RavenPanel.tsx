@@ -1,11 +1,12 @@
-import { Plus, Send, Square } from "lucide-react";
+import { Flag, Plus, Send, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { PrivacyNote } from "@/features/chat/PrivacyNote";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { safeStorage } from "@/lib/safeStorage";
 import { useRavenStore } from "@/stores/ravenStore";
-import { useUiStore } from "@/stores/uiStore";
+import { reportAi } from "@/lib/reportAi";
+import { reportError, useUiStore } from "@/stores/uiStore";
 import { RavenBubble } from "./RavenBubble";
 import { SaveAnswerDialog } from "./SaveAnswerDialog";
 import { useRaven } from "./useRaven";
@@ -47,6 +48,17 @@ export function RavenPanel() {
               : "No cloud provider"}
           </div>
         </div>
+        <Button
+          size="icon"
+          variant="ghost"
+          aria-label="Report inappropriate AI content"
+          title="Report inappropriate AI content"
+          onClick={() => {
+            reportAi("Raven").catch(reportError);
+          }}
+        >
+          <Flag />
+        </Button>
         <Button size="sm" variant="ghost" onClick={newChat} aria-label="New chat">
           <Plus /> New chat
         </Button>
