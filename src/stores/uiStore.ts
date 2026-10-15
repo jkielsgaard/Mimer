@@ -5,6 +5,17 @@ import { toApiError } from "@/lib/api";
 
 export type LeftTab = "files" | "search";
 export type RightTab = "assistant" | "raven" | "images" | "history";
+const SOURCE_MODE_KEY = "mimer.sourceMode";
+
+/** Whether notes are shown as Markdown source (remembered between runs). */
+function readSourceMode(): boolean {
+  try {
+    return localStorage.getItem(SOURCE_MODE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 export type LinkUpdateChoice = "update" | "skip" | "cancel";
 
 export interface Toast {
@@ -40,6 +51,9 @@ export interface ImagePreview {
 }
 
 interface UiState {
+  /** True = the editor shows the Markdown source instead of the live preview. */
+  sourceMode: boolean;
+  setSourceMode: (on: boolean) => void;
   notice: Notice | null;
   /** Shows a message in a dialog (not a toast that disappears). */
   showNotice: (notice: Notice | null) => void;
@@ -127,6 +141,15 @@ export const useUiStore = create<UiState>((set, get) => ({
   newNoteDialog: null,
   openNewNoteDialog: (folder) => {
     set({ newNoteDialog: folder === null ? null : { folder } });
+  },
+  sourceMode: readSourceMode(),
+  setSourceMode: (sourceMode) => {
+    try {
+      localStorage.setItem(SOURCE_MODE_KEY, sourceMode ? "1" : "0");
+    } catch {
+      /* the choice just is not remembered */
+    }
+    set({ sourceMode });
   },
   leftTab: "files",
   rightTab: "assistant",

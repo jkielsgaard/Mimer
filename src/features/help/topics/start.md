@@ -30,3 +30,7 @@ The **Sort** button above the file tree has **My own order**. Then nothing is so
 ## Recent, Projects and All files
 
 The file panel has three parts. **Recent** lists the notes you opened last (4 by default; change it in **Settings → General → Recent notes shown**, 0 hides it). **Projects** shows every project with its own notes. **All files** holds everything that is not in a project, with **Meetings** and **Quick notes** at the top.
+
+## Found a bug, or have an idea?
+
+Use **File → Report a bug…** or **File → Suggest a feature…**. Your browser opens a page on GitHub with the form already started (Mimer version and system filled in). You need a free GitHub account to send it. Do not paste private notes.

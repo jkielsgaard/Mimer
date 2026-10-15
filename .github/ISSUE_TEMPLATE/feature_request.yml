@@ -1,0 +1,20 @@
+name: Feature idea
+description: Suggest something Mimer should be able to do
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Mimer to do?
+      description: Describe the idea, and what problem it solves for you.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: How would you use it? A short example helps.
+  - type: input
+    id: version
+    attributes:
+      label: Mimer version

@@ -180,6 +180,10 @@ export function App() {
       "Mod+,": () => {
         useUiStore.getState().setSettingsOpen(true);
       },
+      "Mod+Alt+m": () => {
+        const ui = useUiStore.getState();
+        ui.setSourceMode(!ui.sourceMode);
+      },
       "Mod+Shift+d": () => {
         void openDailyNote();
       },

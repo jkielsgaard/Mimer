@@ -185,3 +185,17 @@ export const editorTheme = EditorView.theme({
   ".cm-panels": { backgroundColor: "var(--card)", color: "var(--foreground)" },
   ".cm-searchMatch": { backgroundColor: "color-mix(in oklab, var(--warning) 40%, transparent)" },
 });
+
+/**
+ * Markdown source view: the text exactly as it is stored (`# `, `**`, `[[...]]` and all), in a
+ * monospace font, with none of the live-preview formatting.
+ */
+export const sourceModeTheme = [
+  EditorView.theme({
+    ".cm-scroller": {
+      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace",
+      lineHeight: "1.6",
+    },
+  }),
+  EditorView.editorAttributes.of({ class: "cm-source-mode" }),
+];

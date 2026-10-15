@@ -7,7 +7,7 @@ import { RecentSection } from "./RecentSection";
 import { TreeDialogs } from "./TreeDialogs";
 import { TreeFilter } from "./TreeFilter";
 import { TreeToolbar } from "./TreeToolbar";
-import { withoutFolders, type Action } from "./treeUtils";
+import { withoutFolders, withoutImages, type Action } from "./treeUtils";
 
 /** The whole Files tab: toolbar, filter, Recent, Projects and the file tree of everything else. */
 export function FilesPanel() {
@@ -18,7 +18,7 @@ export function FilesPanel() {
   const [action, setAction] = useState<Action | null>(null);
   const others = useMemo(
     () =>
-      withoutFolders(tree, [
+      withoutFolders(withoutImages(tree), [
         ...projects.map((p) => p.folder),
         // Pictures are listed in the Images tab.
         ...(attachments ? [attachments] : []),

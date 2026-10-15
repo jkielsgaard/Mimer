@@ -1,6 +1,8 @@
 import type { EditorView } from "@codemirror/view";
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { Code2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatShortcut } from "@/lib/shortcuts";
 import { InlineAiPopup, type InlineSelection } from "@/features/inlineAi/InlineAiPopup";
 import { api } from "@/lib/api";
 import { planTitleRename } from "@/lib/noteTitle";
@@ -38,6 +40,7 @@ export function Editor({ paneId }: { paneId: PaneId }) {
   const resolver = useVaultStore((s) => s.resolver);
   const spellcheck = useSettingsStore((s) => s.settings?.editor.spellcheck ?? true);
   const conflict = useEditorStore((s) => s.conflicts[paneId]);
+  const sourceMode = useUiStore((s) => s.sourceMode);
 
   const previewCfg = useMemo<PreviewConfig>(
     () => ({
@@ -109,6 +112,7 @@ export function Editor({ paneId }: { paneId: PaneId }) {
     host,
     previewCfg,
     spellcheck,
+    sourceMode,
     onInline: openInline,
     onLinkPicker: openLinkPicker,
     onSaved: followTitle,
@@ -189,6 +193,19 @@ export function Editor({ paneId }: { paneId: PaneId }) {
         trailing={
           <span className="ml-auto flex items-center gap-1">
             <TitleFollowChip path={activePath} />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={sourceMode ? "Show live preview" : "Show Markdown source"}
+              aria-pressed={sourceMode}
+              title={`${sourceMode ? "Show live preview" : "Show Markdown source"} (${formatShortcut("Mod+Alt+M")})`}
+              onClick={() => {
+                useUiStore.getState().setSourceMode(!sourceMode);
+              }}
+            >
+              {sourceMode ? <Eye /> : <Code2 />}
+            </Button>
             <InfoHint
               label="Writing notes"
               text="The buttons add the Markdown for you: select text and click, or click and type. Pause on a button to see its name and shortcut."

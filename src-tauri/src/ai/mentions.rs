@@ -14,8 +14,13 @@ pub const MAX_MENTIONS: usize = 5;
 /// Longest text kept per attached note (same as the `read_note` tool).
 pub const MENTION_CHAR_LIMIT: usize = 12_000;
 
-/// Most notes taken from one attached folder or project.
-pub const FOLDER_NOTE_LIMIT: usize = 40;
+/// Most notes whose text is attached from one folder or project. A bigger folder is attached as a
+/// list of its note names only: the text of dozens of notes would fill the model's context, and
+/// the model then loses the task. It reads the notes it needs with its own tools.
+pub const FOLDER_NOTE_LIMIT: usize = 12;
+
+/// Most note names listed for a folder that is too big to attach with its text.
+const FOLDER_LIST_LIMIT: usize = 400;
 
 /// Longest text kept per note that comes from a folder (shorter than a note attached by itself,
 /// because many of them share the prompt).
@@ -118,13 +123,24 @@ fn attach_folder(
             .push(format!("Could not attach {folder} (it has no notes)"));
         return;
     }
-    let mut taken = 0;
+    if total > FOLDER_NOTE_LIMIT {
+        let names: Vec<&str> = found
+            .iter()
+            .take(FOLDER_LIST_LIMIT)
+            .map(String::as_str)
+            .collect();
+        out.notes.push((
+            format!("{folder}/ (the names of all {total} notes in it)"),
+            names.join("\n"),
+        ));
+        out.skipped.push(format!(
+            "{folder} has {total} notes, so only their names were attached; Mimer reads the notes it needs"
+        ));
+        return;
+    }
     for note in found {
         if out.notes.iter().any(|(p, _)| *p == note) {
             continue;
-        }
-        if taken >= FOLDER_NOTE_LIMIT {
-            break;
         }
         if let Ok(n) = fs_ops::read_note(root, &note) {
             if current_note == Some(note.as_str()) {
@@ -132,13 +148,7 @@ fn attach_folder(
             }
             out.notes
                 .push((n.path, truncate_middle(&n.content, FOLDER_NOTE_CHAR_LIMIT)));
-            taken += 1;
         }
-    }
-    if total > FOLDER_NOTE_LIMIT {
-        out.skipped.push(format!(
-            "{folder} has {total} notes; the first {FOLDER_NOTE_LIMIT} were attached"
-        ));
     }
 }
 
@@ -336,19 +346,35 @@ mod tests {
     }
 
     #[test]
-    fn a_big_folder_is_cut_at_the_limit_with_a_notice_and_notes_are_shortened() {
+    fn a_big_folder_is_attached_as_a_list_of_names() {
         let dir = tempfile::tempdir().unwrap();
         for i in 0..(FOLDER_NOTE_LIMIT + 5) {
             std::fs::create_dir_all(dir.path().join("Big")).unwrap();
+            std::fs::write(dir.path().join(format!("Big/n{i:03}.md")), "text").unwrap();
+        }
+        let got = load(dir.path(), None, &req(&["Big"]), None);
+        assert_eq!(got.notes.len(), 1);
+        assert!(got.notes[0].0.contains("all 17 notes"));
+        assert_eq!(got.notes[0].1.lines().count(), 17);
+        assert!(got.notes[0].1.contains("Big/n016.md"));
+        assert!(!got.notes[0].1.contains("text"));
+        assert!(got.skipped[0].contains("only their names"));
+    }
+
+    #[test]
+    fn a_small_folder_is_attached_with_shortened_text() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir.path().join("Small")).unwrap();
+        for i in 0..3 {
             std::fs::write(
-                dir.path().join(format!("Big/n{i:03}.md")),
+                dir.path().join(format!("Small/n{i}.md")),
                 "w".repeat(FOLDER_NOTE_CHAR_LIMIT * 2),
             )
             .unwrap();
         }
-        let got = load(dir.path(), None, &req(&["Big"]), None);
-        assert_eq!(got.notes.len(), FOLDER_NOTE_LIMIT);
-        assert!(got.skipped[0].contains("first 40"));
+        let got = load(dir.path(), None, &req(&["Small"]), None);
+        assert_eq!(got.notes.len(), 3);
+        assert!(got.skipped.is_empty());
         assert!(got.notes[0].1.chars().count() <= FOLDER_NOTE_CHAR_LIMIT);
     }
 }

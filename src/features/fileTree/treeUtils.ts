@@ -1,5 +1,5 @@
 import type { TreeNode } from "@/bindings/TreeNode";
-import { isMarkdown } from "@/lib/utils";
+import { isImage, isMarkdown } from "@/lib/utils";
 
 export type Action =
   | { kind: "newNote"; folder: string }
@@ -114,6 +114,25 @@ export function withoutFolders(nodes: readonly TreeNode[], folders: readonly str
   return nodes
     .filter((n) => !(n.isDir && folders.includes(n.path)))
     .map((n) => (n.isDir ? { ...n, children: withoutFolders(n.children, folders) } : n));
+}
+
+/**
+ * The tree without picture files, and without folders that only held pictures. Pictures are
+ * listed in the Images tab, so they are not shown a second time among the notes (for example the
+ * pictures that came with an import). A folder that was already empty stays.
+ */
+export function withoutImages(nodes: readonly TreeNode[]): TreeNode[] {
+  const out: TreeNode[] = [];
+  for (const n of nodes) {
+    if (!n.isDir) {
+      if (!isImage(n.name)) out.push(n);
+      continue;
+    }
+    const children = withoutImages(n.children);
+    if (children.length === 0 && n.children.length > 0) continue;
+    out.push({ ...n, children });
+  }
+  return out;
 }
 
 /** The folder node at `path`, searched through the whole tree. */

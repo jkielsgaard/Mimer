@@ -16,6 +16,10 @@ use tokio_util::sync::CancellationToken;
 /// Maximum agent iterations per turn.
 pub const MAX_ITERATIONS: usize = 15;
 
+/// Lower than for plain chat: choosing tools and writing their arguments needs steady answers,
+/// and small local models drift into repeating themselves when it is higher.
+const AGENT_TEMPERATURE: f32 = 0.3;
+
 fn convert(m: &ChatMessageIn) -> ChatMessage {
     match m.role {
         ChatRole::User => ChatMessage::user(m.content.clone()),
@@ -133,7 +137,7 @@ pub async fn run_chat(
             system,
             messages: fitted,
             tools: tool_defs.clone(),
-            temperature: 0.7,
+            temperature: AGENT_TEMPERATURE,
         };
         let resp = providers::chat(
             &client,

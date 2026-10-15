@@ -16,6 +16,7 @@ import { flushPendingWrites } from "@/lib/flush";
 import { newNoteInCurrentFolder, openDailyNote } from "@/lib/actions";
 import { formatShortcut } from "@/lib/shortcuts";
 import { reportAi } from "@/lib/reportAi";
+import { reportIssue } from "@/lib/reportIssue";
 import { noteTitle } from "@/lib/utils";
 import { VaultSwitcher } from "@/features/vaults/VaultSwitcher";
 import { reportError, useUiStore } from "@/stores/uiStore";
@@ -112,11 +113,20 @@ export function Header() {
             ui.setRecoverOpen(true);
           })}
           <DropdownMenuSeparator />
+          {item(ui.sourceMode ? "Show live preview" : "Show Markdown source", "Mod+Alt+M", () => {
+            ui.setSourceMode(!ui.sourceMode);
+          })}
           {item("Settings…", "Mod+,", () => {
             ui.setSettingsOpen(true);
           })}
           {item("How to use Mimer", "F1", () => {
             ui.openHelp();
+          })}
+          {item("Report a bug…", null, () => {
+            reportIssue("bug").catch(reportError);
+          })}
+          {item("Suggest a feature…", null, () => {
+            reportIssue("feature").catch(reportError);
           })}
           {item("Report inappropriate AI content…", null, () => {
             reportAi("Mimer").catch(reportError);

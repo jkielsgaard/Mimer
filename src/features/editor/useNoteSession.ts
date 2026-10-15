@@ -28,7 +28,7 @@ import { previewConfig, type PreviewConfig } from "./extensions/previewConfig";
 import { dropLink } from "./extensions/dropLink";
 import { trackEditor } from "./extensions/trackEditor";
 import { wikiLinkCompletion } from "./extensions/wikiLinks";
-import { editorTheme } from "./editorTheme";
+import { editorTheme, sourceModeTheme } from "./editorTheme";
 
 const WRITE_DEBOUNCE_MS = 1000;
 const NO_TABS: string[] = [];
@@ -65,6 +65,8 @@ export interface NoteSessionOptions {
   /** Link resolution and asset settings for the live preview. */
   previewCfg: PreviewConfig;
   spellcheck: boolean;
+  /** True = show the Markdown source instead of the live preview. */
+  sourceMode: boolean;
   /** Opens the inline AI popup for the current selection; `x`/`y` are screen coordinates. */
   onInline: (view: EditorView, x?: number, y?: number) => void;
   /** Opens the "link to a note" picker (Mod+Shift+K). */
@@ -83,6 +85,7 @@ export function useNoteSession({
   host,
   previewCfg,
   spellcheck,
+  sourceMode,
   onInline,
   onLinkPicker,
   onSaved,
@@ -96,6 +99,9 @@ export function useNoteSession({
   const configCompartment = useRef(new Compartment());
   const editableCompartment = useRef(new Compartment());
   const spellCompartment = useRef(new Compartment());
+  const viewModeCompartment = useRef(new Compartment());
+  const sourceModeRef = useRef(sourceMode);
+  sourceModeRef.current = sourceMode;
 
   const activePath = useWorkspaceStore(
     (s) => s.layout.panes.find((p) => p.id === paneId)?.active ?? null,
@@ -176,7 +182,7 @@ export function useNoteSession({
         closeBrackets(),
         EditorView.lineWrapping,
         markdown({ base: markdownLanguage }),
-        livePreview(),
+        viewModeCompartment.current.of(sourceModeRef.current ? sourceModeTheme : livePreview()),
         editorTheme,
         search({ top: true }),
         autocompletion({
@@ -334,6 +340,17 @@ export function useNoteSession({
       effects: configCompartment.current.reconfigure(previewConfig.of(previewCfg)),
     });
   }, [previewCfg]);
+
+  // Switching between live preview and Markdown source: open tabs are rebuilt in the new mode
+  // (they were saved when they were left, so nothing is lost).
+  useEffect(() => {
+    stash.current.clear();
+    viewRef.current?.dispatch({
+      effects: viewModeCompartment.current.reconfigure(
+        sourceMode ? sourceModeTheme : livePreview(),
+      ),
+    });
+  }, [sourceMode]);
 
   useEffect(() => {
     viewRef.current?.dispatch({

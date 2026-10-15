@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in Mimer does not work as it should
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping. Please do not paste private notes or passwords.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Click ...
+  - type: input
+    id: version
+    attributes:
+      label: Mimer version
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: For example Windows 11, Linux (Fedora)
+  - type: dropdown
+    id: install
+    attributes:
+      label: How is Mimer installed?
+      options:
+        - Microsoft Store
+        - Installer from GitHub (Windows)
+        - AppImage or rpm (Linux)
+        - Built from source
+        - Not sure
+  - type: input
+    id: ai
+    attributes:
+      label: AI used, if it is about the AI
+      description: Built-in AI (which model), LM Studio, or a cloud provider

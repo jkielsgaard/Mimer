@@ -329,7 +329,8 @@ Prepare a note with a heading, bold text, a table, a task list, a code block, an
 ### 33. Folders, tasks and projects
 
 - [ ] Type `/` in the message to Mimer: folders are in the list with a folder icon and a note count. Pick one: a chip with a folder icon appears. Ask "List the notes you were given": they are the notes in that folder.
-- [ ] Pick a folder with more than 40 notes: Mimer says the first 40 were attached.
+- [ ] Pick a folder with more than 12 notes: Mimer says only their names were attached.
+- [ ] Attach that folder and ask Mimer to "structure and sort it into folders": it lists the notes once, then proposes the moves (Review shows Move proposals into new folders). It does not ask which note to start with, and it does not say it has already moved anything. Apply: the folders exist and links still work.
 - [ ] In a project, `/` offers only the project folder and what is inside it.
 - [ ] **Tasks** over the message box lists ten tasks. Choosing one fills the box; you can edit the text before sending. "Merge notes" with three notes attached gives one review with a new note and three deletions.
 - [ ] A project is not in **All files**. It is under **Projects** with its notes, a **+** button and a gear. Click it to fold and open it; the choice is remembered after a restart.
@@ -431,3 +432,10 @@ Needs Windows (a virtual machine or Windows Sandbox). See docs/MSIX.md.
 - [ ] Uninstall from Windows Settings → Apps: Mimer is gone, and the notes folder you opened is untouched.
 - [ ] The workflow's `mimer-msix` artifact contains the unsigned `Mimer_<version>_x64.msix` after a tag is built.
 - [ ] The Microsoft Store app opens on the computer where you want to use Mimer (an organisation may block it).
+
+## 40. Source view, pictures in the tree, reporting (0.8.5)
+
+- [ ] Click the **</>** button in the editor toolbar: the note shows `#`, `**`, `[[...]]` as typed, in a monospace font. Click the eye: formatted again. **Ctrl+Alt+M** and **File → Show Markdown source** do the same. Restart Mimer: the choice is remembered. Edit in source view and switch back: nothing is lost.
+- [ ] With several tabs open, switch the mode and then to another tab: it shows in the same mode and has its text.
+- [ ] Import a folder that has notes and pictures (for example a `images` folder): the notes are in the file tree, the pictures are **not**, and a folder with only pictures is not shown. The **Images** tab lists the pictures, and they are still shown inside the notes. Do the same inside a project.
+- [ ] **File → Report a bug…** opens GitHub with the bug form, version and system filled in. **File → Suggest a feature…** opens the feature form.

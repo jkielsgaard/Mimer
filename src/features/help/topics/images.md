@@ -29,3 +29,7 @@ Both are shown in the note in the same way.
 On the right, the **Images** tab shows every picture in the vault, which notes use it, and which are **not used anywhere**. **Move to trash** removes a picture after asking. It stays in the version history, so you can bring it back.
 
 Pictures can be PNG, JPG, GIF, WebP, SVG, BMP or AVIF, up to 25 MB.
+
+## Where pictures are listed
+
+Pictures are shown in the **Images** tab and nowhere in the file tree, also the pictures that came with an imported folder. The files are still in their folders on disk and in the notes that show them. A folder that only holds pictures is not shown in the tree.

@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.5] - 2026-10-15
+
+### Added
+
+- **Markdown source view**: a button in the editor toolbar (and **File → Show Markdown source**, **Ctrl/Cmd+Alt+M**) shows the note exactly as it is stored, with every `#`, `**` and `[[...]]`, in a monospace font. Switch back to the live preview the same way. The choice is remembered.
+- **Report a bug / Suggest a feature** in the File menu: opens a GitHub issue form with the Mimer version and system already filled in (`.github/ISSUE_TEMPLATE`).
+
+### Changed
+
+- **Pictures are listed in the Images tab only**, not in the file tree. This includes the pictures that come with an imported folder. A folder that only holds pictures is not shown either. The files themselves are not moved.
+
+### Fixed
+
+- **Mimer went in circles when asked to sort a big folder** (for example a OneNote import). A folder with more than 12 notes is now attached as a list of its note names instead of the text of 40 notes, which filled the AI's memory. The AI can list a whole folder at once (`list_folder` with `recursive`) and move many notes in one step (`propose_move_many`, up to 60 per call). It now knows that a folder is made by moving a note to a new path (there is no tool for empty folders, which it kept trying to use), that it must not ask for confirmation, and that nothing it proposes is applied until you apply it. The AI uses a lower temperature when it works with tools, so small local models repeat themselves less.
+
 ## [0.8.4] - 2026-10-15
 
 ### Fixed

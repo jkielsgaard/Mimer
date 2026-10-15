@@ -16,7 +16,7 @@ import { useVaultStore } from "@/stores/vaultStore";
 import { FileTree } from "./FileTree";
 import { droppedPaths, moveMany } from "./treeMoves";
 import { SidebarSection } from "./SidebarSection";
-import { countNotes, filterTree, findFolder, type Action } from "./treeUtils";
+import { countNotes, filterTree, findFolder, withoutImages, type Action } from "./treeUtils";
 import { reportError } from "@/stores/uiStore";
 
 const small = "rounded p-1 text-muted-foreground hover:bg-background hover:text-foreground";
@@ -28,7 +28,7 @@ function ProjectTree({ project, onAction }: { project: Project; onAction: (a: Ac
   const setOpen = useTreeStore((s) => s.setProjectOpen);
   const [dragOver, setDragOver] = useState(false);
   const folder = findFolder(tree, project.folder);
-  const children = folder?.children ?? [];
+  const children = withoutImages(folder?.children ?? []);
   const filtering = filter.trim() !== "";
   // While filtering, a project with nothing that matches is left out.
   if (filtering && filterTree(children, filter).length === 0) return null;

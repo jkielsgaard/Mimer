@@ -35,8 +35,11 @@ pub fn definitions() -> Vec<ToolDef> {
         },
         ToolDef {
             name: "list_folder",
-            description: "List child folders and notes of a folder. Use an empty path for the root of the allowed area.",
-            parameters: s(json!({"path": {"type": "string"}}), &["path"]),
+            description: "List child folders and notes of a folder. Use an empty path for the root of the allowed area. With recursive=true it lists every note in the folder and all its sub-folders (up to 400), which is the way to see a whole imported folder at once.",
+            parameters: s(
+                json!({"path": {"type": "string"}, "recursive": {"type": "boolean"}}),
+                &["path"],
+            ),
         },
         ToolDef {
             name: "propose_edit",
@@ -56,10 +59,28 @@ pub fn definitions() -> Vec<ToolDef> {
         },
         ToolDef {
             name: "propose_move",
-            description: "Propose renaming or moving a note or folder. Links to it are updated.",
+            description: "Propose renaming or moving a note or folder. Links to it are updated. Missing folders in the new path are created automatically, so this is also how you create a folder: move a note to \"New folder/Note.md\". For more than a few notes use propose_move_many.",
             parameters: s(
                 json!({"from": {"type": "string"}, "to": {"type": "string"}, "reason": {"type": "string"}}),
                 &["from", "to", "reason"],
+            ),
+        },
+        ToolDef {
+            name: "propose_move_many",
+            description: "Propose moving or renaming many notes in one call (use this to sort a whole folder; up to 60 per call, call it again for more). Missing folders in the new paths are created automatically. Links are updated. Moves that are not valid are listed in the answer; fix those and send them again.",
+            parameters: s(
+                json!({
+                    "moves": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {"from": {"type": "string"}, "to": {"type": "string"}},
+                            "required": ["from", "to"]
+                        }
+                    },
+                    "reason": {"type": "string"}
+                }),
+                &["moves", "reason"],
             ),
         },
         ToolDef {
@@ -115,8 +136,24 @@ fn arg<'a>(v: &'a Value, key: &str) -> Option<&'a str> {
 fn err(summary: String, msg: impl std::fmt::Display) -> ToolOutcome {
     ToolOutcome {
         result: format!("Error: {msg}"),
-        summary,
+        // The user sees this line: it must not look like the change was proposed.
+        summary: format!("Failed: {summary}"),
     }
+}
+
+/// Added to "does not exist" errors: small models shorten paths or invent them.
+const PATH_HINT: &str = ". Use the full vault-relative path exactly as list_folder shows it";
+
+/// A note moved to a path without `.md` would become a file with that name ("vendors").
+fn extension_problem(from: &str, to: &str) -> Option<String> {
+    let note = from.to_lowercase().ends_with(".md");
+    (note && !to.to_lowercase().ends_with(".md")).then(|| {
+        let name = from.rsplit('/').next().unwrap_or(from);
+        format!(
+            "'to' must be the complete new path including the file name, for example '{}/{name}'; '{to}' would turn the note into a file called '{to}'",
+            to.trim_end_matches('/')
+        )
+    })
 }
 
 fn truncate(s: &str, max: usize) -> String {
@@ -193,6 +230,7 @@ pub fn describe_call(call: &ToolCall) -> String {
         "propose_create" => format!("Preparing a new note {}", or("path", "")),
         "propose_move" => format!("Preparing to move {}", or("from", "a note")),
         "propose_delete" => format!("Preparing to delete {}", or("path", "a note")),
+        "propose_move_many" => "Preparing to move several notes".to_string(),
         "propose_merge" => format!(
             "Preparing to merge into {}",
             or("target_path", "a new note")
@@ -303,6 +341,30 @@ pub fn execute(
                 Ok(a) => a,
                 Err(e) => return err(summary, e),
             };
+            if args.get("recursive").and_then(Value::as_bool) == Some(true) {
+                let prefix = if path.is_empty() {
+                    scope.map(|s| format!("{}/", s.trim_matches('/'))).unwrap_or_default()
+                } else {
+                    format!("{}/", path.trim_matches('/'))
+                };
+                let found: Vec<String> = tree::list_files(&v.root)
+                    .into_iter()
+                    .filter(|f| f.to_lowercase().ends_with(".md") && f.starts_with(&prefix))
+                    .collect();
+                let total = found.len();
+                let mut lines: Vec<String> = found.into_iter().take(RECURSIVE_LIMIT).collect();
+                if total > RECURSIVE_LIMIT {
+                    lines.push(format!("(… {} more notes not shown)", total - RECURSIVE_LIMIT));
+                }
+                return ToolOutcome {
+                    result: if lines.is_empty() {
+                        "(no notes)".into()
+                    } else {
+                        format!("{total} notes:\n{}", lines.join("\n"))
+                    },
+                    summary,
+                };
+            }
             let mut dirs = Vec::new();
             let mut notes = Vec::new();
             if let Ok(rd) = std::fs::read_dir(&abs) {
@@ -388,6 +450,9 @@ pub fn execute(
                 return missing("from/to");
             };
             let summary = format!("Proposed move {from} → {to}");
+            if let Some(problem) = extension_problem(from, to) {
+                return err(summary, problem);
+            }
             let (a, b) = match (
                 paths::resolve(&v.root, from, scope),
                 paths::resolve(&v.root, to, scope),
@@ -396,7 +461,7 @@ pub fn execute(
                 (Err(e), _) | (_, Err(e)) => return err(summary, e),
             };
             if !a.exists() {
-                return err(summary, format!("{from} does not exist"));
+                return err(summary, format!("{from} does not exist{PATH_HINT}"));
             }
             if b.exists() {
                 return err(summary, format!("{to} already exists"));
@@ -416,6 +481,7 @@ pub fn execute(
             )
         }
         "propose_merge" => merge(v, scope, set, &args),
+        "propose_move_many" => move_many(v, scope, set, &args),
         "write_research_prompt" => match research_card(call) {
             Ok(card) => ToolOutcome {
                 result: "The research prompt was shown to the user as a card with a Copy button, and a Send to Raven button when the user has the Raven tab. Tell the user in one or two sentences to take it to a cloud AI with internet access (Raven, or any other) and to bring the answer back, with Save as note in Raven or Import answer. Do not repeat the prompt.".into(),
@@ -433,7 +499,7 @@ pub fn execute(
                 Err(e) => return err(summary, e),
             };
             if !abs.exists() {
-                return err(summary, format!("{path} does not exist"));
+                return err(summary, format!("{path} does not exist{PATH_HINT}"));
             }
             let original = std::fs::read(&abs)
                 .ok()
@@ -453,6 +519,88 @@ pub fn execute(
             format!("Unknown tool {other}"),
             format!("unknown tool '{other}'"),
         ),
+    }
+}
+
+/// Most notes listed by a recursive `list_folder`.
+const RECURSIVE_LIMIT: usize = 400;
+
+/// Most moves accepted by one `propose_move_many` call.
+const MOVE_MANY_LIMIT: usize = 60;
+
+/// `propose_move_many`: queues every valid move and lists the ones that were refused, so the
+/// model can fix just those.
+fn move_many(
+    v: &OpenVault,
+    scope: Option<&str>,
+    set: &mut ProposalSet,
+    args: &Value,
+) -> ToolOutcome {
+    let Some(moves) = args.get("moves").and_then(Value::as_array) else {
+        return err(
+            "propose_move_many failed".into(),
+            "missing required argument 'moves' (a list of {from, to})",
+        );
+    };
+    let reason = arg(args, "reason");
+    let mut queued = 0usize;
+    let mut refused: Vec<String> = Vec::new();
+    let mut targets: std::collections::HashSet<String> = std::collections::HashSet::new();
+    for m in moves.iter().take(MOVE_MANY_LIMIT) {
+        let (Some(from), Some(to)) = (arg(m, "from"), arg(m, "to")) else {
+            refused.push("an entry without from/to".into());
+            continue;
+        };
+        if let Some(problem) = extension_problem(from, to) {
+            refused.push(format!("{from} → {to}: {problem}"));
+            continue;
+        }
+        let (a, b) = match (
+            paths::resolve(&v.root, from, scope),
+            paths::resolve(&v.root, to, scope),
+        ) {
+            (Ok(a), Ok(b)) => (a, b),
+            (Err(e), _) | (_, Err(e)) => {
+                refused.push(format!("{from} → {to}: {e}"));
+                continue;
+            }
+        };
+        if !a.exists() {
+            refused.push(format!("{from} does not exist{PATH_HINT}"));
+        } else if b.exists() || !targets.insert(to.to_lowercase()) {
+            refused.push(format!(
+                "{to} already exists or is used twice; choose another name"
+            ));
+        } else {
+            let original = std::fs::read(&a)
+                .ok()
+                .map(|b| String::from_utf8_lossy(&b).into_owned());
+            queue(
+                set,
+                ProposalAction::Move,
+                from,
+                Some(to),
+                None,
+                original,
+                reason,
+                String::new(),
+            );
+            queued += 1;
+        }
+    }
+    if moves.len() > MOVE_MANY_LIMIT {
+        refused.push(format!(
+            "only the first {MOVE_MANY_LIMIT} moves were read; send the other {} in another call",
+            moves.len() - MOVE_MANY_LIMIT
+        ));
+    }
+    let mut result = format!("Queued {queued} move(s) for the user to review (nothing is moved until the user applies them).");
+    if !refused.is_empty() {
+        result.push_str(&format!("\nNot queued:\n- {}", refused.join("\n- ")));
+    }
+    ToolOutcome {
+        result,
+        summary: format!("Proposed moving {queued} notes"),
     }
 }
 
@@ -496,7 +644,7 @@ fn merge(v: &OpenVault, scope: Option<&str>, set: &mut ProposalSet, args: &Value
         };
         match std::fs::read(&abs) {
             Ok(bytes) => originals.push((source, String::from_utf8_lossy(&bytes).into_owned())),
-            Err(_) => return err(summary, format!("{source} does not exist")),
+            Err(_) => return err(summary, format!("{source} does not exist{PATH_HINT}")),
         }
     }
     let reason = arg(args, "reason");
@@ -848,5 +996,119 @@ mod tests {
         );
         assert!(r.result.starts_with("Error:"));
         assert!(set.proposals.is_empty());
+    }
+
+    #[test]
+    fn move_many_queues_valid_moves_and_lists_the_refused_ones() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        ops::write_note(&v, "In/a.md", "a").unwrap();
+        ops::write_note(&v, "In/b.md", "b").unwrap();
+        ops::write_note(&v, "In/c.md", "c").unwrap();
+        let mut set = ProposalSet::new(None);
+        let r = execute(
+            &v,
+            None,
+            &mut set,
+            &call(
+                "propose_move_many",
+                json!({"moves": [
+                    {"from": "In/a.md", "to": "New folder/a.md"},
+                    {"from": "In/b.md", "to": "New folder/a.md"},
+                    {"from": "In/missing.md", "to": "X/m.md"},
+                    {"from": "In/c.md", "to": "Other/c.md"}
+                ], "reason": "sort"}),
+            ),
+        );
+        assert_eq!(set.proposals.len(), 2, "{}", r.result);
+        assert!(r.result.contains("Queued 2 move(s)"));
+        assert!(r.result.contains("used twice"));
+        assert!(r.result.contains("In/missing.md does not exist"));
+        assert!(
+            d.path().join("In/a.md").exists(),
+            "nothing is moved by the tool"
+        );
+        let bad = execute(
+            &v,
+            None,
+            &mut set,
+            &call("propose_move_many", json!({"reason": "r"})),
+        );
+        assert!(bad.result.starts_with("Error:"));
+    }
+
+    #[test]
+    fn recursive_list_shows_all_notes_below_a_folder_and_respects_scope() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        ops::write_note(&v, "Imp/a.md", "a").unwrap();
+        ops::write_note(&v, "Imp/Sub/b.md", "b").unwrap();
+        ops::write_note(&v, "Imp/Sub/Deep/c.md", "c").unwrap();
+        ops::write_note(&v, "Other/x.md", "x").unwrap();
+        let mut set = ProposalSet::new(None);
+        let r = execute(
+            &v,
+            None,
+            &mut set,
+            &call("list_folder", json!({"path": "Imp", "recursive": true})),
+        );
+        assert!(r.result.starts_with("3 notes:"), "{}", r.result);
+        assert!(r.result.contains("Imp/Sub/Deep/c.md"));
+        assert!(!r.result.contains("Other/x.md"));
+        let scoped = execute(
+            &v,
+            Some("Imp"),
+            &mut set,
+            &call("list_folder", json!({"path": "", "recursive": true})),
+        );
+        assert!(scoped.result.starts_with("3 notes:"), "{}", scoped.result);
+        let out = execute(
+            &v,
+            Some("Imp"),
+            &mut set,
+            &call("list_folder", json!({"path": "Other", "recursive": true})),
+        );
+        assert!(out.result.starts_with("Error:"));
+    }
+
+    #[test]
+    fn a_move_to_a_folder_name_without_the_file_name_is_refused() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        ops::write_note(&v, "In/a.md", "a").unwrap();
+        let mut set = ProposalSet::new(None);
+        let one = execute(
+            &v,
+            None,
+            &mut set,
+            &call(
+                "propose_move",
+                json!({"from": "In/a.md", "to": "vendors", "reason": "r"}),
+            ),
+        );
+        assert!(one.result.contains("'vendors/a.md'"), "{}", one.result);
+        assert!(one.summary.starts_with("Failed:"));
+        let many = execute(
+            &v,
+            None,
+            &mut set,
+            &call(
+                "propose_move_many",
+                json!({"moves": [{"from": "In/a.md", "to": "vendors"}], "reason": "r"}),
+            ),
+        );
+        assert!(many.result.contains("Queued 0 move(s)"));
+        assert!(many.result.contains("complete new path"));
+        assert!(set.proposals.is_empty());
+        let missing = execute(
+            &v,
+            None,
+            &mut set,
+            &call(
+                "propose_move",
+                json!({"from": "a.md", "to": "X/a.md", "reason": "r"}),
+            ),
+        );
+        assert!(missing.result.contains("exactly as list_folder shows it"));
     }
 }

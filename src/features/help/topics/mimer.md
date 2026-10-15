@@ -8,7 +8,7 @@
 
 - Keep **Include current note** ticked to let Mimer see the note you have open.
 - Type **/** in the message box and pick a note, or click the **paperclip**. The note becomes a chip above the box. Attach up to five notes. Remove one with the **×**.
-- You can also attach a **whole folder or project**: folders are in the same list, with a folder icon and a note count. Mimer then works on the notes in it (the first 40, each shortened if very long).
+- You can also attach a **whole folder or project**: folders are in the same list, with a folder icon and a note count. Mimer then works on the notes in it. A folder of up to 12 notes is attached with its text (each shortened if very long). A bigger folder is attached as a list of its note names only, and Mimer reads the notes it needs. To sort a big folder, attach it and ask Mimer to organise it: Mimer proposes the moves (new folders are made by moving notes into them), and you apply them in the review.
 - In a project, only notes inside the project are offered.
 
 ## Review what Mimer proposes

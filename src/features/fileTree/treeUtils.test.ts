@@ -13,6 +13,7 @@ import {
   sortTree,
   topLevelPaths,
   withoutFolders,
+  withoutImages,
 } from "./treeUtils";
 
 const file = (path: string, modified = 0): TreeNode => ({
@@ -196,5 +197,24 @@ describe("my own order", () => {
   it("visibleNames lists a folder as the tree shows it", () => {
     expect(visibleNames(vault, { Work: ["z.md"] }, "Work")).toEqual(["z.md", "x.md", "y.md"]);
     expect(visibleNames(vault, {}, "")).toEqual(["Archive", "Work", "Home.md"]);
+  });
+});
+
+describe("withoutImages", () => {
+  it("hides pictures and folders that only held pictures, keeps notes and empty folders", () => {
+    const imported = [
+      dir("Imported/Notebook", [
+        file("Imported/Notebook/Page.md"),
+        file("Imported/Notebook/doc.pdf"),
+        dir("Imported/Notebook/images", [
+          file("Imported/Notebook/images/a.png"),
+          file("Imported/Notebook/images/b.JPG"),
+        ]),
+        dir("Imported/Notebook/Empty", []),
+      ]),
+    ];
+    const got = withoutImages(imported);
+    const names = (got[0]?.children ?? []).map((n) => n.name);
+    expect(names).toEqual(["Page.md", "doc.pdf", "Empty"]);
   });
 });
