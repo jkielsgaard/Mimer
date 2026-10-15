@@ -239,7 +239,8 @@ mod tests {
         let d = tempfile::tempdir().unwrap();
         let other = "9f6c1e2a-1111-4222-8333-444455556666";
         save(d.path(), chat(ID, vec![msg(1, ChatRole::User, "old")])).unwrap();
-        std::thread::sleep(std::time::Duration::from_millis(5));
+        // `updated_at` has a resolution of one second, so the chats need different seconds.
+        std::thread::sleep(std::time::Duration::from_millis(1100));
         save(d.path(), chat(other, vec![msg(1, ChatRole::User, "new")])).unwrap();
         std::fs::write(d.path().join(DIR).join("broken.json"), "{not json").unwrap();
         let list = list(d.path());
