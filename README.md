@@ -33,6 +33,10 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
 - Projects: a folder with its own AI instructions and its own tree
 - Import from a folder (for example a OneNote export) and export to HTML, Word and PDF
 
+## Language
+
+The app itself (menus, buttons, help and documentation) is in **English**. The AI answers in the language you write in, so you can write your notes and talk to Mimer in your own language. How well it does that depends on the model you choose. The built-in models (Gemma 4) have been tried by the author in both **Danish and English** and work as expected. Other languages, and models you add yourself, may vary.
+
 ## Install
 
 Download the build for your system from the **Releases** page. There are builds for Windows and Linux. A macOS build is not made for now, because it cannot be tested.
