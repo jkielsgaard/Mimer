@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-10-15
+
 ### Changed
 
 - **The built-in AI is Mimer's provider from the start** on a fresh install (where it can be downloaded: Windows and Linux, not the Store version). LM Studio and other local providers are still there to choose under Settings → AI → Mimer's provider, and a cloud AI is only for Raven. Existing settings are not changed. The settings and the help now say plainly that Raven needs a cloud AI, because LM Studio and the built-in AI cannot search the internet.
