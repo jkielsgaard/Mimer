@@ -1127,6 +1127,8 @@ mod tests {
     /// provider settings, and puts it to sleep (not run by default). Needs `MIMER_TEST_ENGINE_DIR`
     /// (an unpacked Vulkan or CPU engine) and `MIMER_TEST_MODEL` (a .gguf file):
     /// `cargo test engine::service::tests::real_wake -- --ignored --nocapture`.
+    // Uses symbolic links to put the engine and model in place, so it is for Linux only.
+    #[cfg(unix)]
     #[tokio::test(flavor = "multi_thread")]
     #[ignore = "needs a downloaded engine and model"]
     async fn real_wake_chat_and_sleep_through_the_service() {
