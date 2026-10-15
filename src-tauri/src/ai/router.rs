@@ -108,6 +108,8 @@ mod tests {
 
     fn settings() -> Settings {
         let mut s = Settings::default();
+        // These tests are about choosing between providers, not about what a fresh install uses.
+        s.ai.default_provider_id = "lmstudio-default".into();
         s.ai.providers.push(ProviderConfig {
             id: "cloud".into(),
             kind: ProviderKind::Anthropic,

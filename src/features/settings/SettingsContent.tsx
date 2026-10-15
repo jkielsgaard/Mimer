@@ -318,8 +318,10 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                   ))}
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  What you type in Raven is sent to that provider. Add a cloud provider under AI
-                  providers first.
+                  Raven is for knowledge from the internet, so it needs a <strong>cloud</strong> AI.
+                  LM Studio and the built-in AI run on this computer and cannot search the internet,
+                  so they cannot be used here. What you type in Raven is sent to the cloud provider.
+                  Add one under AI providers first.
                 </p>
               </div>
               <MimerInstructionSettings draft={draft} onChange={setDraft} />

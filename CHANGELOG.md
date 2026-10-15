@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The built-in AI is Mimer's provider from the start** on a fresh install (where it can be downloaded: Windows and Linux, not the Store version). LM Studio and other local providers are still there to choose under Settings → AI → Mimer's provider, and a cloud AI is only for Raven. Existing settings are not changed. The settings and the help now say plainly that Raven needs a cloud AI, because LM Studio and the built-in AI cannot search the internet.
 - The message about a missing Windows runtime now says to install the **64-bit (x64)** Visual C++ Redistributable, not x86, gives the direct link, and names the files that come with it (`vcruntime140_1.dll`, `msvcp140.dll`).
 - The Store package is called **Mimer: Markdown Notes** (the name reserved in Partner Center); the tile and the Start menu show the short name Mimer.
 

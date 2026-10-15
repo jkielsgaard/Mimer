@@ -1,6 +1,6 @@
 ## The built-in AI
 
-Mimer can run its own AI **on this computer**, so you do not need LM Studio. Your notes never leave the computer.
+Mimer can run its own AI **on this computer**, so you do not need LM Studio. Your notes never leave the computer. The built-in AI is what Mimer uses from the start. You can choose LM Studio instead under **Settings → AI → Mimer's provider**, and a cloud AI is only for **Raven**, which cannot see your notes.
 
 ## Set it up
 

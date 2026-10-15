@@ -265,10 +265,22 @@ pub struct AiSettings {
     pub builtin: BuiltInSettings,
 }
 
+/// The provider Mimer uses when nothing has been chosen: the built-in AI where it can be
+/// downloaded (Windows and Linux, not the Store build), otherwise LM Studio.
+fn preferred_default_provider() -> &'static str {
+    if crate::engine::hardware::current_os() != crate::engine::hardware::Os::Unsupported
+        && crate::engine::catalog::unavailable_reason().is_none()
+    {
+        crate::engine::BUILTIN_ID
+    } else {
+        "lmstudio-default"
+    }
+}
+
 impl Default for AiSettings {
     fn default() -> Self {
         Self {
-            default_provider_id: "lmstudio-default".into(),
+            default_provider_id: preferred_default_provider().into(),
             raven_provider_id: None,
             base_instruction: String::new(),
             allow_own_knowledge: false,
@@ -276,6 +288,7 @@ impl Default for AiSettings {
             embeddings: EmbeddingSettings::default(),
             builtin: BuiltInSettings::default(),
             providers: vec![
+                builtin_provider(BuiltInSettings::default().context_tokens),
                 ProviderConfig {
                     id: "lmstudio-default".into(),
                     kind: ProviderKind::LmStudio,
@@ -286,7 +299,6 @@ impl Default for AiSettings {
                     supports_tools: true,
                     context_tokens: 16000,
                 },
-                builtin_provider(BuiltInSettings::default().context_tokens),
             ],
         }
     }
@@ -626,7 +638,10 @@ mod tests {
         ));
         s.ai.default_provider_id = "claude".into();
         s.normalize();
-        assert_eq!(s.ai.default_provider_id, "lmstudio-default");
+        // A local provider takes its place (the first one in the list).
+        assert!(s
+            .provider(&s.ai.default_provider_id)
+            .is_some_and(|p| p.effective_location() == Location::Local));
         assert_eq!(s.ai.raven_provider_id.as_deref(), Some("claude"));
     }
 
@@ -676,5 +691,24 @@ mod tests {
         s.ai.embeddings.provider_id = "far".into();
         s.normalize();
         assert!(!s.ai.embeddings.enabled);
+    }
+
+    #[test]
+    fn a_fresh_install_uses_the_built_in_ai_where_it_can_be_downloaded() {
+        let s = Settings::default();
+        let can_download = crate::engine::hardware::current_os()
+            != crate::engine::hardware::Os::Unsupported
+            && crate::engine::catalog::unavailable_reason().is_none();
+        let expected = if can_download {
+            "builtin"
+        } else {
+            "lmstudio-default"
+        };
+        assert_eq!(s.ai.default_provider_id, expected);
+        // LM Studio is still there to choose, and both are local, so notes stay on this computer.
+        assert!(s.provider("lmstudio-default").is_some());
+        assert!(s.provider("builtin").is_some());
+        // Raven is off: it needs a cloud provider, which neither of these is.
+        assert_eq!(s.ai.raven_provider_id, None);
     }
 }

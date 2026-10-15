@@ -6,7 +6,7 @@ Raven is named after Odin's two ravens, who fly out into the world and come back
 
 ## Turn it on
 
-The Raven tab is only there when you have chosen a cloud AI for it:
+Raven needs a **cloud** AI, because it is meant for knowledge from the internet. LM Studio and the built-in AI run on your computer and cannot search the internet, so they cannot be used for Raven. The Raven tab is only there when you have chosen a cloud AI for it:
 
 1. **Settings → AI providers**: add an **Anthropic** or **OpenAI-compatible** provider with an address that is not on your computer, and store its API key.
 2. **Settings → AI → Raven's provider (cloud AI)**: choose it. Choose **Off** to hide the tab again.
