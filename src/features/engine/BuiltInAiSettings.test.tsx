@@ -169,4 +169,16 @@ describe("Settings → Built-in AI", () => {
     await user.click(screen.getByLabelText(/Let the model think/));
     expect((onChange.mock.calls.at(-1)?.[0] as Settings).ai.builtin.thinking).toBe(true);
   });
+
+  it("in the Microsoft Store version it only says that the built-in AI is not available", () => {
+    useEngineStore.setState({
+      catalog: {
+        ...CATALOG,
+        unavailableReason: "The Microsoft Store version of Mimer does not download an engine.",
+      },
+    });
+    render(<BuiltInAiSettings draft={settings()} onChange={onChange} />);
+    expect(screen.getByTestId("engine-unavailable")).toHaveTextContent("Microsoft Store version");
+    expect(screen.queryByRole("button", { name: "Download" })).toBeNull();
+  });
 });

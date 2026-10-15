@@ -6,4 +6,8 @@ import type { Os } from "./Os";
 /**
  * Everything that can be downloaded on this operating system.
  */
-export type Catalog = { engineBuild: string, os: Os, backends: Array<BackendInfo>, models: Array<ModelInfo>, };
+export type Catalog = { engineBuild: string, os: Os, backends: Array<BackendInfo>, models: Array<ModelInfo>, 
+/**
+ * Set when the built-in AI cannot be downloaded in this version of Mimer, and why.
+ */
+unavailableReason: string | null, };

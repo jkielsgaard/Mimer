@@ -71,3 +71,12 @@ jobs:
       - name: Compile and lint the Rust code on Windows
         working-directory: src-tauri
         run: cargo clippy --all-targets -- -D warnings
+
+      # The Microsoft Store package: pack a stand-in program with the real manifest and logos and
+      # sign it with a test certificate. makeappx rejects a manifest that is wrong, so a mistake in
+      # the manifest or the script shows up here and not at the first release.
+      - name: Check the Microsoft Store package script
+        shell: pwsh
+        run: |
+          ./scripts/msix/Build-Msix.ps1 -Version 0.0.1 -Exe "$env:SystemRoot\System32\notepad.exe" -TestSign
+          Get-ChildItem msix-out -Filter *.msix | ForEach-Object { Write-Host $_.Name $_.Length }

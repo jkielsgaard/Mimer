@@ -37,7 +37,7 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
 
 Download the build for your system from the **Releases** page. There are builds for Windows and Linux. A macOS build is not made for now, because it cannot be tested.
 
-- **Windows 10/11:** run `Mimer_<version>_x64-setup.exe`. It installs for the current user and does not need administrator rights. The installer is not signed, so Windows SmartScreen may warn you: choose **More info → Run anyway**.
+- **Windows 10/11:** run `Mimer_<version>_x64-setup.exe` (a Microsoft Store version is being prepared; see [docs/MSIX.md](docs/MSIX.md)). It installs for the current user and does not need administrator rights. The installer is not signed, so Windows SmartScreen may warn you: choose **More info → Run anyway**.
 - **Linux:** run the `.AppImage` (`chmod +x Mimer_*.AppImage && ./Mimer_*.AppImage`), or install the `.rpm` / `.deb`.
 
 ## Set up the AI
@@ -69,7 +69,7 @@ pnpm tauri build      # build an installer for the current system
 pnpm check            # everything CI runs: format, lint, types, tests, clippy
 ```
 
-Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v0.8.0` makes GitHub Actions build the installers (`.github/workflows/release.yml`).
+Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v0.8.1` makes GitHub Actions build the installers (`.github/workflows/release.yml`).
 
 ## More
 

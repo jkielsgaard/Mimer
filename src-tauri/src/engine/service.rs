@@ -322,6 +322,9 @@ fn install_problem(e: &AppError) -> Problem {
 /// Starts downloading the engine and the model the user chose. Returns at once; progress and
 /// problems arrive through the status.
 pub fn start_install<R: Runtime>(app: &AppHandle<R>, req: InstallRequest) -> AppResult<()> {
+    if let Some(reason) = catalog::unavailable_reason() {
+        return Err(AppError::Settings(reason));
+    }
     let os = current_os();
     if os == Os::Unsupported {
         return Err(AppError::Settings(

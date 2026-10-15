@@ -90,6 +90,17 @@ export function BuiltInAiSettings({ draft, onChange }: Props) {
   if (!catalog || !status) {
     return <p className="text-sm text-muted-foreground">Loading…</p>;
   }
+  if (catalog.unavailableReason) {
+    return (
+      <p
+        role="note"
+        className="rounded border bg-muted/50 p-3 text-sm"
+        data-testid="engine-unavailable"
+      >
+        {catalog.unavailableReason}
+      </p>
+    );
+  }
   if (catalog.backends.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">

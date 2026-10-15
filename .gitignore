@@ -1,4 +1,5 @@
 node_modules
+msix-out
 dist
 .DS_Store
 *.log

@@ -12,6 +12,7 @@ import { ProblemPanel } from "./ProblemPanel";
  */
 export function EngineBar() {
   const status = useEngineStore((s) => s.status);
+  const unavailable = useEngineStore((s) => s.catalog?.unavailableReason);
   const wake = useEngineStore((s) => s.wake);
   const sleep = useEngineStore((s) => s.sleep);
   const cancelInstall = useEngineStore((s) => s.cancelInstall);
@@ -61,6 +62,9 @@ export function EngineBar() {
 
   switch (status.state) {
     case "notInstalled":
+      if (unavailable) {
+        return bar(<span className="min-w-0 flex-1">{unavailable}</span>);
+      }
       return bar(
         <>
           <span className="min-w-0 flex-1">

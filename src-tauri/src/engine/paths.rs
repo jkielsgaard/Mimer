@@ -56,14 +56,32 @@ pub fn choose_root(install_dir: Option<&Path>, data_dir: &Path) -> (PathBuf, Opt
     (data_dir.join(FOLDER), None)
 }
 
+/// True when `exe` lives in a Microsoft Store (MSIX) package folder (`...\WindowsApps\...`).
+/// Such a program folder is read-only, and the package's data is removed when the app is.
+pub fn is_packaged_path(exe: &Path) -> bool {
+    // Split on both kinds of slash so a Windows path is recognised wherever this runs.
+    exe.to_string_lossy()
+        .split(['/', '\\'])
+        .any(|part| part.eq_ignore_ascii_case("WindowsApps"))
+}
+
+/// True when Mimer runs as a Microsoft Store package.
+pub fn is_packaged() -> bool {
+    cfg!(windows)
+        && std::env::current_exe()
+            .ok()
+            .is_some_and(|p| is_packaged_path(&p))
+}
+
 /// The folders for this computer. Does not create them.
 pub fn dirs<R: Runtime>(app: &AppHandle<R>) -> AppResult<Dirs> {
     let data = app
         .path()
         .app_data_dir()
         .map_err(|e| AppError::Io(format!("Cannot find the user data folder: {e}")))?;
-    // Only a release build on Windows lives in its own program folder.
-    let install = if cfg!(windows) && !cfg!(debug_assertions) {
+    // Only a release build on Windows lives in its own program folder. A Store package does not:
+    // its program folder is read-only, so the data folder is used, and it goes with the app.
+    let install = if cfg!(windows) && !cfg!(debug_assertions) && !is_packaged() {
         std::env::current_exe()
             .ok()
             .and_then(|p| p.parent().map(Path::to_path_buf))
@@ -114,6 +132,20 @@ mod tests {
         assert_eq!(root, install.path().join(FOLDER));
         assert!(note.is_none());
         assert!(root.is_dir());
+    }
+
+    #[test]
+    fn a_store_package_folder_is_recognised() {
+        assert!(is_packaged_path(Path::new(
+            r"C:\Program Files\WindowsApps\Jkielsgaard.Mimer_0.8.1.0_x64__abc\mimer.exe"
+        )));
+        assert!(is_packaged_path(Path::new(
+            "/x/windowsapps/Mimer/mimer.exe"
+        )));
+        assert!(!is_packaged_path(Path::new(
+            r"C:\Users\me\AppData\Local\Mimer\mimer.exe"
+        )));
+        assert!(!is_packaged_path(Path::new("/usr/bin/mimer")));
     }
 
     #[test]

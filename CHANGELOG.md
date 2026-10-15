@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-10-15
+
+### Added
+
+- **A Microsoft Store package (MSIX).** `scripts/msix/Build-Msix.ps1` makes the package from the Windows release build: the manifest, the logos and `makeappx`. With `-TestSign` it also makes a copy signed with a test certificate, with `Install-TestMsix.ps1` and a Windows Sandbox file (`mimer-sandbox.wsb`) to try it on a clean Windows. The package Microsoft wants is unsigned: the Store signs it itself, so no certificate is needed and Windows shows no "unknown publisher" warning. The release workflow builds it as an artifact (`mimer-msix`) without ever failing the release, and CI packs and signs a stand-in program with the real manifest, so a mistake shows early. How to reserve the name, build, test and submit is in `docs/MSIX.md`.
+- A **privacy policy** (`PRIVACY.md`), which the Store listing needs.
+
+### Changed
+
+- When Mimer runs as a Store package it keeps the built-in AI files in the user's data folder (the program folder is read-only), which goes away with the app. **The built-in AI cannot be downloaded in the Store version** until the Store's rules about apps that download programs have been checked (`ENGINE_DOWNLOAD_IN_STORE_BUILD`); the settings say so and LM Studio works as before.
+
 ## [0.8.0] - 2026-10-15
 
 ### Added

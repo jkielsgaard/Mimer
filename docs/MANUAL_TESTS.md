@@ -419,3 +419,15 @@ Run on each combination you can. Only Linux with an AMD graphics card (Vulkan) h
 - [ ] Drag a project onto a folder: a dialog says a project stays in the vault root. Nothing moved.
 - [ ] Rename a project's folder: the project follows (also its name when it matched). Drag notes and folders onto the project: they move into it.
 - [ ] A vault with a project made in an older version inside a folder still opens, and the project still works. It can be moved to the root.
+
+### 39. The Microsoft Store package (0.8.1)
+
+Needs Windows (a virtual machine or Windows Sandbox). See docs/MSIX.md.
+
+- [ ] `Build-Msix.ps1 -Version 0.8.1 -TestSign` runs without errors and makes `Mimer_0.8.1.0_x64.msix`, the `_test.msix`, `mimer-test.cer` and `Install-TestMsix.ps1` in `msix-out`.
+- [ ] Windows Sandbox: edit `HostFolder` in `mimer-sandbox.wsb`, double-click it. Mimer is installed and starts from the Start menu, with the new icon.
+- [ ] In the Store build: open a folder as a vault, write and save a note (`Ctrl+S`), check **History**, and restart Mimer: the settings and the recent vaults are kept.
+- [ ] **Settings → Built-in AI** says that the built-in AI is not available in the Store version, and the Mimer tab bar says so too. LM Studio (if installed in the sandbox or reachable) works as the AI.
+- [ ] Uninstall from Windows Settings → Apps: Mimer is gone, and the notes folder you opened is untouched.
+- [ ] The workflow's `mimer-msix` artifact contains the unsigned `Mimer_<version>_x64.msix` after a tag is built.
+- [ ] The Microsoft Store app opens on the computer where you want to use Mimer (an organisation may block it).

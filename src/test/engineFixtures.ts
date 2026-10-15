@@ -31,6 +31,7 @@ export function engineStatus(patch: Partial<EngineStatus> = {}): EngineStatus {
 }
 
 export const CATALOG: Catalog = {
+  unavailableReason: null,
   engineBuild: "b11636",
   os: "linux",
   backends: [

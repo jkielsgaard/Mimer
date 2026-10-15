@@ -1,0 +1,19 @@
+<!--
+  Windows Sandbox: a clean, throw-away Windows to try the Store package in.
+  1. Build the test package (Build-Msix.ps1 -TestSign), which makes the msix-out folder.
+  2. Change the HostFolder below to the full path of that msix-out folder.
+  3. Double-click this file. The sandbox installs Mimer and you can start it from the Start menu.
+  Nothing stays on your computer when you close the sandbox window.
+-->
+<Configuration>
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>C:\path\to\Mimer\msix-out</HostFolder>
+      <SandboxFolder>C:\Msix</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+  <LogonCommand>
+    <Command>powershell.exe -ExecutionPolicy Bypass -NoExit -File C:\Msix\Install-TestMsix.ps1</Command>
+  </LogonCommand>
+</Configuration>

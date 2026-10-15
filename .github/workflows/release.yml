@@ -53,3 +53,25 @@ jobs:
           releaseDraft: true
           prerelease: true
           args: ${{ matrix.args }}
+
+      # The Microsoft Store package (see docs/MSIX.md). It must never fail the release, so any
+      # problem here only shows up as a failed step.
+      - name: Build the Microsoft Store package (MSIX)
+        if: matrix.platform == 'windows-latest'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          ./scripts/msix/Build-Msix.ps1 -Version "${{ github.ref_name }}" `
+            -IdentityName "${{ vars.MSIX_IDENTITY_NAME || 'Jkielsgaard.Mimer' }}" `
+            -Publisher "${{ vars.MSIX_PUBLISHER || 'CN=00000000-0000-0000-0000-000000000000' }}" `
+            -PublisherDisplayName "${{ vars.MSIX_PUBLISHER_DISPLAY_NAME || 'Jesper Ahasverusen Kielsgaard' }}"
+
+      - name: Keep the Microsoft Store package
+        if: matrix.platform == 'windows-latest'
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: mimer-msix
+          path: |
+            msix-out/*.msix
+          if-no-files-found: warn

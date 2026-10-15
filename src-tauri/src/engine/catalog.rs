@@ -291,11 +291,29 @@ pub struct Catalog {
     pub os: Os,
     pub backends: Vec<BackendInfo>,
     pub models: Vec<ModelInfo>,
+    /// Set when the built-in AI cannot be downloaded in this version of Mimer, and why.
+    pub unavailable_reason: Option<String>,
+}
+
+/// Whether the Microsoft Store (MSIX) build may download and run the engine. Off until the Store's
+/// rules about apps that download programs have been checked (see docs/DECISIONS.md).
+pub const ENGINE_DOWNLOAD_IN_STORE_BUILD: bool = false;
+
+/// Why the built-in AI cannot be downloaded here, or `None` when it can.
+pub fn unavailable_reason() -> Option<String> {
+    if super::paths::is_packaged() && !ENGINE_DOWNLOAD_IN_STORE_BUILD {
+        return Some(
+            "The Microsoft Store version of Mimer does not download and run an engine. Use LM Studio, or install Mimer from GitHub to use the built-in AI."
+                .into(),
+        );
+    }
+    None
 }
 
 /// The catalog for this operating system.
 pub fn catalog() -> Catalog {
     Catalog {
+        unavailable_reason: unavailable_reason(),
         engine_build: ENGINE_BUILD.into(),
         os: current_os(),
         backends: backends(current_os()),
