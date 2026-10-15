@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.4] - 2026-10-15
+
+### Fixed
+
+- **Links and the report button gave "not allowed to open"**: the app was not allowed to open any web address. Web links in notes and **Report inappropriate AI content** now open in the browser (http, https, mailto and tel only).
+
 ## [0.8.3] - 2026-10-15
 
 ### Added
