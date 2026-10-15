@@ -1,0 +1,31 @@
+## The toolbar
+
+Above every note is a toolbar. Select some text and click a button, or click first and type after. Clicking the same button again removes the formatting.
+
+- **Text:** bold, italic, strikethrough, inline code.
+- **Headings:** H1, H2, H3. Click the same heading again to go back to normal text.
+- **Lists:** bullet list, numbered list, task list (with check boxes), quote.
+- **Link** and **Link to a note** (see _Links and index pages_).
+- **Table**, **Insert image**, **Code block**, **Horizontal line**.
+
+## You do not have to know Markdown
+
+Mimer shows your note nicely while you write: `**bold**` appears bold, and the marks are hidden when the cursor leaves the line. The buttons add the marks for you.
+
+| You type     | You get                       |
+| ------------ | ----------------------------- |
+| `# Title`    | a big heading                 |
+| `**word**`   | **bold**                      |
+| `_word_`     | _italic_                      |
+| `- item`     | a bullet list                 |
+| `- [ ] task` | a task you can tick           |
+| `> quote`    | a quote                       |
+| `#tag`       | a tag you can click to search |
+
+## Tables
+
+Click **Insert table** (or press **Ctrl/Cmd+Alt+T**). Click in a cell and type. A toolbar above the table adds or removes rows and columns and sets alignment. Press **Tab** to go to the next cell.
+
+## Tabs and two notes side by side
+
+Every note you open gets a tab. Close with the **×** or **Ctrl/Cmd+W**. Press *_Ctrl/Cmd+\*_ to show two notes next to each other.

@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.2 0.01 270);
+  --card: oklch(1 0 0);
+  --muted: oklch(0.96 0.005 270);
+  --muted-foreground: oklch(0.5 0.02 270);
+  --border: oklch(0.9 0.008 270);
+  --input: oklch(0.88 0.01 270);
+  --primary: oklch(0.52 0.2 285);
+  --primary-foreground: oklch(0.99 0 0);
+  --accent: oklch(0.94 0.02 285);
+  --accent-foreground: oklch(0.3 0.1 285);
+  --destructive: oklch(0.56 0.22 27);
+  --success: oklch(0.55 0.15 150);
+  --warning: oklch(0.75 0.15 80);
+  --ring: oklch(0.52 0.2 285);
+  --sidebar: oklch(0.97 0.004 270);
+  --editor-font-size: 15px;
+  --editor-line-width: 760px;
+  color-scheme: light;
+}
+
+.dark {
+  --background: oklch(0.2 0.012 270);
+  --foreground: oklch(0.92 0.01 270);
+  --card: oklch(0.24 0.014 270);
+  --muted: oklch(0.27 0.014 270);
+  --muted-foreground: oklch(0.68 0.02 270);
+  --border: oklch(0.33 0.016 270);
+  --input: oklch(0.36 0.016 270);
+  --primary: oklch(0.72 0.14 285);
+  --primary-foreground: oklch(0.18 0.02 270);
+  --accent: oklch(0.31 0.04 285);
+  --accent-foreground: oklch(0.9 0.05 285);
+  --destructive: oklch(0.68 0.19 25);
+  --success: oklch(0.72 0.15 150);
+  --warning: oklch(0.8 0.14 85);
+  --ring: oklch(0.72 0.14 285);
+  --sidebar: oklch(0.17 0.012 270);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  font-size: 14px;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  border-color: var(--border);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--input);
+  background-clip: content-box;
+  border: 2px solid transparent;
+}
+
+.chat-markdown p {
+  margin: 0.4em 0;
+}
+.chat-markdown ul,
+.chat-markdown ol {
+  margin: 0.4em 0;
+  padding-left: 1.4em;
+}
+.chat-markdown ul {
+  list-style: disc;
+}
+.chat-markdown ol {
+  list-style: decimal;
+}
+.chat-markdown code {
+  background: var(--muted);
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.chat-markdown pre {
+  background: var(--muted);
+  padding: 0.6em 0.8em;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+.chat-markdown pre code {
+  background: none;
+  padding: 0;
+}
+.chat-markdown h1,
+.chat-markdown h2,
+.chat-markdown h3 {
+  font-weight: 600;
+  margin: 0.6em 0 0.3em;
+}
+.chat-markdown a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+.chat-markdown table {
+  border-collapse: collapse;
+}
+.chat-markdown th,
+.chat-markdown td {
+  border: 1px solid var(--border);
+  padding: 0.2em 0.5em;
+}
+
+/* The how-to guide reuses the chat Markdown styles and adds tables and bigger headings. */
+.help-markdown h2 {
+  font-size: 1.1em;
+  margin: 1.1em 0 0.4em;
+}
+.help-markdown table {
+  border-collapse: collapse;
+  margin: 0.6em 0;
+  width: 100%;
+  font-size: 0.92em;
+}
+.help-markdown th,
+.help-markdown td {
+  border: 1px solid var(--border);
+  padding: 0.3em 0.6em;
+  text-align: left;
+  vertical-align: top;
+}
+.help-markdown th {
+  background: var(--muted);
+}

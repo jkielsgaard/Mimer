@@ -1,0 +1,18 @@
+data: {"id":"1","choices":[{"index":0,"delta":{"role":"assistant","content":"Hel"}}]}
+
+data: {"id":"1","choices":[{"index":0,"delta":{"content":"lo "}}]}
+
+data: {"id":"1","choices":[{"index":0,"delta":{"content":"world"}}]}
+
+data: {"id":"1","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call_a","type":"function","function":{"name":"search_notes","arguments":""}}]}}]}
+
+data: {"id":"1","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\"query\":"}}]}}]}
+
+data: {"id":"1","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"\"firewall\"}"}}]}}]}
+
+data: {"id":"1","choices":[{"index":0,"delta":{"tool_calls":[{"index":1,"id":"call_b","type":"function","function":{"name":"read_note","arguments":"{\"path\":\"A.md\"}"}}]}}]}
+
+data: {"id":"1","choices":[{"index":0,"delta":{},"finish_reason":"tool_calls"}]}
+
+data: [DONE]
+
