@@ -23,7 +23,7 @@ param(
   [string]$OutDir = "msix-out",
   [string]$IdentityName = "Jkielsgaard.Mimer",
   # The name shown in the Start menu and the Store. It must be the name reserved in Partner Center.
-  [string]$DisplayName = "Mimer",
+  [string]$DisplayName = "Mimer: Markdown Notes",
   [string]$Publisher = "CN=00000000-0000-0000-0000-000000000000",
   [string]$PublisherDisplayName = "Jesper Ahasverusen Kielsgaard",
   [switch]$TestSign

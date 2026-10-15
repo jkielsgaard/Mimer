@@ -7,12 +7,12 @@ The package is built by `scripts/msix/Build-Msix.ps1` on Windows. The release wo
 ## 1. Reserve the name and read the identity (once)
 
 1. Make a free developer account at https://storedeveloper.microsoft.com (as an individual).
-2. In Partner Center choose **Apps and games → New product → MSIX or PWA app** and reserve the name **Mimer** (or another, if it is taken).
+2. In Partner Center choose **Apps and games → New product → MSIX or PWA app** and reserve the name **Mimer: Markdown Notes** (the name "Mimer" alone is taken). The tile and the Start menu show the short name Mimer.
 3. Under **Product management → Product identity** copy three values:
    - **Package/Identity/Name**, for example `12345Jkielsgaard.Mimer`
    - **Package/Identity/Publisher**, for example `CN=0000-1111-…`
    - **Package/Properties/PublisherDisplayName**
-   - the **name you reserved** (for example `MimerNote`): it is the name the package shows in the Start menu and the Store, and Microsoft checks it against the reserved name
+   - the **name you reserved** (`Mimer: Markdown Notes`): it is the name the package shows in the Start menu and the Store, and Microsoft checks it against the reserved name
 4. In the GitHub repository, **Settings → Secrets and variables → Actions → Variables**, add `MSIX_IDENTITY_NAME`, `MSIX_PUBLISHER`, `MSIX_PUBLISHER_DISPLAY_NAME` and `MSIX_DISPLAY_NAME` (the reserved name) with those values. (They are not secrets.) Without them the workflow uses placeholders, which is fine for test packages only.
 
 ## 2. Build a test package and try it (Windows)
@@ -22,7 +22,7 @@ On a Windows computer with the Windows SDK, Node, Rust and pnpm:
 ```powershell
 pnpm install
 pnpm tauri build
-./scripts/msix/Build-Msix.ps1 -Version 0.8.1 -TestSign -DisplayName MimerNote
+./scripts/msix/Build-Msix.ps1 -Version 0.8.1 -TestSign -DisplayName "Mimer: Markdown Notes"
 ```
 
 This makes the folder `msix-out` with, among other files, `Mimer_0.8.1.0_x64.msix` (unsigned, for the Store), `Mimer_0.8.1.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.

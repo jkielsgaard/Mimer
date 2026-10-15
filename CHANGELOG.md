@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The Store package is called **Mimer: Markdown Notes** (the name reserved in Partner Center); the tile and the Start menu show the short name Mimer.
+
 ## [0.8.1] - 2026-10-15
 
 ### Added

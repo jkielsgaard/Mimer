@@ -63,7 +63,7 @@ jobs:
         run: |
           ./scripts/msix/Build-Msix.ps1 -Version "${{ github.ref_name }}" `
             -IdentityName "${{ vars.MSIX_IDENTITY_NAME || 'Jkielsgaard.Mimer' }}" `
-            -DisplayName "${{ vars.MSIX_DISPLAY_NAME || 'Mimer' }}" `
+            -DisplayName "${{ vars.MSIX_DISPLAY_NAME || 'Mimer: Markdown Notes' }}" `
             -Publisher "${{ vars.MSIX_PUBLISHER || 'CN=00000000-0000-0000-0000-000000000000' }}" `
             -PublisherDisplayName "${{ vars.MSIX_PUBLISHER_DISPLAY_NAME || 'Jesper Ahasverusen Kielsgaard' }}"
 
