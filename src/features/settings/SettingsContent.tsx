@@ -16,19 +16,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { effectiveLocation } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settingsStore";
-import { reportError } from "@/stores/uiStore";
+import { reportError, useUiStore } from "@/stores/uiStore";
 import { newProvider, ProviderEditor } from "./ProviderEditor";
+import { BuiltInAiSettings } from "@/features/engine/BuiltInAiSettings";
 import { VaultSettingsTab } from "./VaultSettingsTab";
 import { MimerInstructionSettings } from "./MimerInstructionSettings";
 import { SemanticSearchSettings } from "./SemanticSearchSettings";
 import { appVersion, buildDateLabel, releaseStage } from "@/lib/version";
 import { InfoHint } from "@/components/InfoHint";
 
-type Tab = "general" | "providers" | "ai" | "history" | "vault";
+type Tab = "general" | "providers" | "ai" | "builtin" | "history" | "vault";
 const TABS: { id: Tab; label: string }[] = [
   { id: "general", label: "General" },
   { id: "providers", label: "AI providers" },
   { id: "ai", label: "AI" },
+  { id: "builtin", label: "Built-in AI" },
   { id: "history", label: "Version history" },
   { id: "vault", label: "Vault" },
 ];
@@ -36,7 +38,9 @@ const TABS: { id: Tab; label: string }[] = [
 export function SettingsContent({ stored, onClose }: { stored: Settings; onClose: () => void }) {
   const save = useSettingsStore((s) => s.save);
   const [draft, setDraft] = useState<Settings>(() => structuredClone(stored));
-  const [tab, setTab] = useState<Tab>("general");
+  const [tab, setTab] = useState<Tab>(() =>
+    useUiStore.getState().settingsTab === "builtin" ? "builtin" : "general",
+  );
   const [providerId, setProviderId] = useState<string | null>(stored.ai.providers[0]?.id ?? null);
   const update = (patch: Partial<Settings>): void => {
     setDraft({ ...draft, ...patch });
@@ -206,7 +210,26 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                 </Button>
               </div>
               <div className="min-w-0 flex-1">
-                {provider ? (
+                {provider?.kind === "builtin" ? (
+                  <div className="flex flex-col gap-2 text-sm">
+                    <p className="font-medium">{provider.name}</p>
+                    <p className="text-muted-foreground">
+                      This is Mimer's own AI. It runs on this computer. Choose the hardware and the
+                      model, and download it, under Built-in AI.
+                    </p>
+                    <div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setTab("builtin");
+                        }}
+                      >
+                        Open Built-in AI
+                      </Button>
+                    </div>
+                  </div>
+                ) : provider ? (
                   <ProviderEditor
                     provider={provider}
                     persist={persist}
@@ -340,6 +363,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
               <SemanticSearchSettings draft={draft} onChange={setDraft} persist={persist} />
             </div>
           )}
+          {tab === "builtin" && <BuiltInAiSettings draft={draft} onChange={setDraft} />}
           {tab === "vault" && <VaultSettingsTab />}
           {tab === "history" && (
             <div className="flex flex-col gap-3">

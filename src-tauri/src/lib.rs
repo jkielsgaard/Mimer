@@ -4,6 +4,7 @@ pub mod ai;
 pub mod chats;
 pub mod commands;
 pub mod embeddings;
+pub mod engine;
 pub mod error;
 pub mod export;
 pub mod git;
@@ -71,6 +72,7 @@ pub fn run() {
             };
             app.manage(AppState::new(loaded, settings_path, error));
             git::autosave::spawn_idle_task(app.handle().clone());
+            engine::service::startup(app.handle());
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -174,7 +176,22 @@ pub fn run() {
             commands::embeddings::cancel_embedding_index,
             commands::embeddings::semantic_search,
             commands::embeddings::hybrid_search,
+            commands::engine::engine_hardware,
+            commands::engine::engine_catalog,
+            commands::engine::engine_status,
+            commands::engine::engine_install,
+            commands::engine::engine_cancel_install,
+            commands::engine::engine_add_model,
+            commands::engine::engine_wake,
+            commands::engine::engine_sleep,
+            commands::engine::engine_remove,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running Mimer");
+        .build(tauri::generate_context!())
+        .expect("error while building Mimer")
+        .run(|app, event| {
+            // The built-in AI must never outlive Mimer: it holds gigabytes of memory.
+            if matches!(event, tauri::RunEvent::Exit) {
+                engine::service::shutdown(app);
+            }
+        });
 }

@@ -17,9 +17,9 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { api, toApiError } from "@/lib/api";
-import { projectNameError } from "@/lib/nameConflict";
-import { basename } from "@/lib/utils";
+import { nameError, projectNameError } from "@/lib/nameConflict";
 import { reportError, type ProjectDialogState, useUiStore } from "@/stores/uiStore";
+import { useTreeStore } from "@/stores/treeStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { InfoHint } from "@/components/InfoHint";
 
@@ -38,7 +38,7 @@ export function ProjectForm({
   const p0 = state.project;
   // Notes only go to local AI, so only local providers can be chosen for a project.
   const localProviders = settings.ai.providers.filter((p) => p.location === "local");
-  const [name, setName] = useState(p0?.name ?? basename(state.folder));
+  const [name, setName] = useState(p0?.name ?? "");
   const [instructions, setInstructions] = useState(p0?.instructions ?? "");
   const [providerId, setProviderId] = useState(
     localProviders.some((p) => p.id === p0?.providerId) ? (p0?.providerId ?? GLOBAL) : GLOBAL,
@@ -53,7 +53,13 @@ export function ProjectForm({
   const isNew = state.project === null;
   const allProjects = useVaultStore((s) => s.projects);
   // Two projects with the same name look the same under Projects, so the name must be unique.
-  const nameProblem = name.trim() === "" ? null : projectNameError(allProjects, name, p0?.id);
+  const tree = useVaultStore((s) => s.tree);
+  // A new project is a new folder in the vault root, so its name must be free there too.
+  const nameProblem =
+    name.trim() === ""
+      ? null
+      : ((isNew ? nameError(tree, allProjects, "", name, true) : null) ??
+        projectNameError(allProjects, name, p0?.id));
   const globalDefault = settings.ai.providers.find((p) => p.id === settings.ai.defaultProviderId);
 
   const save = async (): Promise<void> => {
@@ -68,7 +74,11 @@ export function ProjectForm({
           providerId: pid,
         });
       } else {
-        await api.createProject(state.folder, name.trim(), instructions, pid);
+        const made = await api.createProject(name.trim(), instructions, pid);
+        // The project's folder is new: show it under Projects.
+        await useVaultStore.getState().refreshTree();
+        useTreeStore.getState().setSectionOpen("projects", true);
+        useTreeStore.getState().setProjectOpen(made.folder, true);
       }
       await useVaultStore.getState().refreshProjects();
       useUiStore.getState().toast("Project saved", "success");
@@ -122,11 +132,17 @@ export function ProjectForm({
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle className="text-base font-semibold">
-              {isNew ? "Make project" : "Project settings"}
+              {isNew ? "New project" : "Project settings"}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              Folder: <code>{state.folder}</code>. The AI assistant uses these instructions for
-              notes in this folder.
+              {isNew ? (
+                "A project is a new folder in the vault root, with the name you choose. It is made now and cannot be made from an existing folder."
+              ) : (
+                <>
+                  Folder: <code>{state.folder}</code>. The AI assistant uses these instructions for
+                  notes in this folder.
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="flex min-h-0 flex-col gap-3 overflow-auto pr-1">

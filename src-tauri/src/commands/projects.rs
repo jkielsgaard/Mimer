@@ -11,13 +11,12 @@ pub async fn list_projects(state: State<'_, AppState>) -> Result<Vec<Project>, A
 #[tauri::command]
 pub async fn create_project(
     state: State<'_, AppState>,
-    folder: String,
     name: String,
     instructions: String,
     provider_id: Option<String>,
 ) -> Result<Project, AppError> {
     let v = state.current_vault()?;
-    service::create(&v, &folder, &name, instructions, provider_id)
+    service::create(&v, &name, instructions, provider_id)
 }
 
 #[tauri::command]

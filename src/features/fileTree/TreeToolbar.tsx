@@ -22,15 +22,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { newNoteInCurrentFolder, revealInTree } from "@/lib/actions";
 import { formatShortcut } from "@/lib/shortcuts";
-import { nameError, projectNameError } from "@/lib/nameConflict";
-import { isInside } from "@/lib/utils";
+import { nameError } from "@/lib/nameConflict";
 import { useTreeStore } from "@/stores/treeStore";
 import { useUiStore } from "@/stores/uiStore";
 import { currentFolder, useVaultStore } from "@/stores/vaultStore";
 
 const iconButton = "rounded p-1 hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent";
 
-type Asking = "meeting" | "folder" | "project" | null;
+type Asking = "meeting" | "folder" | null;
 
 /**
  * The row above the file tree: one New menu (note, meeting note, quick note, folder, project),
@@ -47,22 +46,12 @@ export function TreeToolbar() {
     return currentFolder(v) || (v.vault?.config.newNoteFolder ?? "");
   };
 
-  const makeFolder = async (name: string, asProject: boolean): Promise<void> => {
+  const makeFolder = async (name: string): Promise<void> => {
     const v = useVaultStore.getState();
     const parent = currentFolder(v);
-    if (asProject && v.projects.some((p) => isInside(parent, p.folder))) {
-      useUiStore
-        .getState()
-        .toast(
-          "A project cannot be inside another project. Select a folder outside it first.",
-          "error",
-        );
-      return;
-    }
     const path = await v.createFolder(parent, name);
     if (path === null) return;
     useTreeStore.getState().expand(parent === "" ? path : parent);
-    if (asProject) useUiStore.getState().openProjectDialog({ folder: path, project: null });
   };
 
   return (
@@ -117,7 +106,8 @@ export function TreeToolbar() {
           <DropdownMenuItem
             className="justify-start gap-2"
             onSelect={() => {
-              setAsking("project");
+              // A project is always a new folder in the vault root: its window asks for the name.
+              useUiStore.getState().openProjectDialog({ folder: "", project: null });
             }}
           >
             <FolderOpen className="size-4" /> Project…
@@ -219,24 +209,20 @@ export function TreeToolbar() {
         }}
       />
       <PromptDialog
-        open={asking === "folder" || asking === "project"}
-        title={asking === "project" ? "New project" : "New folder"}
-        label={asking === "project" ? "Project folder name" : "Folder name"}
+        open={asking === "folder"}
+        title="New folder"
+        label="Folder name"
         confirmLabel="Create"
         validate={(v) => {
           const state = useVaultStore.getState();
-          const problem = nameError(state.tree, state.projects, currentFolder(state), v, true);
-          if (problem !== null || asking !== "project") return problem;
-          // A project is shown by its name under Projects, so two projects cannot share one.
-          return projectNameError(state.projects, v);
+          return nameError(state.tree, state.projects, currentFolder(state), v, true);
         }}
         onCancel={() => {
           setAsking(null);
         }}
         onSubmit={(name) => {
-          const asProject = asking === "project";
           setAsking(null);
-          void makeFolder(name.trim(), asProject);
+          void makeFolder(name.trim());
         }}
       />
       <span className="sr-only">

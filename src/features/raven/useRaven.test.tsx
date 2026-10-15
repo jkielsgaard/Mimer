@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import type { Settings } from "@/bindings/Settings";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useRaven } from "./useRaven";
+import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 
 function withRaven(ravenProviderId: string | null): Settings {
   return {
@@ -15,6 +16,7 @@ function withRaven(ravenProviderId: string | null): Settings {
     ai: {
       defaultProviderId: "lm",
       ravenProviderId,
+      builtin: DEFAULT_BUILTIN,
       baseInstruction: "",
       allowOwnKnowledge: false,
       globalInstructions: "",

@@ -15,6 +15,7 @@ vi.mock("@/lib/dialogs", () => dialogs);
 import { Welcome } from "./Welcome";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 
 function settings(recent: string[]): Settings {
   return {
@@ -27,6 +28,7 @@ function settings(recent: string[]): Settings {
     ai: {
       defaultProviderId: "p",
       ravenProviderId: null,
+      builtin: DEFAULT_BUILTIN,
       baseInstruction: "",
       allowOwnKnowledge: false,
       globalInstructions: "",

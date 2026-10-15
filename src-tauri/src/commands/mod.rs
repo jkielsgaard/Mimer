@@ -5,6 +5,7 @@ pub mod app;
 pub mod chats;
 pub mod devtools;
 pub mod embeddings;
+pub mod engine;
 pub mod export;
 pub mod git;
 pub mod images;

@@ -18,6 +18,11 @@ import type { RenamePreview } from "@/bindings/RenamePreview";
 import type { RenameResult } from "@/bindings/RenameResult";
 import type { SearchHit } from "@/bindings/SearchHit";
 import type { SearchQuery } from "@/bindings/SearchQuery";
+import type { Catalog } from "@/bindings/Catalog";
+import type { EngineStatus } from "@/bindings/EngineStatus";
+import type { HardwareInfo } from "@/bindings/HardwareInfo";
+import type { InstallRequest } from "@/bindings/InstallRequest";
+import type { RemoveWhat } from "@/bindings/RemoveWhat";
 import type { Settings } from "@/bindings/Settings";
 import type { TagCount } from "@/bindings/TagCount";
 import type { TreeNode } from "@/bindings/TreeNode";
@@ -94,6 +99,17 @@ export const api = {
     call<undefined>("set_folder_order", { folder, names }),
   openDevtools: () => call<undefined>("open_devtools"),
 
+  // The built-in AI (download, wake, sleep)
+  engineHardware: () => call<HardwareInfo>("engine_hardware"),
+  engineCatalog: () => call<Catalog>("engine_catalog"),
+  engineStatus: () => call<EngineStatus>("engine_status"),
+  engineInstall: (request: InstallRequest) => call<undefined>("engine_install", { request }),
+  engineCancelInstall: () => call<undefined>("engine_cancel_install"),
+  engineAddModel: (path: string) => call<undefined>("engine_add_model", { path }),
+  engineWake: () => call<undefined>("engine_wake"),
+  engineSleep: () => call<undefined>("engine_sleep"),
+  engineRemove: (what: RemoveWhat) => call<undefined>("engine_remove", { what }),
+
   // Research prompts for a cloud AI
   buildResearchPrompt: (spec: ResearchSpec) => call<string>("build_research_prompt", { spec }),
 
@@ -137,8 +153,8 @@ export const api = {
 
   // Projects
   listProjects: () => call<Project[]>("list_projects"),
-  createProject: (folder: string, name: string, instructions: string, providerId: string | null) =>
-    call<Project>("create_project", { folder, name, instructions, providerId }),
+  createProject: (name: string, instructions: string, providerId: string | null) =>
+    call<Project>("create_project", { name, instructions, providerId }),
   updateProject: (project: Project) => call<Project>("update_project", { project }),
   deleteProject: (id: string) => call<undefined>("delete_project", { id }),
 

@@ -55,6 +55,10 @@ interface UiState {
   rightCollapsed: boolean;
   quickOpen: boolean;
   settingsOpen: boolean;
+  /** The Settings tab to show when the dialog opens (`null` = the first). */
+  settingsTab: string | null;
+  /** Opens Settings on the Built-in AI tab. */
+  openBuiltInSettings: () => void;
   recoverOpen: boolean;
   templatePickerOpen: boolean;
   vaultSwitcherOpen: boolean;
@@ -130,6 +134,10 @@ export const useUiStore = create<UiState>((set, get) => ({
   rightCollapsed: false,
   quickOpen: false,
   settingsOpen: false,
+  settingsTab: null,
+  openBuiltInSettings: () => {
+    set({ settingsOpen: true, settingsTab: "builtin" });
+  },
   recoverOpen: false,
   templatePickerOpen: false,
   vaultSwitcherOpen: false,
@@ -195,7 +203,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({ quickOpen });
   },
   setSettingsOpen: (settingsOpen) => {
-    set({ settingsOpen });
+    set({ settingsOpen, settingsTab: null });
   },
   setRecoverOpen: (recoverOpen) => {
     set({ recoverOpen });
@@ -255,6 +263,14 @@ export const useUiStore = create<UiState>((set, get) => ({
  */
 export function reportError(e: unknown): void {
   const err = toApiError(e);
+  if (err.code === "Conflict") {
+    useUiStore.getState().showNotice({
+      title: "That cannot be done",
+      details: [err.message],
+      hint: "Nothing was changed.",
+    });
+    return;
+  }
   if (err.code === "AlreadyExists") {
     useUiStore.getState().showNotice({
       title: "That name is already taken",

@@ -9,7 +9,7 @@ Mimer is a desktop app for Markdown notes with a built-in AI assistant that help
 - **Plain files.** Your notes are normal `.md` files in normal folders. A vault works without Mimer.
 - **Never lose data.** Every vault is a local Git repository, so any change can be restored from the history.
 - **You are in control.** The AI only _proposes_ changes. Nothing is written until you approve it.
-- **Local first.** Mimer, the notes AI, uses [LM Studio](https://lmstudio.ai) on your own machine and nothing else: your notes are never sent to a cloud service. A cloud AI is available in a separate tab, Raven, which has no access to your notes.
+- **Local first.** Mimer, the notes AI, runs on your own machine, with [LM Studio](https://lmstudio.ai) or with the built-in AI, and nothing else: your notes are never sent to a cloud service. A cloud AI is available in a separate tab, Raven, which has no access to your notes.
 
 ## Why Mimer?
 
@@ -27,7 +27,7 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
 - `[[Wiki-links]]`, tags, images, templates and daily notes
 - Full-text search, plus search by meaning with an embedding model
 - Version history per note: compare, restore, recover deleted notes
-- AI chat that can search and read your notes and propose edits you review file by file
+- AI chat that can search and read your notes and propose edits you review file by file, with a built-in local AI (download, **Wake Mimer**, **Sleep Mimer**) or LM Studio
 - **Raven**: a separate chat with a cloud AI for knowledge from the internet. It cannot see your notes, and an answer can be saved as a note marked "needs review"
 - Inline AI commands on selected text (fix spelling, shorten, rewrite …)
 - Projects: a folder with its own AI instructions and its own tree
@@ -41,6 +41,12 @@ Download the build for your system from the **Releases** page. There are builds 
 - **Linux:** run the `.AppImage` (`chmod +x Mimer_*.AppImage && ./Mimer_*.AppImage`), or install the `.rpm` / `.deb`.
 
 ## Set up the AI
+
+### Option A: the built-in AI (no other program needed)
+
+Open **Settings → Built-in AI**, choose your processor, graphics card and a model (Gemma 4 12B is recommended), and press **Download**. Then press **Wake Mimer** in the Mimer tab. **Sleep Mimer** unloads the model and frees the memory. It works on Windows and Linux with AMD, Intel and Nvidia graphics cards, or on the processor alone.
+
+### Option B: LM Studio
 
 1. Install [LM Studio](https://lmstudio.ai) and download a model that supports tool calling.
 2. In LM Studio's **Developer** tab, load the model and start the local server (`http://localhost:1234/v1`).
@@ -63,7 +69,7 @@ pnpm tauri build      # build an installer for the current system
 pnpm check            # everything CI runs: format, lint, types, tests, clippy
 ```
 
-Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v0.7.1` makes GitHub Actions build the installers (`.github/workflows/release.yml`).
+Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v0.8.0` makes GitHub Actions build the installers (`.github/workflows/release.yml`).
 
 ## More
 

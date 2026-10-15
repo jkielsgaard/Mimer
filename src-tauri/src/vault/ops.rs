@@ -99,6 +99,12 @@ pub fn rename_no_commit(
     let before_files = v.file_list();
     let before = v.resolver();
     let moves = compute_moves(&before_files, from, to);
+    // A project always stays in the vault root: it can be renamed, but not moved into a folder.
+    if to.contains('/') && v.project_list().iter().any(|p| p.folder == from) {
+        return Err(AppError::Conflict(
+            "A project always stays in the vault root, so it cannot be moved into a folder. Drop other folders and notes into the project instead.".into(),
+        ));
+    }
     fs_ops::rename(&v.root, from, to)?;
 
     let mut commit_paths = vec![from.to_string(), to.to_string()];
@@ -109,7 +115,13 @@ pub fn rename_no_commit(
         .iter_mut()
         .filter(|p| paths::is_inside(&p.folder, from))
     {
+        let renamed_itself = p.folder == from;
         p.folder = format!("{to}{}", &p.folder[from.len()..]);
+        // A project that is renamed keeps its folder name as its name, as long as they matched.
+        let last = |s: &str| s.rsplit('/').next().unwrap_or(s).to_string();
+        if renamed_itself && p.name == last(from) {
+            p.name = last(to);
+        }
         p.updated_at = projects::now();
         projects::save(&v.root, p)?;
         commit_paths.push(projects::file_path(&p.id));
@@ -489,5 +501,23 @@ mod tests {
             "b"
         );
         assert!(dir.path().join("Work/a.md").exists());
+    }
+
+    #[test]
+    fn a_project_can_be_renamed_in_the_root_but_not_moved_into_a_folder() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        let p = crate::projects::service::create(&v, "Docs", String::new(), None).unwrap();
+        std::fs::create_dir_all(v.root.join("Other")).unwrap();
+        v.refresh_files();
+        // Moving into a folder is refused, and nothing changed.
+        let err = rename_path(&v, "Docs", "Other/Docs", false).unwrap_err();
+        assert!(matches!(err, AppError::Conflict(m) if m.contains("stays in the vault root")));
+        assert!(v.root.join("Docs").is_dir());
+        // Renaming in the root works, and the project follows its folder (also its name).
+        rename_path(&v, "Docs", "Manuals", false).unwrap();
+        let moved = v.project_list().into_iter().find(|x| x.id == p.id).unwrap();
+        assert_eq!(moved.folder, "Manuals");
+        assert_eq!(moved.name, "Manuals");
     }
 }

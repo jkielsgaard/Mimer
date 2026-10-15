@@ -15,6 +15,7 @@ import { RavenPanel } from "./RavenPanel";
 import { useRavenStore } from "@/stores/ravenStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 
 function settings(): Settings {
   return {
@@ -27,6 +28,7 @@ function settings(): Settings {
     ai: {
       defaultProviderId: "lm",
       ravenProviderId: "claude",
+      builtin: DEFAULT_BUILTIN,
       baseInstruction: "",
       allowOwnKnowledge: false,
       globalInstructions: "",

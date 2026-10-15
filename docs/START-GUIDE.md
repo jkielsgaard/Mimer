@@ -149,6 +149,10 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 ---
 
+## Use the built-in AI (optional)
+
+Open **Settings → Built-in AI**, choose your hardware and a model, press **Download**, and then **Wake Mimer** in the Mimer tab. The help (F1) has a topic called The built-in AI.
+
 ## Start the app (both systems)
 
 From the project folder:
@@ -187,7 +191,7 @@ On Windows replace the `cargo` line with the same command; it works in PowerShel
 pnpm tauri build
 ```
 
-- **Windows:** the installer is `src-tauri\target\release\bundle\nsis\Mimer_0.7.1_x64-setup.exe`. It installs for the current user only and needs no administrator rights.
+- **Windows:** the installer is `src-tauri\target\release\bundle\nsis\Mimer_0.8.0_x64-setup.exe`. It installs for the current user only and needs no administrator rights.
 - **Linux:** `src-tauri/target/release/bundle/` contains an `.AppImage` and an `.rpm`.
 
 ---

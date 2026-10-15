@@ -1,4 +1,4 @@
-import { countNotes, displayName, projectBlocked, topLevelPaths, type RowProps } from "./treeUtils";
+import { countNotes, displayName, topLevelPaths, type RowProps } from "./treeUtils";
 import {
   ChevronDown,
   ChevronRight,
@@ -293,17 +293,18 @@ export function TreeRow({
                   >
                     Create index page
                   </ContextMenuItem>
-                  <ContextMenuItem
-                    disabled={!isProject && projectBlocked(node.path, projectFolders)}
-                    onSelect={() => {
-                      const project =
-                        useVaultStore.getState().projects.find((p) => p.folder === node.path) ??
-                        null;
-                      useUiStore.getState().openProjectDialog({ folder: node.path, project });
-                    }}
-                  >
-                    {isProject ? "Project settings" : "Make project"}
-                  </ContextMenuItem>
+                  {isProject && (
+                    <ContextMenuItem
+                      onSelect={() => {
+                        const project =
+                          useVaultStore.getState().projects.find((p) => p.folder === node.path) ??
+                          null;
+                        useUiStore.getState().openProjectDialog({ folder: node.path, project });
+                      }}
+                    >
+                      Project settings
+                    </ContextMenuItem>
+                  )}
                 </>
               )}
               <ContextMenuItem

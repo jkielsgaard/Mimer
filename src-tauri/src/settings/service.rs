@@ -33,6 +33,19 @@ pub fn apply_update(state: &AppState, settings: Settings) -> AppResult<IndexActi
             .map_err(|_| AppError::Io("State lock poisoned".into()))?;
         new.recent_vaults = cur.recent_vaults.clone();
         new.last_vault = cur.last_vault.clone();
+        // The address of the built-in AI changes each time Mimer is woken: keep the current one.
+        let current_url = cur
+            .provider(crate::engine::BUILTIN_ID)
+            .map(|p| p.base_url.clone());
+        if let (Some(url), Some(p)) = (
+            current_url,
+            new.ai
+                .providers
+                .iter_mut()
+                .find(|p| p.id == crate::engine::BUILTIN_ID),
+        ) {
+            p.base_url = url;
+        }
         save(&state.settings_path, &new)?;
         *cur = new.clone();
     }

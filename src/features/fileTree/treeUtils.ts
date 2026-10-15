@@ -1,5 +1,5 @@
 import type { TreeNode } from "@/bindings/TreeNode";
-import { isInside, isMarkdown } from "@/lib/utils";
+import { isMarkdown } from "@/lib/utils";
 
 export type Action =
   | { kind: "newNote"; folder: string }
@@ -11,11 +11,6 @@ export type Action =
 
 export function displayName(n: TreeNode): string {
   return n.isDir ? n.name : isMarkdown(n.name) ? n.name.replace(/\.md$/i, "") : n.name;
-}
-
-/** Projects nested in (or around) this folder block "Make project". */
-export function projectBlocked(folder: string, projectFolders: readonly string[]): boolean {
-  return projectFolders.some((p) => p !== folder && (isInside(folder, p) || isInside(p, folder)));
 }
 
 export interface RowProps {

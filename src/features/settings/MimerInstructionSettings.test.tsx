@@ -7,6 +7,7 @@ const api = vi.hoisted(() => ({ getDefaultBaseInstruction: vi.fn() }));
 vi.mock("@/lib/api", () => ({ api, toApiError: (e: unknown) => ({ message: String(e) }) }));
 
 import { MimerInstructionSettings } from "./MimerInstructionSettings";
+import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 
 const DEFAULT_TEXT = "You are Mimer, a notes AI.";
 
@@ -21,6 +22,7 @@ function settings(baseInstruction: string): Settings {
     ai: {
       defaultProviderId: "p1",
       ravenProviderId: null,
+      builtin: DEFAULT_BUILTIN,
       baseInstruction,
       allowOwnKnowledge: false,
       globalInstructions: "",

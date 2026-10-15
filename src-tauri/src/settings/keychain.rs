@@ -18,6 +18,10 @@ pub fn set_key(provider_id: &str, key: &str) -> AppResult<()> {
 
 /// Reads the API key, if one is stored.
 pub fn get_key(provider_id: &str) -> Option<String> {
+    // The built-in AI has no stored key: it uses a random one made each time it is woken.
+    if provider_id == crate::engine::BUILTIN_ID {
+        return crate::engine::current_token();
+    }
     entry(provider_id).ok()?.get_password().ok()
 }
 

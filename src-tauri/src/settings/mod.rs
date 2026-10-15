@@ -3,6 +3,7 @@
 pub mod keychain;
 pub mod service;
 
+use crate::engine::hardware::{Backend, CpuVendor, GpuVendor};
 use crate::error::{AppError, AppResult};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -80,6 +81,10 @@ pub enum ProviderKind {
     #[serde(rename = "anthropic")]
     #[ts(rename = "anthropic")]
     Anthropic,
+    /// The AI that Mimer runs itself (`engine` module). Always on this computer.
+    #[serde(rename = "builtin")]
+    #[ts(rename = "builtin")]
+    BuiltIn,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -111,7 +116,7 @@ impl ProviderConfig {
     pub fn effective_location(&self) -> Location {
         match self.kind {
             ProviderKind::Anthropic => Location::Cloud,
-            ProviderKind::LmStudio => {
+            ProviderKind::LmStudio | ProviderKind::BuiltIn => {
                 if is_loopback_url(&self.base_url) {
                     Location::Local
                 } else {
@@ -126,6 +131,94 @@ impl ProviderConfig {
                 }
             }
         }
+    }
+}
+
+/// How much of the model is placed on the graphics card.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(export)]
+pub enum GpuUse {
+    /// The engine decides from the free graphics memory.
+    Auto,
+    /// Everything that fits.
+    All,
+    /// Nothing: use the CPU and ordinary memory only.
+    None,
+    /// The number in `gpuLayerCount`.
+    Custom,
+}
+
+/// Flash attention (faster and lighter on memory where the card supports it).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "lowercase")]
+#[ts(export)]
+pub enum FlashAttention {
+    Auto,
+    On,
+    Off,
+}
+
+/// Settings of the AI that Mimer runs itself. They apply the next time Mimer is woken.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", default)]
+#[ts(export)]
+pub struct BuiltInSettings {
+    /// The CPU the user chose (saved with the download; it does not change what is downloaded).
+    pub cpu: CpuVendor,
+    /// The graphics card the user chose.
+    pub gpu: GpuVendor,
+    /// The engine build downloaded for it.
+    pub backend: Backend,
+    /// A model from the catalog, or `custom:<file name>` for the user's own file.
+    pub model_id: String,
+    /// The context window in tokens; also what Mimer budgets its prompts against.
+    pub context_tokens: u32,
+    pub gpu_use: GpuUse,
+    pub gpu_layer_count: u32,
+    /// Threads for the CPU part; 0 lets the engine decide.
+    pub threads: u32,
+    pub flash_attention: FlashAttention,
+    /// Let the model think before it answers (slower). Off by default.
+    pub thinking: bool,
+    /// Sleep automatically after this many minutes without a request; 0 = never.
+    pub idle_sleep_minutes: u32,
+}
+
+/// The least and most context tokens the built-in AI accepts.
+pub const MIN_BUILTIN_CONTEXT: u32 = 2_048;
+pub const MAX_BUILTIN_CONTEXT: u32 = 131_072;
+
+impl Default for BuiltInSettings {
+    fn default() -> Self {
+        Self {
+            cpu: CpuVendor::Other,
+            gpu: GpuVendor::None,
+            backend: Backend::Cpu,
+            model_id: "gemma-4-12b-qat".into(),
+            context_tokens: 16_384,
+            gpu_use: GpuUse::Auto,
+            gpu_layer_count: 32,
+            threads: 0,
+            flash_attention: FlashAttention::Auto,
+            thinking: false,
+            idle_sleep_minutes: 0,
+        }
+    }
+}
+
+/// The provider that stands for the built-in AI.
+fn builtin_provider(context_tokens: u32) -> ProviderConfig {
+    ProviderConfig {
+        id: crate::engine::BUILTIN_ID.into(),
+        kind: ProviderKind::BuiltIn,
+        name: "Mimer (built-in)".into(),
+        // The port is chosen each time Mimer is woken and written here then.
+        base_url: "http://127.0.0.1:8080/v1".into(),
+        model: crate::engine::BUILTIN_ALIAS.into(),
+        location: Location::Local,
+        supports_tools: true,
+        context_tokens,
     }
 }
 
@@ -168,6 +261,8 @@ pub struct AiSettings {
     pub global_instructions: String,
     pub providers: Vec<ProviderConfig>,
     pub embeddings: EmbeddingSettings,
+    /// The AI that Mimer runs itself, without LM Studio.
+    pub builtin: BuiltInSettings,
 }
 
 impl Default for AiSettings {
@@ -179,16 +274,20 @@ impl Default for AiSettings {
             allow_own_knowledge: false,
             global_instructions: String::new(),
             embeddings: EmbeddingSettings::default(),
-            providers: vec![ProviderConfig {
-                id: "lmstudio-default".into(),
-                kind: ProviderKind::LmStudio,
-                name: "LM Studio".into(),
-                base_url: "http://localhost:1234/v1".into(),
-                model: String::new(),
-                location: Location::Local,
-                supports_tools: true,
-                context_tokens: 16000,
-            }],
+            builtin: BuiltInSettings::default(),
+            providers: vec![
+                ProviderConfig {
+                    id: "lmstudio-default".into(),
+                    kind: ProviderKind::LmStudio,
+                    name: "LM Studio".into(),
+                    base_url: "http://localhost:1234/v1".into(),
+                    model: String::new(),
+                    location: Location::Local,
+                    supports_tools: true,
+                    context_tokens: 16000,
+                },
+                builtin_provider(BuiltInSettings::default().context_tokens),
+            ],
         }
     }
 }
@@ -228,6 +327,7 @@ impl Settings {
 
     /// Enforces the invariants from the spec (fixed locations, clamped values).
     pub fn normalize(&mut self) {
+        self.normalize_builtin();
         for p in &mut self.ai.providers {
             p.location = p.effective_location();
             if p.context_tokens < 1000 {
@@ -242,10 +342,13 @@ impl Settings {
             .take(MAX_BASE_INSTRUCTION_CHARS)
             .collect();
         self.separate_local_and_cloud();
-        // Embeddings read the notes, so they need a local OpenAI-compatible endpoint.
+        // Embeddings read the notes, so they need a local OpenAI-compatible endpoint. The built-in
+        // AI runs a chat model and cannot make embeddings.
         let emb = self.ai.embeddings.clone();
         let usable = self.provider(&emb.provider_id).is_some_and(|p| {
-            p.kind != ProviderKind::Anthropic && p.effective_location() == Location::Local
+            p.kind != ProviderKind::Anthropic
+                && p.kind != ProviderKind::BuiltIn
+                && p.effective_location() == Location::Local
         });
         if !usable {
             self.ai.embeddings.enabled = false;
@@ -256,6 +359,37 @@ impl Settings {
         self.editor.recent_notes = self.editor.recent_notes.min(MAX_RECENT_NOTES);
         if self.recent_vaults.len() > 10 {
             self.recent_vaults.truncate(10);
+        }
+    }
+
+    /// Keeps the built-in AI's settings in range and its provider in step with them: there is
+    /// exactly one built-in provider, it is local, and it follows the context size.
+    fn normalize_builtin(&mut self) {
+        let b = &mut self.ai.builtin;
+        b.context_tokens = b
+            .context_tokens
+            .clamp(MIN_BUILTIN_CONTEXT, MAX_BUILTIN_CONTEXT);
+        b.threads = b.threads.min(256);
+        b.gpu_layer_count = b.gpu_layer_count.min(999);
+        b.idle_sleep_minutes = b.idle_sleep_minutes.min(1_440);
+        let context = b.context_tokens;
+        let id = crate::engine::BUILTIN_ID;
+        // Only one provider may be of the built-in kind, and it has the built-in id.
+        self.ai
+            .providers
+            .retain(|p| p.kind != ProviderKind::BuiltIn || p.id == id);
+        match self.ai.providers.iter_mut().find(|p| p.id == id) {
+            Some(p) => {
+                p.kind = ProviderKind::BuiltIn;
+                p.location = Location::Local;
+                p.supports_tools = true;
+                p.model = crate::engine::BUILTIN_ALIAS.into();
+                p.context_tokens = context;
+                if !is_loopback_url(&p.base_url) {
+                    p.base_url = builtin_provider(context).base_url;
+                }
+            }
+            None => self.ai.providers.push(builtin_provider(context)),
         }
     }
 

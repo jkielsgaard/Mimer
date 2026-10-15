@@ -33,7 +33,7 @@ export async function moveMany(paths: readonly string[], folder: string): Promis
   return moved;
 }
 
-/** Moves `from` into `folder`, unless that would nest one project inside another. */
+/** Moves `from` into `folder`, unless it is a project (a project stays in the vault root). */
 export async function moveInto(
   from: string,
   folder: string,
@@ -41,10 +41,13 @@ export async function moveInto(
 ): Promise<boolean> {
   const to = joinPath(folder, basename(from));
   if (from === to || isInside(folder, from)) return false;
-  const { projects } = useVaultStore.getState();
-  const holdsProject = projects.some((p) => isInside(p.folder, from));
-  if (holdsProject && projects.some((p) => isInside(folder, p.folder) && p.folder !== from)) {
-    useUiStore.getState().toast("A project cannot be inside another project.", "error");
+  // A project always stays in the vault root: it can be renamed, but never moved into a folder.
+  if (folder !== "" && useVaultStore.getState().projects.some((p) => p.folder === from)) {
+    useUiStore.getState().showNotice({
+      title: "A project stays in the vault root",
+      details: [`“${basename(from)}” is a project, so it cannot be moved into a folder.`],
+      hint: "Drop notes and folders into the project instead.",
+    });
     return false;
   }
   if (!(await useVaultStore.getState().renamePath(from, to, updateLinks))) return false;

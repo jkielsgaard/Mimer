@@ -2,23 +2,24 @@
 
 Step-by-step plans for the v2 features (1, 4–8) and the v3 features (9–12). Each plan is written so that a junior developer can build the feature **without asking questions**: every decision is already made, every file is named, and every task says when it is "done". If something is genuinely not covered, follow the rule at the bottom of this page.
 
-| #   | Feature                                                  | Plan                                                               | Size           | Depends on                           |
-| --- | -------------------------------------------------------- | ------------------------------------------------------------------ | -------------- | ------------------------------------ |
-| 8   | Persisted chat history and saved prompts                 | [08-chat-history-and-prompts.md](08-chat-history-and-prompts.md)   | S–M (2–3 days) | –                                    |
-| 4   | Templates and daily notes                                | [04-templates-and-daily-notes.md](04-templates-and-daily-notes.md) | M (3–4 days)   | –                                    |
-| 1   | Tabs and split view                                      | [01-tabs-and-split-view.md](01-tabs-and-split-view.md)             | L (6–8 days)   | –                                    |
-| 6   | Table editor                                             | [06-table-editor.md](06-table-editor.md)                           | M–L (5–6 days) | do after 1 (both change the editor)  |
-| 5   | Export to HTML, PDF and Word                             | [05-export.md](05-export.md)                                       | L (6–8 days)   | –                                    |
-| 7   | Semantic search and "ask my vault"                       | [07-semantic-search.md](07-semantic-search.md)                     | XL (8–10 days) | –                                    |
-| 12  | AI is called Mimer, editable base instruction            | [12-mimer-persona.md](12-mimer-persona.md)                         | S (1–2 days)   | –                                    |
-| 9   | Mention notes in chat with `/`                           | [09-mention-notes-in-chat.md](09-mention-notes-in-chat.md)         | M (3–4 days)   | do after 12 (both change the prompt) |
-| 11  | Show that Mimer works, and how far                       | [11-ai-progress.md](11-ai-progress.md)                             | M (3 days)     | do after 9 (both change chat events) |
-| 10  | Import notes (OneNote migration)                         | [10-onenote-import.md](10-onenote-import.md)                       | L (5–7 days)   | –                                    |
-| 13  | Images in notes (proposal)                               | [13-images-in-notes.md](13-images-in-notes.md)                     | S–M (pick)     | –                                    |
-| 14  | A clearer file panel (proposal)                          | [14-file-panel-layout.md](14-file-panel-layout.md)                 | S–L (pick)     | –                                    |
-| 15  | Name the note by typing its title (proposal)             | [15-title-first-notes.md](15-title-first-notes.md)                 | M (3 days)     | works best with 14                   |
-| 16  | Notes are local only, cloud AI in a Raven tab (proposal) | [16-raven-cloud-tab.md](16-raven-cloud-tab.md)                     | M–L (4–6 days) | –                                    |
-| 17  | A built-in local AI (idea, for later)                    | [17-built-in-local-ai.md](17-built-in-local-ai.md)                 | XL             | after 16                             |
+| #   | Feature                                                             | Plan                                                               | Size           | Depends on                           |
+| --- | ------------------------------------------------------------------- | ------------------------------------------------------------------ | -------------- | ------------------------------------ |
+| 8   | Persisted chat history and saved prompts                            | [08-chat-history-and-prompts.md](08-chat-history-and-prompts.md)   | S–M (2–3 days) | –                                    |
+| 4   | Templates and daily notes                                           | [04-templates-and-daily-notes.md](04-templates-and-daily-notes.md) | M (3–4 days)   | –                                    |
+| 1   | Tabs and split view                                                 | [01-tabs-and-split-view.md](01-tabs-and-split-view.md)             | L (6–8 days)   | –                                    |
+| 6   | Table editor                                                        | [06-table-editor.md](06-table-editor.md)                           | M–L (5–6 days) | do after 1 (both change the editor)  |
+| 5   | Export to HTML, PDF and Word                                        | [05-export.md](05-export.md)                                       | L (6–8 days)   | –                                    |
+| 7   | Semantic search and "ask my vault"                                  | [07-semantic-search.md](07-semantic-search.md)                     | XL (8–10 days) | –                                    |
+| 12  | AI is called Mimer, editable base instruction                       | [12-mimer-persona.md](12-mimer-persona.md)                         | S (1–2 days)   | –                                    |
+| 9   | Mention notes in chat with `/`                                      | [09-mention-notes-in-chat.md](09-mention-notes-in-chat.md)         | M (3–4 days)   | do after 12 (both change the prompt) |
+| 11  | Show that Mimer works, and how far                                  | [11-ai-progress.md](11-ai-progress.md)                             | M (3 days)     | do after 9 (both change chat events) |
+| 10  | Import notes (OneNote migration)                                    | [10-onenote-import.md](10-onenote-import.md)                       | L (5–7 days)   | –                                    |
+| 13  | Images in notes (proposal)                                          | [13-images-in-notes.md](13-images-in-notes.md)                     | S–M (pick)     | –                                    |
+| 14  | A clearer file panel (proposal)                                     | [14-file-panel-layout.md](14-file-panel-layout.md)                 | S–L (pick)     | –                                    |
+| 15  | Name the note by typing its title (proposal)                        | [15-title-first-notes.md](15-title-first-notes.md)                 | M (3 days)     | works best with 14                   |
+| 16  | Notes are local only, cloud AI in a Raven tab (proposal)            | [16-raven-cloud-tab.md](16-raven-cloud-tab.md)                     | M–L (4–6 days) | –                                    |
+| 18  | A project is always a new folder in the root (implemented in 0.8.0) | [18-projects-in-the-root.md](18-projects-in-the-root.md)           | S (1 day)      | –                                    |
+| 17  | A built-in local AI (idea, for later)                               | [17-built-in-local-ai.md](17-built-in-local-ai.md)                 | XL             | after 16                             |
 
 The numbers are the numbers from the original idea list, so the file names stay stable.
 

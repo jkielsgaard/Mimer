@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Settings } from "@/bindings/Settings";
+import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 
 const settings: Settings = {
   schemaVersion: 1,
@@ -13,6 +14,7 @@ const settings: Settings = {
   ai: {
     defaultProviderId: "lmstudio-default",
     ravenProviderId: null,
+    builtin: DEFAULT_BUILTIN,
     baseInstruction: "",
     allowOwnKnowledge: false,
     globalInstructions: "",
@@ -61,6 +63,8 @@ const apiMock = vi.hoisted(() => ({
   saveChat: vi.fn().mockResolvedValue({}),
   listTemplates: vi.fn().mockResolvedValue([]),
   getEmbeddingStatus: vi.fn().mockResolvedValue({ enabled: false }),
+  engineStatus: vi.fn().mockRejectedValue(new Error("not available in tests")),
+  engineCatalog: vi.fn().mockRejectedValue(new Error("not available in tests")),
 }));
 
 vi.mock("@/lib/api", () => ({
@@ -73,6 +77,7 @@ vi.mock("@/lib/events", () => ({
   onCommitted: vi.fn().mockResolvedValue(() => undefined),
   onCloseRequested: vi.fn().mockResolvedValue(() => undefined),
   onEmbeddingStatus: vi.fn().mockResolvedValue(() => undefined),
+  onEngineStatus: vi.fn().mockResolvedValue(() => undefined),
 }));
 vi.mock("@tauri-apps/api/window", () => ({
   getCurrentWindow: () => ({ setTitle: vi.fn().mockResolvedValue(undefined) }),

@@ -19,6 +19,15 @@ export async function pickImages(): Promise<string[]> {
   return Array.isArray(picked) ? picked : [picked];
 }
 
+/** Asks the user for a model file (`.gguf`). Resolves to null when cancelled. */
+export async function pickModelFile(): Promise<string | null> {
+  const picked = await open({
+    multiple: false,
+    filters: [{ name: "Model files", extensions: ["gguf"] }],
+  });
+  return typeof picked === "string" ? picked : null;
+}
+
 /** Asks the user where to save a file. Resolves to null when cancelled. */
 export async function pickSavePath(
   defaultPath: string,

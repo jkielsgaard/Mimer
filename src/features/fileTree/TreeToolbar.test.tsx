@@ -86,17 +86,8 @@ describe("TreeToolbar", () => {
     expect(useUiStore.getState().projectDialog).toBeNull();
   });
 
-  it("New → Project creates the folder and opens the project settings for it", async () => {
-    const user = await openMenu();
-    await user.click(await screen.findByRole("menuitem", { name: /Project/ }));
-    await user.type(screen.getByLabelText("Project folder name"), "Ideas");
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    await waitFor(() => {
-      expect(useUiStore.getState().projectDialog).toEqual({ folder: "Ideas", project: null });
-    });
-  });
-
-  it("a project cannot be made inside another project", async () => {
+  it("New → Project opens the project window for a new project in the vault root", async () => {
+    // Whatever is selected, a project is never made inside a folder or another project.
     useVaultStore.setState({
       projects: [project],
       files: ["Work/Security/a.md"],
@@ -105,14 +96,15 @@ describe("TreeToolbar", () => {
     });
     const user = await openMenu();
     await user.click(await screen.findByRole("menuitem", { name: /Project/ }));
-    await user.type(screen.getByLabelText("Project folder name"), "Nested");
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    await waitFor(() => {
-      expect(useUiStore.getState().toasts.at(-1)?.message).toMatch(
-        /cannot be inside another project/,
-      );
-    });
+    expect(useUiStore.getState().projectDialog).toEqual({ folder: "", project: null });
     expect(createFolder).not.toHaveBeenCalled();
+  });
+
+  it("there is no way to turn an existing folder into a project from the menus", async () => {
+    const user = await openMenu();
+    expect(screen.queryByRole("menuitem", { name: /Make project/ })).toBeNull();
+    expect(await screen.findByRole("menuitem", { name: /Project…/ })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
   });
 
   it("collapse all and sort change the tree settings", async () => {

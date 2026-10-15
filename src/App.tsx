@@ -27,7 +27,14 @@ import {
   toggleSplit,
 } from "@/lib/actions";
 import { api } from "@/lib/api";
-import { onCloseRequested, onEmbeddingStatus, onFileChanged, onIndexUpdated } from "@/lib/events";
+import {
+  onCloseRequested,
+  onEmbeddingStatus,
+  onEngineStatus,
+  onFileChanged,
+  onIndexUpdated,
+} from "@/lib/events";
+import { useEngineStore } from "@/stores/engineStore";
 import { NoticeDialog } from "@/components/NoticeDialog";
 import { NewNoteDialog } from "@/features/fileTree/NewNoteDialog";
 import { useEmbeddingStore } from "@/stores/embeddingStore";
@@ -65,6 +72,17 @@ function useBackendEvents(active: boolean): void {
       }),
     );
     void useEmbeddingStore.getState().load();
+    keep(
+      onEngineStatus((status) => {
+        const before = useEngineStore.getState().status?.state;
+        useEngineStore.getState().setStatus(status);
+        // A finished download may have made the built-in AI Mimer's provider.
+        if (before === "installing" && status.state !== "installing") {
+          void useSettingsStore.getState().load();
+        }
+      }),
+    );
+    void useEngineStore.getState().load();
     keep(
       onIndexUpdated(() => {
         useVaultStore.setState((s) => ({ indexNonce: s.indexNonce + 1 }));

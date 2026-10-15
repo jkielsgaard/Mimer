@@ -107,8 +107,8 @@ Check with `git log --oneline` inside the vault folder (any Git client works).
 
 ### 8. Projects (M9)
 
-- [ ] Right-click a folder → **Make project**: dialog with Name, Instructions and AI provider (local providers only). Save: the folder gets a different icon; `.vault/projects/<id>.json` exists and was committed (`Project: <name> updated`).
-- [ ] **Make project** is greyed out for a folder inside a project and for a folder that contains a project.
+- [ ] **New → Project…**: a window asks for Name, Instructions and AI provider (local providers only). Save: a new folder with that name appears in the vault root, listed under Projects with a project icon; `.vault/projects/<id>.json` exists and was committed (`Project: <name> updated`).
+- [ ] There is no **Make project** on any folder, and a project cannot be made inside a folder (see section 38).
 - [ ] With a note from the project open, the chat header and status bar show the project name.
 - [ ] Put an instruction such as "Always answer in French" in the project: the assistant's answers visibly change for notes in that folder, and not for notes outside it.
 - [ ] In the project dialog, type "Make these instructions stricter about formatting" and press **Ask AI**: a diff of the proposed instructions appears. **Reject** leaves the field alone; **Accept** replaces the text; nothing is saved until you press **Save**.
@@ -385,7 +385,37 @@ Prepare a note with a heading, bold text, a table, a task list, a code block, an
 - [ ] **Create** opens the note with `# <name>` as its first line, and the file has that name. Nothing is renamed while you type.
 - [ ] Type the name of an existing note in the same folder (also in other upper/lower case, for example `plan` for `Plan`): a red box says "A note called “Plan” already exists in “Work”. Choose another name." while you type, and **Create** is greyed out. Enter does nothing.
 - [ ] The same in the vault root, and for **New folder**, **New → Project…** and **Rename**. A folder `Docs` and a note `Docs` also clash. Renaming `plan` to `Plan` (only the case) works.
-- [ ] **Make project** on a folder whose name is already used by another project: the project window says so and **Save** is greyed out.
+- [ ] **New → Project…** with a name that another project already has: the project window says so and **Save** is greyed out.
 - [ ] Drag a note onto a folder that already has a note with that name: a window opens that you have to close (OK), saying what exists where. Nothing moved.
 - [ ] Tick three items, **Move to…** a folder where two of them clash: the third is moved, and one window lists the two clashes.
 - [ ] A vault that already has `Docs` and `docs` still opens; the clash is only checked when you create, rename or move.
+
+### 37. The built-in AI (0.8.0)
+
+Run on each combination you can. Only Linux with an AMD graphics card (Vulkan) has been run by the developer; **the rest are untested and need a real machine**: Windows (all of it), Nvidia (CUDA), Intel (Vulkan, SYCL), AMD on Windows, AMD ROCm, and an Intel processor.
+
+- [ ] **Settings → Built-in AI** shows what was found (processor, memory, graphics card) and pre-selects the processor, the graphics card and the engine. Choosing another graphics card picks its default engine (Nvidia → CUDA 12, AMD/Intel → Vulkan, none → CPU only); advanced engines are under "Advanced".
+- [ ] Pick a model: the size and the memory it needs are shown; a computer with too little memory gets a yellow warning.
+- [ ] **Download**: progress with percentage and sizes for the engine, then the model. **Cancel**, then Download again continues where it stopped. After it finishes, the built-in AI is Mimer's provider (when the box was ticked) and the status says "Mimer is asleep".
+- [ ] Disconnect the network during a download: a red box explains it and says to press Download again; reconnect and it continues.
+- [ ] The Mimer tab shows a bar: asleep → **Wake Mimer**. The message box says "Wake Mimer to start chatting" and is locked. **Wake Mimer** shows "Loading the model into memory… N s", then "Mimer is awake" and the box opens. Ask a question: it streams an answer. Ask for an edit: a proposal appears (tool calls work).
+- [ ] **Sleep Mimer**: the memory is freed (check Task Manager or `top`: no `llama-server`), the box locks again.
+- [ ] Close Mimer while awake: `llama-server` is gone. Wake, then kill Mimer (`kill -9` or End task): `llama-server` is gone within a moment. Windows: also check after a crash.
+- [ ] Change the context size while awake: the bar says to sleep and wake. Wake again: the new size is used.
+- [ ] Set **Sleep after** to 1 minute, wake, do nothing: Mimer goes to sleep by itself.
+- [ ] Problems: set the context size to 131072 with the 26B model on a small computer, wake: a red box says there is not enough memory, with steps and the engine's last lines under **Show details**; **Copy details** works. Choose a graphics engine on a computer without the driver: the box says to update the driver or choose CPU only.
+- [ ] Break the model file (cut it shorter): the settings show it as not downloaded and Download fetches it again with a checksum check.
+- [ ] **Add my own model file…** copies a `.gguf` into the folder and selects it; it is listed as "your own file".
+- [ ] **Remove** a model, the engine, and all files (with a confirmation): the folder shown in the settings is cleaned. The built-in AI sleeps first.
+- [ ] Windows: after installing, the files are in `%LOCALAPPDATA%\Mimer\mimer-ai`. **Uninstall Mimer** while awake: the folder is gone, `llama-server.exe` is not running. Linux: the files are in `~/.local/share/dk.mdvault.app/mimer-ai`.
+- [ ] Nothing from the built-in AI is reachable from outside: `curl http://127.0.0.1:<port>/v1/models` without a key is refused, and the port is not open on the network address.
+- [ ] LM Studio still works as before when it is the chosen provider, and no Wake bar is shown then.
+
+### 38. Projects in the vault root (0.8.0)
+
+- [ ] **New → Project…** with a folder selected (for example `Work`): the new project's folder is made in the **vault root**, not inside `Work`.
+- [ ] Make a folder `Test`, then try **New → Project…** with the name `test`: a red message says a folder called “Test” already exists in the vault root, and **Save** is greyed out. The same with a note called `Test`.
+- [ ] Right-click a folder: there is no **Make project**. A project cannot be made from an existing folder.
+- [ ] Drag a project onto a folder: a dialog says a project stays in the vault root. Nothing moved.
+- [ ] Rename a project's folder: the project follows (also its name when it matched). Drag notes and folders onto the project: they move into it.
+- [ ] A vault with a project made in an older version inside a folder still opens, and the project still works. It can be moved to the root.

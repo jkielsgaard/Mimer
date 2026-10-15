@@ -1,10 +1,12 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { Settings } from "@/bindings/Settings";
 
 vi.mock("@/lib/api", () => ({ api: {}, toApiError: (e: unknown) => ({ message: String(e) }) }));
 
 import { ProjectForm } from "./ProjectForm";
+import { useVaultStore } from "@/stores/vaultStore";
+import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 
 const settings: Settings = {
   schemaVersion: 1,
@@ -16,6 +18,7 @@ const settings: Settings = {
   ai: {
     defaultProviderId: "lm",
     ravenProviderId: "claude",
+    builtin: DEFAULT_BUILTIN,
     baseInstruction: "",
     allowOwnKnowledge: false,
     globalInstructions: "",
@@ -78,5 +81,24 @@ describe("ProjectForm", () => {
     expect(screen.getByRole<HTMLSelectElement>("combobox", { name: "AI provider" }).value).toBe(
       "__global__",
     );
+  });
+
+  it("a new project is a new folder in the vault root: a name already used there is refused", () => {
+    useVaultStore.setState({
+      tree: [{ name: "Test", path: "Test", isDir: true, children: [], modified: 0 }],
+      projects: [],
+    });
+    render(<ProjectForm state={{ folder: "", project: null }} settings={settings} />);
+    expect(screen.getByRole("heading", { name: "New project" })).toBeInTheDocument();
+    expect(screen.getByText(/cannot be made from an existing folder/)).toBeInTheDocument();
+    const box = screen.getByLabelText("Name");
+    fireEvent.change(box, { target: { value: "test" } });
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "A folder called “Test” already exists in the vault root.",
+    );
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    fireEvent.change(box, { target: { value: "Fresh" } });
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
   });
 });

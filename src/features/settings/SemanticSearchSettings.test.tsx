@@ -10,6 +10,7 @@ vi.mock("@/stores/embeddingStore", () => ({
 }));
 
 import { SemanticSearchSettings } from "./SemanticSearchSettings";
+import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 
 function settings(
   providerLocation: "local" | "cloud",
@@ -25,6 +26,7 @@ function settings(
     ai: {
       defaultProviderId: "p1",
       ravenProviderId: null,
+      builtin: DEFAULT_BUILTIN,
       baseInstruction: "",
       allowOwnKnowledge: false,
       globalInstructions: "",

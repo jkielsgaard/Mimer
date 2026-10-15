@@ -1,0 +1,30 @@
+## The built-in AI
+
+Mimer can run its own AI **on this computer**, so you do not need LM Studio. Your notes never leave the computer.
+
+## Set it up
+
+1. Open **Settings → Built-in AI** (or press **Set up** in the Mimer tab).
+2. Choose your **processor** and your **graphics card**. Mimer pre-selects what it finds. The engine follows the graphics card: **Vulkan** works with AMD, Intel and Nvidia, **CUDA** is fastest on Nvidia, **CPU only** works everywhere but is slow.
+3. Choose a **model**. **Gemma 4 12B** is the recommended one and needs about 12 GB of memory. **E4B** and **E2B** are lighter. You can also add your own `.gguf` file.
+4. Press **Download**. The files are checked after the download and kept in Mimer's own folder. If the connection breaks, press Download again: it continues where it stopped.
+
+## Wake and sleep
+
+In the **Mimer tab**, **Wake Mimer** loads the model into memory. It takes some seconds to a minute. Until Mimer is awake the message box is locked. **Sleep Mimer** unloads the model and gives the memory back, so use it when you need the memory for something else. Closing Mimer, or a crash, also stops it. In Settings you can choose that Mimer sleeps by itself after some idle minutes.
+
+## When something goes wrong
+
+A red box says what happened and what to do, step by step. **Show details** has the engine's own last lines, and **Copy details** copies them. The most common causes are too little memory (lower the context size, use less of the graphics card, or choose a lighter model), an out-of-date graphics driver (update it, or choose CPU only), and security software blocking the engine.
+
+## Settings
+
+They apply the next time Mimer is woken. If Mimer is awake, the bar tells you to sleep and wake him.
+
+- **Context size**: how much text Mimer keeps in mind. More uses much more memory.
+- **Use the graphics card**: automatic, as much as possible, not at all, or a number of layers.
+- **Processor threads**, **Flash attention**, **Let the model think** (slower; off is best for notes), **Sleep after**.
+
+## Files
+
+The engine and the models are in a folder called `mimer-ai`. On Windows it is next to the program, and **uninstalling Mimer removes it**. On Linux it is in your user data folder; **Remove files** in the settings deletes it. Settings → Built-in AI shows the exact folder and how much space it uses.

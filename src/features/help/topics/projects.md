@@ -1,18 +1,18 @@
 ## Projects
 
-A **project** is a folder with its own instructions for Mimer. Use it to keep one area apart, for example a customer, a course or a work stream.
+A **project** is a folder in the vault root with its own instructions for Mimer. Use it to keep one area apart, for example a customer, a course or a work stream.
 
 ## Make one
 
-- **New → Project…** above the file tree, or
-- right-click a folder and choose **Make project**.
+Choose **New → Project…** above the file tree. A window asks for:
 
-Then fill in:
-
-- **Name** and **Instructions**: what Mimer should know and how it should write in this project.
+- **Name**: this is also the name of the new folder. It is made at once, in the **vault root**, whatever you have selected in the tree.
+- **Instructions**: what Mimer should know and how it should write in this project.
 - **AI provider**: use the default or choose another **local** AI. Notes are only ever sent to an AI on your own computer, in every project.
 
-A project cannot be inside another project.
+A project is always a **new** folder of its own. A folder you already have cannot be turned into a project, and a project cannot be put inside a folder or another project. If the name is already used in the root (also with other upper/lower case, or by a note with that name), the window says so. To bring existing notes into a project, drag them onto it.
+
+A project can be renamed (its folder name changes with it), but not moved into a folder.
 
 ## Where the project is
 

@@ -1,5 +1,6 @@
 import exportMd from "./topics/export.md?raw";
 import historyMd from "./topics/history.md?raw";
+import builtinMd from "./topics/builtin.md?raw";
 import imagesMd from "./topics/images.md?raw";
 import importMd from "./topics/import.md?raw";
 import linksMd from "./topics/links.md?raw";
@@ -55,6 +56,12 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     title: "Mimer, the assistant",
     summary: "Ask, attach notes, review changes",
     body: mimerMd,
+  },
+  {
+    id: "builtin",
+    title: "The built-in AI",
+    summary: "Mimer without LM Studio: download, wake, sleep",
+    body: builtinMd,
   },
   {
     id: "raven",

@@ -1,7 +1,10 @@
-//! Projects: folders with their own AI instructions and provider rules.
+//! Projects: folders in the vault root with their own AI instructions and provider.
+//!
+//! A project is made as a new folder in the root (never from an existing folder), so it is always
+//! visible as a folder of its own on disk and can never sit inside another folder or project.
 
-use crate::error::{AppError, AppResult};
-use crate::vault::paths::{is_inside, resolve, resolve_internal};
+use crate::error::AppResult;
+use crate::vault::paths::{is_inside, resolve_internal};
 pub mod service;
 
 use serde::{Deserialize, Serialize};
@@ -72,34 +75,6 @@ pub fn for_path<'a>(projects: &'a [Project], path: &str) -> Option<&'a Project> 
     projects.iter().find(|p| is_inside(path, &p.folder))
 }
 
-/// Checks that `folder` can become a project (exists, not nested in or around another project).
-pub fn validate_new(
-    root: &Path,
-    projects: &[Project],
-    folder: &str,
-    ignore_id: Option<&str>,
-) -> AppResult<()> {
-    let abs = resolve(root, folder, None)?;
-    if !abs.is_dir() {
-        return Err(AppError::NotFound(format!("{folder} is not a folder")));
-    }
-    for p in projects.iter().filter(|p| Some(p.id.as_str()) != ignore_id) {
-        if is_inside(folder, &p.folder) {
-            return Err(AppError::Conflict(format!(
-                "{folder} is already inside the project “{}”",
-                p.name
-            )));
-        }
-        if is_inside(&p.folder, folder) {
-            return Err(AppError::Conflict(format!(
-                "{folder} contains the project “{}”",
-                p.name
-            )));
-        }
-    }
-    Ok(())
-}
-
 /// Current time as RFC 3339 (UTC).
 pub fn now() -> String {
     chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
@@ -120,19 +95,6 @@ mod tests {
             created_at: now(),
             updated_at: now(),
         }
-    }
-
-    #[test]
-    fn nesting_is_rejected() {
-        let d = tempfile::tempdir().unwrap();
-        std::fs::create_dir_all(d.path().join("Work/Security/Deep")).unwrap();
-        std::fs::create_dir_all(d.path().join("Other")).unwrap();
-        let ps = vec![project("a", "Work/Security")];
-        assert!(validate_new(d.path(), &ps, "Work/Security/Deep", None).is_err());
-        assert!(validate_new(d.path(), &ps, "Work", None).is_err());
-        assert!(validate_new(d.path(), &ps, "Other", None).is_ok());
-        assert!(validate_new(d.path(), &ps, "Work/Security", Some("a")).is_ok());
-        assert!(validate_new(d.path(), &ps, "Missing", None).is_err());
     }
 
     #[test]

@@ -1,9 +1,9 @@
 //! Project operations used by the Tauri commands: validation, saving and Git commits.
 
-use super::{file_path, now, remove_file, save, validate_new, Project};
+use super::{file_path, now, remove_file, save, Project};
 use crate::error::{AppError, AppResult};
 use crate::git::{CommitKind, CommitReason};
-use crate::vault::OpenVault;
+use crate::vault::{fs_ops, OpenVault};
 use uuid::Uuid;
 
 /// Fails when another project already has this name (ignoring upper/lower case): two projects
@@ -22,35 +22,40 @@ fn ensure_unique_name(projects: &[Project], name: &str, except_id: Option<&str>)
     }
 }
 
-/// Creates a project for a folder and commits it.
+/// Creates a project: a new folder called `name` in the vault root, and the project for it.
+/// A project is never made from an existing folder, and never inside another folder: the name
+/// must not already be used by anything in the root (a folder, a note or another project).
 pub fn create(
     v: &OpenVault,
-    folder: &str,
     name: &str,
     instructions: String,
     provider_id: Option<String>,
 ) -> AppResult<Project> {
     let name = name.trim().to_string();
-    if name.is_empty() {
-        return Err(AppError::InvalidPath("Project name is empty".into()));
-    }
-    let folder = folder.trim_matches('/').to_string();
-    validate_new(&v.root, &v.project_list(), &folder, None)?;
     ensure_unique_name(&v.project_list(), &name, None)?;
+    // Creates the folder and refuses a name that is taken or not allowed in a folder name.
+    let folder = fs_ops::create_folder(&v.root, "", &name)?;
     let stamp = now();
     let project = Project {
         schema_version: 1,
         id: Uuid::new_v4().to_string(),
         name,
-        folder,
+        folder: folder.clone(),
         instructions,
         provider_id,
         created_at: stamp.clone(),
         updated_at: stamp,
     };
-    save(&v.root, &project)?;
-    v.reload_projects();
-    commit(v, &project)?;
+    let saved = save(&v.root, &project).and_then(|()| {
+        v.reload_projects();
+        commit(v, &project)
+    });
+    if let Err(e) = saved {
+        // Do not leave an empty folder behind for a project that was not made.
+        let _ = std::fs::remove_dir(v.root.join(&folder));
+        return Err(e);
+    }
+    v.refresh_files();
     Ok(project)
 }
 
@@ -111,8 +116,7 @@ mod tests {
     fn create_update_delete_each_commit_once() {
         let d = tempfile::tempdir().unwrap();
         let v = open_for_test(d.path());
-        std::fs::create_dir_all(v.root.join("Work")).unwrap();
-        let p = create(&v, "Work", "  Work  ", "rules".into(), None).unwrap();
+        let p = create(&v, "  Work  ", "rules".into(), None).unwrap();
         assert_eq!(p.name, "Work");
         assert_eq!(v.project_list().len(), 1);
         let mut changed = p.clone();
@@ -131,7 +135,7 @@ mod tests {
         let d = tempfile::tempdir().unwrap();
         let v = open_for_test(d.path());
         std::fs::create_dir_all(v.root.join("Work")).unwrap();
-        assert!(create(&v, "Work", "   ", String::new(), None).is_err());
+        assert!(create(&v, "   ", String::new(), None).is_err());
         let ghost = Project {
             schema_version: 1,
             id: "nope".into(),
@@ -146,15 +150,41 @@ mod tests {
     }
 
     #[test]
+    fn a_project_is_a_new_folder_in_the_root_named_like_the_project() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        let p = create(&v, "Docs", String::new(), None).unwrap();
+        assert_eq!(p.folder, "Docs");
+        assert!(v.root.join("Docs").is_dir(), "the folder is made on disk");
+        assert!(v.root.join(super::file_path(&p.id)).is_file());
+    }
+
+    #[test]
+    fn a_project_cannot_be_made_with_a_name_that_is_already_used_in_the_root() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        std::fs::create_dir_all(v.root.join("Test")).unwrap();
+        std::fs::write(v.root.join("Plan.md"), "x").unwrap();
+        for name in ["Test", "test", "Plan"] {
+            let err = create(&v, name, String::new(), None).unwrap_err();
+            assert!(matches!(err, AppError::AlreadyExists(_)), "{name}: {err}");
+        }
+        assert!(v.project_list().is_empty(), "nothing was made");
+        assert!(!v.root.join("test").exists() || v.root.join("Test").exists());
+        // A name with a slash would put the project inside a folder.
+        assert!(create(&v, "Test/Inner", String::new(), None).is_err());
+        assert!(create(&v, "../out", String::new(), None).is_err());
+        assert!(!v.root.join("Test/Inner").exists());
+    }
+
+    #[test]
     fn two_projects_cannot_have_the_same_name() {
         let d = tempfile::tempdir().unwrap();
         let v = open_for_test(d.path());
-        std::fs::create_dir_all(v.root.join("Work")).unwrap();
-        std::fs::create_dir_all(v.root.join("Home")).unwrap();
-        let first = create(&v, "Work", "Docs", String::new(), None).unwrap();
-        let err = create(&v, "Home", " docs ", String::new(), None).unwrap_err();
-        assert!(matches!(err, AppError::AlreadyExists(m) if m.contains("“Docs” already exists")));
-        let other = create(&v, "Home", "Home", String::new(), None).unwrap();
+        let first = create(&v, "Docs", String::new(), None).unwrap();
+        let err = create(&v, " docs ", String::new(), None).unwrap_err();
+        assert!(matches!(err, AppError::AlreadyExists(_)));
+        let other = create(&v, "Home", String::new(), None).unwrap();
         let mut clash = other.clone();
         clash.name = "DOCS".into();
         assert!(matches!(update(&v, clash), Err(AppError::AlreadyExists(_))));

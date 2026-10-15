@@ -20,6 +20,7 @@ import type { Settings } from "@/bindings/Settings";
 import { useUiStore } from "@/stores/uiStore";
 import { useTreeStore } from "@/stores/treeStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 
 const file = (path: string, modified = 0): TreeNode => ({
   name: path.split("/").pop() ?? path,
@@ -67,6 +68,7 @@ const settings = (recentNotes: number): Settings => ({
   ai: {
     defaultProviderId: "p1",
     ravenProviderId: null,
+    builtin: DEFAULT_BUILTIN,
     baseInstruction: "",
     allowOwnKnowledge: false,
     globalInstructions: "",

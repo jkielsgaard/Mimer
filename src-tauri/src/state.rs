@@ -28,6 +28,8 @@ pub struct AppState {
     /// Cancel handle of the running folder import.
     pub import_job: Mutex<Option<CancellationToken>>,
     pub embedding_status: Mutex<crate::embeddings::EmbeddingStatus>,
+    /// The AI that Mimer runs itself (download, wake, sleep).
+    pub engine: crate::engine::EngineRuntime,
 }
 
 impl AppState {
@@ -45,6 +47,7 @@ impl AppState {
             import_job: Mutex::new(None),
             open_lock: Mutex::new(()),
             embedding_status: Mutex::new(crate::embeddings::EmbeddingStatus::default()),
+            engine: crate::engine::EngineRuntime::new(),
         }
     }
 

@@ -19,6 +19,8 @@ const KIND_DEFAULTS: Record<
     contextTokens: 32000,
   },
   anthropic: { baseUrl: "https://api.anthropic.com", name: "Anthropic", contextTokens: 100000 },
+  // The built-in AI is set up under Settings → Built-in AI; it is never made here.
+  builtin: { baseUrl: "http://127.0.0.1:8080/v1", name: "Mimer (built-in)", contextTokens: 16384 },
 };
 
 /** Default values for a new provider of the given kind. */

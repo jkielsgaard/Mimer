@@ -38,7 +38,7 @@ pub async fn chat(
         ProviderKind::Anthropic => {
             anthropic::chat_stream(client, p, key, req, cancel, on_text).await
         }
-        ProviderKind::LmStudio | ProviderKind::OpenAiCompatible => {
+        ProviderKind::LmStudio | ProviderKind::OpenAiCompatible | ProviderKind::BuiltIn => {
             openai_compat::chat_stream(client, p, key, req, cancel, on_text).await
         }
     }

@@ -30,6 +30,14 @@ export function onCloseRequested(handler: () => void): Promise<UnlistenFn> {
   });
 }
 
+export function onEngineStatus(
+  handler: (e: import("@/bindings/EngineStatus").EngineStatus) => void,
+): Promise<UnlistenFn> {
+  return listen<import("@/bindings/EngineStatus").EngineStatus>("engine://status", (e) => {
+    handler(e.payload);
+  });
+}
+
 export function onEmbeddingStatus(
   handler: (e: import("@/bindings/EmbeddingStatus").EmbeddingStatus) => void,
 ): Promise<UnlistenFn> {

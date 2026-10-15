@@ -58,6 +58,9 @@ pub async fn run_chat(
     // Notes only go to a local provider; a cloud provider is refused here.
     let provider = router::select_for_project(&settings, project.as_ref())?;
     let cfg = provider.config().clone();
+    // The built-in AI must be awake (loaded) before anything is sent to it.
+    crate::engine::service::require_awake(&state, &cfg)?;
+    crate::engine::service::touch(&state);
     let key = keychain::get_key(&cfg.id);
     let scope = project.as_ref().map(|p| p.folder.clone());
 

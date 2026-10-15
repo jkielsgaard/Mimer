@@ -41,4 +41,4 @@ If you prefer, **Settings → AI → Let Mimer write new content from its own kn
 - **History** in the chat header reopens earlier chats. **Prompts** saves texts you use often.
 - Select text in a note and press **Ctrl/Cmd+K** for quick changes: fix spelling, rewrite, shorten and more. You review the result before it is used.
 - **Settings → AI** has Mimer's base instruction (who Mimer is), your own instructions, and the AI providers.
-- Mimer only ever uses an AI **on your own computer**, by default LM Studio. Your notes are never sent to a cloud AI. For a cloud AI there is a separate tab, **Raven**, that cannot see your notes.
+- Mimer only ever uses an AI **on your own computer**: LM Studio, or his own **built-in AI** (see the Built-in AI topic). Your notes are never sent to a cloud AI. For a cloud AI there is a separate tab, **Raven**, that cannot see your notes.

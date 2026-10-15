@@ -11,6 +11,8 @@ import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { useActiveAi } from "./useActiveAi";
 import { ChatHistoryMenu } from "./ChatHistoryMenu";
+import { EngineBar } from "@/features/engine/EngineBar";
+import { useEngineStore } from "@/stores/engineStore";
 import { PrivacyNote } from "./PrivacyNote";
 import { PromptsMenu } from "./PromptsMenu";
 import { TasksMenu } from "./TasksMenu";
@@ -36,6 +38,9 @@ export function ChatPanel() {
   const focusNonce = useUiStore((s) => s.focusChatNonce);
   const activePath = useVaultStore((s) => s.activePath);
   const { project, provider } = useActiveAi();
+  // With the built-in AI the model must be loaded (Mimer awake) before a message can be written.
+  const engineState = useEngineStore((s) => s.status?.state);
+  const locked = provider?.kind === "builtin" && engineState !== "awake";
   const files = useVaultStore((s) => s.files);
   const tree = useVaultStore((s) => s.tree);
   const folders = useMemo(() => folderNoteCounts(tree), [tree]);
@@ -105,7 +110,7 @@ export function ChatPanel() {
   };
 
   const submit = (): void => {
-    if (draft.trim() === "") return;
+    if (draft.trim() === "" || locked) return;
     const text = draft;
     setDraft("");
     void send(text);
@@ -114,6 +119,7 @@ export function ChatPanel() {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <PrivacyNote kind="local" />
+      {provider?.kind === "builtin" && <EngineBar />}
       <div className="flex items-center gap-2 border-b px-3 py-2 text-xs">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1 font-medium">
@@ -194,7 +200,7 @@ export function ChatPanel() {
             size="icon"
             aria-label="Attach a note or folder"
             title="Attach a note or folder (or type /)"
-            disabled={streaming}
+            disabled={streaming || locked}
             onClick={openPicker}
           >
             <Paperclip />
@@ -203,8 +209,13 @@ export function ChatPanel() {
             ref={input}
             aria-label="Message Mimer"
             rows={2}
+            disabled={locked}
             className="max-h-40 min-h-12 resize-none"
-            placeholder="Message Mimer…  (Enter to send, Shift+Enter for a new line)"
+            placeholder={
+              locked
+                ? "Wake Mimer to start chatting"
+                : "Message Mimer…  (Enter to send, Shift+Enter for a new line)"
+            }
             value={draft}
             onChange={(e) => {
               setDraft(e.target.value);
@@ -246,7 +257,12 @@ export function ChatPanel() {
               <Square />
             </Button>
           ) : (
-            <Button size="icon" aria-label="Send" disabled={draft.trim() === ""} onClick={submit}>
+            <Button
+              size="icon"
+              aria-label="Send"
+              disabled={draft.trim() === "" || locked}
+              onClick={submit}
+            >
               <Send />
             </Button>
           )}

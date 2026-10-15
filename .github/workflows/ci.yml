@@ -40,3 +40,34 @@ jobs:
 
       - name: Bindings are up to date
         run: git diff --exit-code src/bindings
+
+  # The built-in AI has Windows-only code (a job object, PowerShell calls). This only compiles and
+  # lints it on Windows, so a mistake there shows up here and not first in a release build.
+  windows-check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - run: pnpm install --frozen-lockfile
+
+      # The Rust build embeds the frontend, so it must exist.
+      - run: pnpm build
+
+      - name: Compile and lint the Rust code on Windows
+        working-directory: src-tauri
+        run: cargo clippy --all-targets -- -D warnings

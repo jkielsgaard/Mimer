@@ -18,6 +18,7 @@ vi.mock("@/stores/embeddingStore", () => ({
 import { SettingsContent } from "./SettingsContent";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { Dialog } from "@/components/ui/dialog";
+import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 
 const stored: Settings = {
   schemaVersion: 1,
@@ -29,6 +30,7 @@ const stored: Settings = {
   ai: {
     defaultProviderId: "lm",
     ravenProviderId: null,
+    builtin: DEFAULT_BUILTIN,
     baseInstruction: "",
     allowOwnKnowledge: false,
     globalInstructions: "",

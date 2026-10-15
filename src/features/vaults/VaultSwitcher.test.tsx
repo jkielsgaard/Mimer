@@ -12,6 +12,7 @@ import { normalizeVaultPath, VaultSwitcher } from "./VaultSwitcher";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 
 const vault: VaultInfo = {
   name: "Work",
@@ -40,6 +41,7 @@ function settings(recent: string[]): Settings {
     ai: {
       defaultProviderId: "p",
       ravenProviderId: null,
+      builtin: DEFAULT_BUILTIN,
       baseInstruction: "",
       allowOwnKnowledge: false,
       globalInstructions: "",

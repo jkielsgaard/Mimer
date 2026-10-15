@@ -6,6 +6,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-15
+
+### Added
+
+- **A built-in AI: Mimer without LM Studio.** **Settings → Built-in AI**: choose your processor (AMD, Intel, other) and graphics card (Nvidia, AMD, Intel, none), pick a model, and press **Download**. Mimer downloads llama.cpp's `llama-server` (build b11636) for Windows or Linux and the model, checks both against fixed SHA-256 checksums, and keeps them in its own folder. The engine is chosen from the graphics card: Vulkan (AMD, Intel and Nvidia), CUDA 12 or 13 (Nvidia), ROCm (AMD) or SYCL (Intel) as advanced choices, or CPU only. Models: **Gemma 4 12B** (recommended, 7.0 GB), **E4B** (5.2 GB), **E2B** (3.3 GB) and **26B-A4B** (14.4 GB), all Google's quantisation-aware GGUF files under Apache-2.0, pinned to a commit. You can also add your own `.gguf` file.
+- **Wake Mimer / Sleep Mimer** in the Mimer tab. Wake loads the model into memory; Sleep unloads it and gives the memory back. The message box is **locked until Mimer is awake**, in the screen and in the backend. Mimer can also sleep by itself after a number of idle minutes.
+- **Clear problems.** When something fails (not enough memory, a graphics or Nvidia driver, a missing Windows runtime or Linux library, a busy port, a damaged or too new model, security software, a failed download or a full disk) the Mimer tab and the settings say what happened, give numbered steps, and have the engine's own last lines under **Show details** with **Copy details**.
+- **Settings for the built-in AI** that apply at the next wake: context size, how much goes on the graphics card (automatic, as much as possible, none, or a number of layers), processor threads, flash attention, thinking (off by default) and sleep after idle time. The bar says when a change needs a sleep and a wake.
+- The engine **never outlives Mimer**: it is stopped by Sleep and by closing Mimer, and if Mimer crashes or is killed (Linux: the kernel stops it; Windows: a job object; a pid file removes a leftover at the next start). It listens on `127.0.0.1` only, with a random key made at each wake, and has no web page.
+- On Windows the files live next to the program (`%LOCALAPPDATA%\Mimer\mimer-ai`) and the **uninstaller removes them** (an NSIS hook also stops the engine first). On Linux they are in the user's data folder, and **Settings → Built-in AI → Remove files** deletes them.
+- **The new app icon** (the gold M on a dark tile) in all sizes for the window, the installer and the favicon.
+
+### Changed
+
+- **A project is always a new folder in the vault root.** **New → Project…** asks for a name and makes that folder and the project at once, whatever is selected. **Make project** on an existing folder is gone: a project cannot be made from a folder, cannot be put inside a folder or another project, and a name that is used in the root (a folder, a note, another project, any case) is refused while you type. A project can be renamed but not moved into a folder; the project and its folder keep the same name when renamed. Projects made by older versions inside folders keep working.
+- Conflicts such as moving a project into a folder open a dialog that must be closed, like taken names do.
+- Provider lists include "Mimer (built-in)". The built-in AI cannot be used for semantic search (it runs a chat model).
+
+### Fixed
+
+- The release workflow no longer builds macOS (it cannot be tested); CI compiles and lints the Rust code on Windows too.
+
 ## [0.7.1] - 2026-10-15
 
 ### Changed
