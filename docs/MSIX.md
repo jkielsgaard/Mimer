@@ -12,7 +12,8 @@ The package is built by `scripts/msix/Build-Msix.ps1` on Windows. The release wo
    - **Package/Identity/Name**, for example `12345Jkielsgaard.Mimer`
    - **Package/Identity/Publisher**, for example `CN=0000-1111-…`
    - **Package/Properties/PublisherDisplayName**
-4. In the GitHub repository, **Settings → Secrets and variables → Actions → Variables**, add `MSIX_IDENTITY_NAME`, `MSIX_PUBLISHER` and `MSIX_PUBLISHER_DISPLAY_NAME` with those values. (They are not secrets.) Without them the workflow uses placeholders, which is fine for test packages only.
+   - the **name you reserved** (for example `MimerNote`): it is the name the package shows in the Start menu and the Store, and Microsoft checks it against the reserved name
+4. In the GitHub repository, **Settings → Secrets and variables → Actions → Variables**, add `MSIX_IDENTITY_NAME`, `MSIX_PUBLISHER`, `MSIX_PUBLISHER_DISPLAY_NAME` and `MSIX_DISPLAY_NAME` (the reserved name) with those values. (They are not secrets.) Without them the workflow uses placeholders, which is fine for test packages only.
 
 ## 2. Build a test package and try it (Windows)
 
@@ -21,7 +22,7 @@ On a Windows computer with the Windows SDK, Node, Rust and pnpm:
 ```powershell
 pnpm install
 pnpm tauri build
-./scripts/msix/Build-Msix.ps1 -Version 0.8.1 -TestSign
+./scripts/msix/Build-Msix.ps1 -Version 0.8.1 -TestSign -DisplayName MimerNote
 ```
 
 This makes the folder `msix-out` with, among other files, `Mimer_0.8.1.0_x64.msix` (unsigned, for the Store), `Mimer_0.8.1.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.

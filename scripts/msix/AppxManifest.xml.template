@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Manifest of the Microsoft Store (MSIX) package. Build-Msix.ps1 fills in the values written in double curly braces.
-  Name and Publisher must be the ones Partner Center shows under Product identity for the app.
+  Name and Publisher must be the ones Partner Center shows under Product identity for the app, and
+  the display name must be the name reserved for the app in the Store.
 -->
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
@@ -12,7 +13,7 @@
   <Identity Name="{{NAME}}" Publisher="{{PUBLISHER}}" Version="{{VERSION}}" ProcessorArchitecture="x64" />
 
   <Properties>
-    <DisplayName>Mimer</DisplayName>
+    <DisplayName>{{DISPLAY_NAME}}</DisplayName>
     <PublisherDisplayName>{{PUBLISHER_DISPLAY}}</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -28,7 +29,7 @@
   <Applications>
     <Application Id="Mimer" Executable="mimer.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="Mimer"
+        DisplayName="{{DISPLAY_NAME}}"
         Description="Markdown notes with a local-first AI assistant"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"

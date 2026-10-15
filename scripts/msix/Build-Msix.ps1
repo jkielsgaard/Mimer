@@ -22,6 +22,8 @@ param(
   [string]$IconDir = "src-tauri\icons",
   [string]$OutDir = "msix-out",
   [string]$IdentityName = "Jkielsgaard.Mimer",
+  # The name shown in the Start menu and the Store. It must be the name reserved in Partner Center.
+  [string]$DisplayName = "Mimer",
   [string]$Publisher = "CN=00000000-0000-0000-0000-000000000000",
   [string]$PublisherDisplayName = "Jesper Ahasverusen Kielsgaard",
   [switch]$TestSign
@@ -70,6 +72,7 @@ foreach ($logo in @("StoreLogo.png", "Square44x44Logo.png", "Square150x150Logo.p
 function Escape-Xml([string]$s) { [System.Security.SecurityElement]::Escape($s) }
 $manifest = Get-Content (Join-Path $here "AppxManifest.xml.template") -Raw -Encoding UTF8
 $manifest = $manifest.Replace("{{NAME}}", (Escape-Xml $IdentityName)).
+  Replace("{{DISPLAY_NAME}}", (Escape-Xml $DisplayName)).
   Replace("{{PUBLISHER}}", (Escape-Xml $Publisher)).
   Replace("{{PUBLISHER_DISPLAY}}", (Escape-Xml $PublisherDisplayName)).
   Replace("{{VERSION}}", $msixVersion)
