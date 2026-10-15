@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.6] - 2026-10-15
+
+### Changed
+
+- **File → Report** is a submenu with **Report a bug…**, **Suggest a feature…** and **Report inappropriate AI content…**. The flag buttons in the Mimer and Raven tabs are gone.
+
+### Fixed
+
+- **Links did nothing in the Linux AppImage** (the report items, and web links in notes): the AppImage's own library settings leaked into the browser that Mimer started. Mimer now opens links itself with those settings removed, and when a link still cannot be opened a dialog says so and shows the address.
+- **Sorting a big folder**: a list of moves that a model writes as text instead of calling the tool is now turned into proposals for review, the tool tells the model which notes in the folder still have no move, and the model is asked for about 20 moves per call.
+
 ## [0.8.5] - 2026-10-15
 
 ### Added

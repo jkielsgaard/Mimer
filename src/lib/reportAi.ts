@@ -1,4 +1,4 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink } from "@/lib/openLink";
 import { appVersion } from "@/lib/version";
 
 /** Where reports about inappropriate AI answers go. */
@@ -29,5 +29,5 @@ export function reportAiUrl(source: ReportSource): string {
 
 /** Opens the pre-filled report in the browser. */
 export async function reportAi(source: ReportSource): Promise<void> {
-  await openUrl(reportAiUrl(source));
+  await openLink(reportAiUrl(source));
 }

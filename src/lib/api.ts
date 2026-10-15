@@ -216,6 +216,7 @@ export const api = {
   // Images
   addImages: (notePath: string, files: string[]) =>
     call<string[]>("add_images", { notePath, files }),
+  openExternal: (url: string) => call<undefined>("open_external", { url }),
   imageUsage: () => call<ImageUsage[]>("image_usage"),
 
   // Import from a folder

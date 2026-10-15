@@ -67,7 +67,7 @@ pub fn definitions() -> Vec<ToolDef> {
         },
         ToolDef {
             name: "propose_move_many",
-            description: "Propose moving or renaming many notes in one call (use this to sort a whole folder; up to 60 per call, call it again for more). Missing folders in the new paths are created automatically. Links are updated. Moves that are not valid are listed in the answer; fix those and send them again.",
+            description: "Propose moving or renaming many notes in one call (use this to sort a whole folder; about 20 per call is safest; call it again for more). Missing folders in the new paths are created automatically. Links are updated. Moves that are not valid are listed in the answer; fix those and send them again.",
             parameters: s(
                 json!({
                     "moves": {
@@ -525,8 +525,68 @@ pub fn execute(
 /// Most notes listed by a recursive `list_folder`.
 const RECURSIVE_LIMIT: usize = 400;
 
+/// Looks for a list of moves that the model wrote as text (a JSON array of `{from, to}` objects,
+/// usually in a code block) instead of calling `propose_move_many`, and turns it into that call.
+/// `n` makes the call id unique.
+pub fn rescue_moves(text: &str, n: usize) -> Option<ToolCall> {
+    for (i, _) in text.match_indices('[') {
+        let mut stream = serde_json::Deserializer::from_str(&text[i..]).into_iter::<Value>();
+        let Some(Ok(Value::Array(items))) = stream.next() else {
+            continue;
+        };
+        let moves: Vec<Value> = items
+            .iter()
+            .filter(|m| arg(m, "from").is_some() && arg(m, "to").is_some())
+            .cloned()
+            .collect();
+        if !moves.is_empty() && moves.len() == items.len() {
+            return Some(ToolCall {
+                id: format!("rescued-{n}"),
+                name: "propose_move_many".into(),
+                arguments: json!({"moves": moves, "reason": "Sorted into folders"}).to_string(),
+            });
+        }
+    }
+    None
+}
+
+/// Notes in the folder the queued moves come from that have no queued move yet.
+fn not_placed(v: &OpenVault, set: &ProposalSet) -> Vec<String> {
+    let sources: Vec<&str> = set
+        .proposals
+        .iter()
+        .filter(|p| p.action == ProposalAction::Move)
+        .map(|p| p.path.as_str())
+        .collect();
+    let Some(first) = sources.first() else {
+        return Vec::new();
+    };
+    // The deepest folder that holds every source.
+    let mut common: Vec<&str> = first.split('/').collect();
+    common.pop();
+    for s in &sources[1..] {
+        let parts: Vec<&str> = s.split('/').collect();
+        let keep = common
+            .iter()
+            .zip(parts.iter())
+            .take_while(|(a, b)| a == b)
+            .count();
+        common.truncate(keep);
+    }
+    if common.is_empty() {
+        return Vec::new();
+    }
+    let prefix = format!("{}/", common.join("/"));
+    tree::list_files(&v.root)
+        .into_iter()
+        .filter(|f| {
+            tree::is_markdown(f) && f.starts_with(&prefix) && !sources.contains(&f.as_str())
+        })
+        .collect()
+}
+
 /// Most moves accepted by one `propose_move_many` call.
-const MOVE_MANY_LIMIT: usize = 60;
+const MOVE_MANY_LIMIT: usize = 100;
 
 /// `propose_move_many`: queues every valid move and lists the ones that were refused, so the
 /// model can fix just those.
@@ -595,6 +655,15 @@ fn move_many(
         ));
     }
     let mut result = format!("Queued {queued} move(s) for the user to review (nothing is moved until the user applies them).");
+    let left = not_placed(v, set);
+    if !left.is_empty() {
+        let shown: Vec<&str> = left.iter().take(40).map(String::as_str).collect();
+        result.push_str(&format!(
+            "\nNotes in the same folder that have no move yet ({}): {}. Place these too with propose_move_many before you answer.",
+            left.len(),
+            shown.join(", ")
+        ));
+    }
     if !refused.is_empty() {
         result.push_str(&format!("\nNot queued:\n- {}", refused.join("\n- ")));
     }
@@ -1110,5 +1179,61 @@ mod tests {
             ),
         );
         assert!(missing.result.contains("exactly as list_folder shows it"));
+    }
+
+    #[test]
+    fn a_list_of_moves_written_as_text_becomes_a_tool_call() {
+        let text = "I moved them:\n```json\n[\n {\"from\": \"A/a.md\", \"to\": \"X/a.md\"},\n {\"from\": \"A/b.md\", \"to\": \"Y/b.md\"}\n]\n```\nDone [1].";
+        let call = rescue_moves(text, 0).unwrap();
+        assert_eq!(call.name, "propose_move_many");
+        let args: Value = serde_json::from_str(&call.arguments).unwrap();
+        assert_eq!(args["moves"].as_array().unwrap().len(), 2);
+        assert!(rescue_moves("No list here, only [a note] and [1, 2].", 0).is_none());
+        assert!(
+            rescue_moves(r#"[{"from": "a.md"}]"#, 0).is_none(),
+            "needs from and to"
+        );
+        assert!(
+            rescue_moves(r#"[{"from": "a.md", "to": "b/a.md"}, 5]"#, 0).is_none(),
+            "every entry must be a move"
+        );
+    }
+
+    #[test]
+    fn move_many_names_the_notes_that_still_have_no_move() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        for n in ["Imp/A/a.md", "Imp/A/b.md", "Imp/B/c.md", "Elsewhere/z.md"] {
+            ops::write_note(&v, n, "x").unwrap();
+        }
+        let mut set = ProposalSet::new(None);
+        let r = execute(
+            &v,
+            None,
+            &mut set,
+            &call(
+                "propose_move_many",
+                json!({"moves": [
+                    {"from": "Imp/A/a.md", "to": "X/a.md"},
+                    {"from": "Imp/B/c.md", "to": "X/c.md"}
+                ], "reason": "r"}),
+            ),
+        );
+        assert!(
+            r.result.contains("have no move yet (1): Imp/A/b.md"),
+            "{}",
+            r.result
+        );
+        assert!(!r.result.contains("Elsewhere"));
+        let r2 = execute(
+            &v,
+            None,
+            &mut set,
+            &call(
+                "propose_move_many",
+                json!({"moves": [{"from": "Imp/A/b.md", "to": "X/b.md"}], "reason": "r"}),
+            ),
+        );
+        assert!(!r2.result.contains("no move yet"), "{}", r2.result);
     }
 }

@@ -44,7 +44,7 @@ Mimer is a notes app for people who want to own their notes. Your notes are ordi
 - No account, no telemetry, no ads. API keys are stored in the Windows Credential Manager.
 - Open source (Apache-2.0): https://github.com/jkielsgaard/Mimer
 
-**Live generative AI.** Mimer shows answers that an AI model writes in response to what you type. The model is one you connect yourself (it runs on your own computer, or is a cloud service you choose). You can report inappropriate AI content from inside the app: the flag button in the Mimer and Raven tabs, or File → Report inappropriate AI content.
+**Live generative AI.** Mimer shows answers that an AI model writes in response to what you type. The model is one you connect yourself (it runs on your own computer, or is a cloud service you choose). You can report inappropriate AI content from inside the app: File → Report → Report inappropriate AI content.
 
 Mimer is a beta version. The app is in English; the assistant answers in the language you write in.
 
@@ -84,7 +84,7 @@ How to try it: start the app, choose "Open folder as vault" and pick or create a
 
 The AI features need a local AI server (LM Studio) that is not part of the package. Without one, the app is a normal Markdown editor with version history. The "Raven" tab is off until the user enters an API key for a cloud AI provider of their own. No data is sent anywhere unless the user does that.
 
-The app shows AI-generated answers (live generative AI). The model is one the user connects themselves. To report inappropriate AI content, use the flag button at the top of the Mimer tab (or the Raven tab), or File > "Report inappropriate AI content…": it opens a pre-filled issue on the developer's GitHub page, and reports are read and acted on.
+The app shows AI-generated answers (live generative AI). The model is one the user connects themselves. To report inappropriate AI content, use File > Report > "Report inappropriate AI content…": it opens a pre-filled issue on the developer's GitHub page, and reports are read and acted on.
 
 The Microsoft Store build does not download or run any additional programs. The built-in AI engine that the GitHub installer offers is disabled in this build.
 
@@ -104,7 +104,7 @@ Microsoft's policy says a product that contains content that a generative AI mod
 1. **Disclose it in the metadata**: the paragraph "Live generative AI." in the description above. Keep it.
 2. **Note it in Partner Center** during the submission: tick the box or answer the question that says the product uses live generative AI.
 3. **Follow the other Store policies**: the user chooses the model, and every change the AI proposes is shown for review before anything is written.
-4. **Give users a way to report inappropriate content to the developer**: the flag button in the Mimer and Raven tabs and **File → Report inappropriate AI content…** open a pre-filled issue at https://github.com/jkielsgaard/Mimer/issues. Read the reports there and act on them. Say in the certification notes where the button is.
+4. **Give users a way to report inappropriate content to the developer**: **File → Report → Report inappropriate AI content…** opens a pre-filled issue at https://github.com/jkielsgaard/Mimer/issues. Read the reports there and act on them. Say in the certification notes where the menu item is.
 
 ## Things Microsoft may ask about
 

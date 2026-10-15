@@ -7,6 +7,7 @@ pub mod embeddings;
 pub mod engine;
 pub mod error;
 pub mod export;
+pub mod external;
 pub mod git;
 pub mod import;
 pub mod links;
@@ -156,6 +157,7 @@ pub fn run() {
             commands::devtools::open_devtools,
             commands::order::get_tree_order,
             commands::order::set_folder_order,
+            commands::external::open_external,
             commands::images::add_images,
             commands::images::image_usage,
             commands::import::scan_import,

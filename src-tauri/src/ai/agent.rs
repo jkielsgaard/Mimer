@@ -20,6 +20,9 @@ pub const MAX_ITERATIONS: usize = 15;
 /// and small local models drift into repeating themselves when it is higher.
 const AGENT_TEMPERATURE: f32 = 0.3;
 
+/// Most times in one turn that a list of moves written as text is turned into a tool call.
+const MAX_RESCUES: usize = 3;
+
 fn convert(m: &ChatMessageIn) -> ChatMessage {
     match m.role {
         ChatRole::User => ChatMessage::user(m.content.clone()),
@@ -111,6 +114,7 @@ pub async fn run_chat(
         tool_defs.push(tools::semantic_search_definition());
     }
     let mut set = ProposalSet::new(scope.clone());
+    let mut rescued = 0usize;
     let client = providers::http_client()?;
 
     for iteration in 0..MAX_ITERATIONS {
@@ -152,14 +156,20 @@ pub async fn run_chat(
             },
         )
         .await?;
-        if resp.tool_calls.is_empty() || cancel.is_cancelled() {
+        let mut calls = resp.tool_calls.clone();
+        // Small models sometimes write the list of moves as text instead of calling the tool.
+        // The moves are only proposals, so they are queued for review just the same.
+        if calls.is_empty() && rescued < MAX_RESCUES && !cancel.is_cancelled() {
+            if let Some(call) = tools::rescue_moves(&resp.text, rescued) {
+                rescued += 1;
+                calls.push(call);
+            }
+        }
+        if calls.is_empty() || cancel.is_cancelled() {
             break;
         }
-        msgs.push(ChatMessage::assistant(
-            resp.text.clone(),
-            resp.tool_calls.clone(),
-        ));
-        for call in &resp.tool_calls {
+        msgs.push(ChatMessage::assistant(resp.text.clone(), calls.clone()));
+        for call in &calls {
             let _ = channel.send(ChatEvent::ToolStart {
                 name: call.name.clone(),
                 detail: tools::describe_call(call),

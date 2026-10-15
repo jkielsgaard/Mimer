@@ -1,4 +1,4 @@
-import { Flag, Paperclip, Plus, Send, Square } from "lucide-react";
+import { Paperclip, Plus, Send, Square } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { folderNoteCounts } from "@/features/fileTree/treeUtils";
 import { findMentionQuery, mentionCandidates, removeMentionQuery } from "@/lib/mentionQuery";
 import { useChatStore } from "@/stores/chatStore";
-import { reportAi } from "@/lib/reportAi";
-import { reportError, useUiStore } from "@/stores/uiStore";
+import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { useActiveAi } from "./useActiveAi";
 import { ChatHistoryMenu } from "./ChatHistoryMenu";
@@ -133,17 +132,6 @@ export function ChatPanel() {
           </div>
         </div>
         <ChatHistoryMenu />
-        <Button
-          size="icon"
-          variant="ghost"
-          aria-label="Report inappropriate AI content"
-          title="Report inappropriate AI content"
-          onClick={() => {
-            reportAi("Mimer").catch(reportError);
-          }}
-        >
-          <Flag />
-        </Button>
         <Button size="sm" variant="ghost" onClick={newChat} aria-label="New chat">
           <Plus /> New chat
         </Button>

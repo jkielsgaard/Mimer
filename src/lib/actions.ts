@@ -1,6 +1,6 @@
 // Cross-cutting user actions shared by menus, shortcuts and the editor.
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink } from "@/lib/openLink";
 import { api } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
 import { basename, dirname, isInside, isMarkdown, resolveRelativePath } from "@/lib/utils";
@@ -78,11 +78,7 @@ export async function openWikiLink(target: string, resolved: string | null): Pro
 /** Opens a standard Markdown link: external URLs in the browser, files in the app or OS. */
 export async function openHref(href: string, notePath: string): Promise<void> {
   if (/^(https?:|mailto:)/i.test(href)) {
-    try {
-      await openUrl(href);
-    } catch (e) {
-      reportError(e);
-    }
+    await openLink(href);
     return;
   }
   const vaultPath = resolveRelativePath(notePath, href);

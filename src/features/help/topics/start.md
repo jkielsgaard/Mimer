@@ -33,4 +33,4 @@ The file panel has three parts. **Recent** lists the notes you opened last (4 by
 
 ## Found a bug, or have an idea?
 
-Use **File → Report a bug…** or **File → Suggest a feature…**. Your browser opens a page on GitHub with the form already started (Mimer version and system filled in). You need a free GitHub account to send it. Do not paste private notes.
+Use **File → Report → Report a bug…** or **File → Report → Suggest a feature…**. The same submenu has **Report inappropriate AI content…** for an AI answer that was wrong or harmful. Your browser opens a page on GitHub with the form already started (Mimer version and system filled in). You need a free GitHub account to send it. Do not paste private notes.

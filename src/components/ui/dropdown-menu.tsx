@@ -42,3 +42,38 @@ export function DropdownMenuSeparator({
 }: React.ComponentProps<typeof Primitive.Separator>) {
   return <Primitive.Separator className={cn("-mx-1 my-1 h-px bg-border", className)} {...props} />;
 }
+
+export const DropdownMenuSub = Primitive.Sub;
+
+const itemClass =
+  "flex cursor-default select-none items-center justify-between gap-6 rounded-sm px-2 py-1.5 outline-none data-[disabled]:opacity-40 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[state=open]:bg-accent";
+
+export function DropdownMenuSubTrigger({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof Primitive.SubTrigger>) {
+  return (
+    <Primitive.SubTrigger className={cn(itemClass, className)} {...props}>
+      {children}
+      <span aria-hidden className="text-xs text-muted-foreground">
+        ▸
+      </span>
+    </Primitive.SubTrigger>
+  );
+}
+
+export function DropdownMenuSubContent({
+  className,
+  ...props
+}: React.ComponentProps<typeof Primitive.SubContent>) {
+  return (
+    <Primitive.Portal>
+      <Primitive.SubContent
+        sideOffset={2}
+        className={cn("z-50 min-w-56 rounded-md border bg-card p-1 text-sm shadow-lg", className)}
+        {...props}
+      />
+    </Primitive.Portal>
+  );
+}

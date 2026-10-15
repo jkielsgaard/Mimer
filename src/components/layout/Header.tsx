@@ -7,6 +7,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { api } from "@/lib/api";
@@ -122,15 +125,20 @@ export function Header() {
           {item("How to use Mimer", "F1", () => {
             ui.openHelp();
           })}
-          {item("Report a bug…", null, () => {
-            reportIssue("bug").catch(reportError);
-          })}
-          {item("Suggest a feature…", null, () => {
-            reportIssue("feature").catch(reportError);
-          })}
-          {item("Report inappropriate AI content…", null, () => {
-            reportAi("Mimer").catch(reportError);
-          })}
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Report</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              {item("Report a bug…", null, () => {
+                reportIssue("bug").catch(reportError);
+              })}
+              {item("Suggest a feature…", null, () => {
+                reportIssue("feature").catch(reportError);
+              })}
+              {item("Report inappropriate AI content…", null, () => {
+                reportAi(ui.rightTab === "raven" ? "Raven" : "Mimer").catch(reportError);
+              })}
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
           {item("About Mimer…", null, () => {
             ui.setAboutOpen(true);
           })}

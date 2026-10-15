@@ -1,4 +1,4 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink } from "@/lib/openLink";
 import { appVersion } from "@/lib/version";
 import { REPORT_URL } from "@/lib/reportAi";
 
@@ -29,5 +29,5 @@ export function issueUrl(kind: IssueKind): string {
 
 /** Opens a pre-filled bug report or feature idea in the browser. */
 export async function reportIssue(kind: IssueKind): Promise<void> {
-  await openUrl(issueUrl(kind));
+  await openLink(issueUrl(kind));
 }
