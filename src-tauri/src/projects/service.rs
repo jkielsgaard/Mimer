@@ -13,7 +13,6 @@ pub fn create(
     name: &str,
     instructions: String,
     provider_id: Option<String>,
-    local_only: bool,
 ) -> AppResult<Project> {
     let name = name.trim().to_string();
     if name.is_empty() {
@@ -29,7 +28,6 @@ pub fn create(
         folder,
         instructions,
         provider_id,
-        local_only,
         created_at: stamp.clone(),
         updated_at: stamp,
     };
@@ -96,7 +94,7 @@ mod tests {
         let d = tempfile::tempdir().unwrap();
         let v = open_for_test(d.path());
         std::fs::create_dir_all(v.root.join("Work")).unwrap();
-        let p = create(&v, "Work", "  Work  ", "rules".into(), None, true).unwrap();
+        let p = create(&v, "Work", "  Work  ", "rules".into(), None).unwrap();
         assert_eq!(p.name, "Work");
         assert_eq!(v.project_list().len(), 1);
         let mut changed = p.clone();
@@ -115,7 +113,7 @@ mod tests {
         let d = tempfile::tempdir().unwrap();
         let v = open_for_test(d.path());
         std::fs::create_dir_all(v.root.join("Work")).unwrap();
-        assert!(create(&v, "Work", "   ", String::new(), None, true).is_err());
+        assert!(create(&v, "Work", "   ", String::new(), None).is_err());
         let ghost = Project {
             schema_version: 1,
             id: "nope".into(),
@@ -123,7 +121,6 @@ mod tests {
             folder: "Work".into(),
             instructions: String::new(),
             provider_id: None,
-            local_only: true,
             created_at: String::new(),
             updated_at: String::new(),
         };

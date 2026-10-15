@@ -70,7 +70,6 @@ export function InlineAiPopup({ selection, notePath, onAccept, onClose }: Props)
             text: selection.text,
             notePath,
             providerId: null,
-            localOnly: null,
           },
           (e) => {
             if (e.type === "textDelta") {

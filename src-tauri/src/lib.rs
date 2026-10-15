@@ -135,6 +135,7 @@ pub fn run() {
             commands::settings::test_provider,
             commands::ai::ai_chat,
             commands::ai::ai_inline,
+            commands::ai::raven_chat,
             commands::ai::ai_cancel,
             commands::ai::get_proposals,
             commands::ai::apply_proposals,

@@ -6,15 +6,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-15
+
+### Added
+
+- **Raven**, a separate tab for a cloud AI that has **no access to your notes**. It is a plain chat for knowledge from the internet (whether it can look things up depends on the provider and model). Each answer has **Copy** and **Save as note** (a new note marked `status: needs review`, `source: raven`). The tab is shown only when a cloud provider is chosen under **Settings → AI → Raven's provider**. The first time, a notice says what is sent and to whom. The research prompt card has a **Send to Raven** button that fills the message box (you still press send). The Raven chat is not saved.
+- A line at the top of both tabs says where the AI runs: Mimer "Local AI · your notes stay on this computer", Raven "Cloud AI · no access to your notes" (with the provider's name).
+- A **beta** mark in the status bar, on the start and splash screens, in About and Settings, in the window title and in the README. GitHub releases are marked as pre-releases.
+- The licence is now **Apache-2.0** (was MIT), with a `NOTICE` file, so that other versions of Mimer point back to this project. A short "Why Mimer?" section in the README.
+
 ### Changed
 
-- Mimer is marked as a **beta** version: in the status bar, on the start and splash screens, in About and Settings, in the window title and in the README.
-- The licence is now Apache-2.0 (was MIT), with a `NOTICE` file, so that other versions of Mimer have to point back to this project.
+- **Your notes only ever go to a local AI.** Mimer, inline commands, the project dialog's "Ask AI" and semantic search accept local providers only. A provider is local only when its address is on this computer: this now also applies to LM Studio providers (before, the kind alone made it local). The settings file cannot override this.
+- **Settings → AI:** the Mimer provider list shows local providers only, and there is a new **Raven's provider (cloud AI)** setting. A cloud provider that was the default in an older version moves to Raven, and the first local provider becomes the default.
+- Projects no longer have **Local AI only** (nothing from notes can reach the cloud any more), and the lock icons are gone. Old project files still open; the old setting is ignored and dropped when the file is saved. A cloud provider chosen for a project in an older version is ignored.
+- Semantic search lists local embedding providers only.
+- No macOS build for now (it cannot be tested); the release workflow builds Windows and Linux.
+
+### Security
+
+- Closed three holes in the old per-project lock: a note from a locked project could be attached or read from outside the project and sent to a cloud provider; inline AI trusted the lock flag sent by the UI; a provider of kind LM Studio was always treated as local whatever its address was. The new rule has no per-project state to get wrong, and Raven's backend receives no vault at all.
 
 ### Fixed
 
 - Built (release) versions of the app showed the editor without its styling: headings, lists and links were not formatted and every word sat on its own line. Tauri added a nonce to the style rules of the security policy, which made the browser ignore the inline styles that CodeMirror adds. `style-src` is now excluded from that change (`dangerousDisableAssetCspModification` in `tauri.conf.json`). `pnpm tauri dev` was not affected.
 - A vault that was deleted, renamed or moved on disk can now be dealt with from the start window: it is marked "Folder not found" and can be removed from the list, or located at its new place. The folder itself is never touched.
+- CI: pnpm's version is read from `package.json`, and a chat-list test no longer depends on timing.
 
 ## [0.6.0] - 2026-10-14
 

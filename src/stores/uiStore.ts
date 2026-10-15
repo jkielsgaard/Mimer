@@ -4,7 +4,7 @@ import type { RenamePreview } from "@/bindings/RenamePreview";
 import { toApiError } from "@/lib/api";
 
 export type LeftTab = "files" | "search";
-export type RightTab = "assistant" | "images" | "history";
+export type RightTab = "assistant" | "raven" | "images" | "history";
 export type LinkUpdateChoice = "update" | "skip" | "cancel";
 
 export interface Toast {
@@ -65,6 +65,7 @@ interface UiState {
   linkUpdate: LinkUpdatePrompt | null;
   toasts: Toast[];
   focusChatNonce: number;
+  focusRavenNonce: number;
   focusSearchNonce: number;
   /** Search text pushed from elsewhere (e.g. a tag click). */
   searchSeed: string;
@@ -78,6 +79,8 @@ interface UiState {
   setRecoverOpen: (open: boolean) => void;
   openProjectDialog: (state: ProjectDialogState | null) => void;
   focusChat: () => void;
+  /** Opens the Raven tab and focuses its message box. */
+  focusRaven: () => void;
   focusSearch: (seed?: string) => void;
   toast: (message: string, kind?: Toast["kind"]) => void;
   dismissToast: (id: number) => void;
@@ -139,6 +142,7 @@ export const useUiStore = create<UiState>((set, get) => ({
   linkUpdate: null,
   toasts: [],
   focusChatNonce: 0,
+  focusRavenNonce: 0,
   focusSearchNonce: 0,
   searchSeed: "",
 
@@ -171,6 +175,13 @@ export const useUiStore = create<UiState>((set, get) => ({
       rightTab: "assistant",
       rightCollapsed: false,
       focusChatNonce: s.focusChatNonce + 1,
+    }));
+  },
+  focusRaven: () => {
+    set((s) => ({
+      rightTab: "raven",
+      rightCollapsed: false,
+      focusRavenNonce: s.focusRavenNonce + 1,
     }));
   },
   focusSearch: (seed) => {

@@ -1,13 +1,12 @@
-import { Lock } from "lucide-react";
 import { useActiveAi } from "@/features/chat/useActiveAi";
 import { useChatStore } from "@/stores/chatStore";
 import { appVersion, buildDateLabel, releaseStage } from "@/lib/version";
 import { saveStatusLabel, useFocusedSaveStatus } from "@/stores/editorStore";
 
-/** Save status · project · provider/model · lock · app version. */
+/** Save status · project · provider/model · app version. */
 export function StatusBar() {
   const status = useFocusedSaveStatus();
-  const { project, provider, localOnly } = useActiveAi();
+  const { project, provider } = useActiveAi();
   const working = useChatStore((s) => s.streaming);
   return (
     <footer className="flex h-6 shrink-0 items-center gap-4 border-t bg-sidebar px-3 text-[11px] text-muted-foreground">
@@ -24,7 +23,6 @@ export function StatusBar() {
         {provider
           ? `${provider.name}${provider.model ? ` · ${provider.model}` : ""}`
           : "No AI provider"}
-        {localOnly && <Lock className="size-3 text-success" aria-label="Local AI only" />}
       </span>
       <span data-testid="app-version" title={`Mimer ${appVersion}, built ${buildDateLabel()}`}>
         v{appVersion} {releaseStage}

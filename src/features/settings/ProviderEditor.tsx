@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { api, toApiError } from "@/lib/api";
+import { effectiveLocation as locationOf, isLoopbackUrl } from "@/lib/providers";
 
 const KIND_DEFAULTS: Record<
   ProviderKind,
@@ -33,16 +34,6 @@ export function newProvider(kind: ProviderKind): ProviderConfig {
     supportsTools: true,
     contextTokens: d.contextTokens,
   };
-}
-
-/** True when the URL points at this machine. */
-export function isLoopbackUrl(url: string): boolean {
-  try {
-    const h = new URL(url).hostname.replace(/^\[|\]$/g, "");
-    return h === "localhost" || h === "127.0.0.1" || h === "::1";
-  } catch {
-    return false;
-  }
 }
 
 interface Props {
@@ -75,8 +66,7 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
 
   const loopback = isLoopbackUrl(provider.baseUrl);
   const locationFixed = provider.kind !== "openai_compatible";
-  const effectiveLocation =
-    provider.kind === "openai_compatible" && !loopback ? "cloud" : provider.location;
+  const effectiveLocation = locationOf(provider);
   const set = (patch: Partial<ProviderConfig>): void => {
     onChange({ ...provider, ...patch });
   };
@@ -218,11 +208,16 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
           <option value="cloud">Cloud</option>
         </Select>,
       )}
-      {provider.kind === "openai_compatible" && !loopback && (
+      {provider.kind !== "anthropic" && !loopback && (
         <p className="text-xs text-muted-foreground">
-          Only localhost, 127.0.0.1 and ::1 can be marked as local.
+          Only localhost, 127.0.0.1 and ::1 can be local.
         </p>
       )}
+      <p className="text-xs text-muted-foreground">
+        {effectiveLocation === "local"
+          ? "Local: used by Mimer, which reads your notes. It runs on this computer."
+          : "Cloud: used by Raven only. Your notes are never sent to a cloud provider."}
+      </p>
       <div className="flex items-center gap-4">
         <label className="flex items-center gap-2 text-sm">
           <input

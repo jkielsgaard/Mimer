@@ -24,8 +24,6 @@ export interface RowProps {
   expanded: ReadonlySet<string>;
   toggle: (path: string) => void;
   projectFolders: readonly string[];
-  /** Project folders that are locked to local AI. */
-  lockedFolders: ReadonlySet<string>;
   /** Show every folder open (while the filter is used). */
   forceOpen: boolean;
   onAction: (a: Action) => void;

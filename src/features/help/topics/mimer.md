@@ -32,7 +32,7 @@ The **Tasks** button over the message box fills the box with a ready-made job, w
 
 Mimer has no internet access and only knows what it learned in training, so it can be out of date or wrong. By default it **does not write new facts** for you. It works with what is in your notes: structure, merging, correcting, summarising, linking.
 
-When you need new documentation about a subject, ask Mimer for it, or choose **Tasks → Write a research prompt…**. Mimer writes a prompt for a cloud AI that can search the web. The prompt also tells that AI how to answer (title, sections, sources with links, open questions). Copy it, paste it in the cloud AI, copy the answer back and choose **Tasks → Import an answer from a cloud AI…**. The answer becomes a new note marked **needs review**; nothing existing is changed.
+When you need new documentation about a subject, ask Mimer for it, or choose **Tasks → Write a research prompt…**. Mimer writes a prompt for a cloud AI that can search the web. The prompt also tells that AI how to answer (title, sections, sources with links, open questions). Send it to **Raven** (see the Raven topic), or copy it, paste it in any cloud AI, copy the answer back and choose **Tasks → Import an answer from a cloud AI…**. The answer becomes a new note marked **needs review**; nothing existing is changed.
 
 If you prefer, **Settings → AI → Let Mimer write new content from its own knowledge** lets Mimer write from memory too. It will then say so, and you should check the result.
 
@@ -41,4 +41,4 @@ If you prefer, **Settings → AI → Let Mimer write new content from its own kn
 - **History** in the chat header reopens earlier chats. **Prompts** saves texts you use often.
 - Select text in a note and press **Ctrl/Cmd+K** for quick changes: fix spelling, rewrite, shorten and more. You review the result before it is used.
 - **Settings → AI** has Mimer's base instruction (who Mimer is), your own instructions, and the AI providers.
-- Mimer uses **LM Studio on your own computer** by default. A cloud AI is optional, and can be blocked per project.
+- Mimer only ever uses an AI **on your own computer**, by default LM Studio. Your notes are never sent to a cloud AI. For a cloud AI there is a separate tab, **Raven**, that cannot see your notes.

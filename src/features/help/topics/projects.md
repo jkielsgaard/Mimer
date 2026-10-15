@@ -10,8 +10,7 @@ A **project** is a folder with its own instructions for Mimer. Use it to keep on
 Then fill in:
 
 - **Name** and **Instructions**: what Mimer should know and how it should write in this project.
-- **AI provider**: use the default or choose another.
-- **Local AI only**: Mimer can then only use an AI on your own computer for this project. Mimer enforces this, so no note from the project is sent to a cloud service.
+- **AI provider**: use the default or choose another **local** AI. Notes are only ever sent to an AI on your own computer, in every project.
 
 A project cannot be inside another project.
 
@@ -28,6 +27,6 @@ Links work across projects. A note outside any project can link to a note in a p
 
 ## What changes
 
-When you work in a note inside the project, Mimer follows the project's instructions and stays inside the project folder. The bottom bar shows the project, the AI in use and a lock for **Local AI only**.
+When you work in a note inside the project, Mimer follows the project's instructions and stays inside the project folder. The bottom bar shows the project and the AI in use.
 
 The **Ask AI to change the instructions** box in the project settings lets Mimer suggest better instructions. You see the change and must accept it.

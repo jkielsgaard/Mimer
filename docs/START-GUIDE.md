@@ -187,9 +187,8 @@ On Windows replace the `cargo` line with the same command; it works in PowerShel
 pnpm tauri build
 ```
 
-- **Windows:** the installer is `src-tauri\target\release\bundle\nsis\Mimer_0.5.0_x64-setup.exe`. It installs for the current user only and needs no administrator rights.
+- **Windows:** the installer is `src-tauri\target\release\bundle\nsis\Mimer_0.7.0_x64-setup.exe`. It installs for the current user only and needs no administrator rights.
 - **Linux:** `src-tauri/target/release/bundle/` contains an `.AppImage` and an `.rpm`.
-- **macOS:** a `.dmg` in the same folder (unsigned, so right-click → Open the first time).
 
 ---
 
@@ -207,7 +206,7 @@ Semantic search finds notes by meaning. It needs an **embedding model** in LM St
 2. In Mimer: **Settings → AI → Semantic search**: tick **Enable semantic search**, choose **LM Studio**, pick the model (**Load models** lists them), **Save**.
 3. Indexing starts in the background. The status shows how many notes are done. Then in the search panel choose **Meaning** or **Both**.
 
-Notes in projects marked **Local AI only** are never sent to a cloud embedding provider.
+Semantic search only uses a provider on your own computer, so no note is sent to a cloud service.
 
 ---
 

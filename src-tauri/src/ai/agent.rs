@@ -55,7 +55,7 @@ pub async fn run_chat(
     let project = anchor
         .and_then(|a| projects::for_path(&all_projects, a))
         .cloned();
-    // Local-only enforcement happens here, before anything is sent anywhere.
+    // Notes only go to a local provider; a cloud provider is refused here.
     let provider = router::select_for_project(&settings, project.as_ref())?;
     let cfg = provider.config().clone();
     let key = keychain::get_key(&cfg.id);
@@ -97,10 +97,8 @@ pub async fn run_chat(
     };
     let mut msgs: Vec<ChatMessage> = req.messages.iter().map(convert).collect();
     // Semantic search is offered only when the rules allow it (see embeddings::semantic_allowed).
-    let local_only = project.as_ref().is_some_and(|p| p.local_only);
     let indexed = crate::embeddings::counts(&vault, &settings.ai.embeddings.model).1;
-    let semantic_ok =
-        tools_enabled && crate::embeddings::semantic_allowed(&settings, local_only, indexed);
+    let semantic_ok = tools_enabled && crate::embeddings::semantic_allowed(&settings, indexed);
     let mut tool_defs = tool_defs;
     if semantic_ok {
         tool_defs.push(tools::semantic_search_definition());
@@ -216,7 +214,7 @@ async fn semantic_tool(
         };
     }
     let outcome = async {
-        let (embed, model, _) = crate::embeddings::embedder_for(settings)?;
+        let (embed, model) = crate::embeddings::embedder_for(settings)?;
         let chunks = crate::embeddings::load_vectors(vault, &model)?;
         let q = crate::embeddings::search::embed_query(&embed, &query).await?;
         let hits = crate::embeddings::search::rank(&chunks, &q, scope, 5);

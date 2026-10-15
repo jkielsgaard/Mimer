@@ -106,11 +106,18 @@ pub struct ProviderConfig {
 
 impl ProviderConfig {
     /// The location this provider is *actually* at, ignoring what the settings file claims.
-    /// Only `lmstudio` and loopback `openai_compatible` hosts can be local.
+    /// Only `lmstudio` and `openai_compatible` providers with a loopback address can be local:
+    /// the address decides, never the kind. Notes are only ever sent to local providers.
     pub fn effective_location(&self) -> Location {
         match self.kind {
             ProviderKind::Anthropic => Location::Cloud,
-            ProviderKind::LmStudio => Location::Local,
+            ProviderKind::LmStudio => {
+                if is_loopback_url(&self.base_url) {
+                    Location::Local
+                } else {
+                    Location::Cloud
+                }
+            }
             ProviderKind::OpenAiCompatible => {
                 if is_loopback_url(&self.base_url) && self.location == Location::Local {
                     Location::Local
@@ -146,7 +153,11 @@ impl Default for EmbeddingSettings {
 #[serde(rename_all = "camelCase", default)]
 #[ts(export)]
 pub struct AiSettings {
+    /// The local provider used by Mimer (the notes AI), inline commands and project help.
     pub default_provider_id: String,
+    /// The cloud provider used by Raven, the separate chat that has no access to notes.
+    /// `None` means Raven is off and its tab is hidden.
+    pub raven_provider_id: Option<String>,
     /// Who Mimer is. Empty means the built-in default (`ai::prompt::DEFAULT_BASE_INSTRUCTION`).
     /// The safety rules are not part of it and cannot be edited.
     pub base_instruction: String,
@@ -163,6 +174,7 @@ impl Default for AiSettings {
     fn default() -> Self {
         Self {
             default_provider_id: "lmstudio-default".into(),
+            raven_provider_id: None,
             base_instruction: String::new(),
             allow_own_knowledge: false,
             global_instructions: String::new(),
@@ -229,11 +241,12 @@ impl Settings {
             .chars()
             .take(MAX_BASE_INSTRUCTION_CHARS)
             .collect();
-        // Embeddings need an OpenAI-compatible endpoint (Anthropic has none).
+        self.separate_local_and_cloud();
+        // Embeddings read the notes, so they need a local OpenAI-compatible endpoint.
         let emb = self.ai.embeddings.clone();
-        let usable = self
-            .provider(&emb.provider_id)
-            .is_some_and(|p| p.kind != ProviderKind::Anthropic);
+        let usable = self.provider(&emb.provider_id).is_some_and(|p| {
+            p.kind != ProviderKind::Anthropic && p.effective_location() == Location::Local
+        });
         if !usable {
             self.ai.embeddings.enabled = false;
         }
@@ -243,6 +256,40 @@ impl Settings {
         self.editor.recent_notes = self.editor.recent_notes.min(MAX_RECENT_NOTES);
         if self.recent_vaults.len() > 10 {
             self.recent_vaults.truncate(10);
+        }
+    }
+
+    /// Keeps notes local and cloud AI in Raven: the default provider must be local and Raven's
+    /// must be cloud. A cloud default from an older version becomes Raven's provider (when Raven
+    /// has none yet) and the first local provider takes its place.
+    fn separate_local_and_cloud(&mut self) {
+        let is_local = |s: &Settings, id: &str| {
+            s.provider(id)
+                .is_some_and(|p| p.effective_location() == Location::Local)
+        };
+        if !is_local(self, &self.ai.default_provider_id.clone()) {
+            let old = self.ai.default_provider_id.clone();
+            let was_cloud = self
+                .provider(&old)
+                .is_some_and(|p| p.effective_location() == Location::Cloud);
+            if was_cloud && self.ai.raven_provider_id.is_none() {
+                self.ai.raven_provider_id = Some(old);
+            }
+            if let Some(first) = self
+                .ai
+                .providers
+                .iter()
+                .find(|p| p.effective_location() == Location::Local)
+            {
+                self.ai.default_provider_id = first.id.clone();
+            }
+        }
+        let raven_ok = self.ai.raven_provider_id.as_deref().is_some_and(|id| {
+            self.provider(id)
+                .is_some_and(|p| p.effective_location() == Location::Cloud)
+        });
+        if !raven_ok {
+            self.ai.raven_provider_id = None;
         }
     }
 
@@ -412,5 +459,88 @@ mod tests {
         s.editor.recent_notes = 0;
         s.normalize();
         assert_eq!(s.editor.recent_notes, 0, "zero hides the list");
+    }
+
+    fn provider(id: &str, kind: ProviderKind, url: &str) -> ProviderConfig {
+        ProviderConfig {
+            id: id.into(),
+            kind,
+            name: id.into(),
+            base_url: url.into(),
+            model: String::new(),
+            location: Location::Local,
+            supports_tools: true,
+            context_tokens: 8000,
+        }
+    }
+
+    #[test]
+    fn lm_studio_is_local_only_at_a_loopback_address() {
+        let near = provider("a", ProviderKind::LmStudio, "http://localhost:1234/v1");
+        let far = provider("b", ProviderKind::LmStudio, "https://models.example.com/v1");
+        assert_eq!(near.effective_location(), Location::Local);
+        assert_eq!(far.effective_location(), Location::Cloud);
+    }
+
+    #[test]
+    fn a_cloud_default_provider_moves_to_raven_and_a_local_one_takes_its_place() {
+        let mut s = Settings::default();
+        s.ai.providers.push(provider(
+            "claude",
+            ProviderKind::Anthropic,
+            "https://api.anthropic.com",
+        ));
+        s.ai.default_provider_id = "claude".into();
+        s.normalize();
+        assert_eq!(s.ai.default_provider_id, "lmstudio-default");
+        assert_eq!(s.ai.raven_provider_id.as_deref(), Some("claude"));
+    }
+
+    #[test]
+    fn raven_keeps_its_own_provider_and_never_holds_a_local_one() {
+        let mut s = Settings::default();
+        s.ai.providers.push(provider(
+            "claude",
+            ProviderKind::Anthropic,
+            "https://api.anthropic.com",
+        ));
+        s.ai.providers.push(provider(
+            "other",
+            ProviderKind::OpenAiCompatible,
+            "https://api.example.com/v1",
+        ));
+        s.ai.default_provider_id = "other".into();
+        s.ai.raven_provider_id = Some("claude".into());
+        s.normalize();
+        assert_eq!(s.ai.raven_provider_id.as_deref(), Some("claude"));
+        s.ai.raven_provider_id = Some("lmstudio-default".into());
+        s.normalize();
+        assert_eq!(
+            s.ai.raven_provider_id, None,
+            "a local provider cannot be Raven's"
+        );
+        s.ai.raven_provider_id = Some("gone".into());
+        s.normalize();
+        assert_eq!(s.ai.raven_provider_id, None);
+    }
+
+    #[test]
+    fn old_settings_load_with_raven_off() {
+        let old: Settings = serde_json::from_str(r#"{"schemaVersion":1}"#).unwrap();
+        assert_eq!(old.ai.raven_provider_id, None);
+    }
+
+    #[test]
+    fn embeddings_need_a_local_provider() {
+        let mut s = Settings::default();
+        s.ai.providers.push(provider(
+            "far",
+            ProviderKind::OpenAiCompatible,
+            "https://api.example.com/v1",
+        ));
+        s.ai.embeddings.enabled = true;
+        s.ai.embeddings.provider_id = "far".into();
+        s.normalize();
+        assert!(!s.ai.embeddings.enabled);
     }
 }

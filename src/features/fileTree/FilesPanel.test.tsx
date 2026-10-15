@@ -52,7 +52,6 @@ const project: Project = {
   folder: "Work/Security",
   instructions: "",
   providerId: null,
-  localOnly: true,
   createdAt: "",
   updatedAt: "",
 };
@@ -66,6 +65,7 @@ const settings = (recentNotes: number): Settings => ({
   git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
   ai: {
     defaultProviderId: "p1",
+    ravenProviderId: null,
     baseInstruction: "",
     allowOwnKnowledge: false,
     globalInstructions: "",
@@ -98,13 +98,13 @@ describe("FilesPanel", () => {
     });
   });
 
-  it("shows note counts on folders, and a lock on a local-only project", () => {
+  it("shows note counts on folders, and no lock on projects", () => {
     useTreeStore.setState({ expanded: new Set(["Work"]) });
     render(<FilesPanel />);
     // Work now holds only Plan.md: the project inside it is listed under Projects.
     expect(screen.getByTestId("tree-Work")).toHaveTextContent("1");
     expect(screen.getByTestId("project-Work/Security")).toHaveTextContent("Security docs");
-    expect(screen.getAllByLabelText("Local AI only").length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText("Local AI only")).toBeNull();
   });
 
   it("a project is not part of All files, but its notes are listed under Projects", () => {

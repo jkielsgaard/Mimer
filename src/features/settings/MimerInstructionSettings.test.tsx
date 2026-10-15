@@ -20,6 +20,7 @@ function settings(baseInstruction: string): Settings {
     git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
     ai: {
       defaultProviderId: "p1",
+      ravenProviderId: null,
       baseInstruction,
       allowOwnKnowledge: false,
       globalInstructions: "",

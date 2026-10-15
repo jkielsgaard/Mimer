@@ -11,19 +11,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
-import { parseResearchAnswer, safeFileName } from "@/lib/researchAnswer";
-import { joinPath } from "@/lib/utils";
+import { freeNoteName, parseResearchAnswer } from "@/lib/researchAnswer";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { currentFolder, useVaultStore } from "@/stores/vaultStore";
-
-/** First free file name `Title.md`, `Title 2.md`, … in `folder`. */
-function freeName(title: string, folder: string, files: readonly string[]): string {
-  const base = safeFileName(title);
-  let name = base;
-  for (let i = 2; files.includes(joinPath(folder, `${name}.md`)); i++)
-    name = `${base} ${String(i)}`;
-  return name;
-}
 
 /**
  * File → Import an answer from a cloud AI: paste the answer to a research prompt, check the
@@ -62,7 +52,7 @@ export function ImportAnswerDialog() {
     setBusy(true);
     try {
       const vault = useVaultStore.getState();
-      const name = freeName(title, folder, files);
+      const name = freeNoteName(title, folder, files);
       const path = await api.createNote(folder, name);
       const content = parsed.content.replace(/^title:.*$/m, `title: ${title.trim()}`);
       await api.writeNote(path, content);

@@ -10,6 +10,8 @@ import { EditorArea } from "@/features/workspace/EditorArea";
 import { FilesPanel } from "@/features/fileTree/FilesPanel";
 import { HistoryPanel } from "@/features/history/HistoryPanel";
 import { ImagesPanel } from "@/features/images/ImagesPanel";
+import { RavenPanel } from "@/features/raven/RavenPanel";
+import { useRaven } from "@/features/raven/useRaven";
 import { SearchPanel } from "@/features/search/SearchPanel";
 import { panelStorage } from "@/lib/safeStorage";
 
@@ -18,6 +20,7 @@ import { Header } from "./Header";
 import { StatusBar } from "./StatusBar";
 import { usePanelCollapse } from "./usePanelCollapse";
 import { useChatStore } from "@/stores/chatStore";
+import { useRavenStore } from "@/stores/ravenStore";
 import { Tabs } from "./Tabs";
 
 const LEFT_TABS: { id: LeftTab; label: string }[] = [
@@ -29,11 +32,19 @@ const RIGHT_TABS: { id: RightTab; label: string }[] = [
   { id: "images", label: "Images" },
   { id: "history", label: "History" },
 ];
+const RAVEN_TAB: { id: RightTab; label: string } = { id: "raven", label: "Raven" };
 
 /** Title bar, three resizable/collapsible columns and the status bar. */
 export function AppShell() {
   const ui = useUiStore();
   const streaming = useChatStore((s) => s.streaming);
+  const ravenStreaming = useRavenStore((s) => s.streaming);
+  // The Raven tab is there only when a cloud provider has been chosen for it.
+  const raven = useRaven();
+  const rightTabs = raven
+    ? [RIGHT_TABS[0] ?? RAVEN_TAB, RAVEN_TAB, ...RIGHT_TABS.slice(1)]
+    : RIGHT_TABS;
+  const rightTab = ui.rightTab === "raven" && !raven ? "assistant" : ui.rightTab;
   const left = useRef<ImperativePanelHandle>(null);
   const right = useRef<ImperativePanelHandle>(null);
 
@@ -107,16 +118,20 @@ export function AppShell() {
         >
           <div className="flex h-full min-h-0 flex-col">
             <Tabs
-              tabs={RIGHT_TABS}
-              value={ui.rightTab}
+              tabs={rightTabs}
+              value={rightTab}
               onChange={ui.setRightTab}
               label="Right panel"
-              busy={streaming ? "assistant" : undefined}
+              busy={[
+                ...(streaming ? (["assistant"] as const) : []),
+                ...(ravenStreaming ? (["raven"] as const) : []),
+              ]}
             />
             <div className="min-h-0 flex-1">
-              {ui.rightTab === "assistant" && <ChatPanel />}
-              {ui.rightTab === "images" && <ImagesPanel />}
-              {ui.rightTab === "history" && <HistoryPanel />}
+              {rightTab === "assistant" && <ChatPanel />}
+              {rightTab === "raven" && <RavenPanel />}
+              {rightTab === "images" && <ImagesPanel />}
+              {rightTab === "history" && <HistoryPanel />}
             </div>
           </div>
         </Panel>

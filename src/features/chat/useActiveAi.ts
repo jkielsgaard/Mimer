@@ -13,8 +13,12 @@ export function useActiveAi() {
   return useMemo(() => {
     const anchor = activePath ?? currentFolder({ activePath, selectedPath, files, tree });
     const project = projectForPath(projects, anchor === "" ? null : anchor);
-    const providerId = project?.providerId ?? settings?.ai.defaultProviderId;
-    const provider = settings?.ai.providers.find((p) => p.id === providerId);
-    return { project, provider, localOnly: project?.localOnly ?? false };
+    // A project provider that is not local (from an older version) is ignored, as in the backend.
+    const own = settings?.ai.providers.find(
+      (p) => p.id === project?.providerId && p.location === "local",
+    );
+    const provider =
+      own ?? settings?.ai.providers.find((p) => p.id === settings.ai.defaultProviderId);
+    return { project, provider };
   }, [settings, projects, activePath, selectedPath, files, tree]);
 }

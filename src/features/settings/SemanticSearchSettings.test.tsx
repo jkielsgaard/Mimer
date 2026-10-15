@@ -24,6 +24,7 @@ function settings(
     git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
     ai: {
       defaultProviderId: "p1",
+      ravenProviderId: null,
       baseInstruction: "",
       allowOwnKnowledge: false,
       globalInstructions: "",
@@ -33,7 +34,7 @@ function settings(
           id: "p1",
           kind,
           name: "Provider",
-          baseUrl: "https://x",
+          baseUrl: providerLocation === "local" ? "http://localhost:1234/v1" : "https://x",
           model: "",
           location: providerLocation,
           supportsTools: true,
@@ -55,7 +56,12 @@ function settings(
 }
 
 describe("SemanticSearchSettings", () => {
-  it("warns when the embedding provider is a cloud service", () => {
+  it("offers local providers only, because the notes are read to make embeddings", () => {
+    const { unmount } = render(
+      <SemanticSearchSettings draft={settings("local")} onChange={vi.fn()} persist={vi.fn()} />,
+    );
+    expect(screen.getByRole("option", { name: "Provider" })).toBeInTheDocument();
+    unmount();
     render(
       <SemanticSearchSettings
         draft={settings("cloud", "openai_compatible")}
@@ -63,7 +69,7 @@ describe("SemanticSearchSettings", () => {
         persist={vi.fn()}
       />,
     );
-    expect(screen.getByRole("note")).toHaveTextContent(/sent to this provider/);
+    expect(screen.queryByRole("option", { name: "Provider" })).toBeNull();
   });
 
   it("does not offer Anthropic, which has no embeddings endpoint", () => {

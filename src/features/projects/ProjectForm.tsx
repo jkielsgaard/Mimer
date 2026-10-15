@@ -35,25 +35,25 @@ export function ProjectForm({
     useUiStore.getState().openProjectDialog(null);
   };
   const p0 = state.project;
-  const cloudDefault =
-    settings.ai.providers.find((x) => x.id === settings.ai.defaultProviderId)?.location === "cloud";
+  // Notes only go to local AI, so only local providers can be chosen for a project.
+  const localProviders = settings.ai.providers.filter((p) => p.location === "local");
   const [name, setName] = useState(p0?.name ?? basename(state.folder));
   const [instructions, setInstructions] = useState(p0?.instructions ?? "");
-  const [providerId, setProviderId] = useState(p0?.providerId ?? GLOBAL);
-  const [localOnly, setLocalOnly] = useState(p0?.localOnly ?? !cloudDefault);
+  const [providerId, setProviderId] = useState(
+    localProviders.some((p) => p.id === p0?.providerId) ? (p0?.providerId ?? GLOBAL) : GLOBAL,
+  );
   const [askText, setAskText] = useState("");
   const [proposal, setProposal] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
   const [askError, setAskError] = useState<string | null>(null);
-  const [lockPrompt, setLockPrompt] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const raw = useRef("");
 
   const isNew = state.project === null;
   const globalDefault = settings.ai.providers.find((p) => p.id === settings.ai.defaultProviderId);
 
-  const persist = async (lock: boolean | null): Promise<void> => {
-    const finalLocal = lock ?? localOnly;
+  const save = async (): Promise<void> => {
+    if (name.trim() === "") return;
     const pid = providerId === GLOBAL ? null : providerId;
     try {
       if (state.project) {
@@ -62,10 +62,9 @@ export function ProjectForm({
           name: name.trim(),
           instructions,
           providerId: pid,
-          localOnly: finalLocal,
         });
       } else {
-        await api.createProject(state.folder, name.trim(), instructions, pid, finalLocal);
+        await api.createProject(state.folder, name.trim(), instructions, pid);
       }
       await useVaultStore.getState().refreshProjects();
       useUiStore.getState().toast("Project saved", "success");
@@ -73,16 +72,6 @@ export function ProjectForm({
     } catch (e) {
       reportError(e);
     }
-  };
-
-  const save = (): void => {
-    if (name.trim() === "") return;
-    // New project while the global default is a cloud provider: offer to lock to local AI.
-    if (isNew && providerId === GLOBAL && globalDefault?.location === "cloud" && !localOnly) {
-      setLockPrompt(true);
-      return;
-    }
-    void persist(null);
   };
 
   const askAi = async (): Promise<void> => {
@@ -99,7 +88,6 @@ export function ProjectForm({
           text: instructions,
           notePath: null,
           providerId: providerId === GLOBAL ? null : providerId,
-          localOnly,
         },
         (e) => {
           if (e.type === "textDelta") {
@@ -133,8 +121,8 @@ export function ProjectForm({
               {isNew ? "Make project" : "Project settings"}
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              Folder: <code>{state.folder}</code>. The AI assistant uses these instructions and
-              rules for notes in this folder.
+              Folder: <code>{state.folder}</code>. The AI assistant uses these instructions for
+              notes in this folder.
             </DialogDescription>
           </DialogHeader>
           <div className="flex min-h-0 flex-col gap-3 overflow-auto pr-1">
@@ -235,31 +223,13 @@ export function ProjectForm({
                 }}
               >
                 <option value={GLOBAL}>Use global default ({globalDefault?.name ?? "none"})</option>
-                {settings.ai.providers.map((p) => (
+                {localProviders.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} ({p.location})
+                    {p.name}
                   </option>
                 ))}
               </Select>
             </div>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={localOnly}
-                onChange={(e) => {
-                  setLocalOnly(e.target.checked);
-                }}
-              />
-              Local AI only
-              <span className="text-xs text-muted-foreground">
-                (cloud providers are blocked for this project)
-              </span>
-              <InfoHint
-                label="Local AI only"
-                text="Mimer then only uses an AI on your own computer for this project. Nothing from the project is sent to a cloud service, and Mimer enforces it."
-                topic="projects"
-              />
-            </label>
           </div>
           <DialogFooter className="items-center">
             {!isNew && (
@@ -276,28 +246,17 @@ export function ProjectForm({
             <Button variant="ghost" onClick={close}>
               Cancel
             </Button>
-            <Button disabled={name.trim() === ""} onClick={save}>
+            <Button
+              disabled={name.trim() === ""}
+              onClick={() => {
+                void save();
+              }}
+            >
               Save
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <ConfirmDialog
-        open={lockPrompt}
-        title="Lock this project to local AI?"
-        description={`This project will use ${globalDefault?.name ?? "a cloud provider"}. Lock it to local AI instead?`}
-        confirmLabel="Lock to local AI"
-        cancelLabel="Use global default"
-        onCancel={() => {
-          setLockPrompt(false);
-          void persist(false);
-        }}
-        onConfirm={() => {
-          setLockPrompt(false);
-          setLocalOnly(true);
-          void persist(true);
-        }}
-      />
       <ConfirmDialog
         open={confirmDelete}
         title="Remove this project?"

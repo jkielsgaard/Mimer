@@ -5,7 +5,7 @@ pub mod lmstudio;
 pub mod openai_compat;
 pub mod types;
 
-use super::router::ResolvedProvider;
+use super::router::Approved;
 use crate::error::{AppError, AppResult};
 use crate::settings::{ProviderConfig, ProviderKind};
 use serde::Serialize;
@@ -23,10 +23,11 @@ pub fn http_client() -> AppResult<reqwest::Client> {
         .map_err(|e| AppError::Provider(format!("Could not start the HTTP client: {e}")))
 }
 
-/// Sends a chat request. Only reachable with a [`ResolvedProvider`], i.e. after local-only checks.
+/// Sends a chat request. Only reachable with an approved provider: a `LocalProvider` for notes or
+/// the `CloudProvider` of Raven (see `ai::router`).
 pub async fn chat(
     client: &reqwest::Client,
-    provider: &ResolvedProvider,
+    provider: &impl Approved,
     key: Option<&str>,
     req: &LlmRequest,
     cancel: &CancellationToken,

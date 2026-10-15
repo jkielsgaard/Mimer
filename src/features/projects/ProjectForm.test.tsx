@@ -1,0 +1,82 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import type { Settings } from "@/bindings/Settings";
+
+vi.mock("@/lib/api", () => ({ api: {}, toApiError: (e: unknown) => ({ message: String(e) }) }));
+
+import { ProjectForm } from "./ProjectForm";
+
+const settings: Settings = {
+  schemaVersion: 1,
+  recentVaults: [],
+  lastVault: null,
+  theme: "system",
+  editor: { fontSize: 15, lineWidth: 760, spellcheck: true, recentNotes: 4 },
+  git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
+  ai: {
+    defaultProviderId: "lm",
+    ravenProviderId: "claude",
+    baseInstruction: "",
+    allowOwnKnowledge: false,
+    globalInstructions: "",
+    embeddings: { enabled: false, providerId: "lm", model: "" },
+    providers: [
+      {
+        id: "lm",
+        kind: "lmstudio",
+        name: "LM Studio",
+        baseUrl: "http://localhost:1234/v1",
+        model: "",
+        location: "local",
+        supportsTools: true,
+        contextTokens: 8000,
+      },
+      {
+        id: "claude",
+        kind: "anthropic",
+        name: "Claude",
+        baseUrl: "https://api.anthropic.com",
+        model: "",
+        location: "cloud",
+        supportsTools: true,
+        contextTokens: 8000,
+      },
+    ],
+  },
+};
+
+describe("ProjectForm", () => {
+  it("has no Local AI only choice and offers local providers only", () => {
+    render(<ProjectForm state={{ folder: "Work", project: null }} settings={settings} />);
+    expect(screen.queryByText(/Local AI only/)).toBeNull();
+    const options = screen.getByLabelText("AI provider").querySelectorAll("option");
+    expect([...options].map((o) => o.textContent)).toEqual([
+      "Use global default (LM Studio)",
+      "LM Studio",
+    ]);
+  });
+
+  it("falls back to the default when an old project points at a cloud provider", () => {
+    render(
+      <ProjectForm
+        state={{
+          folder: "Work",
+          project: {
+            schemaVersion: 1,
+            id: "p",
+            name: "Work",
+            folder: "Work",
+            instructions: "",
+            providerId: "claude",
+            createdAt: "",
+            updatedAt: "",
+          },
+        }}
+        settings={settings}
+      />,
+    );
+    expect(screen.getByRole<HTMLSelectElement>("combobox", { name: "AI provider" }).value).toBe(
+      "__global__",
+    );
+  });
+});

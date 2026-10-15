@@ -637,6 +637,8 @@ Internally, convert all providers to one common message/tool format (`ai::provid
 
 **Timeouts**: connect 10 s; no total timeout on streams; cancel via `ai_cancel`.
 
+> **Changed in 0.7.0:** the per-project local-only lock below was replaced. Notes only ever go to local providers, and cloud AI is reachable only through Raven, which has no access to notes. See `docs/DECISIONS.md` (Version 0.7.0).
+
 **Router and local-only enforcement** (`ai::router`)
 
 1. Determine the provider: project `providerId` → else global default.

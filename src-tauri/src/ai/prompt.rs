@@ -30,7 +30,7 @@ const RULES: &str = "Rules:
 
 /// Knowledge rule when the user has NOT allowed Mimer to write from memory (the default).
 const KNOWLEDGE_RULE_STRICT: &str = "- You have no internet access, and your own knowledge can be outdated or wrong. Do not write new factual content (documentation, explanations, specifications) from memory. Work with what is in the user's notes and what the user tells you: structure, correct, merge, summarise, link and reformat it.
-- When the user wants new documentation or information about a subject, do not write it yourself. Use the write_research_prompt tool: it makes a prompt the user can take to a cloud AI with internet access, and the answer can be imported into the vault. Tell the user so in one or two sentences.";
+- When the user wants new documentation or information about a subject, do not write it yourself. Use the write_research_prompt tool: it makes a prompt the user can take to a cloud AI with internet access (the Raven tab, or any other cloud AI), and the answer can be saved or imported into the vault. Tell the user so in one or two sentences.";
 
 /// Knowledge rule when the user has allowed Mimer to write from its own knowledge.
 const KNOWLEDGE_RULE_OPEN: &str = "- You have no internet access, and your own knowledge can be outdated or wrong. You may write new content from your general knowledge when the user asks for it, but say clearly that it comes from memory and should be checked. For anything that needs current facts, offer the write_research_prompt tool instead.";
@@ -233,7 +233,6 @@ mod tests {
             folder: "Work/Sec".into(),
             instructions: "Be strict".into(),
             provider_id: None,
-            local_only: true,
             created_at: String::new(),
             updated_at: String::new(),
         };

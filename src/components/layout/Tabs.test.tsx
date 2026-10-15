@@ -23,4 +23,12 @@ describe("Tabs", () => {
     rerender(<Tabs tabs={tabs} value="b" onChange={() => undefined} label="Panel" />);
     expect(screen.queryByLabelText("Working")).toBeNull();
   });
+
+  it("can show a dot on several busy tabs", () => {
+    const three = [...tabs, { id: "c", label: "Raven" }];
+    render(
+      <Tabs tabs={three} value="b" onChange={() => undefined} label="Panel" busy={["a", "c"]} />,
+    );
+    expect(screen.getAllByLabelText("Working")).toHaveLength(2);
+  });
 });

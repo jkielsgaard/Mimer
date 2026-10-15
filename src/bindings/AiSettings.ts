@@ -2,7 +2,16 @@
 import type { EmbeddingSettings } from "./EmbeddingSettings";
 import type { ProviderConfig } from "./ProviderConfig";
 
-export type AiSettings = { defaultProviderId: string, 
+export type AiSettings = { 
+/**
+ * The local provider used by Mimer (the notes AI), inline commands and project help.
+ */
+defaultProviderId: string, 
+/**
+ * The cloud provider used by Raven, the separate chat that has no access to notes.
+ * `None` means Raven is off and its tab is hidden.
+ */
+ravenProviderId: string | null, 
 /**
  * Who Mimer is. Empty means the built-in default (`ai::prompt::DEFAULT_BASE_INSTRUCTION`).
  * The safety rules are not part of it and cannot be edited.

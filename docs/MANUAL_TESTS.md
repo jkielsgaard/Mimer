@@ -9,7 +9,7 @@ Tick each box as you go. **Run the whole list on Linux before each release and a
 
 - [ ] `pnpm check` finishes with no errors (format, lint, typecheck, frontend tests, `cargo fmt`, `cargo clippy`, Rust tests). On Bazzite/Silverblue, run it inside the development container: the host has no GTK/WebKit libraries for the Rust part.
 - [ ] `pnpm tauri dev` opens the app window without errors in the terminal.
-- [ ] The status bar (bottom right) shows `v0.6.0+<commit>`, for example `v0.6.0+63947f4` (`.dirty` at the end means the build has uncommitted changes). The same version is on the welcome screen and in **Settings → General**. Hover over the status bar version to see the build date and time; it must match when you started or built the app.
+- [ ] The status bar (bottom right) shows `v0.7.0+<commit> beta`, for example `v0.7.0+63947f4` (`.dirty` at the end means the build has uncommitted changes). The same version is on the welcome screen and in **Settings → General**. Hover over the status bar version to see the build date and time; it must match when you started or built the app.
 
 ### 1. Vault and file tree (M1–M2)
 
@@ -107,13 +107,13 @@ Check with `git log --oneline` inside the vault folder (any Git client works).
 
 ### 8. Projects (M9)
 
-- [ ] Right-click a folder → **Make project**: dialog with Name, Instructions, AI provider, **Local AI only**. Save: the folder gets a different icon; `.vault/projects/<id>.json` exists and was committed (`Project: <name> updated`).
+- [ ] Right-click a folder → **Make project**: dialog with Name, Instructions and AI provider (local providers only). Save: the folder gets a different icon; `.vault/projects/<id>.json` exists and was committed (`Project: <name> updated`).
 - [ ] **Make project** is greyed out for a folder inside a project and for a folder that contains a project.
-- [ ] With a note from the project open, the chat header and status bar show the project name; with **Local AI only** on, a lock icon is shown.
+- [ ] With a note from the project open, the chat header and status bar show the project name.
 - [ ] Put an instruction such as "Always answer in French" in the project: the assistant's answers visibly change for notes in that folder, and not for notes outside it.
 - [ ] In the project dialog, type "Make these instructions stricter about formatting" and press **Ask AI**: a diff of the proposed instructions appears. **Reject** leaves the field alone; **Accept** replaces the text; nothing is saved until you press **Save**.
 - [ ] Rename or move a project folder in the tree: the project keeps working (its folder path is updated in the same commit).
-- [ ] With a cloud provider selected for a project that has **Local AI only** ticked, sending a chat message gives a clear "blocked" message and **nothing** is sent to the cloud.
+- [ ] A cloud provider cannot be chosen for Mimer: in Settings → AI the Mimer provider list has local providers only, and an old project that pointed at a cloud provider uses the default.
 - [ ] Set a cloud provider as the global default, then make a new project: a prompt offers **Lock to local AI** / **Use global default**.
 
 ### 9. Agent and proposals (M10)
@@ -132,8 +132,7 @@ Check with `git log --oneline` inside the vault folder (any Git client works).
 
 - [ ] Add an Anthropic provider, store the key, test the connection (models are listed), choose a model.
 - [ ] Add an OpenAI-compatible cloud provider the same way.
-- [ ] Make a cloud provider the global default. Chat and the agent (with proposals) work with it in a project that is **not** local-only.
-- [ ] A project with **Local AI only** still refuses the cloud provider.
+- [ ] Add a cloud provider and choose it as Raven's provider: the Raven tab appears and chat works there (see section 35). Mimer itself keeps using the local provider.
 
 ### 11. Safety and robustness
 
@@ -149,7 +148,7 @@ Check with `git log --oneline` inside the vault folder (any Git client works).
 - [ ] The app starts from the Start menu and works with LM Studio running on the same machine (Settings → AI providers → Test connection).
 - [ ] Windows: images pasted into notes display; opening a note's folder with **Reveal in file manager** opens Explorer.
 - [ ] Uninstall via Windows Settings → Apps removes the app; your vault folders are untouched.
-- [ ] Linux: the `.AppImage` starts; macOS: the `.dmg` opens (an "unidentified developer" warning is expected because v1 is unsigned).
+- [ ] Linux: the `.AppImage` starts.
 
 ### 13. Tabs and split view
 
@@ -213,7 +212,7 @@ Prepare a note with a heading, bold text, a table, a task list, a code block, an
 - [ ] Edit a note, wait a few seconds, search for the new text by meaning: it is found. Typing stays smooth during indexing.
 - [ ] Stop LM Studio's server and search by meaning: a message says semantic search is unavailable and keyword results are still shown.
 - [ ] Assistant: "What do our notes say about losing a laptop?" shows the line "Searched by meaning for …" and answers from the notes.
-- [ ] Privacy: with a cloud embedding provider, a warning is shown. For a project marked **Local AI only**, its notes are not in meaning results and the assistant reports that semantic search is unavailable there.
+- [ ] Privacy: only local providers are listed as embedding providers, so no note is sent to a cloud service.
 - [ ] `.vault/embeddings.db` is ignored by Git (`git status` clean).
 
 ### 19. Mimer, the assistant's identity
@@ -323,7 +322,7 @@ Prepare a note with a heading, bold text, a table, a task list, a code block, an
 
 - [ ] **New** menu: Note, Meeting note…, Quick note, Folder…, Project… all work. A project cannot be made inside a project.
 - [ ] The filter box narrows the tree while you type; Esc clears it. **Collapse all** closes every folder. **Show the open note** finds the open note in the tree. **Sort** by Last changed puts the newest note first.
-- [ ] Folders show how many notes they hold; a Local-AI-only project has a lock.
+- [ ] Folders show how many notes they hold; there are no lock icons on projects.
 - [ ] **Recent** lists the notes you opened last; **Projects** lists projects, and clicking one finds its folder. Both can be folded and remember it.
 - [ ] A breadcrumb above the note shows `Project › Folder › Note`; clicking a folder shows it in the tree.
 
@@ -364,4 +363,18 @@ Prepare a note with a heading, bold text, a table, a task list, a code block, an
 - [ ] Turn the setting on and ask again: Mimer may write the text, and says it comes from memory.
 - [ ] Paste the prompt in a cloud AI with internet access. Copy its answer. **Tasks → Import an answer from a cloud AI…**: paste. The title is filled in; with no sources a warning is shown. **Save as note**: a new note opens with `status: needs review`. Importing the same title again gives `… 2`; nothing is overwritten.
 - [ ] An answer wrapped in a code fence, or with a sentence before it, is imported without the fence and the sentence.
-- [ ] A Local-AI-only project: the research prompt is built without any cloud request (look at the network: there is none).
+- [ ] With Raven on, the prompt card has **Send to Raven**: it fills Raven's message box and does not send.
+
+### 35. Raven and local-only notes
+
+- [ ] Settings → AI: the **Mimer's provider** list has no cloud provider (also not an LM Studio provider with a non-local address). **Raven's provider** lists the cloud providers and **Off**.
+- [ ] An existing settings file whose default provider was a cloud provider: after the update, Mimer uses a local provider and the old cloud provider is Raven's.
+- [ ] Raven **Off**: there is no Raven tab. Choose a cloud provider and Save: the tab appears next to Mimer.
+- [ ] Both tabs show a line at the top: "Local AI · your notes stay on this computer" (Mimer) and "Cloud AI · no access to your notes" with "What you type here is sent to <provider>." (Raven).
+- [ ] The first time in Raven a notice appears; the message box is locked until **I understand**; it does not come back.
+- [ ] Ask Raven about your own notes: it says it cannot see them. There is no attach button, no `/` picker and no "include current note" in Raven.
+- [ ] **Save as note** under an answer makes a note with `source: raven` and `status: needs review`. Attach it to Mimer with `/` and ask about it.
+- [ ] Stop and **New chat** work in Raven. A cloud answer streams word by word.
+- [ ] Project settings have no "Local AI only"; an old project file with `"localOnly": true` still opens.
+- [ ] Inline AI (`Ctrl/Cmd+K`) and the project dialog's **Ask AI** use the local provider.
+- [ ] Network check: while you chat with Mimer, nothing goes to a cloud host; Raven only talks to its own provider.

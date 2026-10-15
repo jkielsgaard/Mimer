@@ -9,6 +9,7 @@ import type { CommitEntry } from "@/bindings/CommitEntry";
 import type { CommitReason } from "@/bindings/CommitReason";
 import type { DeletedFile } from "@/bindings/DeletedFile";
 import type { InlineRequest } from "@/bindings/InlineRequest";
+import type { RavenRequest } from "@/bindings/RavenRequest";
 import type { NoteContent } from "@/bindings/NoteContent";
 import type { Project } from "@/bindings/Project";
 import type { ProposalSetView } from "@/bindings/ProposalSetView";
@@ -79,7 +80,7 @@ async function call<T>(cmd: string, args?: Record<string, unknown>): Promise<T> 
 /** Runs a streaming command; `onEvent` receives every `ChatEvent`. Resolves to the task id. */
 async function stream(
   cmd: string,
-  request: ChatRequest | InlineRequest,
+  request: ChatRequest | InlineRequest | RavenRequest,
   onEvent: (e: ChatEvent) => void,
 ): Promise<string> {
   const channel = new Channel<ChatEvent>();
@@ -136,13 +137,8 @@ export const api = {
 
   // Projects
   listProjects: () => call<Project[]>("list_projects"),
-  createProject: (
-    folder: string,
-    name: string,
-    instructions: string,
-    providerId: string | null,
-    localOnly: boolean,
-  ) => call<Project>("create_project", { folder, name, instructions, providerId, localOnly }),
+  createProject: (folder: string, name: string, instructions: string, providerId: string | null) =>
+    call<Project>("create_project", { folder, name, instructions, providerId }),
   updateProject: (project: Project) => call<Project>("update_project", { project }),
   deleteProject: (id: string) => call<undefined>("delete_project", { id }),
 
@@ -162,6 +158,9 @@ export const api = {
     stream("ai_chat", request, onEvent),
   aiInline: (request: InlineRequest, onEvent: (e: ChatEvent) => void) =>
     stream("ai_inline", request, onEvent),
+  /** A chat with the cloud AI of Raven: messages only, no notes. */
+  ravenChat: (request: RavenRequest, onEvent: (e: ChatEvent) => void) =>
+    stream("raven_chat", request, onEvent),
   aiCancel: (taskId: string) => call<undefined>("ai_cancel", { taskId }),
   getProposals: (setId: string) => call<ProposalSetView>("get_proposals", { setId }),
   applyProposals: (setId: string, acceptedIds: string[], confirmedChangedIds: string[]) =>

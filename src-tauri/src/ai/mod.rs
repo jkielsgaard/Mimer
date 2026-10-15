@@ -6,6 +6,7 @@ pub mod mentions;
 pub mod prompt;
 pub mod proposals;
 pub mod providers;
+pub mod raven;
 pub mod router;
 pub mod tools;
 
@@ -117,5 +118,4 @@ pub struct InlineRequest {
     pub note_path: Option<String>,
     /// Overrides for the project dialog (unsaved project settings).
     pub provider_id: Option<String>,
-    pub local_only: Option<bool>,
 }

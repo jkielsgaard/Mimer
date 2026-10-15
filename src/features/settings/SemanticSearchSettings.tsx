@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { api, toApiError } from "@/lib/api";
+import { effectiveLocation } from "@/lib/providers";
 import { useEmbeddingStore } from "@/stores/embeddingStore";
 import { reportError } from "@/stores/uiStore";
 import { InfoHint } from "@/components/InfoHint";
@@ -25,8 +26,10 @@ export function SemanticSearchSettings({ draft, onChange, persist }: Props) {
   const [models, setModels] = useState<string[]>([]);
   const [confirmRebuild, setConfirmRebuild] = useState(false);
   const emb = draft.ai.embeddings;
-  const providers = draft.ai.providers.filter((p) => p.kind !== "anthropic");
-  const provider = providers.find((p) => p.id === emb.providerId);
+  // Semantic search reads the notes, so only local providers qualify.
+  const providers = draft.ai.providers.filter(
+    (p) => p.kind !== "anthropic" && effectiveLocation(p) === "local",
+  );
   const set = (patch: Partial<Settings["ai"]["embeddings"]>): void => {
     onChange({ ...draft, ai: { ...draft.ai, embeddings: { ...emb, ...patch } } });
   };
@@ -80,16 +83,14 @@ export function SemanticSearchSettings({ draft, onChange, persist }: Props) {
         >
           {providers.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.name} ({p.location})
+              {p.name}
             </option>
           ))}
         </Select>
-        {provider?.location === "cloud" && (
-          <p role="note" className="rounded border border-warning/60 bg-warning/15 p-2 text-xs">
-            Note contents are sent to this provider to create embeddings. Notes in projects marked{" "}
-            <em>Local AI only</em> are never sent.
-          </p>
-        )}
+        <p className="text-xs text-muted-foreground">
+          Only local providers are listed: the notes are read to create embeddings, and they never
+          leave your computer.
+        </p>
       </div>
       <div className="flex flex-col gap-1">
         <Label htmlFor="emb-model">Embedding model</Label>

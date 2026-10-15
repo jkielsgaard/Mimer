@@ -1,0 +1,21 @@
+import type { ProviderConfig } from "@/bindings/ProviderConfig";
+
+/** True when the URL points at this machine. */
+export function isLoopbackUrl(url: string): boolean {
+  try {
+    const h = new URL(url).hostname.replace(/^\[|\]$/g, "");
+    return h === "localhost" || h === "127.0.0.1" || h === "::1";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Where a provider really is, as the backend decides it: Anthropic is always cloud, and the
+ * others are local only at a loopback address. Notes are only sent to local providers.
+ */
+export function effectiveLocation(p: ProviderConfig): "local" | "cloud" {
+  if (p.kind === "anthropic") return "cloud";
+  if (!isLoopbackUrl(p.baseUrl)) return "cloud";
+  return p.kind === "openai_compatible" ? p.location : "local";
+}

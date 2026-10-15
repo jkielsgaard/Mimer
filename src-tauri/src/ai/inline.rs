@@ -81,14 +81,11 @@ pub async fn run_inline(
         (Ok(v), Some(p)) => projects::for_path(&v.project_list(), p).cloned(),
         _ => None,
     };
-    let provider = if req.provider_id.is_some() || req.local_only.is_some() {
-        router::select_provider(
-            &settings,
-            req.provider_id.as_deref(),
-            req.local_only.unwrap_or(false),
-        )?
-    } else {
-        router::select_for_project(&settings, project.as_ref())?
+    // Inline commands read notes, so only a local provider is accepted. The provider override
+    // comes from the project dialog (unsaved settings) and is checked here, not in the UI.
+    let provider = match req.provider_id.as_deref() {
+        Some(id) => router::select_local(&settings, Some(id))?,
+        None => router::select_for_project(&settings, project.as_ref())?,
     };
     let key = keychain::get_key(&provider.config().id);
     let (system, user) = build_messages(&req, &settings.ai.global_instructions, project.as_ref());
@@ -127,7 +124,6 @@ mod tests {
             text: "hello wrld".into(),
             note_path: None,
             provider_id: None,
-            local_only: None,
         }
     }
 

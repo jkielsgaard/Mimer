@@ -1,5 +1,5 @@
-//! Background indexing: embeds new or changed chunks, reuses vectors of unchanged ones, and
-//! keeps notes that must stay local out of the cloud.
+//! Background indexing: embeds new or changed chunks and reuses vectors of unchanged ones. The
+//! embedding provider is always local (see `ai::router`), so notes never leave the machine.
 
 use super::chunker::chunk_note;
 use super::client::EmbedFn;
@@ -24,15 +24,13 @@ pub struct IndexReport {
     pub cancelled: bool,
 }
 
-/// Indexes the given notes. `excluded` notes are never read or sent (local-only projects when a
-/// cloud provider is used). Stores that are no longer needed are removed.
-// Nine inputs are all required; a struct would only move them around.
+/// Indexes the given notes. Stores that are no longer needed are removed.
+// Many inputs are all required; a struct would only move them around.
 #[allow(clippy::too_many_arguments)]
 pub async fn run_index(
     root: &Path,
     conn: &mut Connection,
     files: &[String],
-    excluded: &HashSet<String>,
     embed: &EmbedFn,
     model: &str,
     rebuild: bool,
@@ -43,7 +41,7 @@ pub async fn run_index(
         store::clear(conn)?;
     }
     store::remove_other_models(conn, model)?;
-    let wanted: Vec<&String> = files.iter().filter(|f| !excluded.contains(*f)).collect();
+    let wanted: Vec<&String> = files.iter().collect();
     let wanted_set: HashSet<&String> = wanted.iter().copied().collect();
     for stale in store::all_paths(conn)? {
         if !wanted_set.contains(&stale) {
@@ -111,22 +109,6 @@ pub async fn run_index(
     Ok(report)
 }
 
-/// Notes in local-only projects, if the embedding provider is a cloud service.
-pub fn excluded_notes(
-    files: &[String],
-    projects: &[crate::projects::Project],
-    cloud: bool,
-) -> HashSet<String> {
-    if !cloud {
-        return HashSet::new();
-    }
-    files
-        .iter()
-        .filter(|f| crate::projects::for_path(projects, f).is_some_and(|p| p.local_only))
-        .cloned()
-        .collect()
-}
-
 #[cfg(test)]
 pub(crate) mod test_support {
     use super::*;
@@ -164,27 +146,12 @@ pub(crate) mod test_support {
 mod tests {
     use super::test_support::fake;
     use super::*;
-    use crate::projects::Project;
     use std::sync::{Arc, Mutex};
 
     fn write(root: &Path, rel: &str, text: &str) {
         let p = root.join(rel);
         std::fs::create_dir_all(p.parent().unwrap()).unwrap();
         std::fs::write(p, text).unwrap();
-    }
-
-    fn project(folder: &str, local_only: bool) -> Project {
-        Project {
-            schema_version: 1,
-            id: "p".into(),
-            name: "P".into(),
-            folder: folder.into(),
-            instructions: String::new(),
-            provider_id: None,
-            local_only,
-            created_at: String::new(),
-            updated_at: String::new(),
-        }
     }
 
     #[tokio::test]
@@ -209,7 +176,6 @@ mod tests {
             d.path(),
             &mut conn,
             &files,
-            &HashSet::new(),
             &embed,
             "m",
             false,
@@ -225,7 +191,6 @@ mod tests {
             d.path(),
             &mut conn,
             &files,
-            &HashSet::new(),
             &embed,
             "m",
             false,
@@ -255,7 +220,6 @@ mod tests {
             d.path(),
             &mut conn,
             &files,
-            &HashSet::new(),
             &embed,
             "m",
             false,
@@ -278,7 +242,6 @@ mod tests {
             d.path(),
             &mut conn,
             &files,
-            &HashSet::new(),
             &embed,
             "m",
             false,
@@ -307,7 +270,6 @@ mod tests {
             d.path(),
             &mut conn,
             &["a.md".into()],
-            &HashSet::new(),
             &embed,
             "m",
             false,
@@ -320,7 +282,6 @@ mod tests {
             d.path(),
             &mut conn,
             &[],
-            &HashSet::new(),
             &embed,
             "m",
             false,
@@ -330,49 +291,6 @@ mod tests {
         .await
         .unwrap();
         assert!(store::all_paths(&conn).unwrap().is_empty());
-    }
-
-    #[tokio::test]
-    async fn local_only_notes_are_never_sent_to_a_cloud_provider() {
-        let d = tempfile::tempdir().unwrap();
-        write(
-            d.path(),
-            "Secret/plan.md",
-            "# Secret\nThe launch codename is ZEBRA-42 and it must stay private.",
-        );
-        write(
-            d.path(),
-            "Open/note.md",
-            "# Open\nA public note about gardening and tomatoes in summer.",
-        );
-        let files = vec!["Secret/plan.md".to_string(), "Open/note.md".to_string()];
-        let excluded = excluded_notes(&files, &[project("Secret", true)], true);
-        assert!(excluded.contains("Secret/plan.md"));
-        let seen = Arc::new(Mutex::new(Vec::new()));
-        let embed = fake(seen.clone());
-        let mut conn = store::open_memory().unwrap();
-        let cancel = CancellationToken::new();
-        run_index(
-            d.path(),
-            &mut conn,
-            &files,
-            &excluded,
-            &embed,
-            "m",
-            false,
-            &cancel,
-            &|_, _| {},
-        )
-        .await
-        .unwrap();
-        let sent = seen.lock().unwrap().join("\n");
-        assert!(
-            !sent.contains("ZEBRA-42"),
-            "secret text reached the embedder"
-        );
-        assert!(sent.contains("gardening"));
-        // A local provider may index the same note.
-        assert!(excluded_notes(&files, &[project("Secret", true)], false).is_empty());
     }
 
     #[tokio::test]
@@ -397,7 +315,6 @@ mod tests {
             d.path(),
             &mut conn,
             &files,
-            &HashSet::new(),
             &embed,
             "m",
             false,
@@ -429,7 +346,6 @@ mod tests {
             d.path(),
             &mut conn,
             &["a.md".into()],
-            &HashSet::new(),
             &embed,
             "old",
             false,
@@ -442,7 +358,6 @@ mod tests {
             d.path(),
             &mut conn,
             &["a.md".into()],
-            &HashSet::new(),
             &embed,
             "new",
             false,

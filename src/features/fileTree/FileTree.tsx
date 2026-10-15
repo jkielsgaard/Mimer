@@ -47,10 +47,6 @@ export function FileTree({
   const sort = useTreeStore((s) => s.sort);
   const order = useTreeStore((s) => s.order);
   const projectFolders = useMemo(() => projects.map((p) => p.folder), [projects]);
-  const lockedFolders = useMemo(
-    () => new Set(projects.filter((p) => p.localOnly).map((p) => p.folder)),
-    [projects],
-  );
   const filtering = filter.trim() !== "";
   const shown = useMemo(() => {
     const sorted = sortTree(filterTree(nodes, filter), sort, order, rootFolder);
@@ -87,7 +83,6 @@ export function FileTree({
                 expanded={expanded}
                 toggle={toggle}
                 projectFolders={projectFolders}
-                lockedFolders={lockedFolders}
                 forceOpen={filtering}
                 onAction={onAction}
                 onDropOn={onDropOn}

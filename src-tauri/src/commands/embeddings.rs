@@ -46,7 +46,7 @@ pub async fn semantic_search(
     limit: Option<u32>,
 ) -> Result<Vec<search::SemanticHit>, AppError> {
     let settings = state.settings_snapshot();
-    let (embed, model, _) = embeddings::embedder_for(&settings)?;
+    let (embed, model) = embeddings::embedder_for(&settings)?;
     let v = state.current_vault()?;
     let chunks = embeddings::load_vectors(&v, &model)?;
     let q = search::embed_query(&embed, query.trim()).await?;
@@ -79,7 +79,7 @@ pub async fn hybrid_search(
     })?;
     let semantic: Vec<search::SemanticHit> =
         if settings.ai.embeddings.enabled && !query.contains("tag:") && !query.contains("path:") {
-            let (embed, model, _) = embeddings::embedder_for(&settings)?;
+            let (embed, model) = embeddings::embedder_for(&settings)?;
             let chunks = embeddings::load_vectors(&v, &model)?;
             let q = search::embed_query(&embed, query.trim()).await?;
             search::rank(&chunks, &q, None, 20)

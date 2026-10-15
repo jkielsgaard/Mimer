@@ -418,7 +418,7 @@ pub fn execute(
         "propose_merge" => merge(v, scope, set, &args),
         "write_research_prompt" => match research_card(call) {
             Ok(card) => ToolOutcome {
-                result: "The research prompt was shown to the user as a card with a Copy button. Tell the user in one or two sentences to take it to a cloud AI with internet access and to bring the answer back with Import answer. Do not repeat the prompt.".into(),
+                result: "The research prompt was shown to the user as a card with a Copy button, and a Send to Raven button when the user has the Raven tab. Tell the user in one or two sentences to take it to a cloud AI with internet access (Raven, or any other) and to bring the answer back, with Save as note in Raven or Import answer. Do not repeat the prompt.".into(),
                 summary: format!("Wrote a research prompt: {}", card.title),
             },
             Err(e) => err("Research prompt failed".into(), e),

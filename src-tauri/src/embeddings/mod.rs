@@ -1,5 +1,4 @@
-//! Semantic search: chunking, embeddings from a local (or chosen) provider, a vector store and
-//! ranking. The background job is started when a vault opens, when settings change, and after
+//! Semantic search: chunking, embeddings from a local provider, a vector store and ranking. The background job is started when a vault opens, when settings change, and after
 //! file changes.
 
 pub mod chunker;
@@ -11,13 +10,11 @@ pub mod vector;
 
 use crate::ai::router;
 use crate::error::{AppError, AppResult};
-use crate::projects::Project;
-use crate::settings::{keychain, Location, ProviderKind, Settings};
+use crate::settings::{keychain, ProviderKind, Settings};
 use crate::state::AppState;
 use crate::vault::OpenVault;
 use client::EmbedFn;
 use serde::Serialize;
-use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -100,7 +97,7 @@ pub fn load_vectors(v: &OpenVault, model: &str) -> AppResult<Arc<Vec<store::Stor
 }
 
 /// The embedding function and model for the current settings. Refuses when semantic search is off.
-pub fn embedder_for(settings: &Settings) -> AppResult<(EmbedFn, String, bool)> {
+pub fn embedder_for(settings: &Settings) -> AppResult<(EmbedFn, String)> {
     let emb = &settings.ai.embeddings;
     if !emb.enabled {
         return Err(AppError::Settings("Semantic search is turned off".into()));
@@ -110,19 +107,17 @@ pub fn embedder_for(settings: &Settings) -> AppResult<(EmbedFn, String, bool)> {
             "Choose an embedding model in Settings → AI".into(),
         ));
     }
-    let provider = router::select_provider(settings, Some(&emb.provider_id), false)?;
+    let provider = router::select_local(settings, Some(&emb.provider_id))?;
     let cfg = provider.config();
     if cfg.kind == ProviderKind::Anthropic {
         return Err(AppError::Provider(
             "This provider cannot create embeddings".into(),
         ));
     }
-    let cloud = cfg.effective_location() == Location::Cloud;
     let key = keychain::get_key(&cfg.id);
     Ok((
         client::http_embedder(cfg.base_url.clone(), emb.model.clone(), key),
         emb.model.clone(),
-        cloud,
     ))
 }
 
@@ -154,28 +149,21 @@ pub fn cancel_job(app: &AppHandle) {
 /// Which notes an indexing run covers and how many count toward its progress total.
 #[derive(Debug, PartialEq)]
 pub struct IndexPlan {
-    /// Every Markdown note in the vault, including excluded ones (the indexer skips those).
+    /// Every Markdown note in the vault.
     pub files: Vec<String>,
-    /// Notes that must not leave the machine (local-only projects, cloud provider).
-    pub excluded: HashSet<String>,
-    /// Notes that will be embedded: `files` minus `excluded`.
+    /// Notes that will be embedded.
     pub total: u32,
 }
 
 /// Plans an indexing run over the vault's file list. Non-Markdown files are ignored.
-pub fn plan_index(all_files: &[String], projects: &[Project], cloud: bool) -> IndexPlan {
+pub fn plan_index(all_files: &[String]) -> IndexPlan {
     let files: Vec<String> = all_files
         .iter()
         .filter(|f| crate::vault::tree::is_markdown(f))
         .cloned()
         .collect();
-    let excluded = indexer::excluded_notes(&files, projects, cloud);
-    let total = u32::try_from(files.len().saturating_sub(excluded.len())).unwrap_or(u32::MAX);
-    IndexPlan {
-        files,
-        excluded,
-        total,
-    }
+    let total = u32::try_from(files.len()).unwrap_or(u32::MAX);
+    IndexPlan { files, total }
 }
 
 /// Starts the background indexing job. A running job is cancelled first (its progress is kept).
@@ -183,12 +171,8 @@ pub fn spawn_index_job(app: &AppHandle, rebuild: bool) -> AppResult<()> {
     let state = app.state::<AppState>();
     let settings = state.settings_snapshot();
     let v = state.current_vault()?;
-    let (embed, model, cloud) = embedder_for(&settings)?;
-    let IndexPlan {
-        files,
-        excluded,
-        total,
-    } = plan_index(&v.file_list(), &v.project_list(), cloud);
+    let (embed, model) = embedder_for(&settings)?;
+    let IndexPlan { files, total } = plan_index(&v.file_list());
     let token = CancellationToken::new();
     {
         let mut job = state
@@ -221,7 +205,7 @@ pub fn spawn_index_job(app: &AppHandle, rebuild: bool) -> AppResult<()> {
         let result = async {
             let mut conn = store::open(&store_path(&root))?;
             indexer::run_index(
-                &root, &mut conn, &files, &excluded, &embed, &model, rebuild, &token, &progress,
+                &root, &mut conn, &files, &embed, &model, rebuild, &token, &progress,
             )
             .await
         }
@@ -270,28 +254,23 @@ pub fn index_change(
     Some(before.model != after.model || before.provider_id != after.provider_id)
 }
 
-/// Whether the semantic search tool may be offered to the assistant in this project.
-/// False when semantic search is off, nothing is indexed, or a local-only project would have to
-/// reach a cloud embedding provider.
-pub fn semantic_allowed(
-    settings: &Settings,
-    local_only_project: bool,
-    indexed_chunks: u32,
-) -> bool {
+/// Whether the semantic search tool may be offered to the assistant. False when semantic search
+/// is off, nothing is indexed, or the embedding provider is not local (notes never go to a cloud
+/// provider).
+pub fn semantic_allowed(settings: &Settings, indexed_chunks: u32) -> bool {
     let emb = &settings.ai.embeddings;
     if !emb.enabled || emb.model.trim().is_empty() || indexed_chunks == 0 {
         return false;
     }
-    let cloud = settings
+    settings
         .provider(&emb.provider_id)
-        .is_some_and(|p| p.effective_location() == Location::Cloud);
-    !(local_only_project && cloud)
+        .is_some_and(|p| p.effective_location() == crate::settings::Location::Local)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::settings::{ProviderConfig, ProviderKind};
+    use crate::settings::{Location, ProviderConfig, ProviderKind};
 
     fn settings(enabled: bool, provider_kind: ProviderKind, base: &str) -> Settings {
         let mut s = Settings::default();
@@ -315,34 +294,39 @@ mod tests {
 
     #[test]
     fn disabled_or_empty_index_never_offers_the_tool() {
+        let local = "http://localhost:1234/v1";
         assert!(!semantic_allowed(
-            &settings(false, ProviderKind::LmStudio, "http://localhost:1234/v1"),
-            false,
+            &settings(false, ProviderKind::LmStudio, local),
             10
         ));
         assert!(!semantic_allowed(
-            &settings(true, ProviderKind::LmStudio, "http://localhost:1234/v1"),
-            false,
+            &settings(true, ProviderKind::LmStudio, local),
             0
         ));
         assert!(semantic_allowed(
-            &settings(true, ProviderKind::LmStudio, "http://localhost:1234/v1"),
-            false,
+            &settings(true, ProviderKind::LmStudio, local),
             10
         ));
     }
 
     #[test]
-    fn local_only_projects_never_use_a_cloud_embedder() {
+    fn a_cloud_embedder_is_never_used() {
+        // normalize() turns semantic search off for a provider that is not local.
         let cloud = settings(
             true,
             ProviderKind::OpenAiCompatible,
             "https://api.example.com/v1",
         );
-        assert!(!semantic_allowed(&cloud, true, 10));
-        assert!(semantic_allowed(&cloud, false, 10));
-        let local = settings(true, ProviderKind::LmStudio, "http://localhost:1234/v1");
-        assert!(semantic_allowed(&local, true, 10));
+        assert!(!cloud.ai.embeddings.enabled);
+        assert!(!semantic_allowed(&cloud, 10));
+        assert!(embedder_for(&cloud).is_err());
+        let far_lm_studio = settings(
+            true,
+            ProviderKind::LmStudio,
+            "https://models.example.com/v1",
+        );
+        assert!(!semantic_allowed(&far_lm_studio, 10));
+        assert!(embedder_for(&far_lm_studio).is_err());
     }
 
     #[test]
@@ -378,20 +362,6 @@ mod tests {
         assert!(embedder_for(&s).is_err());
     }
 
-    fn project(folder: &str, local_only: bool) -> Project {
-        Project {
-            schema_version: 1,
-            id: folder.into(),
-            name: folder.into(),
-            folder: folder.into(),
-            instructions: String::new(),
-            provider_id: None,
-            local_only,
-            created_at: String::new(),
-            updated_at: String::new(),
-        }
-    }
-
     fn vault_files() -> Vec<String> {
         [
             "Home.md",
@@ -405,34 +375,17 @@ mod tests {
 
     #[test]
     fn plan_counts_only_markdown_notes() {
-        let plan = plan_index(&vault_files(), &[], false);
+        let plan = plan_index(&vault_files());
         assert_eq!(
             plan.files,
             vec!["Home.md", "Work/Plan.md", "Secret/Keys.md"]
         );
-        assert!(plan.excluded.is_empty());
-        assert_eq!(plan.total, 3);
-    }
-
-    #[test]
-    fn plan_leaves_out_local_only_projects_when_the_provider_is_cloud() {
-        let projects = [project("Secret", true)];
-        let plan = plan_index(&vault_files(), &projects, true);
-        assert_eq!(plan.excluded, HashSet::from(["Secret/Keys.md".to_string()]));
-        assert_eq!(plan.total, 2);
-    }
-
-    #[test]
-    fn plan_keeps_local_only_notes_when_the_provider_is_local() {
-        let projects = [project("Secret", true)];
-        let plan = plan_index(&vault_files(), &projects, false);
-        assert!(plan.excluded.is_empty());
         assert_eq!(plan.total, 3);
     }
 
     #[test]
     fn plan_total_is_zero_for_an_empty_vault() {
-        let plan = plan_index(&[], &[], true);
+        let plan = plan_index(&[]);
         assert_eq!(plan.total, 0);
         assert!(plan.files.is_empty());
     }

@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, FilePlus, FolderKanban, Lock, Settings2 } from "lucide-react";
+import { ChevronDown, ChevronRight, FilePlus, FolderKanban, Settings2 } from "lucide-react";
 import { useState } from "react";
 import type { Project } from "@/bindings/Project";
 import {
@@ -81,9 +81,6 @@ function ProjectTree({ project, onAction }: { project: Project; onAction: (a: Ac
               )}
               <FolderKanban className="size-4 shrink-0 text-primary" />
               <span className="truncate font-medium text-primary">{project.name}</span>
-              {project.localOnly && (
-                <Lock className="size-3 shrink-0 text-success" aria-label="Local AI only" />
-              )}
               <span className="ml-auto shrink-0 pl-2 text-[11px] tabular-nums text-muted-foreground">
                 {folder ? countNotes(folder) : 0}
               </span>

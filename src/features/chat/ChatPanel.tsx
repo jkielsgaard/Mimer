@@ -1,4 +1,4 @@
-import { Lock, Paperclip, Plus, Send, Square } from "lucide-react";
+import { Paperclip, Plus, Send, Square } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { useActiveAi } from "./useActiveAi";
 import { ChatHistoryMenu } from "./ChatHistoryMenu";
+import { PrivacyNote } from "./PrivacyNote";
 import { PromptsMenu } from "./PromptsMenu";
 import { TasksMenu } from "./TasksMenu";
 import { Bubble } from "./Bubble";
@@ -34,7 +35,7 @@ export function ChatPanel() {
   } = useChatStore();
   const focusNonce = useUiStore((s) => s.focusChatNonce);
   const activePath = useVaultStore((s) => s.activePath);
-  const { project, provider, localOnly } = useActiveAi();
+  const { project, provider } = useActiveAi();
   const files = useVaultStore((s) => s.files);
   const tree = useVaultStore((s) => s.tree);
   const folders = useMemo(() => folderNoteCounts(tree), [tree]);
@@ -112,13 +113,11 @@ export function ChatPanel() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
+      <PrivacyNote kind="local" />
       <div className="flex items-center gap-2 border-b px-3 py-2 text-xs">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1 font-medium">
             <span className="truncate">{project?.name ?? "Vault"}</span>
-            {localOnly && (
-              <Lock className="size-3 shrink-0 text-success" aria-label="Local AI only" />
-            )}
           </div>
           <div className="truncate text-muted-foreground">
             {provider

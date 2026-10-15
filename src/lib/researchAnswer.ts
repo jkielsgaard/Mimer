@@ -1,3 +1,5 @@
+import { joinPath } from "@/lib/utils";
+
 /** What was read from an answer pasted back from a cloud AI. */
 export interface ParsedAnswer {
   /** A short title for the note (also used for its file name). */
@@ -43,6 +45,15 @@ export function safeFileName(title: string): string {
       .slice(0, 80)
       .trim() || "Research"
   );
+}
+
+/** First free file name `Title.md`, `Title 2.md`, … in `folder`. */
+export function freeNoteName(title: string, folder: string, files: readonly string[]): string {
+  const base = safeFileName(title);
+  let name = base;
+  for (let i = 2; files.includes(joinPath(folder, `${name}.md`)); i++)
+    name = `${base} ${String(i)}`;
+  return name;
 }
 
 /**

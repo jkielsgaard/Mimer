@@ -39,6 +39,7 @@ function settings(recent: string[]): Settings {
     git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
     ai: {
       defaultProviderId: "p",
+      ravenProviderId: null,
       baseInstruction: "",
       allowOwnKnowledge: false,
       globalInstructions: "",

@@ -13,4 +13,4 @@ text: string, notePath: string | null,
 /**
  * Overrides for the project dialog (unsaved project settings).
  */
-providerId: string | null, localOnly: boolean | null, };
+providerId: string | null, };

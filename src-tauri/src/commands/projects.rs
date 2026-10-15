@@ -15,10 +15,9 @@ pub async fn create_project(
     name: String,
     instructions: String,
     provider_id: Option<String>,
-    local_only: bool,
 ) -> Result<Project, AppError> {
     let v = state.current_vault()?;
-    service::create(&v, &folder, &name, instructions, provider_id, local_only)
+    service::create(&v, &folder, &name, instructions, provider_id)
 }
 
 #[tauri::command]

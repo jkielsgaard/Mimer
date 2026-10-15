@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { effectiveLocation } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { reportError } from "@/stores/uiStore";
@@ -50,6 +51,9 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
     }
   };
   const provider = draft.ai.providers.find((p) => p.id === providerId) ?? null;
+  // Notes only go to local providers; cloud providers can only be used by Raven.
+  const localProviders = draft.ai.providers.filter((p) => effectiveLocation(p) === "local");
+  const cloudProviders = draft.ai.providers.filter((p) => effectiveLocation(p) === "cloud");
 
   return (
     <DialogContent className="h-[600px] max-w-3xl">
@@ -181,7 +185,9 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                     }}
                   >
                     {p.name}
-                    <span className="block text-[11px] text-muted-foreground">{p.location}</span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      {effectiveLocation(p) === "local" ? "local · Mimer" : "cloud · Raven only"}
+                    </span>
                   </button>
                 ))}
                 <Button
@@ -215,6 +221,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                     }}
                     onRemove={() => {
                       const rest = draft.ai.providers.filter((x) => x.id !== provider.id);
+                      const firstLocal = rest.find((x) => effectiveLocation(x) === "local");
                       setDraft({
                         ...draft,
                         ai: {
@@ -222,8 +229,12 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                           providers: rest,
                           defaultProviderId:
                             draft.ai.defaultProviderId === provider.id
-                              ? (rest[0]?.id ?? "")
+                              ? (firstLocal?.id ?? "")
                               : draft.ai.defaultProviderId,
+                          ravenProviderId:
+                            draft.ai.ravenProviderId === provider.id
+                              ? null
+                              : draft.ai.ravenProviderId,
                         },
                       });
                       setProviderId(rest[0]?.id ?? null);
@@ -239,10 +250,10 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1.5">
-                  <Label htmlFor="set-default">Default provider</Label>
+                  <Label htmlFor="set-default">Mimer's provider (local AI)</Label>
                   <InfoHint
-                    label="Default provider"
-                    text="The AI Mimer uses, unless a project chooses another one. LM Studio keeps everything on your own computer."
+                    label="Mimer's provider"
+                    text="The AI Mimer uses for your notes, unless a project chooses another local one. Notes are only ever sent to a local AI, for example LM Studio on this computer."
                     topic="mimer"
                   />
                 </div>
@@ -253,12 +264,40 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                     update({ ai: { ...draft.ai, defaultProviderId: e.target.value } });
                   }}
                 >
-                  {draft.ai.providers.map((p) => (
+                  {localProviders.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name} ({p.location})
+                      {p.name}
                     </option>
                   ))}
                 </Select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor="set-raven">Raven's provider (cloud AI)</Label>
+                  <InfoHint
+                    label="Raven"
+                    text="Raven is a separate chat for knowledge from the internet. It uses a cloud AI and never sees your notes. Choose Off to hide the Raven tab."
+                    topic="raven"
+                  />
+                </div>
+                <Select
+                  id="set-raven"
+                  value={draft.ai.ravenProviderId ?? ""}
+                  onChange={(e) => {
+                    update({ ai: { ...draft.ai, ravenProviderId: e.target.value || null } });
+                  }}
+                >
+                  <option value="">Off</option>
+                  {cloudProviders.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  What you type in Raven is sent to that provider. Add a cloud provider under AI
+                  providers first.
+                </p>
               </div>
               <MimerInstructionSettings draft={draft} onChange={setDraft} />
               <label className="flex items-start gap-2 text-sm">

@@ -12,6 +12,7 @@ const settings: Settings = {
   git: { authorName: "Mimer", authorEmail: "mdvault@localhost", idleCommitMinutes: 5 },
   ai: {
     defaultProviderId: "lmstudio-default",
+    ravenProviderId: null,
     baseInstruction: "",
     allowOwnKnowledge: false,
     globalInstructions: "",

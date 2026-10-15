@@ -8,7 +8,6 @@ import {
   Folder,
   FolderKanban,
   FolderOpen,
-  Lock,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -40,7 +39,6 @@ export function TreeRow({
   expanded,
   toggle,
   projectFolders,
-  lockedFolders,
   forceOpen,
   onAction,
   onDropOn,
@@ -199,9 +197,6 @@ export function TreeRow({
             <span className={cn("truncate", isProject && "font-medium text-primary")}>
               {displayName(node)}
             </span>
-            {node.isDir && lockedFolders.has(node.path) && (
-              <Lock className="size-3 shrink-0 text-success" aria-label="Local AI only" />
-            )}
             {node.isDir && countNotes(node) > 0 && (
               <span
                 className="ml-auto shrink-0 pl-2 text-[11px] tabular-nums text-muted-foreground"
@@ -363,7 +358,6 @@ export function TreeRow({
               expanded={expanded}
               toggle={toggle}
               projectFolders={projectFolders}
-              lockedFolders={lockedFolders}
               forceOpen={forceOpen}
               onAction={onAction}
               onDropOn={onDropOn}
