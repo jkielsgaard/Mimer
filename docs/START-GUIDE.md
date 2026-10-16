@@ -191,7 +191,7 @@ On Windows replace the `cargo` line with the same command; it works in PowerShel
 pnpm tauri build
 ```
 
-- **Windows:** the installer is `src-tauri\target\release\bundle\nsis\Mimer_0.8.9_x64-setup.exe`. It installs for the current user only and needs no administrator rights.
+- **Windows:** the installer is `src-tauri\target\release\bundle\nsis\Mimer_0.8.10_x64-setup.exe`. It installs for the current user only and needs no administrator rights.
 - **Linux:** `src-tauri/target/release/bundle/` contains an `.AppImage` and an `.rpm`.
 
 ---

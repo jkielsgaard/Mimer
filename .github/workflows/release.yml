@@ -68,20 +68,6 @@ jobs:
             -PublisherDisplayName "${{ vars.MSIX_PUBLISHER_DISPLAY_NAME || 'Jesper Ahasverusen Kielsgaard' }}" `
             -TestSign
 
-      # The same package, but one that may download the built-in AI engine. Its own folder, so the
-      # two sets of files and certificates never mix.
-      - name: Build the Microsoft Store package with the built-in AI (MSIX)
-        if: matrix.platform == 'windows-latest'
-        continue-on-error: true
-        shell: pwsh
-        run: |
-          ./scripts/msix/Build-Msix.ps1 -Version "${{ github.ref_name }}" -OutDir msix-out-ai -BuiltInAi `
-            -IdentityName "${{ vars.MSIX_IDENTITY_NAME || 'Jkielsgaard.Mimer' }}" `
-            -DisplayName "${{ vars.MSIX_DISPLAY_NAME || 'Mimer: Markdown Notes' }}" `
-            -Publisher "${{ vars.MSIX_PUBLISHER || 'CN=00000000-0000-0000-0000-000000000000' }}" `
-            -PublisherDisplayName "${{ vars.MSIX_PUBLISHER_DISPLAY_NAME || 'Jesper Ahasverusen Kielsgaard' }}" `
-            -TestSign
-
       - name: Keep the Microsoft Store package
         if: matrix.platform == 'windows-latest'
         continue-on-error: true
@@ -104,26 +90,4 @@ jobs:
             msix-out/*_test.msix
             msix-out/mimer-test.cer
             msix-out/Install-TestMsix.ps1
-          if-no-files-found: warn
-
-      - name: Keep the Microsoft Store package with the built-in AI
-        if: matrix.platform == 'windows-latest'
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: mimer-msix-with-ai
-          path: |
-            msix-out-ai/Mimer_*_x64_with-ai.msix
-          if-no-files-found: warn
-
-      - name: Keep the test copy of the Microsoft Store package with the built-in AI
-        if: matrix.platform == 'windows-latest'
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: mimer-msix-with-ai-test
-          path: |
-            msix-out-ai/*_with-ai_test.msix
-            msix-out-ai/mimer-test.cer
-            msix-out-ai/Install-TestMsix.ps1
           if-no-files-found: warn

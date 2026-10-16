@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.10] - 2026-10-16
+
+### Changed
+
+- **The Store package no longer has the second variant with the built-in AI.** On a managed laptop the downloaded engine (`llama-server`) was blocked from starting, so that package could not use its AI. There is one Store package again (`mimer-msix`), and Settings → Built-in AI says that the engine cannot run in the Store version. The GitHub installer and the AppImage are unchanged.
+
 ## [0.8.9] - 2026-10-16
 
 ### Added

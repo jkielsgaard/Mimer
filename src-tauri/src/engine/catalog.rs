@@ -295,30 +295,15 @@ pub struct Catalog {
     pub unavailable_reason: Option<String>,
 }
 
-/// Name of the file that the "with built-in AI" Store package carries next to `mimer.exe`
-/// (`Build-Msix.ps1 -BuiltInAi`). Without it the Store package does not download or run an engine,
-/// which is the safe default if the Store's rules about downloaded programs forbid it. Both
-/// packages hold the same program, so switching back is a matter of which package is uploaded.
-pub const STORE_AI_MARKER: &str = "store-builtin-ai.on";
-
-/// True when the package in `exe`'s folder was made with the built-in AI allowed.
-pub fn store_ai_allowed(exe: &std::path::Path) -> bool {
-    exe.parent()
-        .is_some_and(|dir| dir.join(STORE_AI_MARKER).is_file())
-}
-
-/// Why the built-in AI cannot be downloaded here, or `None` when it can.
+/// Why the llama.cpp engine cannot be downloaded here, or `None` when it can. A Microsoft Store
+/// (MSIX) package never runs a downloaded program: some organisations block it from starting
+/// (seen on a managed laptop) and the Store's policy 10.2.2 is against it.
 pub fn unavailable_reason() -> Option<String> {
     if super::paths::is_packaged() {
-        let allowed = std::env::current_exe()
-            .ok()
-            .is_some_and(|exe| store_ai_allowed(&exe));
-        if !allowed {
-            return Some(
-                "The Microsoft Store version of Mimer does not download and run an engine. Use LM Studio, or install Mimer from GitHub to use the built-in AI."
-                    .into(),
-            );
-        }
+        return Some(
+            "The Microsoft Store version of Mimer cannot run the downloaded engine. Use LM Studio, or install Mimer from GitHub to use the built-in AI."
+                .into(),
+        );
     }
     None
 }
@@ -346,16 +331,6 @@ pub fn catalog() -> Catalog {
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn the_store_package_allows_the_engine_only_with_the_marker_file() {
-        let dir = tempfile::tempdir().unwrap();
-        let exe = dir.path().join("mimer.exe");
-        assert!(!super::store_ai_allowed(&exe), "no marker: not allowed");
-        std::fs::write(dir.path().join(super::STORE_AI_MARKER), b"").unwrap();
-        assert!(super::store_ai_allowed(&exe));
-        assert!(!super::store_ai_allowed(std::path::Path::new("/")));
-    }
-
     use super::*;
 
     const ALL: [Backend; 6] = [

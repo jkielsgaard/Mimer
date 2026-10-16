@@ -91,24 +91,6 @@ The Microsoft Store build does not download or run any additional programs. The 
 The app does not collect any data. Privacy policy: https://github.com/jkielsgaard/Mimer/blob/main/PRIVACY.md
 ```
 
-## If you upload the package WITH the built-in AI (`mimer-msix-with-ai`)
-
-Each release builds two Store packages from the same program: `mimer-msix` (no downloaded engine, the safe one, texts above) and `mimer-msix-with-ai` (file name ends `_with-ai.msix`). Upload only one. For the with-AI package change these two places.
-
-**Description**: replace the first bullet under "An assistant that works for you" about where notes are sent with:
-
-```
-- Your notes are only ever sent to an AI that runs on your own computer: the built-in AI that Mimer can download for you (Settings → Built-in AI, Gemma models from Google, Apache-2.0), or LM Studio. A separate chat, Raven, can use a cloud AI of your choice for knowledge from the internet, and it never sees your notes.
-```
-
-**Notes for certification**: replace the sentence "The Microsoft Store build does not download or run any additional programs. …" with:
-
-```
-Optional built-in AI: if the user opens Settings > Built-in AI and presses Download, the app downloads (1) the open-source llama.cpp engine (llama-server, MIT licence) from github.com/ggml-org/llama.cpp and (2) a model file (Google Gemma, Apache-2.0) from huggingface.co. Nothing is downloaded unless the user presses the button. Every file is a fixed release whose SHA-256 and size are written in the app's source code (src-tauri/src/engine/catalog.rs); a file that does not match is deleted. The downloaded program is not an add-on to the app's features: it is only the engine that runs the user's chosen model, it listens on 127.0.0.1 only with a random key, it starts when the user presses "Wake Mimer" and stops with "Sleep Mimer" or when the app closes. The app works fully without it (an LM Studio server can be used instead). This is the same as an app that downloads a model for its AI feature; please tell us if the policy for downloaded executables does not allow this and we will remove the download.
-```
-
-Also tell Microsoft in "Pricing and availability / Properties" nothing more. If the certification fails because of this, upload `mimer-msix` of the same or a later release instead (see docs/MSIX.md, "Going back").
-
 ## Why the app needs "runFullTrust" (if asked)
 
 ```
