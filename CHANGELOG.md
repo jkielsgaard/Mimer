@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.8] - 2026-10-16
+
+### Changed
+
+- **Settings → Built-in AI explains the download** before you press the button: that the engine (llama.cpp, MIT) comes from github.com and the model (Gemma 4, Apache-2.0) from huggingface.co, their sizes, that nothing is downloaded until you press Download, the disk space, and the memory the model uses while awake.
+
 ## [0.8.7] - 2026-10-16
 
 ### Added

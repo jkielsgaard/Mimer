@@ -73,7 +73,7 @@ pnpm tauri build      # build an installer for the current system
 pnpm check            # everything CI runs: format, lint, types, tests, clippy
 ```
 
-Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v0.8.7` makes GitHub Actions build the installers (`.github/workflows/release.yml`).
+Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v0.8.8` makes GitHub Actions build the installers (`.github/workflows/release.yml`).
 
 ## More
 

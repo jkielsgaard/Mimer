@@ -7,7 +7,7 @@ Mimer can run its own AI **on this computer**, so you do not need LM Studio. You
 1. Open **Settings → Built-in AI** (or press **Set up** in the Mimer tab).
 2. Choose your **processor** and your **graphics card**. Mimer pre-selects what it finds. The engine follows the graphics card: **Vulkan** works with AMD, Intel and Nvidia, **CUDA** is fastest on Nvidia, **CPU only** works everywhere but is slow.
 3. Choose a **model**. **Gemma 4 12B** is the recommended one and needs about 12 GB of memory. **E4B** and **E2B** are lighter. You can also add your own `.gguf` file.
-4. Press **Download**. The files are checked after the download and kept in Mimer's own folder. If the connection breaks, press Download again: it continues where it stopped.
+4. Press **Download**. This fetches two things, and nothing is downloaded before you press it: the **engine** (the open-source program llama.cpp, MIT licence) from github.com, and the **model** (Google Gemma 4, Apache-2.0) from huggingface.co. Together they are several GB, shown before you start, and they take about as much disk space. The files are checked after the download and kept in Mimer's own folder. If the connection breaks, press Download again: it continues where it stopped.
 
 ## Wake and sleep
 

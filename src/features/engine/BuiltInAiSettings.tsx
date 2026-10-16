@@ -313,6 +313,34 @@ export function BuiltInAiSettings({ draft, onChange }: Props) {
 
       <section className="flex flex-col gap-2" aria-label="Download">
         <h3 className="text-sm font-semibold">3. Download</h3>
+        <div
+          className="rounded border bg-muted/40 p-2 text-xs text-muted-foreground"
+          data-testid="download-explained"
+        >
+          <p className="mb-1 font-medium text-foreground">
+            The built-in AI is not part of Mimer. Download fetches two things:
+          </p>
+          <ul className="list-disc space-y-0.5 pl-4">
+            <li>
+              <strong>The engine</strong>
+              {backend ? ` (${backend.label}, ${formatBytes(backend.downloadBytes)})` : ""}: the
+              open-source program <em>llama.cpp</em> (MIT licence), from github.com. It runs the
+              model.
+            </li>
+            <li>
+              <strong>The model</strong>
+              {model ? ` (${model.name}, ${formatBytes(model.sizeBytes)})` : ""}: the language model
+              itself, Google Gemma 4 (Apache-2.0 licence), from huggingface.co.
+            </li>
+          </ul>
+          <p className="mt-1">
+            Nothing is downloaded until you press Download. Every file is checked against a fixed
+            checksum and kept in Mimer's own folder (shown below), and it takes about as much disk
+            space as the download. While Mimer is awake the model uses about{" "}
+            {model ? `${String(model.ramGb)} GB` : "several GB"} of memory; Sleep Mimer gives it
+            back. When you use it, your notes stay on this computer.
+          </p>
+        </div>
         <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"

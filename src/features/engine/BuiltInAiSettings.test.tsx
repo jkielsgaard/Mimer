@@ -57,6 +57,16 @@ describe("Settings → Built-in AI", () => {
     });
   });
 
+  it("explains before the download what is fetched, from where, and what it takes", () => {
+    render(<BuiltInAiSettings draft={settings()} onChange={onChange} />);
+    const box = screen.getByTestId("download-explained");
+    expect(box).toHaveTextContent("not part of Mimer");
+    expect(box).toHaveTextContent("github.com");
+    expect(box).toHaveTextContent("huggingface.co");
+    expect(box).toHaveTextContent("Nothing is downloaded until you press Download");
+    expect(box).toHaveTextContent("memory");
+  });
+
   it("pre-selects what was found: AMD processor, AMD graphics card, the Vulkan engine", async () => {
     render(<BuiltInAiSettings draft={settings()} onChange={onChange} />);
     expect(screen.getByTestId("hardware-found")).toHaveTextContent("AMD Ryzen AI 7 PRO 350");
