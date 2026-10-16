@@ -171,7 +171,7 @@ describe("App smoke test", () => {
     render(<App />);
     await user.click(await screen.findByText("/home/me/Notes"));
     await user.click(await screen.findByRole("tab", { name: "History" }));
-    expect(screen.getByText(/Open a note to see its history/)).toBeInTheDocument();
+    expect(await screen.findByText(/Open a note to see its history/)).toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Backlinks" })).toBeNull();
   });
 

@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.4] - 2026-10-16
+
+### Fixed
+
+- A test of the right-panel tabs (`App.test.tsx`) was timing-dependent and failed once in GitHub Actions. It now waits for the text. No change to the app; 0.9.4 has the same content as 0.9.3 and a fully green build.
+
 ## [0.9.3] - 2026-10-16
 
 ### Added
