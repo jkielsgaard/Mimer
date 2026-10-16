@@ -9,7 +9,7 @@ Mimer is a desktop app for Markdown notes with a built-in AI assistant that help
 - **Plain files.** Your notes are normal `.md` files in normal folders. A vault works without Mimer.
 - **Never lose data.** Every vault is a local Git repository, so any change can be restored from the history.
 - **You are in control.** The AI only _proposes_ changes. Nothing is written until you approve it.
-- **Local first.** Mimer, the notes AI, runs on your own machine, with [LM Studio](https://lmstudio.ai) or with the built-in AI, and nothing else: your notes are never sent to a cloud service. A cloud AI is available in a separate tab, Raven, which has no access to your notes.
+- **Local first.** Mimer, the notes AI, runs on your own machine, with the built-in AI, [LM Studio](https://lmstudio.ai) or [Foundry Local](https://learn.microsoft.com/azure/foundry-local/) (Windows and macOS, can use a neural processor), and nothing else: your notes are never sent to a cloud service. A cloud AI is available in a separate tab, Raven, which has no access to your notes.
 
 ## Why Mimer?
 
@@ -58,6 +58,14 @@ Open **Settings → Built-in AI**, choose your processor, graphics card and a mo
 
 Give the model a context length of at least 16k in LM Studio, and use the same value in Mimer's settings.
 
+### Option C: Foundry Local (Windows and macOS, can use an NPU)
+
+1. Install [Foundry Local](https://learn.microsoft.com/azure/foundry-local/) yourself (`winget install Microsoft.FoundryLocal` on Windows) and start a model once (`foundry model run phi-4-mini`).
+2. In Mimer open **Settings → AI providers**, add a provider and choose the kind **Foundry Local**. Press **Detect Foundry Local**: Mimer finds the address, because Foundry Local chooses a new port each time it starts.
+3. Press **Load models**, choose the model, press **Test connection**, and make it Mimer's provider under **Settings → AI**.
+
+Every kind of provider explains these steps in the settings when you choose it.
+
 ### Raven (optional, cloud AI)
 
 To get knowledge from the internet, add an **Anthropic** or **OpenAI-compatible** provider in **Settings → AI providers** and choose it under **Settings → AI → Raven's provider**. A **Raven** tab appears next to Mimer. Raven never sees your notes, and what you type in it is sent to that provider. Cloud AI providers receive whatever you send them: use them only with information you are willing to share with that provider. API keys are stored in your system keychain, never in a file.
@@ -73,7 +81,7 @@ pnpm tauri build      # build an installer for the current system
 pnpm check            # everything CI runs: format, lint, types, tests, clippy
 ```
 
-Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v0.8.8` makes GitHub Actions build the installers (`.github/workflows/release.yml`).
+Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v0.8.9` makes GitHub Actions build the installers (`.github/workflows/release.yml`).
 
 ## More
 

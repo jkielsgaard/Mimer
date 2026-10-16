@@ -440,3 +440,26 @@ Needs Windows (a virtual machine or Windows Sandbox). See docs/MSIX.md.
 - [ ] Import a folder that has notes and pictures (for example a `images` folder): the notes are in the file tree, the pictures are **not**, and a folder with only pictures is not shown. The **Images** tab lists the pictures, and they are still shown inside the notes. Do the same inside a project.
 - [ ] **File → Report** has three items. **Report a bug…** opens GitHub with the bug form, version and system filled in; **Suggest a feature…** opens the feature form; **Report inappropriate AI content…** opens a filled-in issue. There is no flag button in the Mimer or Raven tabs any more.
 - [ ] On Linux, run these from the **AppImage** (not `pnpm tauri dev`): the browser opens. If it cannot, a dialog says so and shows the address.
+
+## 41. Foundry Local and the provider help (needs a computer with Foundry Local, ideally with an NPU)
+
+- [ ] Settings → AI providers → add a provider and choose each Kind in turn (LM Studio, Foundry Local, OpenAI-compatible, Anthropic): a box under Kind says what the provider is and what to do, in numbered steps.
+- [ ] On Windows without Foundry Local: choose **Foundry Local** and press **Detect Foundry Local**: it says it was not found and shows `winget install Microsoft.FoundryLocal`. On Linux it says Foundry Local is not available there.
+- [ ] Install Foundry Local (`winget install Microsoft.FoundryLocal`), run `foundry model run phi-4-mini` (or another model from `foundry model list`), then Detect: the Base URL becomes `http://127.0.0.1:<port>/v1` and the message says it is running.
+- [ ] Without the model running, Detect starts the service and still finds the address (or says what to do).
+- [ ] Load models lists the model, Test connection is green, and chat in the Mimer tab answers. Note whether the Task Manager shows the NPU working (Performance → NPU) for an NPU model.
+- [ ] Ask Mimer to search and propose a change. If tools fail with this model, unticking Supports tools makes plain chat work.
+- [ ] Restart the computer: Detect finds the new port.
+- [ ] The provider shows as Local (notes may be sent to it). Change the Base URL to a non-local address: it turns into Cloud and Mimer will not use it for notes.
+
+## 42. Adding providers and switching AI in the tabs
+
+- [ ] Settings → AI providers: opens with no provider chosen, and says to choose one or press Add provider.
+- [ ] **Add provider** opens a window with five kinds. Local ones say "Local · for Mimer", cloud ones "Cloud · for Raven only". The note says a local AI cannot be used by Raven and that Raven works only with a cloud AI. **Add** is disabled until a kind is chosen; Cancel adds nothing.
+- [ ] After Add, the new provider is chosen on the left and its editor shows the help box with the steps for that kind.
+- [ ] Removing a provider leaves none chosen.
+- [ ] Mimer tab: click the AI name under the title. The menu lists only local providers and the models of the current one (loaded when it opens). Choose another model: the title changes and Settings → AI providers shows the same model. Choose another provider: it becomes Mimer's provider under Settings → AI.
+- [ ] With the built-in AI: the menu lists the downloaded models. Choose another: it says it is used the next time Mimer is woken; Sleep and Wake, and the new model answers.
+- [ ] In a project that has its own AI the menu says the project chooses it and the provider choices are disabled.
+- [ ] Raven tab: the menu lists only cloud providers; choosing one changes Raven's provider. With no cloud AI it says Raven works only with a cloud AI and offers Add or edit providers….
+- [ ] The menu cannot be opened while an answer is being written. Stop LM Studio and open the menu: it says the models could not be listed.

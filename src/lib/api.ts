@@ -38,6 +38,7 @@ import type { ExportRequest } from "@/bindings/ExportRequest";
 import type { ExportResult } from "@/bindings/ExportResult";
 import type { EmbeddingStatus } from "@/bindings/EmbeddingStatus";
 import type { SemanticHit } from "@/bindings/SemanticHit";
+import type { FoundryStatus } from "@/bindings/FoundryStatus";
 import type { ImageUsage } from "@/bindings/ImageUsage";
 import type { ImportEvent } from "@/bindings/ImportEvent";
 import type { ImportPlan } from "@/bindings/ImportPlan";
@@ -216,6 +217,7 @@ export const api = {
   // Images
   addImages: (notePath: string, files: string[]) =>
     call<string[]>("add_images", { notePath, files }),
+  detectFoundryLocal: () => call<FoundryStatus>("detect_foundry_local"),
   openExternal: (url: string) => call<undefined>("open_external", { url }),
   imageUsage: () => call<ImageUsage[]>("image_usage"),
 

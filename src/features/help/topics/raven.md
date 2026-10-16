@@ -31,3 +31,5 @@ The chat is not saved: **New chat** clears it.
 ## From Mimer
 
 When Mimer writes a **research prompt**, a **Send to Raven** button puts it in Raven's message box. You still press send yourself. Without Raven you can copy the prompt into any cloud AI and bring the answer back with **File → Import an answer from a cloud AI…**.
+
+To switch to another cloud AI or model, click the AI name under the title of the Raven tab and choose from the menu.

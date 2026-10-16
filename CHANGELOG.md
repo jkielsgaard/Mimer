@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.9] - 2026-10-16
+
+### Added
+
+- **Foundry Local** as an AI provider (Windows and macOS): Microsoft's program for running models on this computer, including on a neural processor (NPU). Add a provider, choose the kind **Foundry Local** and press **Detect Foundry Local**; Mimer finds the address, since Foundry Local chooses a new port each time it starts. It counts as local (notes may be sent to it) only at an address on this computer. Foundry Local is installed by the user, not by Mimer.
+- **Add provider asks which kind first.** Settings → AI providers opens with no provider chosen, and **Add provider** opens a window with the kinds (LM Studio, Foundry Local, another local server, Anthropic, a cloud service with the OpenAI interface), each marked "Local · for Mimer" or "Cloud · for Raven only", with a note that a local AI cannot be used by Raven because Raven works only with a cloud AI.
+- **Switch AI and model in the tab.** Click the AI name under the title of the Mimer or Raven tab to choose another provider or model from a menu, without opening Settings. Mimer lists the local providers, Raven the cloud ones; the built-in AI lists its downloaded models. The choice is saved in the settings. A project that chooses its own AI keeps it.
+- **Every kind of AI provider explains what to do** in Settings → AI providers when you choose it: what it is, numbered steps to get it working, and what to know afterwards.
+
 ## [0.8.8] - 2026-10-16
 
 ### Changed

@@ -17,7 +17,8 @@ import { effectiveLocation } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
-import { newProvider, ProviderEditor } from "./ProviderEditor";
+import { ProviderEditor } from "./ProviderEditor";
+import { AddProviderDialog } from "./AddProviderDialog";
 import { BuiltInAiSettings } from "@/features/engine/BuiltInAiSettings";
 import { VaultSettingsTab } from "./VaultSettingsTab";
 import { MimerInstructionSettings } from "./MimerInstructionSettings";
@@ -41,7 +42,8 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
   const [tab, setTab] = useState<Tab>(() =>
     useUiStore.getState().settingsTab === "builtin" ? "builtin" : "general",
   );
-  const [providerId, setProviderId] = useState<string | null>(stored.ai.providers[0]?.id ?? null);
+  const [providerId, setProviderId] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
   const update = (patch: Partial<Settings>): void => {
     setDraft({ ...draft, ...patch });
   };
@@ -198,12 +200,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const p = newProvider("openai_compatible");
-                    setDraft({
-                      ...draft,
-                      ai: { ...draft.ai, providers: [...draft.ai.providers, p] },
-                    });
-                    setProviderId(p.id);
+                    setAdding(true);
                   }}
                 >
                   <Plus /> Add provider
@@ -260,11 +257,18 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                               : draft.ai.ravenProviderId,
                         },
                       });
-                      setProviderId(rest[0]?.id ?? null);
+                      setProviderId(null);
                     }}
                   />
                 ) : (
-                  <p className="text-sm text-muted-foreground">No providers configured.</p>
+                  <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+                    <p>Choose a provider on the left to change it, or press Add provider.</p>
+                    <p>
+                      <strong className="text-foreground">Local</strong> providers are used by
+                      Mimer. <strong className="text-foreground">Cloud</strong> providers are used
+                      by Raven only.
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -433,6 +437,17 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
           Save
         </Button>
       </DialogFooter>
+      <AddProviderDialog
+        open={adding}
+        onCancel={() => {
+          setAdding(false);
+        }}
+        onAdd={(p) => {
+          setDraft({ ...draft, ai: { ...draft.ai, providers: [...draft.ai.providers, p] } });
+          setProviderId(p.id);
+          setAdding(false);
+        }}
+      />
     </DialogContent>
   );
 }

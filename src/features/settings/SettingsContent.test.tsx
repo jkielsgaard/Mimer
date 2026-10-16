@@ -118,3 +118,58 @@ describe("Settings → AI: local for notes, cloud for Raven", () => {
     expect(saved?.ai.defaultProviderId).toBe("lm");
   });
 });
+
+describe("Settings → AI providers", () => {
+  const save = vi.fn().mockResolvedValue(undefined);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useSettingsStore.setState({ settings: stored, save });
+  });
+
+  const openProviders = async (): Promise<ReturnType<typeof userEvent.setup>> => {
+    const user = userEvent.setup();
+    render(
+      <Dialog open>
+        <SettingsContent stored={stored} onClose={() => undefined} />
+      </Dialog>,
+    );
+    await user.click(screen.getByRole("button", { name: "AI providers" }));
+    return user;
+  };
+
+  it("opens with no provider chosen and says what to do", async () => {
+    await openProviders();
+    expect(screen.getByText(/Choose a provider on the left/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Base URL")).toBeNull();
+    expect(screen.getAllByRole("button", { name: /LM Studio/ }).length).toBeGreaterThan(0);
+  });
+
+  it("Add provider asks which kind, says local AI cannot be used by Raven, and adds the one chosen", async () => {
+    const user = await openProviders();
+    await user.click(screen.getByRole("button", { name: /Add provider/ }));
+    const note = await screen.findByTestId("add-provider-note");
+    expect(note).toHaveTextContent("cannot be used by Raven");
+    expect(note).toHaveTextContent("Raven works only with a cloud AI");
+    const add = screen.getByRole("button", { name: "Add" });
+    expect(add).toBeDisabled();
+    expect(screen.getByRole("radio", { name: /LM Studio/ })).toHaveTextContent("Local · for Mimer");
+    expect(screen.getByRole("radio", { name: /Anthropic/ })).toHaveTextContent(
+      "Cloud · for Raven only",
+    );
+    await user.click(screen.getByRole("radio", { name: /Foundry Local/ }));
+    expect(add).toBeEnabled();
+    await user.click(add);
+    expect(screen.getByLabelText("Kind")).toHaveValue("foundry_local");
+    expect(screen.getByTestId("provider-help")).toHaveTextContent("winget install");
+  });
+
+  it("Cancel in the Add window adds nothing", async () => {
+    const user = await openProviders();
+    await user.click(screen.getByRole("button", { name: /Add provider/ }));
+    await user.click(await screen.findByRole("radio", { name: /Anthropic/ }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByTestId("add-provider-note")).toBeNull();
+    expect(screen.getByText(/Choose a provider on the left/)).toBeInTheDocument();
+  });
+});

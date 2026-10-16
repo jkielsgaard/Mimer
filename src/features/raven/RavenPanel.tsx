@@ -1,5 +1,6 @@
 import { Plus, Send, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { AiSwitcher } from "@/features/chat/AiSwitcher";
 import { PrivacyNote } from "@/features/chat/PrivacyNote";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,11 +42,7 @@ export function RavenPanel() {
       <div className="flex items-center gap-2 border-b px-3 py-2 text-xs">
         <div className="min-w-0 flex-1">
           <div className="font-medium">Raven</div>
-          <div className="truncate text-muted-foreground">
-            {provider
-              ? `${provider.name}${provider.model ? ` · ${provider.model}` : " · no model selected"}`
-              : "No cloud provider"}
-          </div>
+          <AiSwitcher role="raven" disabled={streaming} />
         </div>
         <Button size="sm" variant="ghost" onClick={newChat} aria-label="New chat">
           <Plus /> New chat

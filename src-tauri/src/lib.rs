@@ -8,6 +8,7 @@ pub mod engine;
 pub mod error;
 pub mod export;
 pub mod external;
+pub mod foundry;
 pub mod git;
 pub mod import;
 pub mod links;
@@ -158,6 +159,7 @@ pub fn run() {
             commands::order::get_tree_order,
             commands::order::set_folder_order,
             commands::external::open_external,
+            commands::foundry::detect_foundry_local,
             commands::images::add_images,
             commands::images::image_usage,
             commands::import::scan_import,

@@ -36,6 +36,12 @@ When you need new documentation about a subject, ask Mimer for it, or choose **T
 
 If you prefer, **Settings → AI → Let Mimer write new content from its own knowledge** lets Mimer write from memory too. It will then say so, and you should check the result.
 
+## Choose which AI Mimer uses
+
+Mimer uses an AI that runs on your own computer: the **built-in AI**, **LM Studio**, **Foundry Local** (Windows and macOS; it can use a neural processor, an NPU) or another OpenAI-compatible server on this computer. Add and choose them under **Settings → AI providers**: when you pick the kind of provider, the settings list what you have to do to get it working. A cloud AI (Anthropic, or an OpenAI-compatible cloud service) is only for **Raven**, which cannot see your notes. A local AI cannot be used by Raven: Raven works only with a cloud AI, because only a cloud AI can look things up on the internet.
+
+**Add provider** asks which kind you want and tells you whether it is local (for Mimer) or cloud (for Raven only). To switch AI or model quickly, click the AI name under the tab's title (for example _LM Studio · qwen_) and choose from the menu: no need to open Settings. The choice is saved and applies to everything you ask from then on.
+
 ## More
 
 - **History** in the chat header reopens earlier chats. **Prompts** saves texts you use often.

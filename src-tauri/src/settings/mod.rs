@@ -85,6 +85,11 @@ pub enum ProviderKind {
     #[serde(rename = "builtin")]
     #[ts(rename = "builtin")]
     BuiltIn,
+    /// Microsoft's Foundry Local, installed by the user (`foundry` module). Local at a loopback
+    /// address only, like LM Studio.
+    #[serde(rename = "foundry_local")]
+    #[ts(rename = "foundry_local")]
+    FoundryLocal,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -116,7 +121,7 @@ impl ProviderConfig {
     pub fn effective_location(&self) -> Location {
         match self.kind {
             ProviderKind::Anthropic => Location::Cloud,
-            ProviderKind::LmStudio | ProviderKind::BuiltIn => {
+            ProviderKind::LmStudio | ProviderKind::BuiltIn | ProviderKind::FoundryLocal => {
                 if is_loopback_url(&self.base_url) {
                     Location::Local
                 } else {
@@ -626,6 +631,26 @@ mod tests {
         let far = provider("b", ProviderKind::LmStudio, "https://models.example.com/v1");
         assert_eq!(near.effective_location(), Location::Local);
         assert_eq!(far.effective_location(), Location::Cloud);
+    }
+
+    #[test]
+    fn foundry_local_is_local_only_at_a_loopback_address_and_is_saved_as_foundry_local() {
+        let near = provider("a", ProviderKind::FoundryLocal, "http://127.0.0.1:5272/v1");
+        let far = provider(
+            "b",
+            ProviderKind::FoundryLocal,
+            "https://models.example.com/v1",
+        );
+        assert_eq!(near.effective_location(), Location::Local);
+        assert_eq!(far.effective_location(), Location::Cloud);
+        let json = serde_json::to_string(&near).unwrap();
+        assert!(json.contains("\"kind\":\"foundry_local\""), "{json}");
+        let back: ProviderConfig = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.kind, ProviderKind::FoundryLocal);
+        let mut s = Settings::default();
+        s.ai.providers.push(far);
+        s.normalize();
+        assert_eq!(s.ai.providers.last().unwrap().location, Location::Cloud);
     }
 
     #[test]

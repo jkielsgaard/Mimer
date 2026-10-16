@@ -13,6 +13,7 @@ import { useActiveAi } from "./useActiveAi";
 import { ChatHistoryMenu } from "./ChatHistoryMenu";
 import { EngineBar } from "@/features/engine/EngineBar";
 import { useEngineStore } from "@/stores/engineStore";
+import { AiSwitcher } from "./AiSwitcher";
 import { PrivacyNote } from "./PrivacyNote";
 import { PromptsMenu } from "./PromptsMenu";
 import { TasksMenu } from "./TasksMenu";
@@ -125,11 +126,7 @@ export function ChatPanel() {
           <div className="flex items-center gap-1 font-medium">
             <span className="truncate">{project?.name ?? "Vault"}</span>
           </div>
-          <div className="truncate text-muted-foreground">
-            {provider
-              ? `${provider.name}${provider.model ? ` · ${provider.model}` : " · no model selected"}`
-              : "No provider"}
-          </div>
+          <AiSwitcher role="mimer" disabled={streaming} />
         </div>
         <ChatHistoryMenu />
         <Button size="sm" variant="ghost" onClick={newChat} aria-label="New chat">

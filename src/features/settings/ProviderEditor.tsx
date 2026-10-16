@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { api, toApiError } from "@/lib/api";
 import { effectiveLocation as locationOf, isLoopbackUrl } from "@/lib/providers";
+import { PROVIDER_HELP } from "./providerHelp";
 
 const KIND_DEFAULTS: Record<
   ProviderKind,
@@ -19,6 +20,12 @@ const KIND_DEFAULTS: Record<
     contextTokens: 32000,
   },
   anthropic: { baseUrl: "https://api.anthropic.com", name: "Anthropic", contextTokens: 100000 },
+  foundry_local: {
+    // Foundry Local picks its own port: "Detect" finds it. This is only a start.
+    baseUrl: "http://127.0.0.1:5272/v1",
+    name: "Foundry Local",
+    contextTokens: 16000,
+  },
   // The built-in AI is set up under Settings → Built-in AI; it is never made here.
   builtin: { baseUrl: "http://127.0.0.1:8080/v1", name: "Mimer (built-in)", contextTokens: 16384 },
 };
@@ -32,7 +39,7 @@ export function newProvider(kind: ProviderKind): ProviderConfig {
     name: d.name,
     baseUrl: d.baseUrl,
     model: "",
-    location: kind === "anthropic" ? "cloud" : kind === "lmstudio" ? "local" : "cloud",
+    location: kind === "lmstudio" || kind === "foundry_local" ? "local" : "cloud",
     supportsTools: true,
     contextTokens: d.contextTokens,
   };
@@ -53,6 +60,7 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
   const [models, setModels] = useState<string[]>([]);
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [detecting, setDetecting] = useState(false);
 
   useEffect(() => {
     setKey("");
@@ -108,6 +116,20 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
     }
   };
 
+  const detect = async (): Promise<void> => {
+    setDetecting(true);
+    setStatus(null);
+    try {
+      const found = await api.detectFoundryLocal();
+      if (found.baseUrl !== null) set({ baseUrl: found.baseUrl });
+      setStatus({ ok: found.running, message: found.message });
+    } catch (e) {
+      setStatus({ ok: false, message: toApiError(e).message });
+    } finally {
+      setDetecting(false);
+    }
+  };
+
   const loadModels = async (): Promise<void> => {
     try {
       if (!(await persist())) return;
@@ -150,15 +172,17 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
               kind,
               baseUrl: d.baseUrl,
               contextTokens: d.contextTokens,
-              location: kind === "lmstudio" ? "local" : "cloud",
+              location: kind === "lmstudio" || kind === "foundry_local" ? "local" : "cloud",
             });
           }}
         >
           <option value="lmstudio">LM Studio</option>
+          <option value="foundry_local">Foundry Local (Windows, NPU)</option>
           <option value="openai_compatible">OpenAI-compatible</option>
           <option value="anthropic">Anthropic</option>
         </Select>,
       )}
+      <ProviderHelpBox kind={provider.kind} />
       {field(
         "prov-url",
         "Base URL",
@@ -169,6 +193,16 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
             set({ baseUrl: e.target.value });
           }}
         />,
+      )}
+      {provider.kind === "foundry_local" && (
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" disabled={detecting} onClick={() => void detect()}>
+            {detecting ? "Looking…" : "Detect Foundry Local"}
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            Finds the address of the running service.
+          </span>
+        </div>
       )}
       {field(
         "prov-model",
@@ -263,7 +297,9 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
                 type="password"
                 autoComplete="off"
                 placeholder={
-                  provider.kind === "lmstudio" ? "Not needed for LM Studio" : "Paste your API key"
+                  provider.kind === "lmstudio" || provider.kind === "foundry_local"
+                    ? "Not needed here"
+                    : "Paste your API key"
                 }
                 value={key}
                 onChange={(e) => {
@@ -292,6 +328,32 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
         >
           {status.message}
         </p>
+      )}
+    </div>
+  );
+}
+
+/** Says what the chosen kind of provider is and what the user must do to get it working. */
+function ProviderHelpBox({ kind }: { kind: ProviderConfig["kind"] }) {
+  const help = PROVIDER_HELP[kind];
+  return (
+    <div
+      className="rounded-md border bg-muted/40 p-2 text-xs text-muted-foreground"
+      data-testid="provider-help"
+    >
+      <p className="font-medium text-foreground">{help.summary}</p>
+      <p className="mt-1 font-medium text-foreground">What to do:</p>
+      <ol className="list-decimal space-y-0.5 pl-4">
+        {help.steps.map((step) => (
+          <li key={step}>{step}</li>
+        ))}
+      </ol>
+      {help.notes.length > 0 && (
+        <ul className="mt-1 list-disc space-y-0.5 pl-4">
+          {help.notes.map((note) => (
+            <li key={note}>{note}</li>
+          ))}
+        </ul>
       )}
     </div>
   );

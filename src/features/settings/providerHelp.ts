@@ -1,0 +1,75 @@
+import type { ProviderKind } from "@/bindings/ProviderKind";
+
+/** What a user has to do to get one kind of AI provider working, shown when it is chosen. */
+export interface ProviderHelp {
+  /** One line: what this provider is. */
+  summary: string;
+  /** Numbered steps, in order. */
+  steps: string[];
+  /** Things to know afterwards (limits, where notes go, what to do when it fails). */
+  notes: string[];
+}
+
+export const PROVIDER_HELP: Record<ProviderKind, ProviderHelp> = {
+  lmstudio: {
+    summary: "LM Studio is a free program that runs AI models on this computer.",
+    steps: [
+      "Install LM Studio from lmstudio.ai and download a model. Choose one that supports tools (for example a Qwen or Gemma instruct model), so Mimer can search and propose changes.",
+      "In LM Studio open the Developer tab and start the server. It listens on http://localhost:1234/v1, which is already filled in below.",
+      "Press Load models, choose the model, and press Test connection.",
+      "Make it Mimer's provider under Settings → AI.",
+    ],
+    notes: [
+      "LM Studio must be running while you use it.",
+      "It runs on this computer, so your notes never leave it.",
+    ],
+  },
+  openai_compatible: {
+    summary:
+      "Any server that speaks the OpenAI interface: a program on this computer (Ollama, llama.cpp, vLLM) or a cloud service (OpenAI, Azure OpenAI and others).",
+    steps: [
+      "Enter the base URL of the server, usually ending in /v1. For Ollama on this computer it is http://localhost:11434/v1.",
+      "If the service needs an API key, paste it below and press Save key. It is kept in the system keychain, never in a file.",
+      "Press Load models, choose the model, and press Test connection.",
+      "A cloud service is chosen under Settings → AI → Raven's provider. A program on this computer is chosen as Mimer's provider.",
+    ],
+    notes: [
+      "Only an address on this computer (localhost, 127.0.0.1 or ::1) can be local. Anything else is cloud.",
+      "A cloud provider is used by Raven only. Your notes are never sent to it.",
+    ],
+  },
+  anthropic: {
+    summary: "Claude, a cloud AI from Anthropic. Used by Raven, which cannot see your notes.",
+    steps: [
+      "Create an account at console.anthropic.com and make an API key there. Using it costs money, billed by Anthropic.",
+      "Paste the key below and press Save key. It is kept in the system keychain.",
+      "Press Load models, choose a model, and press Test connection.",
+      "Choose it under Settings → AI → Raven's provider.",
+    ],
+    notes: [
+      "Raven sends only what you type to the cloud. Mimer, which reads your notes, never uses a cloud provider.",
+    ],
+  },
+  foundry_local: {
+    summary:
+      "Microsoft's Foundry Local runs AI models on this computer and can use a neural processor (NPU). Windows and macOS only.",
+    steps: [
+      "Install Foundry Local yourself. On Windows open a terminal and run: winget install Microsoft.FoundryLocal (on a Mac: brew tap microsoft/foundrylocal, then brew install foundrylocal).",
+      "Start a model once so it is downloaded: run foundry model list to see the names, then for example foundry model run phi-4-mini. Choose a variant made for your NPU if the list has one.",
+      "Press Detect below. Mimer finds the address, because Foundry Local picks a new port when it starts.",
+      "Press Load models, choose the model, and press Test connection.",
+      "Make it Mimer's provider under Settings → AI.",
+    ],
+    notes: [
+      "If it stops working after a restart, press Detect again: the port may have changed.",
+      "Not every model handles tools well. If searching and proposing changes fails, untick Supports tools: chat still works.",
+      "It runs on this computer, so your notes never leave it. It is not available on Linux; use LM Studio or the built-in AI there.",
+      "Some organisations block winget. Ask your IT department if the install is refused.",
+    ],
+  },
+  builtin: {
+    summary: "Mimer's own AI, set up under Settings → Built-in AI.",
+    steps: ["Open Settings → Built-in AI and press Download."],
+    notes: [],
+  },
+};

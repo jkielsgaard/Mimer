@@ -8,6 +8,7 @@ pub mod embeddings;
 pub mod engine;
 pub mod export;
 pub mod external;
+pub mod foundry;
 pub mod git;
 pub mod images;
 pub mod import;
