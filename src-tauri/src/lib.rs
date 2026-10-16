@@ -75,6 +75,7 @@ pub fn run() {
             app.manage(AppState::new(loaded, settings_path, error));
             git::autosave::spawn_idle_task(app.handle().clone());
             engine::service::startup(app.handle());
+            foundry::service::startup(app.handle());
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -159,7 +160,13 @@ pub fn run() {
             commands::order::get_tree_order,
             commands::order::set_folder_order,
             commands::external::open_external,
-            commands::foundry::detect_foundry_local,
+            commands::foundry::foundry_catalog,
+            commands::foundry::foundry_status,
+            commands::foundry::foundry_install,
+            commands::foundry::foundry_cancel_install,
+            commands::foundry::foundry_wake,
+            commands::foundry::foundry_sleep,
+            commands::foundry::foundry_remove,
             commands::images::add_images,
             commands::images::image_usage,
             commands::import::scan_import,
@@ -196,6 +203,7 @@ pub fn run() {
             // The built-in AI must never outlive Mimer: it holds gigabytes of memory.
             if matches!(event, tauri::RunEvent::Exit) {
                 engine::service::shutdown(app);
+                foundry::service::shutdown(app);
             }
         });
 }

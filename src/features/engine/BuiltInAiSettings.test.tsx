@@ -23,6 +23,7 @@ function settings(): Settings {
       defaultProviderId: "lm",
       ravenProviderId: null,
       builtin: { ...DEFAULT_BUILTIN },
+      foundry: { model: "" },
       baseInstruction: "",
       allowOwnKnowledge: false,
       globalInstructions: "",

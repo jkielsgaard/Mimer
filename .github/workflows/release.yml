@@ -43,6 +43,18 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Foundry Local's native libraries are packed into the installer, the AppImage and the Store
+      # package (src-tauri/foundry-native). A failure here stops the release on purpose: a build
+      # without them would silently have no Foundry Local.
+      - name: Fetch Foundry Local's native libraries (Linux)
+        if: matrix.platform == 'ubuntu-22.04'
+        run: ./scripts/fetch-foundry-native.sh
+
+      - name: Fetch Foundry Local's native libraries (Windows)
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: ./scripts/fetch-foundry-native.ps1
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

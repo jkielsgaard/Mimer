@@ -11,8 +11,10 @@ import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { useActiveAi } from "./useActiveAi";
 import { ChatHistoryMenu } from "./ChatHistoryMenu";
+import { FoundryBar } from "@/features/engine/FoundryBar";
 import { EngineBar } from "@/features/engine/EngineBar";
 import { useEngineStore } from "@/stores/engineStore";
+import { useFoundryStore } from "@/stores/foundryStore";
 import { AiSwitcher } from "./AiSwitcher";
 import { PrivacyNote } from "./PrivacyNote";
 import { PromptsMenu } from "./PromptsMenu";
@@ -41,7 +43,10 @@ export function ChatPanel() {
   const { project, provider } = useActiveAi();
   // With the built-in AI the model must be loaded (Mimer awake) before a message can be written.
   const engineState = useEngineStore((s) => s.status?.state);
-  const locked = provider?.kind === "builtin" && engineState !== "awake";
+  const foundryState = useFoundryStore((s) => s.status?.state);
+  const locked =
+    (provider?.kind === "builtin" && engineState !== "awake") ||
+    (provider?.kind === "foundry_local" && foundryState !== "awake");
   const files = useVaultStore((s) => s.files);
   const tree = useVaultStore((s) => s.tree);
   const folders = useMemo(() => folderNoteCounts(tree), [tree]);
@@ -121,6 +126,7 @@ export function ChatPanel() {
     <div className="flex h-full min-h-0 flex-col">
       <PrivacyNote kind="local" />
       {provider?.kind === "builtin" && <EngineBar />}
+      {provider?.kind === "foundry_local" && <FoundryBar />}
       <div className="flex items-center gap-2 border-b px-3 py-2 text-xs">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1 font-medium">

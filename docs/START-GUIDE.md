@@ -191,7 +191,7 @@ On Windows replace the `cargo` line with the same command; it works in PowerShel
 pnpm tauri build
 ```
 
-- **Windows:** the installer is `src-tauri\target\release\bundle\nsis\Mimer_0.8.10_x64-setup.exe`. It installs for the current user only and needs no administrator rights.
+- **Windows:** the installer is `src-tauri\target\release\bundle\nsis\Mimer_0.9.0_x64-setup.exe`. It installs for the current user only and needs no administrator rights.
 - **Linux:** `src-tauri/target/release/bundle/` contains an `.AppImage` and an `.rpm`.
 
 ---
@@ -268,3 +268,7 @@ Logs are written to the application log folder: Linux `~/.local/share/dk.mdvault
 - [`docs/MANUAL_TESTS.md`](MANUAL_TESTS.md): the same checklist as a separate file.
 - [`docs/plans/`](plans/README.md): plans for the features after v1.
 - [`docs/DECISIONS.md`](DECISIONS.md): every technical decision and deviation from the specification.
+
+## Foundry Local in a development build
+
+Foundry Local's native libraries (about 90 MB on Linux) are not kept in git. Fetch them once into `src-tauri/foundry-native` with `scripts/fetch-foundry-native.sh` (Linux) or `scripts/fetch-foundry-native.ps1` (Windows). Without them Mimer works, and Settings → Built-in AI says Foundry Local is not included in this build. The release build fetches them before it builds. The Foundry Local engine runs in a helper process: Mimer started again as `mimer --foundry-helper <command>` (see `src-tauri/src/foundry/helper.rs`).

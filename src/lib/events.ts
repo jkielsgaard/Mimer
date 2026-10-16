@@ -38,6 +38,14 @@ export function onEngineStatus(
   });
 }
 
+export function onFoundryStatus(
+  handler: (e: import("@/bindings/FoundryStatus").FoundryStatus) => void,
+): Promise<UnlistenFn> {
+  return listen<import("@/bindings/FoundryStatus").FoundryStatus>("foundry://status", (e) => {
+    handler(e.payload);
+  });
+}
+
 export function onEmbeddingStatus(
   handler: (e: import("@/bindings/EmbeddingStatus").EmbeddingStatus) => void,
 ): Promise<UnlistenFn> {

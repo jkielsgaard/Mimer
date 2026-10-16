@@ -113,7 +113,7 @@ pub fn engine_ready(dirs: &Dirs, backend: Backend) -> bool {
     paths::server_path(dirs, backend).is_file() && paths::ready_marker(dirs, backend).is_file()
 }
 
-fn folder_size(dir: &Path) -> u64 {
+pub(crate) fn folder_size(dir: &Path) -> u64 {
     let Ok(read) = std::fs::read_dir(dir) else {
         return 0;
     };
@@ -283,7 +283,10 @@ fn set_progress<R: Runtime>(app: &AppHandle<R>, phase: &str, file: &str, done: u
 
 /// Changes the settings in memory and saves them (unless the settings file could not be read, in
 /// which case it is never overwritten).
-fn change_settings<R: Runtime>(app: &AppHandle<R>, f: impl FnOnce(&mut settings::Settings)) {
+pub(crate) fn change_settings<R: Runtime>(
+    app: &AppHandle<R>,
+    f: impl FnOnce(&mut settings::Settings),
+) {
     let state = runtime(app);
     let Ok(mut s) = state.settings.write() else {
         return;

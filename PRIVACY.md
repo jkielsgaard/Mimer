@@ -20,7 +20,7 @@ Only when you choose it:
 
 - **The notes AI ("Mimer")** only talks to an AI that runs on your own computer: LM Studio, or the built-in AI. Your notes are never sent to a cloud service.
 - **Raven** (off until you turn it on) is a separate chat with a cloud AI that you choose and give an API key to. What you type in the Raven chat is sent to that company, and their privacy policy applies. Raven cannot see your notes.
-- **The built-in AI download** (when you press Download) fetches the engine from `github.com` and the model from `huggingface.co`. Those sites see your internet address, as for any download.
+- **The built-in AI download** (when you press Download) fetches, for llama.cpp, the engine from `github.com` and the model from `huggingface.co`; for Foundry Local, the hardware parts and the model from Microsoft's Foundry Local catalog. Those sites see your internet address, as for any download.
 - **Export and import** write and read files on your computer only.
 
 ## Children

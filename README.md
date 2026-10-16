@@ -9,7 +9,7 @@ Mimer is a desktop app for Markdown notes with a built-in AI assistant that help
 - **Plain files.** Your notes are normal `.md` files in normal folders. A vault works without Mimer.
 - **Never lose data.** Every vault is a local Git repository, so any change can be restored from the history.
 - **You are in control.** The AI only _proposes_ changes. Nothing is written until you approve it.
-- **Local first.** Mimer, the notes AI, runs on your own machine, with the built-in AI, [LM Studio](https://lmstudio.ai) or [Foundry Local](https://learn.microsoft.com/azure/foundry-local/) (Windows and macOS, can use a neural processor), and nothing else: your notes are never sent to a cloud service. A cloud AI is available in a separate tab, Raven, which has no access to your notes.
+- **Local first.** Mimer, the notes AI, runs on your own machine, with the built-in AI (llama.cpp or Microsoft's [Foundry Local](https://learn.microsoft.com/azure/foundry-local/), which can use a neural processor) or [LM Studio](https://lmstudio.ai), and nothing else: your notes are never sent to a cloud service. A cloud AI is available in a separate tab, Raven, which has no access to your notes.
 
 ## Why Mimer?
 
@@ -48,7 +48,7 @@ Download the build for your system from the **Releases** page. There are builds 
 
 ### Option A: the built-in AI (no other program needed)
 
-Open **Settings → Built-in AI**, choose your processor, graphics card and a model (Gemma 4 12B is recommended), and press **Download**. Then press **Wake Mimer** in the Mimer tab. **Sleep Mimer** unloads the model and frees the memory. It works on Windows and Linux with AMD, Intel and Nvidia graphics cards, or on the processor alone.
+Open **Settings → Built-in AI** and choose the engine. **Foundry Local** (Microsoft; Windows 11 24H2 or later, and Linux; the only engine in the Microsoft Store version) picks the best hardware by itself, including a neural processor (NPU), and offers Qwen, Phi, Gemma and other models that can use tools. **llama.cpp** (Windows and Linux, not in the Store version) works with Nvidia, AMD and Intel graphics cards and with Google's Gemma models. Choose a model and press **Download**. Then press **Wake Mimer** in the Mimer tab. **Sleep Mimer** unloads the model and frees the memory. It works on Windows and Linux with AMD, Intel and Nvidia graphics cards, or on the processor alone.
 
 ### Option B: LM Studio
 
@@ -57,14 +57,6 @@ Open **Settings → Built-in AI**, choose your processor, graphics card and a mo
 3. In Mimer open **Settings → AI providers → LM Studio**, load the models, pick one and press **Test connection**.
 
 Give the model a context length of at least 16k in LM Studio, and use the same value in Mimer's settings.
-
-### Option C: Foundry Local (Windows and macOS, can use an NPU)
-
-1. Install [Foundry Local](https://learn.microsoft.com/azure/foundry-local/) yourself (`winget install Microsoft.FoundryLocal` on Windows) and start a model once (`foundry model run phi-4-mini`).
-2. In Mimer open **Settings → AI providers**, add a provider and choose the kind **Foundry Local**. Press **Detect Foundry Local**: Mimer finds the address, because Foundry Local chooses a new port each time it starts.
-3. Press **Load models**, choose the model, press **Test connection**, and make it Mimer's provider under **Settings → AI**.
-
-Every kind of provider explains these steps in the settings when you choose it.
 
 ### Raven (optional, cloud AI)
 
@@ -81,7 +73,7 @@ pnpm tauri build      # build an installer for the current system
 pnpm check            # everything CI runs: format, lint, types, tests, clippy
 ```
 
-Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v0.8.10` makes GitHub Actions build the installers (`.github/workflows/release.yml`).
+Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v0.9.0` makes GitHub Actions build the installers (`.github/workflows/release.yml`).
 
 ## More
 

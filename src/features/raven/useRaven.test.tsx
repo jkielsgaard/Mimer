@@ -17,6 +17,7 @@ function withRaven(ravenProviderId: string | null): Settings {
       defaultProviderId: "lm",
       ravenProviderId,
       builtin: DEFAULT_BUILTIN,
+      foundry: { model: "" },
       baseInstruction: "",
       allowOwnKnowledge: false,
       globalInstructions: "",

@@ -19,6 +19,7 @@ const settings: Settings = {
     defaultProviderId: "lm",
     ravenProviderId: "claude",
     builtin: DEFAULT_BUILTIN,
+    foundry: { model: "" },
     baseInstruction: "",
     allowOwnKnowledge: false,
     globalInstructions: "",

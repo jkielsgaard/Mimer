@@ -38,6 +38,7 @@ function settings(): Settings {
       defaultProviderId: "lm",
       ravenProviderId: "claude",
       builtin: DEFAULT_BUILTIN,
+      foundry: { model: "" },
       baseInstruction: "",
       allowOwnKnowledge: false,
       globalInstructions: "",
@@ -57,7 +58,9 @@ describe("AiSwitcher", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     api.listModels.mockResolvedValue(["model-a", "model-b"]);
-    useSettingsStore.setState({ settings: settings(), save });
+    const s0 = settings();
+    s0.ai.foundry = { model: "qwen3-4b" };
+    useSettingsStore.setState({ settings: s0, save });
     useVaultStore.setState({
       vault: null,
       files: [],

@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-16
+
+### Added
+
+- **Foundry Local as a built-in AI.** Settings → Built-in AI now asks which engine should run the AI on this computer: **Foundry Local** (Microsoft's runtime) or **llama.cpp** (as before). Foundry Local picks the best hardware by itself, including a neural processor (NPU) on computers that have one, and offers models such as Qwen, Phi and Gemma; only models that can call tools are shown, because searching and changing notes needs them. Download, **Wake Mimer** and **Sleep Mimer** work as for llama.cpp. The engine runs in a helper process (Mimer started again as `mimer --foundry-helper`), so a fault in it cannot take Mimer down. Foundry Local is the only built-in engine in the Microsoft Store version: its native libraries are part of the signed package, and only data (hardware parts and the model) is downloaded.
+- Windows 11 version 24H2 or later is needed for Foundry Local on Windows. On Linux it is new and on some systems its engine crashed when a model was downloaded; Mimer stays up and says so.
+
+### Changed
+
+- The separate "Foundry Local" provider from 0.8.9 (which looked for a program the user had installed) is gone; Foundry Local is now Mimer's own built-in engine.
+
 ## [0.8.10] - 2026-10-16
 
 ### Changed

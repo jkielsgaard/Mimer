@@ -10,8 +10,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { api, toApiError } from "@/lib/api";
-import { effectiveLocation } from "@/lib/providers";
+import { effectiveLocation, usableProviders } from "@/lib/providers";
 import { useEngineStore } from "@/stores/engineStore";
+import { useFoundryStore } from "@/stores/foundryStore";
 import { useRaven } from "@/features/raven/useRaven";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
@@ -39,6 +40,7 @@ export function AiSwitcher({ role, disabled }: { role: Role; disabled?: boolean 
   const raven = useRaven();
   const engine = useEngineStore((s) => s.status);
   const catalog = useEngineStore((s) => s.catalog);
+  const foundry = useFoundryStore((s) => s.status);
   const [models, setModels] = useState<string[] | null>(null);
   const [modelError, setModelError] = useState<string | null>(null);
 
@@ -49,16 +51,21 @@ export function AiSwitcher({ role, disabled }: { role: Role; disabled?: boolean 
     active.project?.providerId != null &&
     provider?.id === active.project.providerId;
   if (!settings) return null;
-  const choices = settings.ai.providers.filter(
+  const choices = usableProviders(settings).filter(
     (p) => effectiveLocation(p) === (role === "mimer" ? "local" : "cloud"),
   );
   const builtIn = provider?.kind === "builtin";
+  const isFoundry = provider?.kind === "foundry_local";
   const builtInModel = builtIn
     ? (engine?.models.find((m) => m.id === settings.ai.builtin.modelId)?.name ??
       catalog?.models.find((m) => m.id === settings.ai.builtin.modelId)?.name ??
       settings.ai.builtin.modelId)
     : null;
-  const modelName = builtInModel ?? provider?.model ?? "";
+  const foundryModel = isFoundry
+    ? (foundry?.installed.find((m) => m.alias === settings.ai.foundry.model)?.name ??
+      settings.ai.foundry.model)
+    : null;
+  const modelName = builtInModel ?? foundryModel ?? provider?.model ?? "";
   const label = provider
     ? `${provider.name}${modelName ? ` · ${modelName}` : " · no model selected"}`
     : role === "mimer"
@@ -79,6 +86,10 @@ export function AiSwitcher({ role, disabled }: { role: Role; disabled?: boolean 
     setModelError(null);
     if (builtIn) {
       void useEngineStore.getState().load();
+      return;
+    }
+    if (isFoundry) {
+      void useFoundryStore.getState().load();
       return;
     }
     api
@@ -107,6 +118,10 @@ export function AiSwitcher({ role, disabled }: { role: Role; disabled?: boolean 
       });
       return;
     }
+    if (isFoundry) {
+      void store({ ...settings, ai: { ...settings.ai, foundry: { model: name } } });
+      return;
+    }
     void store({
       ...settings,
       ai: {
@@ -119,6 +134,7 @@ export function AiSwitcher({ role, disabled }: { role: Role; disabled?: boolean 
   };
 
   const installed = engine?.models ?? [];
+  const foundryInstalled = foundry?.installed ?? [];
   return (
     <DropdownMenu onOpenChange={onOpen}>
       <DropdownMenuTrigger
@@ -161,7 +177,27 @@ export function AiSwitcher({ role, disabled }: { role: Role; disabled?: boolean 
           <>
             <DropdownMenuSeparator />
             <Heading>Model</Heading>
-            {builtIn ? (
+            {isFoundry ? (
+              foundryInstalled.length === 0 ? (
+                <div className="px-2 py-1.5 text-muted-foreground">
+                  No model downloaded yet. Open Settings → Built-in AI.
+                </div>
+              ) : (
+                foundryInstalled.map((m) => (
+                  <DropdownMenuItem
+                    key={m.alias}
+                    onSelect={() => {
+                      chooseModel(m.alias);
+                    }}
+                  >
+                    <span className="truncate">{m.name}</span>
+                    {m.alias === settings.ai.foundry.model && (
+                      <Check className="size-3.5" aria-label="In use" />
+                    )}
+                  </DropdownMenuItem>
+                ))
+              )
+            ) : builtIn ? (
               installed.length === 0 ? (
                 <div className="px-2 py-1.5 text-muted-foreground">
                   No model downloaded yet. Open Settings → Built-in AI.
@@ -204,7 +240,7 @@ export function AiSwitcher({ role, disabled }: { role: Role; disabled?: boolean 
                 </DropdownMenuItem>
               ))
             )}
-            {builtIn && (
+            {(builtIn || isFoundry) && (
               <div className="px-2 py-1 text-muted-foreground">
                 A new model is used the next time Mimer is woken.
               </div>

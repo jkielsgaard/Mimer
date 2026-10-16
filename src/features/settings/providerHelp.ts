@@ -51,21 +51,9 @@ export const PROVIDER_HELP: Record<ProviderKind, ProviderHelp> = {
     ],
   },
   foundry_local: {
-    summary:
-      "Microsoft's Foundry Local runs AI models on this computer and can use a neural processor (NPU). Windows and macOS only.",
-    steps: [
-      "Install Foundry Local yourself. On Windows open a terminal and run: winget install Microsoft.FoundryLocal (on a Mac: brew tap microsoft/foundrylocal, then brew install foundrylocal).",
-      "Start a model once so it is downloaded: run foundry model list to see the names, then for example foundry model run phi-4-mini. Choose a variant made for your NPU if the list has one.",
-      "Press Detect below. Mimer finds the address, because Foundry Local picks a new port when it starts.",
-      "Press Load models, choose the model, and press Test connection.",
-      "Make it Mimer's provider under Settings → AI.",
-    ],
-    notes: [
-      "If it stops working after a restart, press Detect again: the port may have changed.",
-      "Not every model handles tools well. If searching and proposing changes fails, untick Supports tools: chat still works.",
-      "It runs on this computer, so your notes never leave it. It is not available on Linux; use LM Studio or the built-in AI there.",
-      "Some organisations block winget. Ask your IT department if the install is refused.",
-    ],
+    summary: "Mimer's Foundry Local, set up under Settings → Built-in AI.",
+    steps: ["Open Settings → Built-in AI, choose Foundry Local and press Download."],
+    notes: [],
   },
   builtin: {
     summary: "Mimer's own AI, set up under Settings → Built-in AI.",

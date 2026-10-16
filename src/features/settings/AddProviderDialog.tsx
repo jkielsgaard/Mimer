@@ -30,13 +30,6 @@ export const PROVIDER_CHOICES: Choice[] = [
     make: () => newProvider("lmstudio"),
   },
   {
-    id: "foundry_local",
-    title: "Foundry Local",
-    where: "local",
-    text: "Microsoft's program for running models on this computer, also on a neural processor (NPU). Windows and macOS.",
-    make: () => newProvider("foundry_local"),
-  },
-  {
     id: "local_server",
     title: "Another server on this computer",
     where: "local",
@@ -138,7 +131,8 @@ export function AddProviderDialog({ open, onCancel, onAdd }: Props) {
           ))}
         </div>
         <p className="text-xs text-muted-foreground">
-          The built-in AI is not added here: it has its own tab, Built-in AI.
+          The built-in AI (llama.cpp and Foundry Local) is not added here: it has its own tab,
+          Built-in AI.
         </p>
         <DialogFooter>
           <Button

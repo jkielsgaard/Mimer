@@ -28,7 +28,7 @@ Mimer is a notes app for people who want to own their notes. Your notes are ordi
 
 - Ask Mimer to find, restructure, merge, correct or summarise notes. It can search and read your notes, and it proposes changes that you review file by file. Nothing is written until you accept it.
 - Select text and press Ctrl+K for quick changes: fix spelling, rewrite, shorten and more.
-- Your notes are only ever sent to an AI that runs on your own computer (LM Studio). A separate chat, Raven, can use a cloud AI of your choice for knowledge from the internet, and it never sees your notes.
+- Your notes are only ever sent to an AI that runs on your own computer: the built-in AI (Microsoft's Foundry Local, which can use a neural processor) or LM Studio. A separate chat, Raven, can use a cloud AI of your choice for knowledge from the internet, and it never sees your notes.
 
 **Write and organise**
 
@@ -82,11 +82,11 @@ Mimer is an open-source desktop notes app (Tauri, Rust and a WebView2 front end)
 
 How to try it: start the app, choose "Open folder as vault" and pick or create any empty folder. Create a note with Ctrl+N. No account or sign-in is needed.
 
-The AI features need a local AI server (LM Studio) that is not part of the package. Without one, the app is a normal Markdown editor with version history. The "Raven" tab is off until the user enters an API key for a cloud AI provider of their own. No data is sent anywhere unless the user does that.
+The AI features use either the optional built-in AI (Foundry Local, see below) or a local AI server (LM Studio) that is not part of the package. Without either, the app is a normal Markdown editor with version history. The "Raven" tab is off until the user enters an API key for a cloud AI provider of their own. No data is sent anywhere unless the user does that.
 
 The app shows AI-generated answers (live generative AI). The model is one the user connects themselves. To report inappropriate AI content, use File > Report > "Report inappropriate AI content…": it opens a pre-filled issue on the developer's GitHub page, and reports are read and acted on.
 
-The Microsoft Store build does not download or run any additional programs. The built-in AI engine that the GitHub installer offers is disabled in this build.
+Built-in AI: the package contains Microsoft's Foundry Local runtime (MIT-licensed SDK and native libraries). It runs in a helper process, which is the same mimer.exe started with the argument --foundry-helper; no other program is started. If the user opens Settings > Built-in AI and presses Download, the runtime fetches (1) the hardware components for the neural processor or graphics card, and (2) a model chosen by the user, from Microsoft's Foundry Local catalog. Nothing is downloaded unless the user presses the button, and the screen says what will be downloaded before that. Only data is downloaded, no programs. The app works fully without it. The llama.cpp engine that the GitHub installer offers is disabled in this build.
 
 The app does not collect any data. Privacy policy: https://github.com/jkielsgaard/Mimer/blob/main/PRIVACY.md
 ```

@@ -26,10 +26,10 @@ On a Windows computer with the Windows SDK, Node, Rust and pnpm:
 ```powershell
 pnpm install
 pnpm tauri build
-./scripts/msix/Build-Msix.ps1 -Version 0.8.10 -TestSign -DisplayName "Mimer: Markdown Notes"
+./scripts/msix/Build-Msix.ps1 -Version 0.9.0 -TestSign -DisplayName "Mimer: Markdown Notes"
 ```
 
-This makes the folder `msix-out` with, among other files, `Mimer_0.8.10.0_x64.msix` (unsigned, for the Store), `Mimer_0.8.10.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
+This makes the folder `msix-out` with, among other files, `Mimer_0.9.0.0_x64.msix` (unsigned, for the Store), `Mimer_0.9.0.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
 
 **Windows Sandbox** (Windows 11 Pro, feature "Windows Sandbox" turned on): edit `scripts/msix/mimer-sandbox.wsb` so that `HostFolder` is the full path of `msix-out`, and double-click it. The sandbox installs Mimer; start it from the Start menu. Everything is gone when you close the sandbox.
 
@@ -54,13 +54,15 @@ If a Build-Msix step fails, `makeappx` says what is wrong with the manifest.
 
 ## The built-in AI in the Store package
 
-The Store package **does not run the llama.cpp engine** (`engine::catalog::unavailable_reason`): a downloaded program was blocked from starting on a managed laptop, and the Store's policy 10.2.2 is against apps that extend themselves with downloaded code. Settings → Built-in AI says so, and LM Studio (or a local server) is used instead. There is a single Store package now, `mimer-msix` (and `mimer-msix-test` for Windows Sandbox).
+The Store package **does not run the llama.cpp engine** (`engine::catalog::unavailable_reason`): a downloaded program was blocked from starting on a managed laptop, and the Store's policy 10.2.2 is against apps that extend themselves with downloaded code. Settings → Built-in AI says so for that engine.
 
-Versions 0.8.7 to 0.8.9 also built a second package, `mimer-msix-with-ai`, that could download the engine. It was removed again in 0.8.10 because the engine is blocked from starting. The Store route for a built-in AI is Foundry Local (see `docs/DECISIONS.md`, "Version 0.8.10"), which runs in Mimer's own, Store-signed package.
+The Store package has **Foundry Local** instead (Microsoft's runtime, MIT-licensed SDK). Its native libraries (`foundry-native\`, about 40 MB, fetched by `scripts/fetch-foundry-native.ps1` and packed by `Build-Msix.ps1`) are inside the package, so they are signed by the Store like the rest. The engine runs in a helper process, which is the same `mimer.exe` started with `--foundry-helper`, so no separate program has to be allowed. Only data is downloaded at the user's request: the hardware parts (execution providers for the NPU or graphics card, from Microsoft) and the model.
+
+Versions 0.8.7 to 0.8.9 also built a second package, `mimer-msix-with-ai`, that could download the llama.cpp engine. It was removed in 0.8.10 because that engine is blocked from starting.
 
 ## Known risks
 
-- **No built-in AI in the Store package yet**: see above. LM Studio works if it is installed.
+- **Foundry Local in the Store package** is new and untested in a real Store install: Windows 11 version 24H2 or later is needed for it, and the hardware parts and models are downloaded from Microsoft's servers. Policy 10.2.2 (no extending the app with dynamically included code) is the question to watch: only data is downloaded, not programs. LM Studio works if it is installed.
 - **The Store's rules about AI apps** have not been checked either. Mimer lets the user chat with a model of their own choice and, with Raven, with a cloud AI.
 - **WebView2**: Windows 11 has it. On Windows 10 the user may need to install the Edge WebView2 runtime.
 - An organisation can still block the Store, or block Store apps that are not approved. Check that the Microsoft Store opens on the computer where you want to use Mimer.

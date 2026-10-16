@@ -7,8 +7,8 @@ description = "A stand-alone test of Foundry Local for the Mimer project. It is 
 
 [dependencies]
 # A copy of foundry-local-sdk 2.1.0 where only the build-time `zip` dependency is changed from 2 to
-# 9 (every `zip 2` is yanked on crates.io, so the original cannot be resolved). See vendor/README.
-foundry-local-sdk = { path = "vendor/foundry-local-sdk" }
+# 9 (every `zip 2` is yanked on crates.io, so the original cannot be resolved). See src-tauri/vendor/README.md.
+foundry-local-sdk = { path = "../../src-tauri/vendor/foundry-local-sdk" }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-util", "io-std"] }
 serde_json = "1"
 

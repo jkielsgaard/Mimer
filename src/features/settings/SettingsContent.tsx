@@ -13,13 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { effectiveLocation } from "@/lib/providers";
+import { effectiveLocation, usableProviders } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { ProviderEditor } from "./ProviderEditor";
 import { AddProviderDialog } from "./AddProviderDialog";
-import { BuiltInAiSettings } from "@/features/engine/BuiltInAiSettings";
+import { BuiltInAiTab } from "@/features/engine/BuiltInAiTab";
 import { VaultSettingsTab } from "./VaultSettingsTab";
 import { MimerInstructionSettings } from "./MimerInstructionSettings";
 import { SemanticSearchSettings } from "./SemanticSearchSettings";
@@ -58,7 +58,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
   };
   const provider = draft.ai.providers.find((p) => p.id === providerId) ?? null;
   // Notes only go to local providers; cloud providers can only be used by Raven.
-  const localProviders = draft.ai.providers.filter((p) => effectiveLocation(p) === "local");
+  const localProviders = usableProviders(draft).filter((p) => effectiveLocation(p) === "local");
   const cloudProviders = draft.ai.providers.filter((p) => effectiveLocation(p) === "cloud");
 
   return (
@@ -178,7 +178,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
           {tab === "providers" && (
             <div className="flex gap-4">
               <div className="flex w-44 shrink-0 flex-col gap-1">
-                {draft.ai.providers.map((p) => (
+                {usableProviders(draft).map((p) => (
                   <button
                     key={p.id}
                     type="button"
@@ -207,11 +207,11 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                 </Button>
               </div>
               <div className="min-w-0 flex-1">
-                {provider?.kind === "builtin" ? (
+                {provider?.kind === "builtin" || provider?.kind === "foundry_local" ? (
                   <div className="flex flex-col gap-2 text-sm">
                     <p className="font-medium">{provider.name}</p>
                     <p className="text-muted-foreground">
-                      This is Mimer's own AI. It runs on this computer. Choose the hardware and the
+                      This is Mimer's own AI. It runs on this computer. Choose the engine and the
                       model, and download it, under Built-in AI.
                     </p>
                     <div>
@@ -369,7 +369,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
               <SemanticSearchSettings draft={draft} onChange={setDraft} persist={persist} />
             </div>
           )}
-          {tab === "builtin" && <BuiltInAiSettings draft={draft} onChange={setDraft} />}
+          {tab === "builtin" && <BuiltInAiTab draft={draft} onChange={setDraft} />}
           {tab === "vault" && <VaultSettingsTab />}
           {tab === "history" && (
             <div className="flex flex-col gap-3">

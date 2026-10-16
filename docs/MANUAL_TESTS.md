@@ -463,3 +463,16 @@ Needs Windows (a virtual machine or Windows Sandbox). See docs/MSIX.md.
 - [ ] In a project that has its own AI the menu says the project chooses it and the provider choices are disabled.
 - [ ] Raven tab: the menu lists only cloud providers; choosing one changes Raven's provider. With no cloud AI it says Raven works only with a cloud AI and offers Add or edit providers….
 - [ ] The menu cannot be opened while an answer is being written. Stop LM Studio and open the menu: it says the models could not be listed.
+
+## 43. Foundry Local as a built-in AI (Windows 11 24H2 or later; Linux is experimental)
+
+- [ ] Settings → Built-in AI shows two engine cards, **Foundry Local** and **llama.cpp**, and none is chosen for a new user. Choosing one shows its own settings.
+- [ ] Foundry Local: the model list appears (it can take a minute), shows only models that can call tools, with size and "runs on" (CPU, GPU or NPU), smallest first. The download box says what is fetched and that nothing is fetched before Download.
+- [ ] Choose a small model (for example qwen3-0.6b) and press Download: first "Setting up the hardware parts…", then "Downloading the model…" with a percentage and a working Cancel. When it is done the model shows under Downloaded and is Mimer's provider.
+- [ ] Mimer tab: the bar says Mimer is asleep. **Wake Mimer** loads it ("Loading the model…"), then Awake; the message box unlocks. Ask a question: it answers. Ask Mimer to search the notes: it uses the tool. **Sleep Mimer** frees the memory (check in Task Manager that the second `mimer.exe` process is gone).
+- [ ] Close Mimer while it is awake: no `mimer.exe` helper stays behind.
+- [ ] Click the AI name under the Mimer tab title: Foundry Local's downloaded models are listed; choosing another says it is used the next time Mimer is woken.
+- [ ] Put a computer without a neural processor (Windows Sandbox) next to one with an NPU (a Copilot+ PC): on the NPU computer a model marked NPU runs, and Task Manager → Performance → NPU shows activity while it answers.
+- [ ] Settings → Built-in AI → Remove: a model is removed; **Remove all Foundry Local files** empties the folder.
+- [ ] The Microsoft Store package (test copy in Windows Sandbox): the llama.cpp card says it is not available, Foundry Local works, and the helper starts (it is the same signed `mimer.exe`).
+- [ ] On Linux: if the download crashes the engine, Mimer stays up and shows "the Foundry Local engine crashed" with what to do.

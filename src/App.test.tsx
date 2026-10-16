@@ -15,6 +15,7 @@ const settings: Settings = {
     defaultProviderId: "lmstudio-default",
     ravenProviderId: null,
     builtin: DEFAULT_BUILTIN,
+    foundry: { model: "" },
     baseInstruction: "",
     allowOwnKnowledge: false,
     globalInstructions: "",
@@ -77,6 +78,7 @@ vi.mock("@/lib/events", () => ({
   onCommitted: vi.fn().mockResolvedValue(() => undefined),
   onCloseRequested: vi.fn().mockResolvedValue(() => undefined),
   onEmbeddingStatus: vi.fn().mockResolvedValue(() => undefined),
+  onFoundryStatus: vi.fn().mockResolvedValue(() => undefined),
   onEngineStatus: vi.fn().mockResolvedValue(() => undefined),
 }));
 vi.mock("@tauri-apps/api/window", () => ({

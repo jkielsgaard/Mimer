@@ -31,10 +31,12 @@ import {
   onCloseRequested,
   onEmbeddingStatus,
   onEngineStatus,
+  onFoundryStatus,
   onFileChanged,
   onIndexUpdated,
 } from "@/lib/events";
 import { useEngineStore } from "@/stores/engineStore";
+import { useFoundryStore } from "@/stores/foundryStore";
 import { NoticeDialog } from "@/components/NoticeDialog";
 import { NewNoteDialog } from "@/features/fileTree/NewNoteDialog";
 import { useEmbeddingStore } from "@/stores/embeddingStore";
@@ -83,6 +85,17 @@ function useBackendEvents(active: boolean): void {
       }),
     );
     void useEngineStore.getState().load();
+    keep(
+      onFoundryStatus((status) => {
+        const before = useFoundryStore.getState().status?.state;
+        useFoundryStore.getState().setStatus(status);
+        // A finished download may have made Foundry Local Mimer's provider.
+        if (before === "installing" && status.state !== "installing") {
+          void useSettingsStore.getState().load();
+        }
+      }),
+    );
+    void useFoundryStore.getState().load();
     keep(
       onIndexUpdated(() => {
         useVaultStore.setState((s) => ({ indexNonce: s.indexNonce + 1 }));

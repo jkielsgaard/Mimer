@@ -22,6 +22,10 @@ pub fn get_key(provider_id: &str) -> Option<String> {
     if provider_id == crate::engine::BUILTIN_ID {
         return crate::engine::current_token();
     }
+    // Foundry Local answers on this computer only and needs no key.
+    if provider_id == crate::foundry::FOUNDRY_ID {
+        return None;
+    }
     entry(provider_id).ok()?.get_password().ok()
 }
 

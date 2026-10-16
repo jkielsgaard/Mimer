@@ -21,6 +21,9 @@ param(
   [string]$Exe = "src-tauri\target\release\mimer.exe",
   [string]$IconDir = "src-tauri\icons",
   [string]$OutDir = "msix-out",
+  # Foundry Local's native libraries (scripts/fetch-foundry-native.ps1). Packed next to mimer.exe
+  # when the folder has them; without them the package still works but has no Foundry Local.
+  [string]$FoundryDir = "src-tauri\foundry-native",
   [string]$IdentityName = "Jkielsgaard.Mimer",
   # The name shown in the Start menu and the Store. It must be the name reserved in Partner Center.
   [string]$DisplayName = "Mimer: Markdown Notes",
@@ -62,6 +65,14 @@ New-Item -ItemType Directory -Path (Join-Path $stage "Assets") -Force | Out-Null
 
 # The program and the logos the manifest points at.
 Copy-Item $Exe (Join-Path $stage "mimer.exe")
+if (Test-Path (Join-Path $FoundryDir "foundry_local.dll")) {
+  $native = Join-Path $stage "foundry-native"
+  New-Item -ItemType Directory -Path $native -Force | Out-Null
+  Copy-Item (Join-Path $FoundryDir "*.dll") $native
+  Write-Host "Packed Foundry Local from $FoundryDir"
+} else {
+  Write-Host "No Foundry Local libraries in $FoundryDir: the package will not have Foundry Local."
+}
 foreach ($logo in @("StoreLogo.png", "Square44x44Logo.png", "Square150x150Logo.png")) {
   $src = Join-Path $IconDir $logo
   if (-not (Test-Path $src)) { throw "Missing logo: $src" }

@@ -89,7 +89,9 @@ pub async fn run_inline(
     };
     // The built-in AI must be awake (loaded) before anything is sent to it.
     crate::engine::service::require_awake(&state, provider.config())?;
+    crate::foundry::service::require_awake(&state, provider.config())?;
     crate::engine::service::touch(&state);
+    crate::foundry::service::touch(&state);
     let key = keychain::get_key(&provider.config().id);
     let (system, user) = build_messages(&req, &settings.ai.global_instructions, project.as_ref());
     let llm = LlmRequest {

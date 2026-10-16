@@ -31,6 +31,7 @@ const stored: Settings = {
     defaultProviderId: "lm",
     ravenProviderId: null,
     builtin: DEFAULT_BUILTIN,
+    foundry: { model: "" },
     baseInstruction: "",
     allowOwnKnowledge: false,
     globalInstructions: "",
@@ -157,11 +158,11 @@ describe("Settings → AI providers", () => {
     expect(screen.getByRole("radio", { name: /Anthropic/ })).toHaveTextContent(
       "Cloud · for Raven only",
     );
-    await user.click(screen.getByRole("radio", { name: /Foundry Local/ }));
+    await user.click(screen.getByRole("radio", { name: /Another server on this computer/ }));
     expect(add).toBeEnabled();
     await user.click(add);
-    expect(screen.getByLabelText("Kind")).toHaveValue("foundry_local");
-    expect(screen.getByTestId("provider-help")).toHaveTextContent("winget install");
+    expect(screen.getByLabelText("Kind")).toHaveValue("openai_compatible");
+    expect(screen.getByLabelText("Base URL")).toHaveValue("http://localhost:11434/v1");
   });
 
   it("Cancel in the Add window adds nothing", async () => {

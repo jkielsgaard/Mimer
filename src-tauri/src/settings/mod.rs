@@ -85,8 +85,8 @@ pub enum ProviderKind {
     #[serde(rename = "builtin")]
     #[ts(rename = "builtin")]
     BuiltIn,
-    /// Microsoft's Foundry Local, installed by the user (`foundry` module). Local at a loopback
-    /// address only, like LM Studio.
+    /// Microsoft's Foundry Local, run by Mimer in a helper process (`foundry` module). Local at a
+    /// loopback address only. There is at most one, with the id `foundry`.
     #[serde(rename = "foundry_local")]
     #[ts(rename = "foundry_local")]
     FoundryLocal,
@@ -212,6 +212,30 @@ impl Default for BuiltInSettings {
     }
 }
 
+/// Settings of Foundry Local, the second built-in AI.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", default)]
+#[ts(export)]
+pub struct FoundrySettings {
+    /// The alias of the model that is woken (for example `qwen3-4b`); empty until one is downloaded.
+    pub model: String,
+}
+
+/// The provider that stands for Foundry Local.
+fn foundry_provider() -> ProviderConfig {
+    ProviderConfig {
+        id: crate::foundry::FOUNDRY_ID.into(),
+        kind: ProviderKind::FoundryLocal,
+        name: "Mimer (Foundry Local)".into(),
+        // The port is chosen each time Mimer is woken and written here then.
+        base_url: "http://127.0.0.1:5272/v1".into(),
+        model: String::new(),
+        location: Location::Local,
+        supports_tools: true,
+        context_tokens: 16_000,
+    }
+}
+
 /// The provider that stands for the built-in AI.
 fn builtin_provider(context_tokens: u32) -> ProviderConfig {
     ProviderConfig {
@@ -268,6 +292,8 @@ pub struct AiSettings {
     pub embeddings: EmbeddingSettings,
     /// The AI that Mimer runs itself, without LM Studio.
     pub builtin: BuiltInSettings,
+    /// Foundry Local, the second built-in AI.
+    pub foundry: FoundrySettings,
 }
 
 /// The provider Mimer uses when nothing has been chosen: the built-in AI where it can be
@@ -292,8 +318,10 @@ impl Default for AiSettings {
             global_instructions: String::new(),
             embeddings: EmbeddingSettings::default(),
             builtin: BuiltInSettings::default(),
+            foundry: FoundrySettings::default(),
             providers: vec![
                 builtin_provider(BuiltInSettings::default().context_tokens),
+                foundry_provider(),
                 ProviderConfig {
                     id: "lmstudio-default".into(),
                     kind: ProviderKind::LmStudio,
@@ -345,6 +373,7 @@ impl Settings {
     /// Enforces the invariants from the spec (fixed locations, clamped values).
     pub fn normalize(&mut self) {
         self.normalize_builtin();
+        self.normalize_foundry();
         for p in &mut self.ai.providers {
             p.location = p.effective_location();
             if p.context_tokens < 1000 {
@@ -381,6 +410,35 @@ impl Settings {
 
     /// Keeps the built-in AI's settings in range and its provider in step with them: there is
     /// exactly one built-in provider, it is local, and it follows the context size.
+    /// Adds the Foundry Local provider when there is none (settings from before it existed).
+    pub fn ensure_foundry_provider(&mut self) {
+        if !self
+            .ai
+            .providers
+            .iter()
+            .any(|p| p.id == crate::foundry::FOUNDRY_ID)
+        {
+            self.ai.providers.push(foundry_provider());
+        }
+    }
+
+    /// Only one provider may be of the Foundry Local kind, with its own id, on this computer.
+    fn normalize_foundry(&mut self) {
+        let id = crate::foundry::FOUNDRY_ID;
+        self.ai
+            .providers
+            .retain(|p| p.kind != ProviderKind::FoundryLocal || p.id == id);
+        self.ensure_foundry_provider();
+        if let Some(p) = self.ai.providers.iter_mut().find(|p| p.id == id) {
+            p.kind = ProviderKind::FoundryLocal;
+            p.location = Location::Local;
+            p.supports_tools = true;
+            if !is_loopback_url(&p.base_url) {
+                p.base_url = foundry_provider().base_url;
+            }
+        }
+    }
+
     fn normalize_builtin(&mut self) {
         let b = &mut self.ai.builtin;
         b.context_tokens = b
@@ -647,10 +705,43 @@ mod tests {
         assert!(json.contains("\"kind\":\"foundry_local\""), "{json}");
         let back: ProviderConfig = serde_json::from_str(&json).unwrap();
         assert_eq!(back.kind, ProviderKind::FoundryLocal);
+        // The managed provider is put right: a wrong address is replaced by the loopback one.
         let mut s = Settings::default();
         s.ai.providers.push(far);
         s.normalize();
-        assert_eq!(s.ai.providers.last().unwrap().location, Location::Cloud);
+        let p = s.provider("foundry").unwrap();
+        assert_eq!(p.location, Location::Local);
+        assert!(is_loopback_url(&p.base_url));
+    }
+
+    #[test]
+    fn only_one_foundry_provider_exists_and_it_is_added_on_request() {
+        let mut s = Settings::default();
+        s.ai.providers.retain(|p| p.id != "foundry");
+        s.ai.providers.push(provider(
+            "stray",
+            ProviderKind::FoundryLocal,
+            "http://127.0.0.1:1/v1",
+        ));
+        s.normalize();
+        assert!(
+            s.provider("stray").is_none(),
+            "a Foundry provider with another id is dropped"
+        );
+        assert!(
+            s.provider("foundry").is_some(),
+            "the provider is always there"
+        );
+        s.ensure_foundry_provider();
+        s.ensure_foundry_provider();
+        s.normalize();
+        let n =
+            s.ai.providers
+                .iter()
+                .filter(|p| p.kind == ProviderKind::FoundryLocal)
+                .count();
+        assert_eq!(n, 1);
+        assert!(s.provider("foundry").unwrap().supports_tools);
     }
 
     #[test]

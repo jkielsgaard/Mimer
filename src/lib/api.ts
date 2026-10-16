@@ -38,6 +38,8 @@ import type { ExportRequest } from "@/bindings/ExportRequest";
 import type { ExportResult } from "@/bindings/ExportResult";
 import type { EmbeddingStatus } from "@/bindings/EmbeddingStatus";
 import type { SemanticHit } from "@/bindings/SemanticHit";
+import type { FoundryModel } from "@/bindings/FoundryModel";
+import type { FoundryRemove } from "@/bindings/FoundryRemove";
 import type { FoundryStatus } from "@/bindings/FoundryStatus";
 import type { ImageUsage } from "@/bindings/ImageUsage";
 import type { ImportEvent } from "@/bindings/ImportEvent";
@@ -217,7 +219,14 @@ export const api = {
   // Images
   addImages: (notePath: string, files: string[]) =>
     call<string[]>("add_images", { notePath, files }),
-  detectFoundryLocal: () => call<FoundryStatus>("detect_foundry_local"),
+  foundryCatalog: (refresh: boolean) => call<FoundryModel[]>("foundry_catalog", { refresh }),
+  foundryStatus: () => call<FoundryStatus>("foundry_status"),
+  foundryInstall: (alias: string, useForMimer: boolean) =>
+    call<undefined>("foundry_install", { alias, useForMimer }),
+  foundryCancelInstall: () => call<undefined>("foundry_cancel_install"),
+  foundryWake: () => call<undefined>("foundry_wake"),
+  foundrySleep: () => call<undefined>("foundry_sleep"),
+  foundryRemove: (what: FoundryRemove) => call<undefined>("foundry_remove", { what }),
   openExternal: (url: string) => call<undefined>("open_external", { url }),
   imageUsage: () => call<ImageUsage[]>("image_usage"),
 

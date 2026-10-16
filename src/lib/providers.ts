@@ -1,4 +1,5 @@
 import type { ProviderConfig } from "@/bindings/ProviderConfig";
+import type { Settings } from "@/bindings/Settings";
 
 /** True when the URL points at this machine. */
 export function isLoopbackUrl(url: string): boolean {
@@ -18,4 +19,14 @@ export function effectiveLocation(p: ProviderConfig): "local" | "cloud" {
   if (p.kind === "anthropic") return "cloud";
   if (!isLoopbackUrl(p.baseUrl)) return "cloud";
   return p.kind === "openai_compatible" ? p.location : "local";
+}
+
+/**
+ * The providers the user can choose from. Foundry Local is always in the settings, but is only
+ * offered once a model has been downloaded for it.
+ */
+export function usableProviders(settings: Settings): ProviderConfig[] {
+  return settings.ai.providers.filter(
+    (p) => p.kind !== "foundry_local" || settings.ai.foundry.model !== "",
+  );
 }
