@@ -26,6 +26,9 @@ import { SemanticSearchSettings } from "./SemanticSearchSettings";
 import { appVersion, buildDateLabel, releaseStage } from "@/lib/version";
 import { InfoHint } from "@/components/InfoHint";
 
+/** The one entry in the provider list that stands for both built-in engines. */
+const BUILTIN_ROW = "__builtin__";
+
 type Tab = "general" | "providers" | "ai" | "builtin" | "history" | "vault";
 const TABS: { id: Tab; label: string }[] = [
   { id: "general", label: "General" },
@@ -178,24 +181,39 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
           {tab === "providers" && (
             <div className="flex gap-4">
               <div className="flex w-44 shrink-0 flex-col gap-1">
-                {usableProviders(draft).map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    className={cn(
-                      "truncate rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
-                      providerId === p.id && "bg-accent",
-                    )}
-                    onClick={() => {
-                      setProviderId(p.id);
-                    }}
-                  >
-                    {p.name}
-                    <span className="block text-[11px] text-muted-foreground">
-                      {effectiveLocation(p) === "local" ? "local · Mimer" : "cloud · Raven only"}
-                    </span>
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  className={cn(
+                    "truncate rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
+                    providerId === BUILTIN_ROW && "bg-accent",
+                  )}
+                  onClick={() => {
+                    setProviderId(BUILTIN_ROW);
+                  }}
+                >
+                  Built-in AI
+                  <span className="block text-[11px] text-muted-foreground">local · Mimer</span>
+                </button>
+                {draft.ai.providers
+                  .filter((p) => p.kind !== "builtin" && p.kind !== "foundry_local")
+                  .map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      className={cn(
+                        "truncate rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
+                        providerId === p.id && "bg-accent",
+                      )}
+                      onClick={() => {
+                        setProviderId(p.id);
+                      }}
+                    >
+                      {p.name}
+                      <span className="block text-[11px] text-muted-foreground">
+                        {effectiveLocation(p) === "local" ? "local · Mimer" : "cloud · Raven only"}
+                      </span>
+                    </button>
+                  ))}
                 <Button
                   variant="outline"
                   size="sm"
@@ -207,12 +225,14 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                 </Button>
               </div>
               <div className="min-w-0 flex-1">
-                {provider?.kind === "builtin" || provider?.kind === "foundry_local" ? (
+                {providerId === BUILTIN_ROW ? (
                   <div className="flex flex-col gap-2 text-sm">
-                    <p className="font-medium">{provider.name}</p>
+                    <p className="font-medium">Built-in AI</p>
                     <p className="text-muted-foreground">
-                      This is Mimer's own AI. It runs on this computer. Choose the engine and the
-                      model, and download it, under Built-in AI.
+                      This is Mimer's own AI. It runs on this computer, so your notes never leave
+                      it. Choose the engine (Foundry Local or llama.cpp) and the model, and download
+                      it, under Built-in AI. Only a local AI can be used by Mimer; Raven works only
+                      with a cloud AI.
                     </p>
                     <div>
                       <Button

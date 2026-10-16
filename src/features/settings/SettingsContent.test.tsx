@@ -173,4 +173,51 @@ describe("Settings → AI providers", () => {
     expect(screen.queryByTestId("add-provider-note")).toBeNull();
     expect(screen.getByText(/Choose a provider on the left/)).toBeInTheDocument();
   });
+
+  it("lists the built-in AI as one entry, whichever engine it uses, next to the other providers", async () => {
+    const withBuiltIns: Settings = {
+      ...stored,
+      ai: {
+        ...stored.ai,
+        providers: [
+          ...stored.ai.providers,
+          {
+            id: "builtin",
+            kind: "builtin",
+            name: "Built-in AI · llama.cpp",
+            baseUrl: "http://127.0.0.1:8080/v1",
+            model: "mimer",
+            location: "local",
+            supportsTools: true,
+            contextTokens: 16384,
+          },
+          {
+            id: "foundry",
+            kind: "foundry_local",
+            name: "Built-in AI · Foundry Local",
+            baseUrl: "http://127.0.0.1:5272/v1",
+            model: "",
+            location: "local",
+            supportsTools: true,
+            contextTokens: 16000,
+          },
+        ],
+      },
+    };
+    useSettingsStore.setState({ settings: withBuiltIns, save });
+    const user = userEvent.setup();
+    render(
+      <Dialog open>
+        <SettingsContent stored={withBuiltIns} onClose={() => undefined} />
+      </Dialog>,
+    );
+    await user.click(screen.getByRole("button", { name: "AI providers" }));
+    expect(screen.getAllByRole("button", { name: /Built-in AI/ })).toHaveLength(2);
+    // The other providers are still listed, and the two engines are not listed separately.
+    expect(screen.getByRole("button", { name: /^LM Studio/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /llama\.cpp/ })).toBeNull();
+    await user.click(screen.getByRole("button", { name: /^Built-in AI\s*local/ }));
+    expect(screen.getByRole("button", { name: "Open Built-in AI" })).toBeInTheDocument();
+    expect(screen.queryByText(/Choose a provider on the left/)).toBeNull();
+  });
 });

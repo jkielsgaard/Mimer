@@ -226,7 +226,7 @@ fn foundry_provider() -> ProviderConfig {
     ProviderConfig {
         id: crate::foundry::FOUNDRY_ID.into(),
         kind: ProviderKind::FoundryLocal,
-        name: "Mimer (Foundry Local)".into(),
+        name: "Built-in AI · Foundry Local".into(),
         // The port is chosen each time Mimer is woken and written here then.
         base_url: "http://127.0.0.1:5272/v1".into(),
         model: String::new(),
@@ -241,7 +241,7 @@ fn builtin_provider(context_tokens: u32) -> ProviderConfig {
     ProviderConfig {
         id: crate::engine::BUILTIN_ID.into(),
         kind: ProviderKind::BuiltIn,
-        name: "Mimer (built-in)".into(),
+        name: "Built-in AI · llama.cpp".into(),
         // The port is chosen each time Mimer is woken and written here then.
         base_url: "http://127.0.0.1:8080/v1".into(),
         model: crate::engine::BUILTIN_ALIAS.into(),
@@ -431,6 +431,7 @@ impl Settings {
         self.ensure_foundry_provider();
         if let Some(p) = self.ai.providers.iter_mut().find(|p| p.id == id) {
             p.kind = ProviderKind::FoundryLocal;
+            p.name = foundry_provider().name;
             p.location = Location::Local;
             p.supports_tools = true;
             if !is_loopback_url(&p.base_url) {
@@ -456,6 +457,7 @@ impl Settings {
         match self.ai.providers.iter_mut().find(|p| p.id == id) {
             Some(p) => {
                 p.kind = ProviderKind::BuiltIn;
+                p.name = builtin_provider(context).name;
                 p.location = Location::Local;
                 p.supports_tools = true;
                 p.model = crate::engine::BUILTIN_ALIAS.into();
@@ -712,6 +714,19 @@ mod tests {
         let p = s.provider("foundry").unwrap();
         assert_eq!(p.location, Location::Local);
         assert!(is_loopback_url(&p.base_url));
+    }
+
+    #[test]
+    fn the_built_in_providers_get_clear_names_even_in_old_settings() {
+        let mut s = Settings::default();
+        for p in &mut s.ai.providers {
+            if p.kind == ProviderKind::BuiltIn || p.kind == ProviderKind::FoundryLocal {
+                p.name = "Mimer (old name)".into();
+            }
+        }
+        s.normalize();
+        assert_eq!(s.provider("builtin").unwrap().name, "Built-in AI · llama.cpp");
+        assert_eq!(s.provider("foundry").unwrap().name, "Built-in AI · Foundry Local");
     }
 
     #[test]

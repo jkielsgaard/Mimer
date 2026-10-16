@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-10-16
+
+### Changed
+
+- **Settings → AI providers** lists the built-in AI as one entry, **Built-in AI**, whichever engine it uses (it opens Built-in AI, where the engine and model are chosen), next to LM Studio and the other providers. The two built-in providers are named **Built-in AI · llama.cpp** and **Built-in AI · Foundry Local** where they are chosen (Settings → AI and the menu under the Mimer tab's title).
+
 ## [0.9.1] - 2026-10-16
 
 ### Fixed

@@ -23,11 +23,15 @@ const KIND_DEFAULTS: Record<
   // Foundry Local is set up under Settings → Built-in AI; it is never made here.
   foundry_local: {
     baseUrl: "http://127.0.0.1:5272/v1",
-    name: "Mimer (Foundry Local)",
+    name: "Built-in AI · Foundry Local",
     contextTokens: 16000,
   },
   // The built-in AI is set up under Settings → Built-in AI; it is never made here.
-  builtin: { baseUrl: "http://127.0.0.1:8080/v1", name: "Mimer (built-in)", contextTokens: 16384 },
+  builtin: {
+    baseUrl: "http://127.0.0.1:8080/v1",
+    name: "Built-in AI · llama.cpp",
+    contextTokens: 16384,
+  },
 };
 
 /** Default values for a new provider of the given kind. */
