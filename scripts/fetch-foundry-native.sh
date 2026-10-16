@@ -32,5 +32,10 @@ fi
 mkdir -p "$dest"
 # Only the libraries, not the build's bookkeeping files.
 find "$out" -maxdepth 1 -type f \( -name '*.so' -o -name '*.so.*' -o -name '*.dylib' \) -exec cp {} "$dest"/ \;
+# The libraries ask for ONNX Runtime by its soname (libonnxruntime.so.1). The AppImage tool needs
+# a file with that name to find (a copy: a link would not survive packing).
+if [ -f "$dest/libonnxruntime.so" ] && [ ! -f "$dest/libonnxruntime.so.1" ]; then
+  cp "$dest/libonnxruntime.so" "$dest/libonnxruntime.so.1"
+fi
 echo "Copied to $dest:"
 ls -lh "$dest"

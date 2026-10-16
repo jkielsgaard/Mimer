@@ -58,6 +58,8 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The AppImage tool follows the libraries' dependencies; Foundry Local's sit in this folder.
+          LD_LIBRARY_PATH: ${{ github.workspace }}/src-tauri/foundry-native
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Mimer ${{ github.ref_name }}"

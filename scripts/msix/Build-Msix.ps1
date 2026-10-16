@@ -69,9 +69,9 @@ if (Test-Path (Join-Path $FoundryDir "foundry_local.dll")) {
   $native = Join-Path $stage "foundry-native"
   New-Item -ItemType Directory -Path $native -Force | Out-Null
   Copy-Item (Join-Path $FoundryDir "*.dll") $native
-  Write-Host "Packed Foundry Local from $FoundryDir"
+  Write-Host "Packed Foundry Local from ${FoundryDir}"
 } else {
-  Write-Host "No Foundry Local libraries in $FoundryDir: the package will not have Foundry Local."
+  Write-Host "No Foundry Local libraries in ${FoundryDir}: the package will not have Foundry Local."
 }
 foreach ($logo in @("StoreLogo.png", "Square44x44Logo.png", "Square150x150Logo.png")) {
   $src = Join-Path $IconDir $logo

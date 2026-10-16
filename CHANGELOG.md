@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-10-16
+
+### Fixed
+
+- The build of 0.9.0 stopped half-way (the AppImage could not be packed because it did not find ONNX Runtime by its soname, and the Store package script had a syntax error). 0.9.1 has the same content as 0.9.0 and builds completely. Use 0.9.1.
+
 ## [0.9.0] - 2026-10-16
 
 ### Added
