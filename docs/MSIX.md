@@ -26,10 +26,10 @@ On a Windows computer with the Windows SDK, Node, Rust and pnpm:
 ```powershell
 pnpm install
 pnpm tauri build
-./scripts/msix/Build-Msix.ps1 -Version 0.8.6 -TestSign -DisplayName "Mimer: Markdown Notes"
+./scripts/msix/Build-Msix.ps1 -Version 0.8.7 -TestSign -DisplayName "Mimer: Markdown Notes"
 ```
 
-This makes the folder `msix-out` with, among other files, `Mimer_0.8.6.0_x64.msix` (unsigned, for the Store), `Mimer_0.8.6.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
+This makes the folder `msix-out` with, among other files, `Mimer_0.8.7.0_x64.msix` (unsigned, for the Store), `Mimer_0.8.7.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
 
 **Windows Sandbox** (Windows 11 Pro, feature "Windows Sandbox" turned on): edit `scripts/msix/mimer-sandbox.wsb` so that `HostFolder` is the full path of `msix-out`, and double-click it. The sandbox installs Mimer; start it from the Start menu. Everything is gone when you close the sandbox.
 
@@ -52,9 +52,31 @@ If a Build-Msix step fails, `makeappx` says what is wrong with the manifest.
 5. Under **Pricing and availability** choose **Free**. To keep it out of the public search, choose **Hide this product … available by direct link only** (Markets and visibility).
 6. Submit. Certification usually takes some days. Microsoft may ask questions or reject the app: read the message, fix, and send a new package.
 
+## Two Store packages (with and without the built-in AI)
+
+Every release builds both, as separate workflow artifacts:
+
+| Artifact             | File                                 | What it does                                                                                                     |
+| -------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `mimer-msix`         | `Mimer_<version>.0_x64.msix`         | **Safe.** The built-in AI is switched off: Settings → Built-in AI says it is not available in the Store version. |
+| `mimer-msix-with-ai` | `Mimer_<version>.0_x64_with-ai.msix` | The built-in AI can be downloaded and run (Settings → Built-in AI → Download).                                   |
+
+The only difference is a file, `store-builtin-ai.on`, next to `mimer.exe` in the second package (`Build-Msix.ps1 -BuiltInAi`; `engine::catalog::store_ai_allowed` looks for it). There is nothing to change in the code.
+Each has a test copy (`mimer-msix-test`, `mimer-msix-with-ai-test`) for Windows Sandbox. Install one per Sandbox: both have the same identity and version.
+
+### Going back to the version without the built-in AI
+
+If Microsoft rejects the package with the built-in AI, or you decide against it:
+
+1. Open the latest release run in GitHub Actions and download the artifact **`mimer-msix`** (this is the safe package; every release has it, the last one before the with-AI option is `v0.8.6`).
+2. In Partner Center, start a new submission and upload that `.msix` (its version number must be higher than the one already in the Store, so use the newest release, not an old one).
+3. Change the Description and Notes for certification back to the texts in `docs/STORE-LISTING.md` (the main ones, not the "WITH the built-in AI" section).
+
+No code change and no new tag is needed for this. The GitHub installer and the AppImage always have the built-in AI.
+
 ## Known risks
 
-- **The built-in AI is switched off in the Store build** (`ENGINE_DOWNLOAD_IN_STORE_BUILD` in `src-tauri/src/engine/catalog.rs`), because the Store's rules about apps that download programs have not been checked. Change it to `true` only after reading them.
+- **The built-in AI in the Store**: the Store's policy 10.2.2 forbids extending an app by dynamically including code, and the built-in AI downloads and runs an engine program. Mimer therefore builds **two** Store packages from the same program, and you choose which one to upload (see "Two Store packages" below). Microsoft may reject the one with the built-in AI.
 - **The Store's rules about AI apps** have not been checked either. Mimer lets the user chat with a model of their own choice and, with Raven, with a cloud AI.
 - **WebView2**: Windows 11 has it. On Windows 10 the user may need to install the Edge WebView2 runtime.
 - An organisation can still block the Store, or block Store apps that are not approved. Check that the Microsoft Store opens on the computer where you want to use Mimer.

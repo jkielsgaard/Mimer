@@ -8,6 +8,9 @@
 
     ./scripts/msix/Build-Msix.ps1 -Version 0.8.1
 
+  With -BuiltInAi the package may download and run the built-in AI engine; without it (the safe
+  default) it does not. Upload only one of the two to the Store.
+
   Without -TestSign the package is UNSIGNED, which is what Partner Center wants: the Store signs it.
   With -TestSign a self-signed test certificate is made and the package is signed with it, so it can
   be installed on a test computer (see Install-TestMsix.ps1). The Store never accepts that copy.
@@ -26,7 +29,10 @@ param(
   [string]$DisplayName = "Mimer: Markdown Notes",
   [string]$Publisher = "CN=00000000-0000-0000-0000-000000000000",
   [string]$PublisherDisplayName = "Jesper Ahasverusen Kielsgaard",
-  [switch]$TestSign
+  [switch]$TestSign,
+  # Makes the package that may download and run the built-in AI engine (see docs/MSIX.md). Without
+  # it the package is the safe one: no engine is downloaded. The file names get "_with-ai".
+  [switch]$BuiltInAi
 )
 
 $ErrorActionPreference = "Stop"
@@ -62,6 +68,11 @@ New-Item -ItemType Directory -Path (Join-Path $stage "Assets") -Force | Out-Null
 
 # The program and the logos the manifest points at.
 Copy-Item $Exe (Join-Path $stage "mimer.exe")
+if ($BuiltInAi) {
+  # mimer.exe looks for this file next to itself (engine/catalog.rs, STORE_AI_MARKER).
+  [System.IO.File]::WriteAllText((Join-Path $stage "store-builtin-ai.on"), "The built-in AI may be downloaded in this package.`n")
+}
+$suffix = if ($BuiltInAi) { "_with-ai" } else { "" }
 foreach ($logo in @("StoreLogo.png", "Square44x44Logo.png", "Square150x150Logo.png")) {
   $src = Join-Path $IconDir $logo
   if (-not (Test-Path $src)) { throw "Missing logo: $src" }
@@ -81,7 +92,7 @@ if ($manifest -match '\{\{[A-Z_]+\}\}') { throw "The manifest still has an unfil
 
 # Pack. makeappx also checks the manifest, so a mistake in it stops here.
 New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
-$msix = Join-Path $OutDir "Mimer_${msixVersion}_x64.msix"
+$msix = Join-Path $OutDir "Mimer_${msixVersion}_x64${suffix}.msix"
 if (Test-Path $msix) { Remove-Item $msix -Force }
 & $makeappx pack /d $stage /p $msix /o | Out-Host
 if ($LASTEXITCODE -ne 0) { throw "makeappx failed ($LASTEXITCODE)" }
@@ -99,7 +110,7 @@ if ($TestSign) {
   Export-PfxCertificate -Cert $cert -FilePath $pfx -Password $password | Out-Null
   Export-Certificate -Cert $cert -FilePath (Join-Path $OutDir "mimer-test.cer") | Out-Null
   $plain = [System.Net.NetworkCredential]::new("", $password).Password
-  $testMsix = Join-Path $OutDir "Mimer_${msixVersion}_x64_test.msix"
+  $testMsix = Join-Path $OutDir "Mimer_${msixVersion}_x64${suffix}_test.msix"
   Copy-Item $msix $testMsix -Force
   & $signtool sign /fd SHA256 /f $pfx /p $plain $testMsix | Out-Host
   if ($LASTEXITCODE -ne 0) { throw "signtool failed ($LASTEXITCODE)" }

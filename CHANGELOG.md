@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.7] - 2026-10-16
+
+### Added
+
+- **A Store package with the built-in AI.** Every release now builds two Microsoft Store packages: `mimer-msix` (as before, no downloaded engine) and `mimer-msix-with-ai` (the built-in AI can be downloaded in Settings → Built-in AI). They are the same program; a small marker file in the second package switches the feature on, so going back to the first is just uploading the other file (see docs/MSIX.md). The Store may reject the one with the built-in AI.
+
 ## [0.8.6] - 2026-10-15
 
 ### Changed

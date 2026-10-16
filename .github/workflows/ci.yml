@@ -80,3 +80,6 @@ jobs:
         run: |
           ./scripts/msix/Build-Msix.ps1 -Version 0.0.1 -Exe "$env:SystemRoot\System32\notepad.exe" -TestSign
           Get-ChildItem msix-out -Filter *.msix | ForEach-Object { Write-Host $_.Name $_.Length }
+          ./scripts/msix/Build-Msix.ps1 -Version 0.0.1 -Exe "$env:SystemRoot\System32\notepad.exe" -OutDir msix-out-ai -BuiltInAi -TestSign
+          if (-not (Test-Path msix-out-ai\Mimer_0.0.1.0_x64_with-ai.msix)) { throw "the package with the built-in AI was not made" }
+          Get-ChildItem msix-out-ai -Filter *.msix | ForEach-Object { Write-Host $_.Name $_.Length }
