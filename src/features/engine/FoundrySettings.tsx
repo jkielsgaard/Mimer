@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Settings } from "@/bindings/Settings";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ export function FoundrySettings({ draft, onChange }: Props) {
   const catalogError = useFoundryStore((s) => s.catalogError);
   const catalogLoading = useFoundryStore((s) => s.catalogLoading);
   const install = useFoundryStore((s) => s.install);
+  const setupHardware = useFoundryStore((s) => s.setupHardware);
   const cancelInstall = useFoundryStore((s) => s.cancelInstall);
   const remove = useFoundryStore((s) => s.remove);
   const [chosen, setChosen] = useState<string | null>(null);
@@ -36,9 +37,17 @@ export function FoundrySettings({ draft, onChange }: Props) {
     }
   }, [available]);
 
+  const busy = status?.state === "installing";
+  // When a download or the hardware set-up ends, the list is read again: it now shows where each
+  // model can run with the hardware parts in place.
+  const wasBusy = useRef(false);
+  useEffect(() => {
+    if (wasBusy.current && !busy) void useFoundryStore.getState().loadCatalog(true);
+    wasBusy.current = busy;
+  }, [busy]);
+
   if (!status) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
-  const busy = status.state === "installing";
   const awake = status.state === "awake" || status.state === "waking";
   const alias = chosen ?? (draft.ai.foundry.model || (catalog?.[0]?.alias ?? ""));
   const model = catalog?.find((m) => m.alias === alias);
@@ -88,10 +97,26 @@ export function FoundrySettings({ draft, onChange }: Props) {
               Refresh list
             </Button>
           )}
+          {available && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={catalogLoading || busy || awake}
+              title="Downloads the hardware parts from Microsoft (no model), then reads the list again"
+              onClick={() => {
+                void setupHardware();
+              }}
+            >
+              Find my hardware
+            </Button>
+          )}
         </div>
         <p className="text-xs text-muted-foreground">
           Only models that can call tools are shown, because searching and changing notes needs
-          them. “Runs on” says where Foundry Local runs the model on this computer.
+          them. “Runs on” says where Foundry Local runs the model on this computer. Until the
+          hardware parts are downloaded, only the processor is listed: press{" "}
+          <strong>Find my hardware</strong> to download them (no model) and see what your graphics
+          card or neural processor can run.
         </p>
         {catalogLoading && (
           <p className="text-xs text-muted-foreground" role="status">

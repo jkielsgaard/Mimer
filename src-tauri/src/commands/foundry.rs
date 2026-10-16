@@ -24,6 +24,12 @@ pub async fn foundry_install(
     service::start_install(&app, alias, use_for_mimer)
 }
 
+/// Downloads only the hardware parts, so the model list shows what this computer can run.
+#[tauri::command]
+pub async fn foundry_setup_hardware(app: AppHandle) -> Result<(), AppError> {
+    service::start_hardware(&app)
+}
+
 #[tauri::command]
 pub async fn foundry_cancel_install(app: AppHandle) -> Result<(), AppError> {
     service::cancel_install(&app);

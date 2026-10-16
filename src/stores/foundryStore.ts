@@ -17,6 +17,7 @@ interface FoundryStoreState {
   loadCatalog: (refresh?: boolean) => Promise<void>;
   setStatus: (s: FoundryStatus) => void;
   install: (alias: string, useForMimer: boolean) => Promise<void>;
+  setupHardware: () => Promise<void>;
   cancelInstall: () => Promise<void>;
   wake: () => Promise<void>;
   sleep: () => Promise<void>;
@@ -65,6 +66,7 @@ export const useFoundryStore = create<FoundryStoreState>((set, get) => {
       set({ status });
     },
     install: (alias, useForMimer) => run(() => api.foundryInstall(alias, useForMimer)),
+    setupHardware: () => run(() => api.foundrySetupHardware()),
     cancelInstall: () => run(() => api.foundryCancelInstall()),
     wake: () => run(() => api.foundryWake()),
     sleep: () => run(() => api.foundrySleep()),

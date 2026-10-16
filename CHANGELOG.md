@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-10-16
+
+### Added
+
+- **Find my hardware** in Settings → Built-in AI → Foundry Local. The model list was read before the hardware parts (the NPU and graphics card drivers) were downloaded, so only processor models were listed and no NPU or GPU models showed. The button downloads the hardware parts (no model) and reads the list again. The list is also read again after every download. Foundry Local registers the hardware parts for each process separately, so the model list now registers them first once they have been downloaded (it never starts a download by itself); before, it always showed only the processor.
+
 ## [0.9.2] - 2026-10-16
 
 ### Changed

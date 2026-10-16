@@ -725,8 +725,14 @@ mod tests {
             }
         }
         s.normalize();
-        assert_eq!(s.provider("builtin").unwrap().name, "Built-in AI · llama.cpp");
-        assert_eq!(s.provider("foundry").unwrap().name, "Built-in AI · Foundry Local");
+        assert_eq!(
+            s.provider("builtin").unwrap().name,
+            "Built-in AI · llama.cpp"
+        );
+        assert_eq!(
+            s.provider("foundry").unwrap().name,
+            "Built-in AI · Foundry Local"
+        );
     }
 
     #[test]

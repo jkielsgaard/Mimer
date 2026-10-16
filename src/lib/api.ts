@@ -223,6 +223,7 @@ export const api = {
   foundryStatus: () => call<FoundryStatus>("foundry_status"),
   foundryInstall: (alias: string, useForMimer: boolean) =>
     call<undefined>("foundry_install", { alias, useForMimer }),
+  foundrySetupHardware: () => call<undefined>("foundry_setup_hardware"),
   foundryCancelInstall: () => call<undefined>("foundry_cancel_install"),
   foundryWake: () => call<undefined>("foundry_wake"),
   foundrySleep: () => call<undefined>("foundry_sleep"),

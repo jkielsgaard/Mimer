@@ -163,6 +163,7 @@ pub fn run() {
             commands::foundry::foundry_catalog,
             commands::foundry::foundry_status,
             commands::foundry::foundry_install,
+            commands::foundry::foundry_setup_hardware,
             commands::foundry::foundry_cancel_install,
             commands::foundry::foundry_wake,
             commands::foundry::foundry_sleep,

@@ -468,6 +468,7 @@ Needs Windows (a virtual machine or Windows Sandbox). See docs/MSIX.md.
 
 - [ ] Settings → Built-in AI shows two engine cards, **Foundry Local** and **llama.cpp**, and none is chosen for a new user. Choosing one shows its own settings.
 - [ ] Foundry Local: the model list appears (it can take a minute), shows only models that can call tools, with size and "runs on" (CPU, GPU or NPU), smallest first. The download box says what is fetched and that nothing is fetched before Download.
+- [ ] **Find my hardware** downloads the hardware parts only (no model), then the list is read again: on a computer with a graphics card or NPU, models marked GPU or NPU appear.
 - [ ] Choose a small model (for example qwen3-0.6b) and press Download: first "Setting up the hardware parts…", then "Downloading the model…" with a percentage and a working Cancel. When it is done the model shows under Downloaded and is Mimer's provider.
 - [ ] Mimer tab: the bar says Mimer is asleep. **Wake Mimer** loads it ("Loading the model…"), then Awake; the message box unlocks. Ask a question: it answers. Ask Mimer to search the notes: it uses the tool. **Sleep Mimer** frees the memory (check in Task Manager that the second `mimer.exe` process is gone).
 - [ ] Close Mimer while it is awake: no `mimer.exe` helper stays behind.

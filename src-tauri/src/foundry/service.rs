@@ -410,6 +410,21 @@ pub fn start_install<R: Runtime>(
     alias: String,
     use_for_mimer: bool,
 ) -> AppResult<()> {
+    begin_install(app, alias, use_for_mimer, false)
+}
+
+/// Sets up only the hardware parts (NPU / GPU), so the model list shows what this computer can
+/// run. No model is downloaded.
+pub fn start_hardware<R: Runtime>(app: &AppHandle<R>) -> AppResult<()> {
+    begin_install(app, String::new(), false, true)
+}
+
+fn begin_install<R: Runtime>(
+    app: &AppHandle<R>,
+    alias: String,
+    use_for_mimer: bool,
+    hardware_only: bool,
+) -> AppResult<()> {
     if let Some(reason) = unavailable_reason(app) {
         return Err(AppError::Settings(reason));
     }
@@ -440,7 +455,7 @@ pub fn start_install<R: Runtime>(
     emit(app);
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
-        install_task(&app, &alias, use_for_mimer, &cancel).await;
+        install_task(&app, &alias, use_for_mimer, hardware_only, &cancel).await;
         with_inner(&app, |i| i.install_cancel = None);
     });
     Ok(())
@@ -450,9 +465,15 @@ async fn install_task<R: Runtime>(
     app: &AppHandle<R>,
     alias: &str,
     use_for_mimer: bool,
+    hardware_only: bool,
     cancel: &CancellationToken,
 ) {
-    let (running, data) = match launch(app, "install", &["--alias", alias], "install.log") {
+    let launched = if hardware_only {
+        launch(app, "hardware", &[], "install.log")
+    } else {
+        launch(app, "install", &["--alias", alias], "install.log")
+    };
+    let (running, data) = match launched {
         Ok(x) => x,
         Err(e) => {
             set_problem(
@@ -496,6 +517,15 @@ async fn install_task<R: Runtime>(
     .await;
     running.stop(Duration::from_secs(3));
     match end {
+        JobEnd::Finished(_) if hardware_only => {
+            with_inner(app, |i| {
+                i.phase = Phase::Idle;
+                i.message = "The hardware parts are ready".into();
+                i.install = None;
+                i.catalog = None;
+            });
+            emit(app);
+        }
         JobEnd::Finished(done) => {
             let size_mb = done["sizeMb"].as_u64().unwrap_or(0);
             let name = with_inner(app, |i| {

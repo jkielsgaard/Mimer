@@ -117,8 +117,15 @@ fn manager(o: &Options) -> Result<std::sync::Arc<FoundryLocalManager>, String> {
     FoundryLocalManager::create(cfg).map_err(|e| format!("Foundry Local could not start: {e}"))
 }
 
+/// A file that says the hardware parts were downloaded once. Foundry Local registers them for
+/// each process separately, so the model list asks for them again (a quick step when they are
+/// already on disk) before it reads the catalog; without it the list shows only the processor.
+fn hardware_marker(o: &Options) -> Option<PathBuf> {
+    o.data.as_ref().map(|d| d.join("hardware-ready"))
+}
+
 /// Downloads (when missing) and registers the hardware parts (NPU / GPU), reporting progress.
-async fn hardware(m: &FoundryLocalManager) -> Result<(), String> {
+async fn hardware(m: &FoundryLocalManager, o: &Options) -> Result<(), String> {
     let result = m
         .download_and_register_eps_with_progress(None, |name: &str, pct: f64| {
             emit(&json!({"type": "progress", "phase": "hardware", "name": name, "pct": pct}));
@@ -126,7 +133,18 @@ async fn hardware(m: &FoundryLocalManager) -> Result<(), String> {
         .await;
     match result {
         Ok(r) => {
-            emit(&json!({"type": "hardware", "success": r.success, "status": r.status}));
+            let eps: Vec<Value> = m
+                .discover_eps()
+                .unwrap_or_default()
+                .iter()
+                .map(|e| json!({"name": e.name, "registered": e.is_registered}))
+                .collect();
+            emit(
+                &json!({"type": "hardware", "success": r.success, "status": r.status, "eps": eps}),
+            );
+            if let Some(path) = hardware_marker(o) {
+                let _ = std::fs::write(path, "1");
+            }
             Ok(())
         }
         Err(e) => Err(format!("The hardware parts could not be set up: {e}")),
@@ -137,6 +155,10 @@ async fn job(o: Options) -> Result<(), String> {
     let m = manager(&o)?;
     match o.command.as_str() {
         "catalog" => {
+            // Only when the hardware parts were set up before, so the list never starts a big download.
+            if hardware_marker(&o).is_some_and(|p| p.exists()) {
+                let _ = hardware(&m, &o).await;
+            }
             let models = m
                 .catalog()
                 .get_models()
@@ -163,9 +185,13 @@ async fn job(o: Options) -> Result<(), String> {
             }
             emit(&json!({"type": "catalog", "models": list}));
         }
+        "hardware" => {
+            hardware(&m, &o).await?;
+            emit(&json!({"type": "done"}));
+        }
         "install" => {
             let alias = o.alias.clone().ok_or("--alias is missing")?;
-            hardware(&m).await?;
+            hardware(&m, &o).await?;
             let model = m
                 .catalog()
                 .get_model(&alias)
@@ -186,7 +212,7 @@ async fn job(o: Options) -> Result<(), String> {
         }
         "serve" => {
             let alias = o.alias.clone().ok_or("--alias is missing")?;
-            hardware(&m).await?;
+            hardware(&m, &o).await?;
             let model = m
                 .catalog()
                 .get_model(&alias)
