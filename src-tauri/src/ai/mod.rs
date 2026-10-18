@@ -64,6 +64,10 @@ pub enum ChatEvent {
         rest: Vec<RunTarget>,
         /// Folders a sort skill has chosen so far, so the rest reuses them.
         folders: Vec<String>,
+        /// The extra instructions the user typed, so the rest follows them too.
+        skill_input: Option<String>,
+        /// The note or folder the run started from, which decides its project.
+        anchor: Option<String>,
     },
     Done,
     Error {
@@ -88,6 +92,12 @@ pub struct SkillContinue {
     pub targets: Vec<RunTarget>,
     #[serde(default)]
     pub folders: Vec<String>,
+    /// The extra instructions of the first part of the run.
+    #[serde(default)]
+    pub skill_input: Option<String>,
+    /// The note or folder the run started from; its project is used again.
+    #[serde(default)]
+    pub anchor: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, TS)]

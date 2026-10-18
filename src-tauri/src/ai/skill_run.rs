@@ -72,8 +72,12 @@ pub fn collect_targets(
     let all = tree::list_files(root);
     let add_folder = |dir: &str, out: &mut Vec<Target>, skipped: &mut Vec<String>| {
         let dir = dir.trim_matches('/');
-        let ok = dir.is_empty() && scope.is_none()
-            || paths::resolve_dir(root, dir, scope).is_ok_and(|p| p.is_dir());
+        // Nothing chosen is not "the whole vault": a skill needs a note or a folder to work on.
+        if dir.is_empty() {
+            skipped.push("no folder is chosen".to_string());
+            return;
+        }
+        let ok = paths::resolve_dir(root, dir, scope).is_ok_and(|p| p.is_dir());
         if !ok {
             skipped.push(format!("{dir} is not a folder in this scope"));
             return;
@@ -321,21 +325,32 @@ fn fix_task(instruction: &str) -> String {
     )
 }
 
+/// The `3.` or `12)` at the start of a list item, with the dot or bracket.
+fn list_number(text: &str) -> Option<&str> {
+    let t = text.trim_start();
+    let digits = t.chars().take_while(char::is_ascii_digit).count();
+    let mark = t[digits..].chars().next()?;
+    let after = t[digits + mark.len_utf8()..].chars().next();
+    (digits > 0 && matches!(mark, '.' | ')') && after.is_some_and(char::is_whitespace))
+        .then(|| &t[..digits + mark.len_utf8()])
+}
+
 /// Reads "wrong => right" lines from the model's answer. Lines in another form are ignored.
 pub fn parse_fixes(answer: &str) -> Vec<(String, String)> {
     let mut out = Vec::new();
     for line in strip_fence(answer).lines() {
-        let line = line
-            .trim()
-            .trim_start_matches(['-', '*', '•'])
-            .trim_start_matches(|c: char| c.is_ascii_digit())
-            .trim_start_matches(['.', ')'])
-            .trim();
+        let line = line.trim().trim_start_matches(['-', '*', '•']).trim();
         let Some((wrong, right)) = ["=>", "→", "->"]
             .iter()
             .find_map(|sep| line.split_once(sep))
         else {
             continue;
+        };
+        // "1. wrong => right": the list number is not part of the wrong text. When the right
+        // text starts with the same number ("3. gang => 3. gang"), it belongs to the note.
+        let wrong = match list_number(wrong) {
+            Some(n) if list_number(right) != Some(n) => wrong.trim_start()[n.len()..].trim_start(),
+            _ => wrong,
         };
         let clean = |t: &str| {
             t.trim()
@@ -530,6 +545,10 @@ impl Run<'_> {
         }
         let system = self.system(&rewrite_task(&self.skill.instruction));
         let answer = self.ask(system, original.to_string()).await?;
+        if self.cancel.is_cancelled() {
+            // Stop returns what was written so far; half a note is never proposed.
+            return Ok(Err("stopped before the answer was complete".into()));
+        }
         Ok(accept_rewrite(original, &answer).map_err(str::to_string))
     }
 
@@ -545,6 +564,9 @@ impl Run<'_> {
                 continue;
             }
             let answer = self.ask(system.clone(), piece.clone()).await?;
+            if self.cancel.is_cancelled() {
+                return Ok(Err("stopped before the answer was complete".into()));
+            }
             let (fixed, n) = apply_fixes(&piece, &parse_fixes(&answer));
             changed += n;
             out.push_str(&fixed);
@@ -595,6 +617,9 @@ impl Run<'_> {
             } else {
                 self.rewrite_text(&original).await?
             };
+            if self.cancel.is_cancelled() {
+                break;
+            }
             match result {
                 Ok(text) => {
                     if let Err(e) = self.propose_edit(set, &t.path, &original, &text) {
@@ -628,6 +653,9 @@ impl Run<'_> {
                 }
             };
             let folder = self.choose_folder(&t.path, &content, used).await?;
+            if self.cancel.is_cancelled() {
+                break;
+            }
             if !used.contains(&folder) {
                 used.push(folder.clone());
             }
@@ -686,6 +714,9 @@ impl Run<'_> {
             format!("Writing one note from {} notes", targets.len()),
         );
         let text = self.create_text(targets, &mut notes).await?;
+        if self.cancel.is_cancelled() {
+            return Ok(notes);
+        }
         if text.trim().is_empty() {
             notes.push("the model gave no text".into());
             return Ok(notes);
@@ -766,7 +797,14 @@ pub async fn run_skill<R: Runtime>(
     let state = app.state::<AppState>();
     let vault = state.current_vault()?;
     let settings = state.settings_snapshot();
-    let anchor = req.note_path.as_deref().or(req.folder.as_deref());
+    // A continued run uses the project of the trial, not of whatever is open now.
+    let anchor = req
+        .skill_continue
+        .as_ref()
+        .and_then(|c| c.anchor.as_deref())
+        .or(req.note_path.as_deref())
+        .or(req.folder.as_deref())
+        .filter(|a| !a.is_empty());
     let all_projects = vault.project_list();
     let project = anchor
         .and_then(|a| projects::for_path(&all_projects, a))
@@ -800,10 +838,14 @@ pub async fn run_skill<R: Runtime>(
         let _ = channel.send(ChatEvent::TextDelta { text });
     };
     if targets.is_empty() {
-        say(format!(
-            "**{}** needs notes to work on. Attach a note or a folder with `/`, or open a note, and run it again.",
+        let mut text = format!(
+            "**{}** needs notes to work on. Attach a note or a folder with `/`, or open a note or select a folder, and run it again.",
             skill.name
-        ));
+        );
+        for line in skipped.iter().filter(|l| !l.starts_with("no folder")) {
+            text.push_str(&format!("\n- {line}"));
+        }
+        say(text);
         let _ = channel.send(ChatEvent::Done);
         return Ok(());
     }
@@ -844,7 +886,10 @@ pub async fn run_skill<R: Runtime>(
         scope,
         global: settings.ai.global_instructions.clone(),
         project,
-        extra: req.skill_input.clone().unwrap_or_default(),
+        extra: continued
+            .and_then(|c| c.skill_input.clone())
+            .or_else(|| req.skill_input.clone())
+            .unwrap_or_default(),
         note_limit: note_limit.max(1_000),
         skill: skill.clone(),
     };
@@ -928,6 +973,8 @@ pub async fn run_skill<R: Runtime>(
                 })
                 .collect(),
             folders: used,
+            skill_input: req.skill_input.clone(),
+            anchor: anchor.map(str::to_string),
         });
     }
     match failure {
@@ -1149,6 +1196,9 @@ mod tests {
     use std::io::{Read, Write};
     use std::sync::{Arc, Mutex};
 
+    /// How long the fake model waits before it answers (milliseconds), for the stop test.
+    static REPLY_DELAY_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
     /// A model server that answers like a tiny model would, depending on the skill's prompt.
     fn fake_model() -> u16 {
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
@@ -1218,6 +1268,10 @@ mod tests {
                     let chunk = serde_json::json!({
                         "choices": [{"index": 0, "delta": {"content": answer}, "finish_reason": null}]
                     });
+                    let delay = REPLY_DELAY_MS.load(std::sync::atomic::Ordering::Relaxed);
+                    if delay > 0 {
+                        std::thread::sleep(std::time::Duration::from_millis(delay));
+                    }
                     let reply = format!(
                         "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nConnection: close\r\n\r\ndata: {chunk}\n\ndata: [DONE]\n\n"
                     );
@@ -1285,6 +1339,17 @@ mod tests {
         }
 
         async fn run(&self, kind: SkillKind, instruction: &str, req: ChatRequest) {
+            self.run_with(kind, instruction, req, &CancellationToken::new())
+                .await;
+        }
+
+        async fn run_with(
+            &self,
+            kind: SkillKind,
+            instruction: &str,
+            req: ChatRequest,
+            cancel: &CancellationToken,
+        ) {
             let events = self.events.clone();
             let channel = Channel::new(move |body| {
                 if let tauri::ipc::InvokeResponseBody::Json(j) = body {
@@ -1304,15 +1369,9 @@ mod tests {
                 instruction: instruction.into(),
                 builtin: false,
             };
-            run_skill(
-                self.app.handle(),
-                &req,
-                skill,
-                &channel,
-                &CancellationToken::new(),
-            )
-            .await
-            .unwrap();
+            run_skill(self.app.handle(), &req, skill, &channel, cancel)
+                .await
+                .unwrap();
         }
 
         fn text(&self) -> String {
@@ -1569,6 +1628,8 @@ mod tests {
         req.skill_continue = Some(crate::ai::SkillContinue {
             targets: rest,
             folders,
+            skill_input: None,
+            anchor: None,
         });
         h.events.lock().unwrap().clear();
         h.run(SkillKind::Sort, "Sort.", req).await;
@@ -1603,6 +1664,8 @@ mod tests {
                 },
             ],
             folders: vec![],
+            skill_input: None,
+            anchor: None,
         });
         h.run(SkillKind::Fix, "Fix.", req).await;
         assert_eq!(h.proposals().len(), 1);
@@ -1653,5 +1716,87 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn a_list_number_is_dropped_but_a_number_that_belongs_to_the_note_is_kept() {
+        let fixes = parse_fixes(
+            "1. teh => the\n2) wrold => world\n3. gang denne maned => 3. gang denne måned\n- 12. 2024 => 12. 2025",
+        );
+        assert_eq!(
+            fixes,
+            vec![
+                ("teh".to_string(), "the".to_string()),
+                ("wrold".to_string(), "world".to_string()),
+                (
+                    "3. gang denne maned".to_string(),
+                    "3. gang denne måned".to_string()
+                ),
+                ("12. 2024".to_string(), "12. 2025".to_string()),
+            ]
+        );
+        let (text, _) = apply_fixes("3. gang denne maned", &fixes);
+        assert_eq!(text, "3. gang denne måned");
+    }
+
+    #[test]
+    fn nothing_chosen_is_not_the_whole_vault() {
+        let d = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(d.path().join("Work")).unwrap();
+        std::fs::write(d.path().join("Work/A.md"), "# A").unwrap();
+        let (t, skipped) = collect_targets(d.path(), None, &[], None, Some(""));
+        assert!(t.is_empty());
+        assert_eq!(skipped, vec!["no folder is chosen".to_string()]);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn stopping_a_run_proposes_nothing_from_a_half_finished_answer() {
+        let h = harness(&[
+            ("Work/A.md", "# A\n\nteh text\n"),
+            ("Work/B.md", "# B\n\nteh more\n"),
+        ]);
+        REPLY_DELAY_MS.store(500, std::sync::atomic::Ordering::Relaxed);
+        for kind in [
+            SkillKind::Rewrite,
+            SkillKind::Fix,
+            SkillKind::Sort,
+            SkillKind::Create,
+        ] {
+            let cancel = CancellationToken::new();
+            let stopper = cancel.clone();
+            tokio::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+                stopper.cancel();
+            });
+            h.run_with(kind, "Do it.", h.request(&["Work"]), &cancel)
+                .await;
+            assert!(h.proposals().is_empty(), "{kind:?}: {}", h.text());
+        }
+        REPLY_DELAY_MS.store(0, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_continued_run_keeps_the_project_of_the_trial_not_the_open_note() {
+        let h = harness(&[]);
+        let vault = h.app.state::<AppState>().current_vault().unwrap();
+        crate::projects::service::create(&vault, "Sec", "Write formally.".into(), None).unwrap();
+        crate::projects::service::create(&vault, "Other", String::new(), None).unwrap();
+        std::fs::write(vault.root.join("Sec/A.md"), "# A\n\nteh\n").unwrap();
+        std::fs::write(vault.root.join("Other/Home.md"), "# Home\n").unwrap();
+        vault.refresh_files();
+        let mut req = h.request(&[]);
+        // A note in another project is open when "do the other notes" is pressed.
+        req.note_path = Some("Other/Home.md".into());
+        req.skill_continue = Some(crate::ai::SkillContinue {
+            targets: vec![crate::ai::RunTarget {
+                path: "Sec/A.md".into(),
+                base: "Sec".into(),
+            }],
+            folders: vec![],
+            skill_input: Some("keep British spelling".into()),
+            anchor: Some("Sec/A.md".into()),
+        });
+        h.run(SkillKind::Fix, "Fix.", req).await;
+        assert_eq!(h.proposals().len(), 1, "{}", h.text());
     }
 }

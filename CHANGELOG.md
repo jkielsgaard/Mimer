@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-10-18
+
+### Fixed
+
+- **Stop during a skill no longer proposes half an answer.** A note, a fix, a folder or a new note that was cut off by Stop is left out instead of being proposed.
+- **Fix small mistakes keeps numbers that belong to the note.** A line such as `3. gang denne maned => 3. gang denne måned` no longer turns into `3. 3. gang`; only a list number that is on the wrong text alone is dropped.
+- **A skill started with nothing chosen does not run on the whole vault.** It now says that a note or a folder is needed, and why a chosen folder was left out.
+- **"Looks good, do the other N" does the rest exactly like the first notes**: it keeps the extra instructions you typed and the project of the first notes, even if you opened another note meanwhile.
+- A test of the whole app that sometimes timed out on a busy computer now waits longer.
+
 ## [0.10.1] - 2026-10-18
 
 ### Fixed

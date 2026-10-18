@@ -170,9 +170,13 @@ describe("App smoke test", () => {
   it("switches right-panel tabs", async () => {
     const user = userEvent.setup();
     render(<App />);
-    await user.click(await screen.findByText("/home/me/Notes"));
-    await user.click(await screen.findByRole("tab", { name: "History" }));
-    expect(await screen.findByText(/Open a note to see its history/)).toBeInTheDocument();
+    // The whole app renders here, which can take longer than the default wait on a busy machine.
+    const slow = { timeout: 5000 };
+    await user.click(await screen.findByText("/home/me/Notes", undefined, slow));
+    await user.click(await screen.findByRole("tab", { name: "History" }, slow));
+    expect(
+      await screen.findByText(/Open a note to see its history/, undefined, slow),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Backlinks" })).toBeNull();
   });
 

@@ -21,4 +21,12 @@ rest: Array<RunTarget>,
 /**
  * Folders a sort skill has chosen so far, so the rest reuses them.
  */
-folders: Array<string>, } | { "type": "done" } | { "type": "error", error: AppError, };
+folders: Array<string>, 
+/**
+ * The extra instructions the user typed, so the rest follows them too.
+ */
+skillInput: string | null, 
+/**
+ * The note or folder the run started from, which decides its project.
+ */
+anchor: string | null, } | { "type": "done" } | { "type": "error", error: AppError, };

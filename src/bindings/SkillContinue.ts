@@ -4,4 +4,12 @@ import type { RunTarget } from "./RunTarget";
 /**
  * Continues a skill run after its trial: exactly these notes, with the folders chosen so far.
  */
-export type SkillContinue = { targets: Array<RunTarget>, folders: Array<string>, };
+export type SkillContinue = { targets: Array<RunTarget>, folders: Array<string>, 
+/**
+ * The extra instructions of the first part of the run.
+ */
+skillInput: string | null, 
+/**
+ * The note or folder the run started from; its project is used again.
+ */
+anchor: string | null, };

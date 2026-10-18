@@ -1,6 +1,6 @@
 [package]
 name = "mimer"
-version = "0.10.1"
+version = "0.10.2"
 description = "Markdown notes with a built-in, local-first AI assistant"
 authors = ["Jesper Ahasverusen Kielsgaard"]
 license = "Apache-2.0"

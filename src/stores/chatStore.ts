@@ -35,6 +35,9 @@ export interface SkillTrial {
   total: number;
   rest: RunTarget[];
   folders: string[];
+  /** The extra instructions the user typed and the note the run started from. */
+  skillInput: string | null;
+  anchor: string | null;
   /** True once the user chose to continue (or the card is no longer current). */
   continued: boolean;
 }
@@ -45,6 +48,8 @@ export interface SkillContinuation {
   skillName: string;
   rest: RunTarget[];
   folders: string[];
+  skillInput: string | null;
+  anchor: string | null;
 }
 
 /** Number of words in `text`. */
@@ -226,6 +231,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
             total: e.total,
             rest: e.rest,
             folders: e.folders,
+            skillInput: e.skillInput,
+            anchor: e.anchor,
             continued: false,
           };
           break;
@@ -315,7 +322,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
           selection: selection ?? null,
           skill: skill?.id ?? null,
           skillInput: skill === null || typed === "" || cont ? null : typed,
-          skillContinue: cont ? { targets: cont.rest, folders: cont.folders } : null,
+          skillContinue: cont
+            ? {
+                targets: cont.rest,
+                folders: cont.folders,
+                skillInput: cont.skillInput,
+                anchor: cont.anchor,
+              }
+            : null,
         },
         get().applyEvent,
       );
@@ -342,6 +356,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       skillName: trial.skillName,
       rest: trial.rest,
       folders: trial.folders,
+      skillInput: trial.skillInput,
+      anchor: trial.anchor,
     });
   },
 

@@ -24,6 +24,8 @@ const message = (continued: boolean): ChatMessage => ({
     total: 52,
     rest: Array.from({ length: 49 }, (_, i) => ({ path: `Inbox/N${String(i)}.md`, base: "Inbox" })),
     folders: [],
+    skillInput: null,
+    anchor: null,
     continued,
   },
 });

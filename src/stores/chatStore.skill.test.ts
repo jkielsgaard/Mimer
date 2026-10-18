@@ -94,6 +94,8 @@ describe("a skill run that starts with a trial", () => {
       total: 7,
       rest: [{ path: "Inbox/N4.md", base: "Inbox" }],
       folders: ["Vendors"],
+      skillInput: "keep British spelling",
+      anchor: "Inbox",
     });
     store.applyEvent({ type: "done" });
     const answer = useChatStore.getState().messages[1];
@@ -104,13 +106,20 @@ describe("a skill run that starts with a trial", () => {
     const request = apiMock.aiChat.mock.calls[1]?.[0] as {
       skill: string | null;
       mentions: string[];
-      skillContinue: { targets: { path: string }[]; folders: string[] } | null;
+      skillContinue: {
+        targets: { path: string }[];
+        folders: string[];
+        skillInput: string | null;
+        anchor: string | null;
+      } | null;
     };
     expect(request.skill).toBe(skill.id);
     expect(request.mentions).toEqual([]);
     expect(request.skillContinue).toEqual({
       targets: [{ path: "Inbox/N4.md", base: "Inbox" }],
       folders: ["Vendors"],
+      skillInput: "keep British spelling",
+      anchor: "Inbox",
     });
     const msgs = useChatStore.getState().messages;
     expect(msgs[1]?.trial?.continued).toBe(true);
