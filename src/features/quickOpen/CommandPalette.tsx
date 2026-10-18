@@ -15,7 +15,7 @@ import {
   type PaletteGroup,
   type PaletteItem,
   type PaletteTarget,
-} from "./commandPalette";
+} from "./paletteItems";
 import { findFolder } from "@/features/fileTree/treeUtils";
 
 /** Ctrl+Shift+P: notes, skills and actions in one search. */

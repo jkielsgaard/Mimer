@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Skill } from "@/bindings/Skill";
-import { filterPalette, skillItems, type PaletteItem } from "./commandPalette";
+import { filterPalette, skillItems, type PaletteItem } from "./paletteItems";
 
 const skill = (id: string, name: string, appliesTo: Skill["appliesTo"]): Skill => ({
   id,

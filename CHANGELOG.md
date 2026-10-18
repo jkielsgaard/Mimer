@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-10-18
+
+### Fixed
+
+- The Windows build: two files in the command palette had names that differed only in upper and lower case, which Windows treats as the same file. The helper is now `paletteItems.ts`. 0.10.0 never got a Windows build; use 0.10.1.
+
 ## [0.10.0] - 2026-10-16
 
 ### Added
