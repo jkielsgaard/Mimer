@@ -13,6 +13,7 @@ function view(): ProposalSetView {
       original: "old",
       originalHash: "h",
       reason: "r",
+      checks: [],
     },
     changedSinceProposal: changed,
   });

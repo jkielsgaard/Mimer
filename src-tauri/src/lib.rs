@@ -19,6 +19,7 @@ pub mod prompts;
 pub mod research;
 pub mod search;
 pub mod settings;
+pub mod skills;
 pub mod state;
 pub mod templates;
 pub mod vault;
@@ -121,6 +122,7 @@ pub fn run() {
             commands::git::file_history,
             commands::git::file_at_commit,
             commands::git::restore_file,
+            commands::git::undo_commit,
             commands::git::deleted_files,
             commands::git::restore_deleted,
             commands::search::search,
@@ -151,6 +153,10 @@ pub fn run() {
             commands::chats::save_chat,
             commands::chats::delete_chat,
             commands::chats::delete_all_chats,
+            commands::skills::list_skills,
+            commands::skills::save_skill,
+            commands::skills::remove_skill,
+            commands::skills::preview_skill,
             commands::chats::list_prompts,
             commands::chats::add_prompt,
             commands::chats::remove_prompt,

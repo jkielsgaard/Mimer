@@ -58,3 +58,10 @@ pub async fn restore_deleted(
     let v = state.current_vault()?;
     ops::restore_deleted(&v, &path, &sha)
 }
+
+/// Undoes the changes of an earlier AI commit (see `ops::undo_commit`). Returns the notes touched.
+#[tauri::command]
+pub async fn undo_commit(state: State<'_, AppState>, sha: String) -> Result<Vec<String>, AppError> {
+    let v = state.current_vault()?;
+    ops::undo_commit(&v, &sha)
+}

@@ -799,6 +799,7 @@ fn queue(
         original_hash: original.as_deref().map(hash),
         original,
         reason: reason.unwrap_or("").to_string(),
+        checks: Vec::new(),
     });
     ToolOutcome {
         result: "Queued for user review.".into(),

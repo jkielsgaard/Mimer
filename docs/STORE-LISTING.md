@@ -27,7 +27,8 @@ Mimer is a notes app for people who want to own their notes. Your notes are ordi
 **An assistant that works for you, not on your behalf**
 
 - Ask Mimer to find, restructure, merge, correct or summarise notes. It can search and read your notes, and it proposes changes that you review file by file. Nothing is written until you accept it.
-- Select text and press Ctrl+K for quick changes: fix spelling, rewrite, shorten and more.
+- Skills: ready-made jobs such as fixing spelling, translating, sorting a folder or writing a summary. Make your own by saying in your own words what it should do, and try it on a note before you save it. Mimer checks every change (links, tags, numbers and dates) and starts long runs with three notes.
+- Select text for quick changes: fix spelling, rewrite, shorten and more.
 - Your notes are only ever sent to an AI that runs on your own computer: the built-in AI (Microsoft's Foundry Local, which can use a neural processor) or LM Studio. A separate chat, Raven, can use a cloud AI of your choice for knowledge from the internet, and it never sees your notes.
 
 **Write and organise**
@@ -50,7 +51,7 @@ Mimer is a beta version. The app is in English; the assistant answers in the lan
 
 ## What's new in this version
 
-First release in the Microsoft Store. Beta.
+Skills: jobs Mimer carries out on a note or a whole folder, from the right-click menu, the chat or the command palette (Ctrl+Shift+P). Make your own in two steps and try it on a note first. "Fix spelling and grammar" now changes only the wrong words, every change is checked before you review it, long runs start with three notes, and the last AI change can be undone with one click. A new look: an AI status chip, a clearer review, an icon bar, a bar over selected text and a short welcome on first start.
 
 ## Search terms (up to seven)
 

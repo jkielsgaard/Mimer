@@ -88,6 +88,8 @@ pub struct FoundryStatus {
     pub installed: Vec<FoundryInstalled>,
     /// The alias of the model that is loaded now.
     pub active_model: Option<String>,
+    /// The device Foundry Local reports for the loaded model (CPU, GPU or NPU), when known.
+    pub active_device: Option<String>,
     /// False when this build or computer cannot use Foundry Local; `unavailable_reason` says why.
     pub available: bool,
     pub unavailable_reason: Option<String>,
@@ -109,6 +111,7 @@ pub(crate) struct Inner {
     pub install: Option<InstallProgress>,
     pub running: Option<std::sync::Arc<crate::engine::process::Running>>,
     pub active_model: Option<String>,
+    pub active_device: Option<String>,
     pub install_cancel: Option<CancellationToken>,
     pub wake_cancel: Option<CancellationToken>,
     pub last_used: Instant,
@@ -133,6 +136,7 @@ impl FoundryRuntime {
                 install: None,
                 running: None,
                 active_model: None,
+                active_device: None,
                 install_cancel: None,
                 wake_cancel: None,
                 last_used: Instant::now(),

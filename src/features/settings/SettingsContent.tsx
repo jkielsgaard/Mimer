@@ -21,6 +21,7 @@ import { ProviderEditor } from "./ProviderEditor";
 import { AddProviderDialog } from "./AddProviderDialog";
 import { BuiltInAiTab } from "@/features/engine/BuiltInAiTab";
 import { VaultSettingsTab } from "./VaultSettingsTab";
+import { SkillsTab } from "./SkillsTab";
 import { MimerInstructionSettings } from "./MimerInstructionSettings";
 import { SemanticSearchSettings } from "./SemanticSearchSettings";
 import { appVersion, buildDateLabel, releaseStage } from "@/lib/version";
@@ -29,12 +30,13 @@ import { InfoHint } from "@/components/InfoHint";
 /** The one entry in the provider list that stands for both built-in engines. */
 const BUILTIN_ROW = "__builtin__";
 
-type Tab = "general" | "providers" | "ai" | "builtin" | "history" | "vault";
+type Tab = "general" | "providers" | "ai" | "builtin" | "skills" | "history" | "vault";
 const TABS: { id: Tab; label: string }[] = [
   { id: "general", label: "General" },
   { id: "providers", label: "AI providers" },
   { id: "ai", label: "AI" },
   { id: "builtin", label: "Built-in AI" },
+  { id: "skills", label: "Skills" },
   { id: "history", label: "Version history" },
   { id: "vault", label: "Vault" },
 ];
@@ -42,9 +44,10 @@ const TABS: { id: Tab; label: string }[] = [
 export function SettingsContent({ stored, onClose }: { stored: Settings; onClose: () => void }) {
   const save = useSettingsStore((s) => s.save);
   const [draft, setDraft] = useState<Settings>(() => structuredClone(stored));
-  const [tab, setTab] = useState<Tab>(() =>
-    useUiStore.getState().settingsTab === "builtin" ? "builtin" : "general",
-  );
+  const [tab, setTab] = useState<Tab>(() => {
+    const wanted = useUiStore.getState().settingsTab;
+    return wanted === "builtin" || wanted === "skills" ? wanted : "general";
+  });
   const [providerId, setProviderId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const update = (patch: Partial<Settings>): void => {
@@ -65,7 +68,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
   const cloudProviders = draft.ai.providers.filter((p) => effectiveLocation(p) === "cloud");
 
   return (
-    <DialogContent className="h-[600px] max-w-3xl">
+    <DialogContent className="h-[640px] max-w-4xl">
       <DialogHeader>
         <DialogTitle className="text-base font-semibold">Settings</DialogTitle>
         <DialogDescription className="sr-only">Application settings</DialogDescription>
@@ -390,6 +393,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
             </div>
           )}
           {tab === "builtin" && <BuiltInAiTab draft={draft} onChange={setDraft} />}
+          {tab === "skills" && <SkillsTab />}
           {tab === "vault" && <VaultSettingsTab />}
           {tab === "history" && (
             <div className="flex flex-col gap-3">

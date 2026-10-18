@@ -1,5 +1,8 @@
-import { Paperclip, Plus, Send, Square } from "lucide-react";
+import { Paperclip, Plus, Send, Sparkles, Square, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { Skill } from "@/bindings/Skill";
+import { api } from "@/lib/api";
+import { recentSkillIds } from "@/lib/recentSkills";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,11 +21,20 @@ import { useFoundryStore } from "@/stores/foundryStore";
 import { AiSwitcher } from "./AiSwitcher";
 import { PrivacyNote } from "./PrivacyNote";
 import { PromptsMenu } from "./PromptsMenu";
-import { TasksMenu } from "./TasksMenu";
+import { localAiProblem } from "@/lib/skills";
+import { SkillsMenu } from "./SkillsMenu";
 import { Bubble } from "./Bubble";
 import { MentionChips } from "./MentionChips";
 import { MentionPicker } from "./MentionPicker";
 import { InfoHint } from "@/components/InfoHint";
+
+/** The skills offered as cards in an empty chat. */
+const STARTERS = [
+  "builtin:fix-spelling",
+  "builtin:improve-structure",
+  "builtin:summarise",
+  "builtin:sort-into-folders",
+];
 
 /** Right-panel "Mimer" tab: the chat with the assistant. */
 export function ChatPanel() {
@@ -31,6 +43,8 @@ export function ChatPanel() {
     streaming,
     includeNote,
     draftMentions,
+    draftSkill,
+    setDraftSkill,
     send,
     stop,
     newChat,
@@ -56,6 +70,24 @@ export function ChatPanel() {
   /** Position of a `/` the user closed with Esc; it stays closed until the text changes. */
   const [dismissed, setDismissed] = useState<number | null>(null);
   const input = useRef<HTMLTextAreaElement>(null);
+  const [skills, setSkills] = useState<Skill[]>([]);
+  useEffect(() => {
+    api
+      .listSkills()
+      .then(setSkills)
+      .catch(() => undefined);
+  }, [draftSkill]);
+  const recent = recentSkillIds()
+    .map((id) => skills.find((s) => s.id === id))
+    .filter((s): s is Skill => s !== undefined)
+    .slice(0, 4);
+  const starters = STARTERS.map((id) => skills.find((s) => s.id === id)).filter(
+    (s): s is Skill => s !== undefined,
+  );
+  const chooseSkill = (s: Skill): void => {
+    setDraftSkill(s);
+    input.current?.focus();
+  };
   const bottom = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -116,10 +148,22 @@ export function ChatPanel() {
   };
 
   const submit = (): void => {
-    if (draft.trim() === "" || locked) return;
+    if ((draft.trim() === "" && draftSkill === null) || locked) return;
     const text = draft;
-    setDraft("");
-    void send(text);
+    if (draftSkill === null) {
+      setDraft("");
+      void send(text);
+      return;
+    }
+    // A skill works on notes, so a local AI must be running before it starts.
+    void localAiProblem().then((problem) => {
+      if (problem !== null) {
+        useUiStore.getState().toast(problem, "error");
+        return;
+      }
+      setDraft("");
+      void send(text);
+    });
   };
 
   return (
@@ -146,10 +190,34 @@ export function ChatPanel() {
       )}
       <div className="min-h-0 flex-1 space-y-3 overflow-auto p-3" aria-live="polite">
         {messages.length === 0 && (
-          <p className="text-xs text-muted-foreground">
-            Ask Mimer about your notes, or ask for edits. Proposed changes are always shown for your
-            review before anything is written.
-          </p>
+          <div className="flex flex-col gap-3">
+            {starters.length > 0 && (
+              <>
+                <h3 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  What do you want done?
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {starters.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      className="flex flex-col gap-0.5 rounded-lg border bg-card px-3 py-2 text-left hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+                      onClick={() => {
+                        chooseSkill(s);
+                      }}
+                    >
+                      <span className="text-[13px] font-semibold">{s.name}</span>
+                      <span className="text-[11px] text-muted-foreground">{s.description}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Or ask a question. Mimer only reads the notes you attach or open, and proposed changes
+              are always shown for your review before anything is written.
+            </p>
+          </div>
         )}
         {messages.map((m) => (
           <Bubble key={m.id} m={m} />
@@ -157,6 +225,42 @@ export function ChatPanel() {
         <div ref={bottom} />
       </div>
       <div className="border-t p-2">
+        {draftSkill && (
+          <p
+            className="mb-1 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs"
+            data-testid="draft-skill"
+          >
+            <Sparkles className="size-3" aria-hidden />
+            <span>Skill: {draftSkill.name}</span>
+            <button
+              type="button"
+              aria-label="Remove the skill"
+              className="rounded-full p-0.5 hover:bg-background/60"
+              onClick={() => {
+                setDraftSkill(null);
+              }}
+            >
+              <X className="size-3" />
+            </button>
+          </p>
+        )}
+        {recent.length > 0 && draftSkill === null && (
+          <div className="mb-1 flex flex-wrap items-center gap-1" aria-label="Recent skills">
+            <span className="text-[11px] text-muted-foreground">Recent</span>
+            {recent.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className="rounded-full border bg-card px-2 py-0.5 text-xs hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => {
+                  chooseSkill(s);
+                }}
+              >
+                {s.name}
+              </button>
+            ))}
+          </div>
+        )}
         <MentionChips paths={draftMentions} onRemove={removeMention} />
         <label className="mb-1 flex items-center gap-1.5 text-xs text-muted-foreground">
           <input
@@ -174,9 +278,8 @@ export function ChatPanel() {
             topic="mimer"
           />
           <span className="ml-auto flex">
-            <TasksMenu
-              onInsert={(t) => {
-                setDraft((d) => (d.trim() === "" ? t : `${d}\n${t}`));
+            <SkillsMenu
+              onChosen={() => {
                 input.current?.focus();
               }}
             />
@@ -217,7 +320,9 @@ export function ChatPanel() {
             placeholder={
               locked
                 ? "Wake Mimer to start chatting"
-                : "Message Mimer…  (Enter to send, Shift+Enter for a new line)"
+                : draftSkill
+                  ? "Extra instructions for the skill (optional). Enter to run it."
+                  : "Message Mimer…  (Enter to send, Shift+Enter for a new line)"
             }
             value={draft}
             onChange={(e) => {
@@ -263,7 +368,7 @@ export function ChatPanel() {
             <Button
               size="icon"
               aria-label="Send"
-              disabled={draft.trim() === "" || locked}
+              disabled={(draft.trim() === "" && draftSkill === null) || locked}
               onClick={submit}
             >
               <Send />

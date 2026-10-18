@@ -16,6 +16,7 @@ function status(over: Partial<FoundryStatus>): FoundryStatus {
     install: null,
     installed: [{ alias: "qwen3-4b", name: "Qwen 3 4B", sizeMb: 2763 }],
     activeModel: null,
+    activeDevice: null,
     available: true,
     unavailableReason: null,
     note: null,

@@ -477,3 +477,32 @@ Needs Windows (a virtual machine or Windows Sandbox). See docs/MSIX.md.
 - [ ] Settings → Built-in AI → Remove: a model is removed; **Remove all Foundry Local files** empties the folder.
 - [ ] The Microsoft Store package (test copy in Windows Sandbox): the llama.cpp card says it is not available, Foundry Local works, and the helper starts (it is the same signed `mimer.exe`).
 - [ ] On Linux: if the download crashes the engine, Mimer stays up and shows "the Foundry Local engine crashed" with what to do.
+
+## 44. Skills
+
+- [ ] Settings → Skills: two panels. The left lists **Your skills** and **Built in** (eleven); choosing a built-in one shows it read-only with a note, and **Copy to a new skill** makes an editable copy.
+- [ ] **Add a skill**: choose each kind in turn; the text under the menu explains what Mimer does; **Insert an example** fills the instruction. Save is disabled without a name and an instruction. After Save the skill is in the list and in the Skills menu; **Remove** asks first.
+- [ ] Close and open Mimer, and open another vault: your skills are still there (they are in `skills.json` next to `settings.json`).
+- [ ] Attach a folder with `/`, press **Skills → Fix spelling and grammar**, press Enter with no text: Mimer shows "Step n of N" and the note names, then a review card with one edit per note. Nothing is written before you accept. The text is in the language of the note.
+- [ ] **Sort into folders** on a folder of imported notes (for example the 52 test notes): every note gets a proposed move into a folder; folders are reused; nothing is written before you accept.
+- [ ] **Summarise** on a folder: one new note is proposed next to the notes, and it links to its sources.
+- [ ] Type extra instructions next to a skill ("keep British spelling"): they are followed in that run only.
+- [ ] Press **Stop** in the middle of a long run: it stops; what was done so far can still be reviewed.
+- [ ] With no note attached or open, a skill says what to attach and changes nothing.
+- [ ] A project that is local-only still works; a cloud provider is refused (notes only go to local AI).
+- [ ] Right-click a note: **AI** lists only skills set to _A note_ or _Notes and folders_; right-click a folder: only _A folder_ or _Notes and folders_. Choosing one opens the assistant and starts the run at once. Tick several notes with Ctrl-click and right-click: **AI** works on all of them (more than five is refused with a message).
+- [ ] In Settings → Skills the **Works on** menu is saved with the skill and shown in the list; change it and see the right-click menu change.
+- [ ] Stop LM Studio (or leave the built-in AI asleep) and start a skill from the right-click menu and from the Skills button: a message says what to start and nothing is sent.
+- [ ] Status bar: the AI chip shows a green dot when the AI is ready, grey when asleep (with **Wake**), blue while working (with **Stop**) and red with **Fix** on a problem. Clicking it shows model, device (Foundry Local), connection (LM Studio) and the privacy line. Foundry Local: "Runs on" shows the device Foundry reports after Wake; check it against the Task Manager (NPU/GPU load).
+- [ ] Review changes: filter chips work, **Accept group / Reject group** change every file of a group, a moved note shows the start of its text, a note changed on disk is marked and needs the checkbox.
+- [ ] After **Apply**, press **Undo** in the message: the notes are back as before, new notes are gone, deleted notes are back, and History shows a "Restore AI changes of …" commit. Edit one of the notes by hand after an apply and try Undo: it refuses and says why.
+- [ ] Empty chat: the four skill cards choose a skill; **Recent** chips appear after a skill was used; a long run shows a progress bar and "about N min left"; after a run with skipped notes **Why were N notes left out?** lists them.
+- [ ] **Ctrl/Cmd+Shift+P**: type a skill name and press Enter to run it on the open note; type a note name to open it; actions work; with nothing open, only actions are listed.
+- [ ] Settings → Skills: search; groups; the kind cards; **Try it on a note** with a rewrite skill shows the new text and a sort skill shows the folder; nothing is proposed or changed on disk.
+- [ ] Left icon bar: Files and Search switch the panel, pressing the open one hides it, Settings opens the settings. Select text: the bar with Fix, Rewrite, Shorten and Ask Mimer appears; **Fix** opens the result with a diff and Accept. The breadcrumb shows words and backlinks.
+- [ ] First run (delete `mimer.firstRunDone` in the browser storage, or use a fresh profile, with no model downloaded): the welcome appears once; **Skip setup** does not bring it back; choosing LM Studio selects it and opens the settings.
+- [ ] Settings → Skills → **Add a skill**: describe a job in your own words, choose a goal, **Next**, **Try it** on a note: before/after and the checks are shown; nothing changes on disk. The name is filled in from the description; a sort skill is offered for folders. Save it and find it in the right-click menu and the Skills button.
+- [ ] **Fix spelling and grammar** on a note with spelling mistakes: only the wrong words change (look at the diff); links, tags, numbers and code blocks stay as they were.
+- [ ] A skill whose change drops a tag or changes a date: the review shows the change unselected with "Not selected, because the AI may have made a mistake" and the reason.
+- [ ] Run a skill on a folder with more than five notes: only three are done, then **Looks good, do the other N** finishes the rest and **Not right, change the skill** opens the skill in Settings.
+- [ ] Try it with a small Foundry Local or llama.cpp model, and with LM Studio: the notes are changed (as proposals), not only described in the chat.

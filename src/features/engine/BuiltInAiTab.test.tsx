@@ -52,6 +52,7 @@ describe("Settings → Built-in AI: the engine choice", () => {
         install: null,
         installed: [],
         activeModel: null,
+        activeDevice: null,
         available: true,
         unavailableReason: null,
         note: null,

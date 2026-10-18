@@ -1,13 +1,22 @@
-import { countNotes, displayName, topLevelPaths, type RowProps } from "./treeUtils";
+import { countNotes, displayName, findFolder, topLevelPaths, type RowProps } from "./treeUtils";
+import { SkillsSubmenu } from "./SkillsSubmenu";
 import {
   ChevronDown,
   ChevronRight,
+  Download,
   File,
   FileImage,
+  FilePlus,
   FileText,
   Folder,
   FolderKanban,
   FolderOpen,
+  FolderPlus,
+  History,
+  ListTree,
+  Pencil,
+  SquareArrowOutUpRight,
+  Trash2,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -15,8 +24,10 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuSeparator,
+  ContextMenuShortcut,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { formatShortcut } from "@/lib/shortcuts";
 import { api } from "@/lib/api";
 import { openFile, openInSplit } from "@/lib/actions";
 import { cn, dirname, isImage, isMarkdown } from "@/lib/utils";
@@ -60,6 +71,13 @@ export function TreeRow({
   /** What the menu and the keys act on when this row is one of several ticked items. */
   const targets = ticked && multi.size > 1 ? topLevelPaths([...multi]) : null;
   const container = node.isDir ? node.path : dirname(node.path);
+  /** The notes and folders a skill from the AI menu would run on (images and files are left out). */
+  const skillTargets = (): { path: string; isDir: boolean }[] | null => {
+    const tree = useVaultStore.getState().tree;
+    const picked = targets ?? [node.path];
+    const items = picked.map((path) => ({ path, isDir: findFolder(tree, path) !== null }));
+    return items.every((i) => i.isDir || isMarkdown(i.path)) ? items : null;
+  };
 
   const Icon = node.isDir
     ? isProject
@@ -224,6 +242,7 @@ export function TreeRow({
               >
                 Delete {targets.length} items
               </ContextMenuItem>
+              {skillTargets() && <SkillsSubmenu targets={skillTargets() ?? []} />}
               <ContextMenuSeparator />
               <ContextMenuItem
                 onSelect={() => {
@@ -259,29 +278,34 @@ export function TreeRow({
                   onAction({ kind: "newNote", folder: container });
                 }}
               >
-                New note
+                <FilePlus className="size-4" aria-hidden /> New note
+                <ContextMenuShortcut>{formatShortcut("Mod+N")}</ContextMenuShortcut>
               </ContextMenuItem>
               <ContextMenuItem
                 onSelect={() => {
                   onAction({ kind: "newFolder", folder: container });
                 }}
               >
-                New folder
+                <FolderPlus className="size-4" aria-hidden /> New folder
               </ContextMenuItem>
               <ContextMenuSeparator />
+              {skillTargets() && <SkillsSubmenu targets={skillTargets() ?? []} />}
               <ContextMenuItem
                 onSelect={() => {
                   onAction({ kind: "rename", node });
                 }}
               >
-                Rename
+                <Pencil className="size-4" aria-hidden /> Rename
+                <ContextMenuShortcut>F2</ContextMenuShortcut>
               </ContextMenuItem>
               <ContextMenuItem
+                className="text-destructive"
                 onSelect={() => {
                   onAction({ kind: "delete", node });
                 }}
               >
-                Delete
+                <Trash2 className="size-4" aria-hidden /> Delete
+                <ContextMenuShortcut>Del</ContextMenuShortcut>
               </ContextMenuItem>
               {node.isDir && (
                 <>
@@ -291,7 +315,7 @@ export function TreeRow({
                       void useVaultStore.getState().createIndexPage(node.path);
                     }}
                   >
-                    Create index page
+                    <ListTree className="size-4" aria-hidden /> Create index page
                   </ContextMenuItem>
                   {isProject && (
                     <ContextMenuItem
@@ -312,7 +336,7 @@ export function TreeRow({
                   useUiStore.getState().openExportDialog({ path: node.path, isFolder: node.isDir });
                 }}
               >
-                Export…
+                <Download className="size-4" aria-hidden /> Export…
               </ContextMenuItem>
               {isMarkdown(node.name) && (
                 <ContextMenuItem
@@ -320,7 +344,7 @@ export function TreeRow({
                     void openInSplit(node.path);
                   }}
                 >
-                  Open in split view
+                  <SquareArrowOutUpRight className="size-4" aria-hidden /> Open in split view
                 </ContextMenuItem>
               )}
               {isMarkdown(node.name) && (
@@ -334,7 +358,7 @@ export function TreeRow({
                       });
                   }}
                 >
-                  Show history
+                  <History className="size-4" aria-hidden /> Show history
                 </ContextMenuItem>
               )}
               <ContextMenuSeparator />

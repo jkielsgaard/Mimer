@@ -13,6 +13,10 @@ export type FoundryStatus = { state: EngineState, message: string, problem: Prob
  */
 activeModel: string | null, 
 /**
+ * The device Foundry Local reports for the loaded model (CPU, GPU or NPU), when known.
+ */
+activeDevice: string | null, 
+/**
  * False when this build or computer cannot use Foundry Local; `unavailable_reason` says why.
  */
 available: boolean, unavailableReason: string | null, 

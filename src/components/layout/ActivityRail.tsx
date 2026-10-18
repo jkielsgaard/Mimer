@@ -1,0 +1,67 @@
+import { Files, Search, Settings } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { type LeftTab, useUiStore } from "@/stores/uiStore";
+
+const TABS: { id: LeftTab; label: string; Icon: typeof Files }[] = [
+  { id: "files", label: "Files", Icon: Files },
+  { id: "search", label: "Search", Icon: Search },
+];
+
+/**
+ * The narrow bar of icons at the left edge: choose what the left panel shows. Pressing the icon of
+ * the open panel hides the panel; pressing another one shows it again.
+ */
+export function ActivityRail() {
+  const leftTab = useUiStore((s) => s.leftTab);
+  const collapsed = useUiStore((s) => s.leftCollapsed);
+  return (
+    <div className="flex w-11 shrink-0 flex-col items-center gap-1 border-r bg-sidebar py-2">
+      <div
+        role="tablist"
+        aria-label="Sidebar"
+        aria-orientation="vertical"
+        className="flex flex-col items-center gap-1"
+      >
+        {TABS.map(({ id, label, Icon }) => {
+          const on = leftTab === id && !collapsed;
+          return (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              aria-label={label}
+              title={label}
+              className={cn(
+                "flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+                on && "bg-accent text-accent-foreground",
+              )}
+              onClick={() => {
+                const ui = useUiStore.getState();
+                if (ui.leftTab === id && !ui.leftCollapsed) {
+                  ui.toggleLeft();
+                  return;
+                }
+                ui.setLeftTab(id);
+              }}
+            >
+              <Icon className="size-4" aria-hidden />
+            </button>
+          );
+        })}
+      </div>
+      <span className="grow" />
+      <button
+        type="button"
+        aria-label="Settings"
+        title="Settings"
+        className="flex size-8 items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        onClick={() => {
+          useUiStore.getState().setSettingsOpen(true);
+        }}
+      >
+        <Settings className="size-4" aria-hidden />
+      </button>
+    </div>
+  );
+}

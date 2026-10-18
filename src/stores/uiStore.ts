@@ -22,6 +22,8 @@ export interface Toast {
   id: number;
   kind: "info" | "error" | "success";
   message: string;
+  /** A button in the toast, for example Undo. */
+  action?: { label: string; run: () => void };
 }
 
 /** A message that must not be overlooked: shown in a dialog until the user closes it. */
@@ -68,11 +70,17 @@ interface UiState {
   leftCollapsed: boolean;
   rightCollapsed: boolean;
   quickOpen: boolean;
+  commandPalette: boolean;
   settingsOpen: boolean;
   /** The Settings tab to show when the dialog opens (`null` = the first). */
   settingsTab: string | null;
   /** Opens Settings on the Built-in AI tab. */
   openBuiltInSettings: () => void;
+  /** Opens Settings on the Skills tab. */
+  /** Opens Settings → Skills, optionally with one skill chosen. */
+  openSkillsSettings: (skillId?: string) => void;
+  /** The skill Settings → Skills should open with (read once, then cleared). */
+  skillsFocus: string | null;
   recoverOpen: boolean;
   templatePickerOpen: boolean;
   vaultSwitcherOpen: boolean;
@@ -108,6 +116,7 @@ interface UiState {
   toggleLeft: () => void;
   toggleRight: () => void;
   setQuickOpen: (open: boolean) => void;
+  setCommandPalette: (open: boolean) => void;
   setSettingsOpen: (open: boolean) => void;
   setRecoverOpen: (open: boolean) => void;
   openProjectDialog: (state: ProjectDialogState | null) => void;
@@ -115,7 +124,7 @@ interface UiState {
   /** Opens the Raven tab and focuses its message box. */
   focusRaven: () => void;
   focusSearch: (seed?: string) => void;
-  toast: (message: string, kind?: Toast["kind"]) => void;
+  toast: (message: string, kind?: Toast["kind"], action?: Toast["action"]) => void;
   dismissToast: (id: number) => void;
   askLinkUpdate: (preview: RenamePreview) => Promise<LinkUpdateChoice>;
   answerLinkUpdate: (choice: LinkUpdateChoice) => void;
@@ -156,10 +165,15 @@ export const useUiStore = create<UiState>((set, get) => ({
   leftCollapsed: false,
   rightCollapsed: false,
   quickOpen: false,
+  commandPalette: false,
   settingsOpen: false,
   settingsTab: null,
   openBuiltInSettings: () => {
     set({ settingsOpen: true, settingsTab: "builtin" });
+  },
+  skillsFocus: null,
+  openSkillsSettings: (skillId) => {
+    set({ settingsOpen: true, settingsTab: "skills", skillsFocus: skillId ?? null });
   },
   recoverOpen: false,
   templatePickerOpen: false,
@@ -225,6 +239,9 @@ export const useUiStore = create<UiState>((set, get) => ({
   setQuickOpen: (quickOpen) => {
     set({ quickOpen });
   },
+  setCommandPalette: (commandPalette) => {
+    set({ commandPalette });
+  },
   setSettingsOpen: (settingsOpen) => {
     set({ settingsOpen, settingsTab: null });
   },
@@ -256,14 +273,16 @@ export const useUiStore = create<UiState>((set, get) => ({
       searchSeed: seed ?? s.searchSeed,
     }));
   },
-  toast: (message, kind = "info") => {
+  toast: (message, kind = "info", action) => {
     const id = toastId++;
-    set((s) => ({ toasts: [...s.toasts, { id, kind, message }] }));
+    set((s) => ({
+      toasts: [...s.toasts, { id, kind, message, ...(action ? { action } : {}) }],
+    }));
     setTimeout(
       () => {
         get().dismissToast(id);
       },
-      kind === "error" ? 8000 : 4000,
+      kind === "error" ? 8000 : action ? 15000 : 4000,
     );
   },
   dismissToast: (id) => {

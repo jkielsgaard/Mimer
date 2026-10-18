@@ -4,7 +4,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Project } from "@/bindings/Project";
 import type { TreeNode } from "@/bindings/TreeNode";
 
-vi.mock("@/lib/api", () => ({ api: {}, toApiError: (e: unknown) => ({ message: String(e) }) }));
+vi.mock("@/lib/api", () => ({
+  api: { listSkills: () => Promise.resolve([]) },
+  toApiError: (e: unknown) => ({ message: String(e) }),
+}));
 const actions = vi.hoisted(() => ({
   newNoteInCurrentFolder: vi.fn(),
   revealInTree: vi.fn(),

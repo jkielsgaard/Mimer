@@ -18,5 +18,6 @@ pub mod projects;
 pub mod research;
 pub mod search;
 pub mod settings;
+pub mod skills;
 pub mod templates;
 pub mod vault;

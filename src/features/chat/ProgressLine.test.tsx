@@ -1,7 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ChatProgress } from "@/stores/chatStore";
-import { phaseText, ProgressLine, STALL_SECONDS } from "./ProgressLine";
+import { phaseText, ProgressLine, STALL_SECONDS, timeLeft } from "./ProgressLine";
 
 const START = new Date("2026-10-13T10:00:00Z").getTime();
 
@@ -74,5 +74,14 @@ describe("ProgressLine", () => {
       vi.advanceTimersByTime(60_000);
     });
     expect(screen.queryByText(/Still waiting/)).toBeNull();
+  });
+});
+
+describe("timeLeft", () => {
+  it("estimates from the finished steps and stays quiet at the start and the end", () => {
+    expect(timeLeft(60_000, 4, 10)).toBe("about 2 min left");
+    expect(timeLeft(10_000, 3, 5)).toBe("less than a minute left");
+    expect(timeLeft(5_000, 2, 10)).toBeNull();
+    expect(timeLeft(50_000, 10, 10)).toBeNull();
   });
 });

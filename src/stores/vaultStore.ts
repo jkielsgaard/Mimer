@@ -17,7 +17,7 @@ import { useTreeStore } from "./treeStore";
 import { useWorkspaceStore, layoutPersistence, filterExisting } from "./workspaceStore";
 import { loadLayout, saveLayout } from "@/lib/workspacePersistence";
 
-interface VaultState {
+export interface VaultState {
   vault: VaultInfo | null;
   tree: TreeNode[];
   files: string[];

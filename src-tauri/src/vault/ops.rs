@@ -291,6 +291,100 @@ pub fn restore_deleted(v: &OpenVault, rel: &str, sha: &str) -> AppResult<()> {
     Ok(())
 }
 
+/// What one commit did to one file: the bytes before and after (`None` = the file did not exist).
+struct FileChange {
+    path: String,
+    before: Option<Vec<u8>>,
+    after: Option<Vec<u8>>,
+}
+
+fn changes_of_commit(r: &git2::Repository, sha: &str) -> AppResult<Vec<FileChange>> {
+    let oid = git2::Oid::from_str(sha).map_err(|e| AppError::Git(e.to_string()))?;
+    let commit = r.find_commit(oid)?;
+    let parent = commit
+        .parent(0)
+        .map_err(|_| AppError::Git("The first commit cannot be undone".into()))?;
+    let diff = r.diff_tree_to_tree(Some(&parent.tree()?), Some(&commit.tree()?), None)?;
+    let blob = |id: git2::Oid| -> AppResult<Option<Vec<u8>>> {
+        if id.is_zero() {
+            return Ok(None);
+        }
+        Ok(Some(r.find_blob(id)?.content().to_vec()))
+    };
+    let mut out = Vec::new();
+    for delta in diff.deltas() {
+        let (old, new) = (delta.old_file(), delta.new_file());
+        let Some(path) = new.path().or_else(|| old.path()) else {
+            continue;
+        };
+        out.push(FileChange {
+            path: path.to_string_lossy().replace('\\', "/"),
+            before: blob(old.id())?,
+            after: blob(new.id())?,
+        });
+    }
+    Ok(out)
+}
+
+/// Undoes the changes an earlier commit made (an AI commit): files it created are removed, files it
+/// changed or removed are brought back as they were before it. Nothing is lost: a snapshot is
+/// committed first and the undo is a commit of its own, so it can be undone too. Refuses when one
+/// of the files was changed after that commit.
+pub fn undo_commit(v: &OpenVault, sha: &str) -> AppResult<Vec<String>> {
+    let changes = v.with_repo(|r| changes_of_commit(r, sha))?;
+    // `.vault/` and hidden files are not notes; the AI never touches them.
+    let changes: Vec<FileChange> = changes
+        .into_iter()
+        .filter(|c| !c.path.split('/').any(|p| p.starts_with('.')))
+        .collect();
+    if changes.is_empty() {
+        return Err(AppError::NotFound("That commit changed no notes".into()));
+    }
+    for c in &changes {
+        let abs = paths::resolve(&v.root, &c.path, None)?;
+        let now = std::fs::read(&abs).ok();
+        if now != c.after {
+            return Err(AppError::Conflict(format!(
+                "{} was changed after the AI change, so the change was not undone. Use the version history to restore it.",
+                c.path
+            )));
+        }
+    }
+    v.commit(
+        CommitReason::new(CommitKind::SnapshotBeforeRestore, Some("AI changes".into())),
+        None,
+    )?;
+    let mut touched = Vec::new();
+    for c in &changes {
+        let abs = paths::resolve(&v.root, &c.path, None)?;
+        match &c.before {
+            Some(bytes) => {
+                if let Some(dir) = abs.parent() {
+                    std::fs::create_dir_all(dir)?;
+                }
+                fs_ops::write_atomic(&abs, bytes)?;
+            }
+            None => {
+                if abs.exists() {
+                    std::fs::remove_file(&abs)?;
+                }
+            }
+        }
+        touched.push(c.path.clone());
+    }
+    v.refresh_files();
+    for p in &touched {
+        v.reindex(p)?;
+    }
+    v.touch();
+    let short = &sha[..7.min(sha.len())];
+    v.commit(
+        CommitReason::new(CommitKind::Restore, Some(format!("AI changes of {short}"))),
+        Some(&touched),
+    )?;
+    Ok(touched)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -383,6 +477,55 @@ mod tests {
             std::fs::read_to_string(d.path().join("Keep.md")).unwrap(),
             "important unsaved text"
         );
+    }
+
+    #[test]
+    fn an_ai_commit_can_be_undone_but_not_over_later_edits() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        write_note(&v, "A.md", "old A").unwrap();
+        write_note(&v, "Gone.md", "to be deleted").unwrap();
+        v.commit(CommitReason::new(CommitKind::Save, Some("x".into())), None)
+            .unwrap();
+        // What an AI apply does: edit, create, delete, then one commit.
+        write_note(&v, "A.md", "new A").unwrap();
+        write_note(&v, "New.md", "created").unwrap();
+        std::fs::remove_file(d.path().join("Gone.md")).unwrap();
+        v.refresh_files();
+        let sha = v
+            .commit(CommitReason::new(CommitKind::Ai, Some("AI".into())), None)
+            .unwrap()
+            .unwrap();
+
+        // An edit after the AI change blocks the undo, and nothing is touched.
+        write_note(&v, "A.md", "edited by hand").unwrap();
+        let err = undo_commit(&v, &sha).unwrap_err();
+        assert!(matches!(err, AppError::Conflict(_)), "{err:?}");
+        assert!(d.path().join("New.md").exists());
+        write_note(&v, "A.md", "new A").unwrap();
+
+        let touched = undo_commit(&v, &sha).unwrap();
+        assert_eq!(touched.len(), 3);
+        assert_eq!(
+            std::fs::read_to_string(d.path().join("A.md")).unwrap(),
+            "old A"
+        );
+        assert!(!d.path().join("New.md").exists());
+        assert_eq!(
+            std::fs::read_to_string(d.path().join("Gone.md")).unwrap(),
+            "to be deleted"
+        );
+        // The undo is a commit of its own, and the AI version is still in history.
+        assert!(log_messages(&v)[0].contains("AI changes of"));
+        let hist = v.with_repo(|r| history::file_history(r, "A.md")).unwrap();
+        let texts: Vec<String> = hist
+            .iter()
+            .map(|e| {
+                v.with_repo(|r| history::file_at_commit(r, "A.md", &e.sha))
+                    .unwrap()
+            })
+            .collect();
+        assert!(texts.contains(&"new A".to_string()));
     }
 
     #[test]

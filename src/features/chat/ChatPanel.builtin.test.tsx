@@ -7,6 +7,7 @@ import { engineStatus } from "@/test/engineFixtures";
 const api = vi.hoisted(() => ({
   listChats: vi.fn().mockResolvedValue([]),
   listPrompts: vi.fn().mockResolvedValue([]),
+  listSkills: vi.fn().mockResolvedValue([]),
   saveChat: vi.fn(),
   aiChat: vi.fn(),
   aiCancel: vi.fn(),

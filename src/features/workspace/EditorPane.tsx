@@ -24,7 +24,7 @@ export function EditorPane({
       )}
     >
       <TabBar paneId={paneId} />
-      <Breadcrumb path={active} />
+      <Breadcrumb path={active} paneId={paneId} />
       <div className="min-h-0 flex-1">
         <Editor paneId={paneId} />
       </div>

@@ -26,8 +26,12 @@ const COMMANDS: { id: InlineCommand; label: string }[] = [
   { id: "custom", label: "Custom…" },
 ];
 
+/** A command to start at once when the popup opens (from the bubble over a selection). */
+export type InlineStart = { id: Exclude<InlineCommand, "custom"> } | { id: "custom" };
+
 interface Props {
   selection: InlineSelection;
+  start?: InlineStart;
   notePath: string;
   /** Called with the replacement text when the user accepts. */
   onAccept: (replacement: string, commandLabel: string) => void;
@@ -37,7 +41,7 @@ interface Props {
 type Phase = "choose" | "custom" | "running" | "review";
 
 /** Mod+K popup: choose a command, stream the result, review the diff, accept or reject. */
-export function InlineAiPopup({ selection, notePath, onAccept, onClose }: Props) {
+export function InlineAiPopup({ selection, start, notePath, onAccept, onClose }: Props) {
   const [phase, setPhase] = useState<Phase>("choose");
   const [instruction, setInstruction] = useState("");
   const [result, setResult] = useState("");
@@ -91,6 +95,18 @@ export function InlineAiPopup({ selection, notePath, onAccept, onClose }: Props)
     },
     [notePath, selection.text],
   );
+
+  const started = useRef(false);
+  useEffect(() => {
+    if (!start || started.current) return;
+    started.current = true;
+    if (start.id === "custom") {
+      setPhase("custom");
+      return;
+    }
+    const c = COMMANDS.find((x) => x.id === start.id);
+    if (c) void run(c.id, null, c.label);
+  }, [start, run]);
 
   const close = useCallback(() => {
     if (taskId.current !== null) void api.aiCancel(taskId.current).catch(() => undefined);

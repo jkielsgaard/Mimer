@@ -30,6 +30,8 @@ import type { VaultInfo } from "@/bindings/VaultInfo";
 import type { ChatSummary } from "@/bindings/ChatSummary";
 import type { StoredChat } from "@/bindings/StoredChat";
 import type { SavedPrompt } from "@/bindings/SavedPrompt";
+import type { PreviewResult } from "@/bindings/PreviewResult";
+import type { Skill } from "@/bindings/Skill";
 import type { TemplateInfo } from "@/bindings/TemplateInfo";
 import type { SeedReport } from "@/bindings/SeedReport";
 import type { StandardKind } from "@/bindings/StandardKind";
@@ -146,6 +148,7 @@ export const api = {
   fileHistory: (path: string) => call<CommitEntry[]>("file_history", { path }),
   fileAtCommit: (path: string, sha: string) => call<string>("file_at_commit", { path, sha }),
   restoreFile: (path: string, sha: string) => call<undefined>("restore_file", { path, sha }),
+  undoCommit: (sha: string) => call<string[]>("undo_commit", { sha }),
   deletedFiles: () => call<DeletedFile[]>("deleted_files"),
   restoreDeleted: (path: string, sha: string) => call<undefined>("restore_deleted", { path, sha }),
 
@@ -223,6 +226,11 @@ export const api = {
   foundryStatus: () => call<FoundryStatus>("foundry_status"),
   foundryInstall: (alias: string, useForMimer: boolean) =>
     call<undefined>("foundry_install", { alias, useForMimer }),
+  listSkills: () => call<Skill[]>("list_skills"),
+  saveSkill: (skill: Skill) => call<Skill>("save_skill", { skill }),
+  removeSkill: (id: string) => call<undefined>("remove_skill", { id }),
+  previewSkill: (skill: Skill, path: string) =>
+    call<PreviewResult>("preview_skill", { skill, path }),
   foundrySetupHardware: () => call<undefined>("foundry_setup_hardware"),
   foundryCancelInstall: () => call<undefined>("foundry_cancel_install"),
   foundryWake: () => call<undefined>("foundry_wake"),

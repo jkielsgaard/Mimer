@@ -226,7 +226,12 @@ async fn job(o: Options) -> Result<(), String> {
                 .await
                 .map_err(|e| format!("The local service could not start: {e}"))?;
             let urls = m.urls().map_err(|e| e.to_string())?;
-            emit(&json!({"type": "ready", "urls": urls, "model": model.id()}));
+            let device = model
+                .info()
+                .ok()
+                .and_then(|i| i.runtime.as_ref().map(|r| format!("{:?}", r.device_type)))
+                .unwrap_or_default();
+            emit(&json!({"type": "ready", "urls": urls, "model": model.id(), "device": device}));
             // Answer until Mimer stops this process (Sleep, closing Mimer, or Mimer dying).
             std::future::pending::<()>().await;
         }

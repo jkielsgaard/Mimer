@@ -22,6 +22,7 @@ import { reportAi } from "@/lib/reportAi";
 import { reportIssue } from "@/lib/reportIssue";
 import { noteTitle } from "@/lib/utils";
 import { VaultSwitcher } from "@/features/vaults/VaultSwitcher";
+import { useProposalStore } from "@/stores/proposalStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { activeTitle, useVaultStore } from "@/stores/vaultStore";
 
@@ -31,6 +32,7 @@ export function Header() {
   const activePath = useVaultStore((s) => s.activePath);
   const closeVault = useVaultStore((s) => s.closeVault);
   const ui = useUiStore();
+  const lastApplied = useProposalStore((s) => s.lastAppliedSha);
   const [templateName, setTemplateName] = useState<string | null>(null);
   const title = vault
     ? activePath
@@ -112,6 +114,14 @@ export function Header() {
           {item("Version history", "Mod+Shift+H", () => {
             ui.setRightTab("history");
           })}
+          {item(
+            "Undo last AI change",
+            null,
+            () => {
+              void useProposalStore.getState().undoLast();
+            },
+            lastApplied === null,
+          )}
           {item("Recover deleted notes…", null, () => {
             ui.setRecoverOpen(true);
           })}

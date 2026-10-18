@@ -41,6 +41,7 @@ function status(over: Partial<FoundryStatus> = {}): FoundryStatus {
     install: null,
     installed: [],
     activeModel: null,
+    activeDevice: null,
     available: true,
     unavailableReason: null,
     note: null,

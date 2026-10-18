@@ -60,6 +60,7 @@ const apiMock = vi.hoisted(() => ({
   hasApiKey: vi.fn(),
   getProposals: vi.fn(),
   listPrompts: vi.fn().mockResolvedValue([]),
+  listSkills: vi.fn().mockResolvedValue([]),
   listChats: vi.fn().mockResolvedValue([]),
   saveChat: vi.fn().mockResolvedValue({}),
   listTemplates: vi.fn().mockResolvedValue([]),

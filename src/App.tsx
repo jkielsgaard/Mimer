@@ -4,6 +4,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Toasts } from "@/components/layout/Toasts";
 import { ProjectDialog } from "@/features/projects/ProjectDialog";
 import { ProposalReview } from "@/features/proposals/ProposalReview";
+import { FirstRunDialog } from "@/features/welcome/FirstRunDialog";
+import { CommandPalette } from "@/features/quickOpen/CommandPalette";
 import { QuickOpen } from "@/features/quickOpen/QuickOpen";
 import { RecoverDeletedDialog } from "@/features/history/RecoverDeletedDialog";
 import { SettingsDialog } from "@/features/settings/SettingsDialog";
@@ -175,6 +177,9 @@ export function App() {
       "Mod+p": () => {
         useUiStore.getState().setQuickOpen(true);
       },
+      "Mod+Shift+p": () => {
+        useUiStore.getState().setCommandPalette(true);
+      },
       "Mod+Shift+f": () => {
         useUiStore.getState().focusSearch();
       },
@@ -244,6 +249,8 @@ export function App() {
     <>
       {vault ? <AppShell /> : <Welcome />}
       <QuickOpen />
+      <CommandPalette />
+      <FirstRunDialog />
       <SettingsDialog />
       <RecoverDeletedDialog />
       <TemplatePicker />

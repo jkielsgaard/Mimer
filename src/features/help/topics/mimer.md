@@ -24,15 +24,36 @@ Ask Mimer for bigger jobs too, for example:
 
 You see what it is doing: waiting for the model, writing, or reading a note, and **Step 3 of 15** for longer tasks. A local model can be slow to load; after a quiet moment Mimer tells you. Press **Stop** at any time.
 
-## Tasks
+## Skills
 
-The **Tasks** button over the message box fills the box with a ready-made job, which you can change before you send it: merge notes, propose a structure, split a long note, summarise, fix spelling and grammar, find duplicates, create an index page, add links between notes, collect action items and tidy up formatting. Attach the notes or the folder first.
+A small model often answers in the chat instead of changing your notes. A **skill** takes that choice away: Mimer does the work itself, one note at a time, and the model only writes the text for each step. You still review every change before anything is written.
+
+1. Attach the notes or a folder with `/` (or open a note).
+2. Press **Skills** over the message box and choose one, for example **Fix spelling and grammar**, **Improve the structure**, **Sort into folders** or **Summarise**.
+3. Add extra instructions if you want (for example "keep British spelling"), then press Enter.
+
+**Fix small mistakes** works differently from the rest: the AI only sends back the words that are wrong, and Mimer puts them in. Nothing else in the note can change.
+
+**Mimer checks every change** before you see it: are the links, tags, numbers and dates, names, properties and code the same, did a part go missing, did the AI add words of its own in front? A change that fails a check is still shown, but it is not selected in the review and the review says why.
+
+**Long runs start with three notes.** When a skill works on more than five notes, Mimer does the first three and stops. Look at those changes; press **Looks good, do the other …** to go on, or **Not right, change the skill**.
+
+A run handles up to 50 notes when changing text, 300 when sorting and 30 when writing one note from many; Mimer says if more were chosen.
+
+You can also right-click a note or a folder in the file tree and choose **AI**: the menu lists the skills that fit what you clicked and starts one at once. A skill needs a local AI that is running (the built-in AI awake, or LM Studio started); otherwise Mimer says what to start.
+
+Make your own in **Settings → Skills** in two steps:
+
+1. **Say what it should do** in your own words, for example "Translate my meeting notes to English and keep the names", and choose what should happen to the notes: fix small mistakes, change the text, move them into folders, make one new note, or just answer in the chat.
+2. **Try it on a note.** You see the note before and after and Mimer's checks. Nothing is changed. If it looks right, give it a name and save it.
+
+Your skills are kept with your settings and work in every vault.
 
 ## New facts: use a cloud AI with internet
 
 Mimer has no internet access and only knows what it learned in training, so it can be out of date or wrong. By default it **does not write new facts** for you. It works with what is in your notes: structure, merging, correcting, summarising, linking.
 
-When you need new documentation about a subject, ask Mimer for it, or choose **Tasks → Write a research prompt…**. Mimer writes a prompt for a cloud AI that can search the web. The prompt also tells that AI how to answer (title, sections, sources with links, open questions). Send it to **Raven** (see the Raven topic), or copy it, paste it in any cloud AI, copy the answer back and choose **Tasks → Import an answer from a cloud AI…**. The answer becomes a new note marked **needs review**; nothing existing is changed.
+When you need new documentation about a subject, ask Mimer for it, or choose **Skills → Write a research prompt…**. Mimer writes a prompt for a cloud AI that can search the web. The prompt also tells that AI how to answer (title, sections, sources with links, open questions). Send it to **Raven** (see the Raven topic), or copy it, paste it in any cloud AI, copy the answer back and choose **Skills → Import an answer from a cloud AI…**. The answer becomes a new note marked **needs review**; nothing existing is changed.
 
 If you prefer, **Settings → AI → Let Mimer write new content from its own knowledge** lets Mimer write from memory too. It will then say so, and you should check the result.
 

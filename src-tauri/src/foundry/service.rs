@@ -100,6 +100,7 @@ pub fn status<R: Runtime>(app: &AppHandle<R>) -> FoundryStatus {
             install: None,
             installed,
             active_model: None,
+            active_device: None,
             available: reason.is_none(),
             unavailable_reason: reason,
             note: note(),
@@ -149,6 +150,7 @@ pub fn status<R: Runtime>(app: &AppHandle<R>) -> FoundryStatus {
         install: inner.install.clone(),
         installed,
         active_model: inner.active_model.clone(),
+        active_device: inner.active_device.clone(),
         available: reason.is_none(),
         unavailable_reason: reason,
         note: note(),
@@ -693,6 +695,10 @@ async fn wake_task<R: Runtime>(app: &AppHandle<R>, alias: &str, cancel: &Cancell
     match end {
         JobEnd::Finished(ready) => {
             let model = ready["model"].as_str().unwrap_or(alias).to_string();
+            let device = ready["device"]
+                .as_str()
+                .filter(|d| !d.is_empty() && *d != "Invalid")
+                .map(str::to_string);
             let url = ready["urls"]
                 .as_array()
                 .and_then(|u| u.first())
@@ -715,6 +721,7 @@ async fn wake_task<R: Runtime>(app: &AppHandle<R>, alias: &str, cancel: &Cancell
                 i.phase = Phase::Awake;
                 i.message = "Mimer is awake".into();
                 i.active_model = Some(alias.to_string());
+                i.active_device = device;
                 i.last_used = Instant::now();
             });
             emit(app);
@@ -744,6 +751,7 @@ fn clear_running<R: Runtime>(app: &AppHandle<R>, running: &Arc<Running>) {
         if i.running.as_ref().is_some_and(|r| Arc::ptr_eq(r, running)) {
             i.running = None;
             i.active_model = None;
+            i.active_device = None;
         }
     });
 }

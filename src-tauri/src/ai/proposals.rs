@@ -35,6 +35,9 @@ pub struct Proposal {
     pub original: Option<String>,
     pub original_hash: Option<String>,
     pub reason: String,
+    /// Mimer's checks of a skill's change; a change that fails one is not selected by default.
+    #[serde(default)]
+    pub checks: Vec<super::checks::CheckResult>,
 }
 
 #[derive(Debug, Clone)]
@@ -325,6 +328,7 @@ mod tests {
             original: original.map(str::to_string),
             original_hash: original.map(hash),
             reason: format!("{action:?} {path}"),
+            checks: Vec::new(),
         }
     }
 

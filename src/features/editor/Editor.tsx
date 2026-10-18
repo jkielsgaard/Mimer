@@ -3,7 +3,12 @@ import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } fro
 import { Code2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatShortcut } from "@/lib/shortcuts";
-import { InlineAiPopup, type InlineSelection } from "@/features/inlineAi/InlineAiPopup";
+import {
+  InlineAiPopup,
+  type InlineSelection,
+  type InlineStart,
+} from "@/features/inlineAi/InlineAiPopup";
+import { SelectionBubble } from "./SelectionBubble";
 import { api } from "@/lib/api";
 import { planTitleRename } from "@/lib/noteTitle";
 import { useTitleFollow } from "@/stores/titleFollowStore";
@@ -32,6 +37,7 @@ export const TITLE_RENAME_DELAY_MS = 1500;
 export function Editor({ paneId }: { paneId: PaneId }) {
   const host = useRef<HTMLDivElement>(null);
   const [inline, setInline] = useState<InlineSelection | null>(null);
+  const [inlineStart, setInlineStart] = useState<InlineStart | undefined>(undefined);
   const [linkQuery, setLinkQuery] = useState<string | null>(null);
 
   const activePath = useWorkspaceStore(
@@ -66,6 +72,7 @@ export function Editor({ paneId }: { paneId: PaneId }) {
       return;
     }
     const coords = view.coordsAtPos(sel.from);
+    setInlineStart(undefined);
     setInline({
       from: sel.from,
       to: sel.to,
@@ -227,9 +234,21 @@ export function Editor({ paneId }: { paneId: PaneId }) {
         }}
       />
       <div ref={host} className="min-h-0 flex-1" data-testid={`editor-${paneId}`} />
+      <SelectionBubble
+        host={host}
+        viewRef={viewRef}
+        hidden={inline !== null || activePath === null}
+        onChoose={(start) => {
+          const view = viewRef.current;
+          if (!view) return;
+          openInline(view);
+          setInlineStart(start);
+        }}
+      />
       {inline && activePath !== null && (
         <InlineAiPopup
           selection={inline}
+          start={inlineStart}
           notePath={activePath}
           onAccept={(r, l) => void acceptInline(r, l)}
           onClose={() => {

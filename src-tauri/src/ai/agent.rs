@@ -55,6 +55,29 @@ pub async fn run_chat(
     cancel: CancellationToken,
 ) -> AppResult<()> {
     let state = app.state::<AppState>();
+    let mut req = req;
+    // A skill that is not a plain answer is carried out by Mimer itself, note by note.
+    if let Some(id) = req.skill.clone() {
+        let file = state
+            .settings_path
+            .parent()
+            .map(|d| d.join("skills.json"))
+            .unwrap_or_default();
+        let skill = crate::skills::find(&file, &id).ok_or_else(|| {
+            crate::error::AppError::NotFound("That skill no longer exists".into())
+        })?;
+        if skill.kind == crate::skills::SkillKind::Answer {
+            // An ordinary turn: the instruction goes in front of the user's last message.
+            let extra = req.skill_input.clone().unwrap_or_default();
+            if let Some(last) = req.messages.last_mut() {
+                last.content = format!("{}\n\n{}", skill.instruction.trim(), extra.trim())
+                    .trim()
+                    .to_string();
+            }
+        } else {
+            return super::skill_run::run_skill(app, &req, skill, channel, &cancel).await;
+        }
+    }
     let vault = state.current_vault()?;
     let settings = state.settings_snapshot();
     let all_projects = vault.project_list();

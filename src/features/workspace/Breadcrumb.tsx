@@ -1,14 +1,42 @@
 import { ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
 import { revealInTree } from "@/lib/actions";
+import { api } from "@/lib/api";
 import { isInside, noteTitle } from "@/lib/utils";
+import { useEditorStore } from "@/stores/editorStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import type { PaneId } from "@/stores/workspaceStore";
+
+/** The number of words in a note, not counting the front matter. */
+export function countWords(text: string): number {
+  const body = text.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "");
+  const words = body.match(/[^\s]+/g);
+  return words === null ? 0 : words.length;
+}
 
 /**
  * Where the open note lives: `Project › Folder › Note`. A folder can be clicked to find it in the
  * file tree; a project shows under its name instead of its folder name.
  */
-export function Breadcrumb({ path }: { path: string | null }) {
+export function Breadcrumb({ path, paneId }: { path: string | null; paneId?: PaneId }) {
   const projects = useVaultStore((s) => s.projects);
+  const status = useEditorStore((s) => s.statuses[paneId ?? "primary"]);
+  const [facts, setFacts] = useState<{ words: number; links: number } | null>(null);
+  // Counted from what is on disk, so it follows the note once it is saved.
+  useEffect(() => {
+    if (path === null || status !== "saved") return;
+    let alive = true;
+    void Promise.all([api.readNote(path), api.backlinks(path)])
+      .then(([note, back]) => {
+        if (alive) setFacts({ words: countWords(note.content), links: back.length });
+      })
+      .catch(() => {
+        if (alive) setFacts(null);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [path, status]);
   if (path === null) return null;
   const parts = path.split("/");
   const folders = parts.slice(0, -1);
@@ -44,6 +72,15 @@ export function Breadcrumb({ path }: { path: string | null }) {
       <span aria-current="page" className="truncate px-1 font-medium text-foreground">
         {noteTitle(path)}
       </span>
+      {facts !== null && (
+        <span className="ml-auto flex shrink-0 gap-2 pl-2" data-testid="note-facts">
+          <span>{facts.words} words</span>
+          <span aria-hidden>·</span>
+          <span>
+            {facts.links} backlink{facts.links === 1 ? "" : "s"}
+          </span>
+        </span>
+      )}
     </nav>
   );
 }

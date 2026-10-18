@@ -6,16 +6,20 @@ import type { Project } from "@/bindings/Project";
 const api = vi.hoisted(() => ({
   listChats: vi.fn(),
   listPrompts: vi.fn(),
+  listSkills: vi.fn().mockResolvedValue([]),
   saveChat: vi.fn(),
   aiChat: vi.fn(),
   aiCancel: vi.fn(),
+  testProvider: vi.fn(),
 }));
 vi.mock("@/lib/api", () => ({ api, toApiError: (e: unknown) => ({ message: String(e) }) }));
 vi.mock("@/lib/flush", () => ({ flushPendingWrites: vi.fn().mockResolvedValue(undefined) }));
 
 import { ChatPanel } from "./ChatPanel";
 import { useChatStore } from "@/stores/chatStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import type { Settings } from "@/bindings/Settings";
 
 const files = ["Home.md", "Work/Plan.md", "Work/Sec/Keys.md", "Work/Sec/Policy.md", "Work/pic.png"];
 
@@ -132,5 +136,91 @@ describe("ChatPanel: attaching notes with /", () => {
     expect(
       screen.queryByRole("list", { name: "Attached notes and folders" })?.textContent,
     ).toContain("Plan");
+  });
+});
+
+describe("ChatPanel: a skill needs a running local AI", () => {
+  const skill = {
+    id: "builtin:fix-spelling",
+    name: "Fix spelling and grammar",
+    description: "",
+    kind: "rewrite" as const,
+    appliesTo: "both" as const,
+    instruction: "Fix it.",
+    builtin: true,
+  };
+  beforeEach(() => {
+    vi.clearAllMocks();
+    api.listChats.mockResolvedValue([]);
+    api.listPrompts.mockResolvedValue([]);
+    api.saveChat.mockImplementation((c: unknown) => Promise.resolve(c));
+    api.aiChat.mockResolvedValue("task-1");
+    useChatStore.getState().resetForVault();
+    useVaultStore.setState({ vault: null, files, tree: [], projects: [], activePath: null });
+    useSettingsStore.setState({
+      settings: {
+        ai: {
+          defaultProviderId: "p",
+          providers: [{ id: "p", kind: "lmstudio", name: "LM Studio", location: "local" }],
+        },
+      } as unknown as Settings,
+    });
+    useChatStore.getState().setDraftSkill(skill);
+  });
+
+  it("does not run the skill when the local AI is not reachable", async () => {
+    api.testProvider.mockResolvedValue({ ok: false, message: "Connection refused", models: [] });
+    render(<ChatPanel />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    await waitFor(() => {
+      expect(api.testProvider).toHaveBeenCalled();
+    });
+    expect(api.aiChat).not.toHaveBeenCalled();
+  });
+
+  it("runs the skill when the local AI answers", async () => {
+    api.testProvider.mockResolvedValue({ ok: true, message: "", models: ["m"] });
+    render(<ChatPanel />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    await waitFor(() => {
+      expect(api.aiChat).toHaveBeenCalled();
+    });
+  });
+});
+
+describe("ChatPanel: skill cards and recent skills", () => {
+  const fix = {
+    id: "builtin:fix-spelling",
+    name: "Fix spelling and grammar",
+    description: "Correct the text, keep the meaning",
+    kind: "rewrite" as const,
+    appliesTo: "both" as const,
+    instruction: "Fix it.",
+    builtin: true,
+  };
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    api.listChats.mockResolvedValue([]);
+    api.listPrompts.mockResolvedValue([]);
+    api.listSkills.mockResolvedValue([fix]);
+    useChatStore.getState().resetForVault();
+    useVaultStore.setState({ vault: null, files, tree: [], projects: [], activePath: null });
+  });
+
+  it("offers skills as cards in an empty chat and chooses one on click", async () => {
+    render(<ChatPanel />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /Fix spelling and grammar/ }));
+    expect(useChatStore.getState().draftSkill?.id).toBe("builtin:fix-spelling");
+  });
+
+  it("lists the skills used before as recent chips", async () => {
+    localStorage.setItem("mimer.recentSkills", JSON.stringify(["builtin:fix-spelling"]));
+    render(<ChatPanel />);
+    const recent = await screen.findByLabelText("Recent skills");
+    expect(recent).toHaveTextContent("Fix spelling and grammar");
   });
 });

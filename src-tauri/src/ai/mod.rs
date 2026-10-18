@@ -1,6 +1,7 @@
 //! AI assistant: providers, routing, prompts, tools, agent loop and proposals.
 
 pub mod agent;
+pub mod checks;
 pub mod inline;
 pub mod mentions;
 pub mod prompt;
@@ -8,6 +9,7 @@ pub mod proposals;
 pub mod providers;
 pub mod raven;
 pub mod router;
+pub mod skill_run;
 pub mod tools;
 
 use crate::error::AppError;
@@ -50,10 +52,42 @@ pub enum ChatEvent {
         title: String,
         text: String,
     },
+    /// A long skill run did its first notes only; the rest waits for the user to say go on.
+    SkillTrial {
+        skill_id: String,
+        skill_name: String,
+        /// Notes done in the trial.
+        done: u32,
+        /// Notes in the whole run.
+        total: u32,
+        /// The notes still to do, sent back to continue the run.
+        rest: Vec<RunTarget>,
+        /// Folders a sort skill has chosen so far, so the rest reuses them.
+        folders: Vec<String>,
+    },
     Done,
     Error {
         error: AppError,
     },
+}
+
+/// One note of a skill run and the folder it is sorted inside.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct RunTarget {
+    pub path: String,
+    pub base: String,
+}
+
+/// Continues a skill run after its trial: exactly these notes, with the folders chosen so far.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SkillContinue {
+    pub targets: Vec<RunTarget>,
+    #[serde(default)]
+    pub folders: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, TS)]
@@ -90,6 +124,15 @@ pub struct ChatRequest {
     /// Notes attached with the `/` picker (vault-relative paths; checked in `ai::mentions`).
     #[serde(default)]
     pub mentions: Vec<String>,
+    /// The skill to run (see `crate::skills`); `None` for an ordinary chat message.
+    #[serde(default)]
+    pub skill: Option<String>,
+    /// What the user typed next to the skill: extra instructions for this run.
+    #[serde(default)]
+    pub skill_input: Option<String>,
+    /// Set when the user continues a skill run after its trial.
+    #[serde(default)]
+    pub skill_continue: Option<SkillContinue>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]

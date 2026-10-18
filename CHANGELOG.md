@@ -6,6 +6,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-16
+
+### Added
+
+- **Skills.** A skill is a job that Mimer carries out itself, note by note, so it works with small local models that only answer in the chat when asked to use tools. Mimer finds the notes (the attached notes and folders, or the open note), asks the model for the text of **one step** (the whole new text of a note, the folder of a note, or one new note) and builds the proposals itself. You still review every change before anything is written. There are four kinds: **Rewrite each note**, **Sort notes into folders**, **Write one new note** and **Answer in the chat** (an ordinary chat turn with the instruction in front). Eleven skills come with Mimer, for example Fix spelling and grammar, Improve the structure, Sort into folders and Summarise.
+- **Settings → Skills**: a list on the left (add, remove) and the chosen skill on the right, with the kind and what it does, an example to start from, and Copy to a new skill. Built-in skills cannot be changed but can be copied. Your own skills are stored in `skills.json` next to `settings.json`, so they follow you into every vault.
+- The **Skills** button over the message box (it replaces **Tasks**) lists the skills. Choosing one puts it on the message; type extra instructions if you like, then press Enter.
+
+- **Right-click a note or folder in the file tree → AI** lists the skills that fit it and runs one at once on what you clicked (several ticked items work too, up to five). Each skill has a **Works on** setting in Settings → Skills (a note, a folder, or both) that decides where it is offered; the built-in skills are set to what suits them.
+- **A local AI must be running.** A skill will not start, from the menu or the chat, unless a local AI is chosen, started (built-in AI or Foundry Local awake) and, for LM Studio and other local servers, answering. Otherwise a message says what to start. Notes never go to a cloud AI.
+
+- **A new look for working with the AI**, from the design ideas:
+  - **AI chip in the status bar**: a coloured dot and one verb (Wake, Stop, Fix, Set up). Click it for the model, the device Foundry Local reports (CPU, GPU or NPU), the connection to LM Studio, and the privacy note.
+  - **Review changes** has two panels, filters for moves, edits, new notes and deletes, **Accept group / Reject group**, and shows the start of a note that is to be moved. After you apply, an **Undo** button in the message (and File → Undo last AI change) puts everything back, as long as the notes were not changed again; the undo is a commit of its own.
+  - **The assistant**: skill cards in an empty chat, **Recent** skills over the message box, a progress bar with a rough time left while a skill works through notes, and **Why were N notes left out?** after a run.
+  - **Command palette** (Ctrl/Cmd+Shift+P): notes, the skills that fit the open note or selected folder, and actions in one search.
+  - **Settings → Skills**: search, skills grouped by kind, kind cards, **Try it on a note** (shows what the model answers for one note without proposing anything) and a note on where each skill is shown.
+  - **Left icon bar** for Files, Search and Settings, a **bar over selected text** with Fix, Rewrite, Shorten and Ask Mimer, and the word count and number of backlinks of the open note.
+  - **Right-click menu** with icons and shortcuts; the AI submenu lists Recent skills, a line for each skill and which local AI is ready.
+  - **First run**: when there is no AI yet, a short welcome helps you choose the built-in AI or LM Studio.
+
+- **Skills that are easier to make and safer to run** (from the "Simpler skills" design):
+  - **Making a skill takes two steps**: say in your own words what it should do and choose what should happen to the notes (fix small mistakes, change the text, move into folders, make one new note, or answer in the chat), then **try it on a note**, see before and after, and save.
+  - **Fix small mistakes**: the AI only sends back "wrong => right" for the words to fix, and Mimer puts exactly those in. Front matter and code blocks are never sent, and long notes are proofread in parts. *Fix spelling and grammar* now works this way.
+  - **Mimer checks every change** of a skill: links, tags, numbers and dates, names, properties, code, nothing left out, no extra text in front. A change that fails a check is shown but not selected in the review, with the reason.
+  - **Long runs start with three notes**: with more than five notes, Mimer does three, then asks **Looks good, do the other N** or **Not right, change the skill**. The rest of the run uses exactly the notes that were left and the folders chosen so far.
+
+### Changed
+
+- The ten ready-made Tasks became skills. Seven of the eleven built-in skills are carried out by Mimer (spelling, structure and formatting, writing, sort, summarise, action items, index page); merge, split, duplicates and explain still run as chat turns. "Propose a structure" and "Add links" are replaced by Improve the structure, Sort into folders and Explain these notes.
+
 ## [0.9.4] - 2026-10-16
 
 ### Fixed

@@ -16,11 +16,12 @@ describe("StatusBar", () => {
     expect(screen.getByTestId("app-version").textContent).toMatch(/^v\d+\.\d+\.\d+/);
   });
 
-  it("says Mimer is working only while an answer is being written", () => {
+  it("says Mimer is working, with a Stop button, only while an answer is being written", () => {
     const { rerender } = render(<StatusBar />);
-    expect(screen.queryByTestId("ai-working")).toBeNull();
+    expect(screen.queryByText("Mimer is working…")).toBeNull();
     useChatStore.setState({ streaming: true });
     rerender(<StatusBar />);
-    expect(screen.getByTestId("ai-working")).toHaveTextContent("Mimer is working…");
+    expect(screen.getByText("Mimer is working…")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Stop" })).toBeInTheDocument();
   });
 });

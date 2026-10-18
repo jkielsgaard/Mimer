@@ -1,12 +1,15 @@
 import { create } from "zustand";
 import type { ChatEvent } from "@/bindings/ChatEvent";
 import type { ResearchCard } from "@/bindings/ResearchCard";
+import type { RunTarget } from "@/bindings/RunTarget";
+import type { Skill } from "@/bindings/Skill";
 import type { ChatSummary } from "@/bindings/ChatSummary";
 import type { StoredChat } from "@/bindings/StoredChat";
 import type { StoredMessage } from "@/bindings/StoredMessage";
 import { api, toApiError } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
 import { MAX_MENTIONS } from "@/lib/mentionQuery";
+import { pushRecentSkill } from "@/lib/recentSkills";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { currentFolder, projectForPath, useVaultStore } from "./vaultStore";
 
@@ -22,6 +25,26 @@ export interface ChatProgress {
   /** When the last event arrived; used to notice a stall. */
   lastEventAt: number;
   words: number;
+}
+
+/** A long skill run that did its first notes and waits for the user to go on. */
+export interface SkillTrial {
+  skillId: string;
+  skillName: string;
+  done: number;
+  total: number;
+  rest: RunTarget[];
+  folders: string[];
+  /** True once the user chose to continue (or the card is no longer current). */
+  continued: boolean;
+}
+
+/** What `send` needs to continue a skill run after its trial. */
+export interface SkillContinuation {
+  skillId: string;
+  skillName: string;
+  rest: RunTarget[];
+  folders: string[];
 }
 
 /** Number of words in `text`. */
@@ -44,6 +67,8 @@ export interface ChatMessage {
   research: ResearchCard[];
   /** Live progress of an assistant message that is still being written. */
   progress?: ChatProgress;
+  /** Set when a long skill run did only its first notes. */
+  trial?: SkillTrial;
 }
 
 interface ChatState {
@@ -52,15 +77,20 @@ interface ChatState {
   includeNote: boolean;
   /** Notes attached to the message being written (sent with the next message). */
   draftMentions: string[];
+  /** The skill chosen for the message being written (it runs when the message is sent). */
+  draftSkill: Skill | null;
   taskId: string | null;
   /** Id of the saved chat this conversation belongs to (null = not saved yet). */
   chatId: string | null;
   /** Saved chats of the open vault, newest first. */
   chats: ChatSummary[];
   setIncludeNote: (v: boolean) => void;
+  setDraftSkill: (skill: Skill | null) => void;
   addMention: (path: string) => void;
   removeMention: (path: string) => void;
-  send: (text: string, selection?: string) => Promise<void>;
+  send: (text: string, selection?: string, cont?: SkillContinuation) => Promise<void>;
+  /** Continues the skill run whose trial is shown in message `messageId`. */
+  continueSkill: (messageId: number) => Promise<void>;
   stop: () => Promise<void>;
   newChat: () => void;
   /** Applies one streamed event to the last assistant message. */
@@ -122,12 +152,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
   streaming: false,
   includeNote: true,
   draftMentions: [],
+  draftSkill: null,
   taskId: null,
   chatId: null,
   chats: [],
 
   setIncludeNote: (includeNote) => {
     set({ includeNote });
+  },
+
+  setDraftSkill: (draftSkill) => {
+    set({ draftSkill });
   },
 
   addMention: (path) => {
@@ -183,6 +218,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
         case "proposalsReady":
           updated.proposalSetId = e.setId;
           break;
+        case "skillTrial":
+          updated.trial = {
+            skillId: e.skillId,
+            skillName: e.skillName,
+            done: e.done,
+            total: e.total,
+            rest: e.rest,
+            folders: e.folders,
+            continued: false,
+          };
+          break;
         case "researchPrompt":
           updated.research = [...updated.research, { title: e.title, text: e.text }];
           break;
@@ -203,12 +249,20 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (e.type === "done" || e.type === "error") void get().persist();
   },
 
-  send: async (text, selection) => {
-    const trimmed = text.trim();
-    if (trimmed === "" || get().streaming) return;
+  send: async (text, selection, cont) => {
+    const typed = text.trim();
+    const skill = cont ? { id: cont.skillId, name: cont.skillName } : get().draftSkill;
+    // A skill can run without any text: the notes and the skill are the message.
+    if ((typed === "" && skill === null) || get().streaming) return;
+    const trimmed = cont
+      ? `Continue: ${cont.skillName} (${String(cont.rest.length)} more notes)`
+      : skill === null
+        ? typed
+        : `Skill: ${skill.name}${typed === "" ? "" : `\n${typed}`}`;
     if (get().chatId === null) set({ chatId: crypto.randomUUID() });
+    if (skill !== null && !cont) pushRecentSkill(skill.id);
     const vault = useVaultStore.getState();
-    const mentions = get().draftMentions;
+    const mentions = cont ? [] : get().draftMentions;
     const user: ChatMessage = {
       id: nextId++,
       role: "user",
@@ -240,7 +294,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
       lastEventAt: startedAt,
       words: 0,
     };
-    set({ messages: [...history, assistant], streaming: true, draftMentions: [] });
+    set({
+      messages: [...history, assistant],
+      streaming: true,
+      draftMentions: [],
+      draftSkill: null,
+    });
     void get().persist();
     try {
       await flushPendingWrites();
@@ -254,6 +313,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
           notePath: vault.activePath,
           folder: vault.activePath === null ? currentFolder(vault) : null,
           selection: selection ?? null,
+          skill: skill?.id ?? null,
+          skillInput: skill === null || typed === "" || cont ? null : typed,
+          skillContinue: cont ? { targets: cont.rest, folders: cont.folders } : null,
         },
         get().applyEvent,
       );
@@ -264,6 +326,23 @@ export const useChatStore = create<ChatState>((set, get) => ({
         error: { code: "Provider", message: toApiError(e).message },
       });
     }
+  },
+
+  continueSkill: async (messageId) => {
+    const m = get().messages.find((x) => x.id === messageId);
+    const trial = m?.trial;
+    if (!trial || trial.continued || get().streaming) return;
+    set((s) => ({
+      messages: s.messages.map((x) =>
+        x.id === messageId && x.trial ? { ...x, trial: { ...x.trial, continued: true } } : x,
+      ),
+    }));
+    await get().send("", undefined, {
+      skillId: trial.skillId,
+      skillName: trial.skillName,
+      rest: trial.rest,
+      folders: trial.folders,
+    });
   },
 
   stop: async () => {
@@ -290,7 +369,14 @@ export const useChatStore = create<ChatState>((set, get) => ({
   newChat: () => {
     const { taskId, streaming } = get();
     if (streaming && taskId !== null) void api.aiCancel(taskId).catch(() => undefined);
-    set({ messages: [], streaming: false, taskId: null, chatId: null, draftMentions: [] });
+    set({
+      messages: [],
+      streaming: false,
+      taskId: null,
+      chatId: null,
+      draftMentions: [],
+      draftSkill: null,
+    });
   },
 
   refreshChats: async () => {
@@ -350,6 +436,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       chatId: null,
       chats: [],
       draftMentions: [],
+      draftSkill: null,
     });
   },
 

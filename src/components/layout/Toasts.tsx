@@ -22,6 +22,19 @@ export function Toasts() {
           )}
         >
           <span className="flex-1 break-words">{t.message}</span>
+          {t.action && (
+            <button
+              type="button"
+              className="rounded border px-2 text-xs font-medium hover:bg-muted"
+              onClick={() => {
+                const run = t.action?.run;
+                dismiss(t.id);
+                run?.();
+              }}
+            >
+              {t.action.label}
+            </button>
+          )}
           <button
             type="button"
             aria-label="Dismiss"
