@@ -26,9 +26,6 @@ pub struct StoredMessage {
     /// Notes the user attached to this message (older chats have none).
     #[serde(default)]
     pub mentions: Vec<String>,
-    /// Prompts for a cloud AI that Mimer wrote in this answer (older chats have none).
-    #[serde(default)]
-    pub research: Vec<crate::research::ResearchCard>,
 }
 
 /// A whole chat as stored on disk.
@@ -177,7 +174,6 @@ mod tests {
             activity: vec![],
             error: None,
             mentions: vec![],
-            research: vec![],
         }
     }
 

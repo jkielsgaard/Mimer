@@ -98,7 +98,7 @@ export function FirstRunDialog() {
         </DialogHeader>
         <div className="grid gap-3 sm:grid-cols-2">
           <section aria-label="Notes folder" className="rounded-lg border border-success p-4">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className="flex items-center gap-2 section-label">
               <Check className="size-3.5 text-success" aria-hidden /> 1 · Notes folder
             </div>
             <p className="mt-2 font-semibold">{vault.name}</p>
@@ -110,9 +110,7 @@ export function FirstRunDialog() {
             </p>
           </section>
           <section aria-label="Choose an AI" className="rounded-lg border border-primary p-4">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-              2 · Choose an AI
-            </div>
+            <div className="section-label">2 · Choose an AI</div>
             <div role="radiogroup" aria-label="AI" className="mt-2 flex flex-col gap-1.5">
               {options.map((o) => (
                 <button
@@ -139,7 +137,7 @@ export function FirstRunDialog() {
         </div>
         <p className="text-xs text-muted-foreground">
           {choice === "builtin"
-            ? "Next you pick a model to download. A small model only answers in the chat; a larger one can change notes with skills."
+            ? "Next you pick a model to download. A small model is quick; a larger one does a better job with the AI commands."
             : choice === "lmstudio"
               ? "Next you open Settings → AI providers to test the connection to LM Studio."
               : "You can set up an AI later in Settings."}

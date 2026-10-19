@@ -16,7 +16,6 @@ const message = (continued: boolean): ChatMessage => ({
   proposalSetId: null,
   error: null,
   mentions: [],
-  research: [],
   trial: {
     skillId: "u1",
     skillName: "Sort",
@@ -35,18 +34,17 @@ describe("Bubble: a skill trial", () => {
   beforeEach(() => {
     continueSkill.mockReset();
     useChatStore.setState({ streaming: false, continueSkill });
-    useUiStore.setState({ settingsOpen: false, skillsFocus: null });
+    useUiStore.setState({ settingsOpen: false });
   });
 
-  it("offers to do the rest or to change the skill", async () => {
+  it("offers to do the rest, and says how to stop", async () => {
     render(<Bubble m={message(false)} />);
     const user = userEvent.setup();
     expect(screen.getByText("First 3 of 52 notes done")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Looks good, do the other 49" }));
     expect(continueSkill).toHaveBeenCalledWith(7);
-    await user.click(screen.getByRole("button", { name: "Not right, change the skill" }));
-    expect(useUiStore.getState().settingsOpen).toBe(true);
-    expect(useUiStore.getState().skillsFocus).toBe("u1");
+    expect(screen.getByText(/reject them in the review and stop here/)).toBeInTheDocument();
+    expect(useUiStore.getState().settingsOpen).toBe(false);
   });
 
   it("says the rest is being done once it was continued", () => {

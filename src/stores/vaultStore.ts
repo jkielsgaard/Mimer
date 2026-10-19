@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { isManagedNote } from "@/features/fileTree/treeUtils";
 import type { StandardKind } from "@/bindings/StandardKind";
 import type { Project } from "@/bindings/Project";
 import type { TreeNode } from "@/bindings/TreeNode";
@@ -171,6 +172,11 @@ export const useVaultStore = create<VaultState>((set, get) => ({
       if (active !== null) useWorkspaceStore.getState().close(active);
       return;
     }
+    // Tasks and Ideas are not notes to the user: they are shown in their own areas.
+    if (isManagedNote(path)) {
+      useUiStore.getState().openArea(path === "Ideas.md" ? "ideas" : "tasks");
+      return;
+    }
     try {
       await flushPendingWrites();
     } catch (e) {
@@ -179,6 +185,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     // Opens (or focuses) the tab in the focused pane. Switching away from the previous note is
     // handled by the editor, which saves and commits it.
     useWorkspaceStore.getState().open(path);
+    useUiStore.getState().setCenterView("notes");
   },
 
   select: (path) => {

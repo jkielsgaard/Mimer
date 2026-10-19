@@ -13,15 +13,20 @@ const settings: Settings = {
   recentVaults: [],
   lastVault: null,
   theme: "system",
-  editor: { fontSize: 15, lineWidth: 760, spellcheck: true, recentNotes: 4 },
+  editor: {
+    fontSize: 15,
+    lineWidth: 760,
+    spellcheck: true,
+    recentNotes: 4,
+    aiSpelling: false,
+    ownWords: [],
+  },
   git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
   ai: {
     defaultProviderId: "lm",
-    ravenProviderId: "claude",
     builtin: DEFAULT_BUILTIN,
     foundry: { model: "" },
     baseInstruction: "",
-    allowOwnKnowledge: false,
     globalInstructions: "",
     embeddings: { enabled: false, providerId: "lm", model: "" },
     providers: [

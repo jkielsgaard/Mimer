@@ -37,6 +37,10 @@ pub struct EditorSettings {
     pub spellcheck: bool,
     /// How many recent notes the file panel lists (0 hides the list).
     pub recent_notes: u32,
+    /// Spelling help: the local AI marks misspelt words while you write (it never changes them).
+    pub ai_spelling: bool,
+    /// Words the spelling help must never mark (names, terms).
+    pub own_words: Vec<String>,
 }
 
 impl Default for EditorSettings {
@@ -46,6 +50,8 @@ impl Default for EditorSettings {
             line_width: 760,
             spellcheck: true,
             recent_notes: DEFAULT_RECENT_NOTES,
+            ai_spelling: false,
+            own_words: Vec::new(),
         }
     }
 }
@@ -277,16 +283,9 @@ impl Default for EmbeddingSettings {
 pub struct AiSettings {
     /// The local provider used by Mimer (the notes AI), inline commands and project help.
     pub default_provider_id: String,
-    /// The cloud provider used by Raven, the separate chat that has no access to notes.
-    /// `None` means Raven is off and its tab is hidden.
-    pub raven_provider_id: Option<String>,
     /// Who Mimer is. Empty means the built-in default (`ai::prompt::DEFAULT_BASE_INSTRUCTION`).
     /// The safety rules are not part of it and cannot be edited.
     pub base_instruction: String,
-    /// When true Mimer may write new content from its own knowledge (it has no internet access and
-    /// can be wrong). Off by default: Mimer then works on the user's notes and offers a research
-    /// prompt for a cloud AI instead.
-    pub allow_own_knowledge: bool,
     pub global_instructions: String,
     pub providers: Vec<ProviderConfig>,
     pub embeddings: EmbeddingSettings,
@@ -312,9 +311,7 @@ impl Default for AiSettings {
     fn default() -> Self {
         Self {
             default_provider_id: preferred_default_provider().into(),
-            raven_provider_id: None,
             base_instruction: String::new(),
-            allow_own_knowledge: false,
             global_instructions: String::new(),
             embeddings: EmbeddingSettings::default(),
             builtin: BuiltInSettings::default(),
@@ -372,6 +369,17 @@ impl Settings {
 
     /// Enforces the invariants from the spec (fixed locations, clamped values).
     pub fn normalize(&mut self) {
+        let mut words: Vec<String> = Vec::new();
+        for w in &self.editor.own_words {
+            let w = w.trim();
+            if !w.is_empty()
+                && !words.iter().any(|x| x.eq_ignore_ascii_case(w))
+                && words.len() < 1000
+            {
+                words.push(w.to_string());
+            }
+        }
+        self.editor.own_words = words;
         self.normalize_builtin();
         self.normalize_foundry();
         for p in &mut self.ai.providers {
@@ -470,22 +478,14 @@ impl Settings {
         }
     }
 
-    /// Keeps notes local and cloud AI in Raven: the default provider must be local and Raven's
-    /// must be cloud. A cloud default from an older version becomes Raven's provider (when Raven
-    /// has none yet) and the first local provider takes its place.
+    /// Keeps notes local: the default provider must be local. A cloud default from an older
+    /// version is replaced by the first local provider.
     fn separate_local_and_cloud(&mut self) {
         let is_local = |s: &Settings, id: &str| {
             s.provider(id)
                 .is_some_and(|p| p.effective_location() == Location::Local)
         };
         if !is_local(self, &self.ai.default_provider_id.clone()) {
-            let old = self.ai.default_provider_id.clone();
-            let was_cloud = self
-                .provider(&old)
-                .is_some_and(|p| p.effective_location() == Location::Cloud);
-            if was_cloud && self.ai.raven_provider_id.is_none() {
-                self.ai.raven_provider_id = Some(old);
-            }
             if let Some(first) = self
                 .ai
                 .providers
@@ -494,13 +494,6 @@ impl Settings {
             {
                 self.ai.default_provider_id = first.id.clone();
             }
-        }
-        let raven_ok = self.ai.raven_provider_id.as_deref().is_some_and(|id| {
-            self.provider(id)
-                .is_some_and(|p| p.effective_location() == Location::Cloud)
-        });
-        if !raven_ok {
-            self.ai.raven_provider_id = None;
         }
     }
 
@@ -573,6 +566,20 @@ pub fn save(path: &Path, settings: &Settings) -> AppResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn own_words_are_trimmed_and_kept_once_and_spelling_help_starts_off() {
+        let mut s = Settings::default();
+        assert!(!s.editor.ai_spelling);
+        s.editor.own_words = vec![
+            " Mimer ".into(),
+            "".into(),
+            "mimer".into(),
+            "Bazzite".into(),
+        ];
+        s.normalize();
+        assert_eq!(s.editor.own_words, ["Mimer", "Bazzite"]);
+    }
 
     #[test]
     fn loopback_detection() {
@@ -662,7 +669,6 @@ mod tests {
         let old: Settings =
             serde_json::from_str(r#"{"schemaVersion":1,"editor":{"fontSize":15}}"#).unwrap();
         assert_eq!(old.editor.recent_notes, 4);
-        assert!(!old.ai.allow_own_knowledge);
         let mut s = Settings::default();
         s.editor.recent_notes = 500;
         s.normalize();
@@ -766,7 +772,7 @@ mod tests {
     }
 
     #[test]
-    fn a_cloud_default_provider_moves_to_raven_and_a_local_one_takes_its_place() {
+    fn a_cloud_default_provider_is_replaced_by_a_local_one() {
         let mut s = Settings::default();
         s.ai.providers.push(provider(
             "claude",
@@ -779,41 +785,6 @@ mod tests {
         assert!(s
             .provider(&s.ai.default_provider_id)
             .is_some_and(|p| p.effective_location() == Location::Local));
-        assert_eq!(s.ai.raven_provider_id.as_deref(), Some("claude"));
-    }
-
-    #[test]
-    fn raven_keeps_its_own_provider_and_never_holds_a_local_one() {
-        let mut s = Settings::default();
-        s.ai.providers.push(provider(
-            "claude",
-            ProviderKind::Anthropic,
-            "https://api.anthropic.com",
-        ));
-        s.ai.providers.push(provider(
-            "other",
-            ProviderKind::OpenAiCompatible,
-            "https://api.example.com/v1",
-        ));
-        s.ai.default_provider_id = "other".into();
-        s.ai.raven_provider_id = Some("claude".into());
-        s.normalize();
-        assert_eq!(s.ai.raven_provider_id.as_deref(), Some("claude"));
-        s.ai.raven_provider_id = Some("lmstudio-default".into());
-        s.normalize();
-        assert_eq!(
-            s.ai.raven_provider_id, None,
-            "a local provider cannot be Raven's"
-        );
-        s.ai.raven_provider_id = Some("gone".into());
-        s.normalize();
-        assert_eq!(s.ai.raven_provider_id, None);
-    }
-
-    #[test]
-    fn old_settings_load_with_raven_off() {
-        let old: Settings = serde_json::from_str(r#"{"schemaVersion":1}"#).unwrap();
-        assert_eq!(old.ai.raven_provider_id, None);
     }
 
     #[test]
@@ -845,7 +816,5 @@ mod tests {
         // LM Studio is still there to choose, and both are local, so notes stay on this computer.
         assert!(s.provider("lmstudio-default").is_some());
         assert!(s.provider("builtin").is_some());
-        // Raven is off: it needs a cloud provider, which neither of these is.
-        assert_eq!(s.ai.raven_provider_id, None);
     }
 }

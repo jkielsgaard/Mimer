@@ -4,4 +4,12 @@ export type EditorSettings = { fontSize: number, lineWidth: number, spellcheck: 
 /**
  * How many recent notes the file panel lists (0 hides the list).
  */
-recentNotes: number, };
+recentNotes: number, 
+/**
+ * Spelling help: the local AI marks misspelt words while you write (it never changes them).
+ */
+aiSpelling: boolean, 
+/**
+ * Words the spelling help must never mark (names, terms).
+ */
+ownWords: Array<string>, };

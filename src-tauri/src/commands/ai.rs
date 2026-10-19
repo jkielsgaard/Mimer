@@ -1,5 +1,4 @@
 use crate::ai::proposals::{self, ApplyResult, ProposalSetView};
-use crate::ai::raven::{self, RavenRequest};
 use crate::ai::{agent, inline, ChatEvent, ChatRequest, InlineRequest};
 use crate::error::AppError;
 use crate::state::AppState;
@@ -48,27 +47,6 @@ pub async fn ai_inline(
     let (id, token) = register(&state)?;
     tauri::async_runtime::spawn(async move {
         if let Err(error) = inline::run_inline(&app, request, &channel, token).await {
-            let _ = channel.send(ChatEvent::Error { error });
-        }
-        if let Ok(mut m) = app.state::<AppState>().ai_tasks.lock() {
-            m.remove(&id);
-        }
-    });
-    Ok(id)
-}
-
-/// A chat with the cloud AI of Raven. It gets the messages only: no vault, no notes, no tools.
-#[tauri::command]
-pub async fn raven_chat(
-    app: AppHandle,
-    state: State<'_, AppState>,
-    request: RavenRequest,
-    channel: Channel<ChatEvent>,
-) -> Result<Uuid, AppError> {
-    let (id, token) = register(&state)?;
-    let settings = state.settings_snapshot();
-    tauri::async_runtime::spawn(async move {
-        if let Err(error) = raven::run_raven(&settings, request, &channel, token).await {
             let _ = channel.send(ChatEvent::Error { error });
         }
         if let Ok(mut m) = app.state::<AppState>().ai_tasks.lock() {

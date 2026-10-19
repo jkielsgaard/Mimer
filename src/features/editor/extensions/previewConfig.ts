@@ -8,6 +8,8 @@ export interface PreviewConfig {
   resolveLink: (target: string) => string | null;
   /** Webview URL for a vault-relative file. */
   assetUrl: (vaultPath: string) => string;
+  /** True when the vault has a file at this path; lets a picture whose link is stale be found. */
+  fileExists?: (vaultPath: string) => boolean;
   /** Ctrl/Cmd+click (or click on an unresolved rendered link). */
   openWikiLink: (target: string, resolved: string | null) => void;
   openTag: (tag: string) => void;

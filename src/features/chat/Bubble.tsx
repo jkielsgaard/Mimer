@@ -3,10 +3,8 @@ import remarkGfm from "remark-gfm";
 import { ProposalCard } from "@/features/proposals/ProposalCard";
 import { MentionChips } from "./MentionChips";
 import { ProgressLine } from "./ProgressLine";
-import { ResearchPromptCard } from "./ResearchPromptCard";
 import { cn } from "@/lib/utils";
 import { type ChatMessage, useChatStore } from "@/stores/chatStore";
-import { useUiStore } from "@/stores/uiStore";
 import { Button } from "@/components/ui/button";
 import { splitLeftOut } from "./leftOut";
 
@@ -20,11 +18,7 @@ export function Bubble({ m }: { m: ChatMessage }) {
           {a}
         </div>
       ))}
-      {!user && m.content !== "" && (
-        <div className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-          Mimer
-        </div>
-      )}
+      {!user && m.content !== "" && <div className="section-label">Mimer</div>}
       {user && <MentionChips paths={m.mentions} />}
       {(m.content !== "" || user) && (
         <div
@@ -64,9 +58,6 @@ export function Bubble({ m }: { m: ChatMessage }) {
           {m.error}
         </div>
       )}
-      {m.research.map((card, i) => (
-        <ResearchPromptCard key={i} card={card} />
-      ))}
       {m.proposalSetId !== null && <ProposalCard setId={m.proposalSetId} />}
       {m.trial && <TrialCard m={m} />}
     </div>
@@ -92,8 +83,8 @@ function TrialCard({ m }: { m: ChatMessage }) {
       ) : (
         <>
           <p className="text-muted-foreground">
-            Look at the changes first, so you know the skill does what you want. Nothing is written
-            until you apply.
+            Look at the changes first. If they are right, do the rest; if not, reject them in the
+            review and stop here. Nothing is written until you apply.
           </p>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -104,15 +95,6 @@ function TrialCard({ m }: { m: ChatMessage }) {
               }}
             >
               Looks good, do the other {rest}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                useUiStore.getState().openSkillsSettings(trial.skillId);
-              }}
-            >
-              Not right, change the skill
             </Button>
           </div>
         </>

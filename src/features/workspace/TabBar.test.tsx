@@ -43,4 +43,15 @@ describe("TabBar", () => {
     expect(dropIndex(3, 1)).toBe(1);
     expect(dropIndex(3, 9)).toBe(3);
   });
+
+  it("tells tabs with the same name apart by their folder", () => {
+    let layout = openPath(openPath(emptyLayout(), "Acme/Meeting.md"), "Bygma/Meeting.md");
+    layout = { ...layout, focused: "primary" };
+    useWorkspaceStore.setState({ layout });
+    render(<TabBar paneId="primary" />);
+    const tabs = screen.getAllByRole("tab");
+    expect(tabs.map((t) => t.textContent)).toEqual(["MeetingAcme", "MeetingBygma"]);
+    expect(screen.getByLabelText("Close Meeting (Acme)")).toBeInTheDocument();
+    expect(screen.getByLabelText("Close Meeting (Bygma)")).toBeInTheDocument();
+  });
 });

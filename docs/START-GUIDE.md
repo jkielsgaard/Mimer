@@ -151,7 +151,7 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 ## Use the built-in AI (optional)
 
-Open **Settings → Built-in AI**, choose your hardware and a model, press **Download**, and then **Wake Mimer** in the Mimer tab. The help (F1) has a topic called The built-in AI.
+Open **Settings → Built-in AI**, choose your hardware and a model, press **Download**, and then **Wake** in the status bar. The help (F1) has a topic called The built-in AI.
 
 ## Start the app (both systems)
 
@@ -216,33 +216,33 @@ Semantic search only uses a provider on your own computer, so no note is sent to
 
 ## Try the new features (quick tour)
 
-| What                    | How                                                                                                                                                                         |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Several notes at once   | Click notes in the tree; each opens as a tab. Close with `×`, middle-click or `Ctrl/Cmd+W`. Switch with `Ctrl/Cmd+PageUp/PageDown`.                                         |
-| Split view              | Open two notes, press `Ctrl/Cmd+\`. Press it again to close the split.                                                                                                      |
-| Daily note              | `Ctrl/Cmd+Shift+D` (creates `Daily/<date>.md`).                                                                                                                             |
-| Templates               | Right-click or **File → Save current note as template…**, then **File → New note from template…**. Variables such as `{{date}}` are filled in.                              |
-| Vault settings          | **Settings → Vault**: daily notes folder, date format, daily template.                                                                                                      |
-| Tables                  | Type a Markdown table; when the cursor leaves it, it shows as a table. `Ctrl/Cmd+Alt+T` inserts one.                                                                        |
-| Export                  | **File → Export…**, or right-click a note or folder → **Export…**. Choose HTML, Word or PDF (PDF opens a print preview: choose _Save as PDF_).                              |
-| Chat history            | In the **Mimer** tab: **History** lists earlier chats; **Prompts** inserts or saves reusable prompts.                                                                       |
-| Attach notes to chat    | In the **Mimer** tab type `/` and pick a note (or press the paperclip). Mimer works on the notes you attach.                                                                |
-| Formatting toolbar      | Above every note: bold, italic, headings, lists, links, table, code block and more. You do not need to type the Markdown.                                                   |
-| Import from OneNote     | See [IMPORT-ONENOTE.md](IMPORT-ONENOTE.md), then **File → Import notes from folder…**.                                                                                      |
-| Meeting and quick notes | The two buttons at the top of the file tree. They use the templates `Meeting` and `Quick note`.                                                                             |
-| Command palette         | `Ctrl/Cmd+Shift+P`: notes, skills and actions in one search.                                                                                                                |
-| Switch vault            | Click the vault name in the header, or `Ctrl/Cmd+Shift+O`.                                                                                                                  |
-| Index page              | Right-click a folder → **Create index page**.                                                                                                                               |
-| Link to a note          | The link button in the toolbar, or `Ctrl/Cmd+Shift+K`.                                                                                                                      |
-| How-to guide            | **File → How to use Mimer**, or press `F1`. Small **?** buttons explain settings and tools.                                                                                 |
-| Name a note             | `Ctrl/Cmd+N`, then type the name in the window that opens; it becomes the first line.                                                                                       |
-| Pictures                | Paste, drag, or the **Insert image** button. The **Images** tab on the right lists them.                                                                                    |
-| Folder in chat          | Type `/` in the **Mimer** tab and pick a folder or a project: Mimer works on its notes.                                                                                     |
-| Skills                  | The **Skills** button over the message box: jobs Mimer does itself on the attached notes (fix spelling, sort into folders, summarise…). Make your own in Settings → Skills. |
-| Research prompt         | **File → Write a research prompt…**, take it to a cloud AI with internet, then **Import an answer from a cloud AI…**. See the guide, _Mimer_.                               |
-| Projects                | Under **Projects** in the file panel, with their own notes. Drag a note onto a project to move it in.                                                                       |
-| About                   | **File → About Mimer…** shows the version and who made the app.                                                                                                             |
-| Meaning search          | Needs semantic search enabled (see above).                                                                                                                                  |
+| What                    | How                                                                                                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Several notes at once   | Click notes in the tree; each opens as a tab. Close with `×`, middle-click or `Ctrl/Cmd+W`. Switch with `Ctrl/Cmd+PageUp/PageDown`.                  |
+| Split view              | Open two notes, press `Ctrl/Cmd+\`. Press it again to close the split.                                                                               |
+| Daily note              | `Ctrl/Cmd+Shift+D` (creates `Daily/<date>.md`).                                                                                                      |
+| Templates               | Right-click or **File → Save current note as template…**, then **File → New note from template…**. Variables such as `{{date}}` are filled in.       |
+| Vault settings          | **Settings → Vault**: daily notes folder, date format, daily template.                                                                               |
+| Tables                  | Type a Markdown table; when the cursor leaves it, it shows as a table. `Ctrl/Cmd+Alt+T` inserts one.                                                 |
+| Export                  | **File → Export…**, or right-click a note or folder → **Export…**. Choose HTML, Word or PDF (PDF opens a print preview: choose _Save as PDF_).       |
+| Chat history            | In the **Mimer** tab: **History** lists earlier chats; **Prompts** inserts or saves reusable prompts.                                                |
+| Attach notes to chat    | In the **Mimer** tab type `/` and pick a note (or press the paperclip). Mimer works on the notes you attach.                                         |
+| Formatting toolbar      | Above every note: bold, italic, headings, lists, links, table, code block and more. You do not need to type the Markdown.                            |
+| Import from OneNote     | See [IMPORT-ONENOTE.md](IMPORT-ONENOTE.md), then **File → Import → Notes from a folder…**.                                                           |
+| Meeting and quick notes | The two buttons at the top of the file tree. They use the templates `Meeting` and `Quick note`.                                                      |
+| Task list               | `Ctrl/Cmd+Shift+T`, or the Tasks icon at the left edge. Tasks are checklist lines in your notes.                                                     |
+| Command palette         | `Ctrl/Cmd+Shift+P`: notes, AI commands and actions in one search.                                                                                    |
+| Switch vault            | Click the vault name in the header, or `Ctrl/Cmd+Shift+O`.                                                                                           |
+| Index page              | Right-click a folder → **Make an index page** (no AI), or **AI** → **Create an index page**.                                                         |
+| Link to a note          | The link button in the toolbar, or `Ctrl/Cmd+Shift+K`.                                                                                               |
+| How-to guide            | **Help → How to use Mimer**, or press `F1`. Small **?** buttons explain settings and tools.                                                          |
+| Name a note             | `Ctrl/Cmd+N`, then type the name in the window that opens; it becomes the first line.                                                                |
+| Pictures                | Paste, drag, or the **Insert image** button. **Images** at the right edge lists them.                                                                |
+| AI on a folder          | Right-click a folder → **AI**: sort into folders, find duplicates, fix spelling in every note and more.                                              |
+| AI on a note            | The **AI** button above the note, and **AI ▾** in the bar over selected text. Each command does one fixed thing; you review it before it is written. |
+| Projects                | Under **Projects** in the file panel, with their own notes. Drag a note onto a project to move it in.                                                |
+| About                   | **Help → About Mimer…** shows the version and who made the app.                                                                                      |
+| Meaning search          | Needs semantic search enabled (see above).                                                                                                           |
 
 ---
 

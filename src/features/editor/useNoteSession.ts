@@ -29,6 +29,16 @@ import { dropLink } from "./extensions/dropLink";
 import { trackEditor } from "./extensions/trackEditor";
 import { wikiLinkCompletion } from "./extensions/wikiLinks";
 import { editorTheme, sourceModeTheme } from "./editorTheme";
+import { registerView } from "@/lib/editorViews";
+import { aiSpelling, type SpellingConfig } from "./extensions/aiSpelling";
+
+/** Spelling help when no editor has set it up. */
+const SPELLING_OFF: SpellingConfig = {
+  enabled: false,
+  check: () => Promise.resolve([]),
+  ownWords: [],
+  onPick: () => undefined,
+};
 
 const WRITE_DEBOUNCE_MS = 1000;
 const NO_TABS: string[] = [];
@@ -73,6 +83,8 @@ export interface NoteSessionOptions {
   onLinkPicker: () => void;
   /** Called after a note was written to disk, with its path and the text that was saved. */
   onSaved?: (path: string, content: string) => void;
+  /** Spelling help: read when it is needed, so it can change without a new editor state. */
+  spelling?: () => SpellingConfig;
 }
 
 /**
@@ -89,9 +101,12 @@ export function useNoteSession({
   onInline,
   onLinkPicker,
   onSaved,
+  spelling,
 }: NoteSessionOptions) {
   const onSavedRef = useRef(onSaved);
   onSavedRef.current = onSaved;
+  const spellingRef = useRef(spelling);
+  spellingRef.current = spelling;
   const viewRef = useRef<EditorView | null>(null);
   const session = useRef<Session>({ path: null, lastDisk: "", dirty: false, timer: null });
   const stash = useRef(new Map<string, EditorState>());
@@ -193,6 +208,7 @@ export function useNoteSession({
         pasteImage(() => session.current.path),
         dropLink(() => session.current.path),
         trackEditor(() => session.current.path),
+        aiSpelling(() => spellingRef.current?.() ?? SPELLING_OFF),
         configCompartment.current.of(previewConfig.of(previewCfgRef.current)),
         editableCompartment.current.of(editableExt(true)),
         spellCompartment.current.of(
@@ -251,11 +267,13 @@ export function useNoteSession({
     if (!host.current) return;
     const view = new EditorView({ state: makeState(""), parent: host.current });
     viewRef.current = view;
+    registerView(paneId, view);
     return () => {
+      registerView(paneId, null);
       view.destroy();
       viewRef.current = null;
     };
-  }, [host, makeState]);
+  }, [host, makeState, paneId]);
 
   // --- switching tabs and loading notes -----------------------------------------------------
 

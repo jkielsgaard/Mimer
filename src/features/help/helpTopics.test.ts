@@ -32,6 +32,7 @@ describe("the how-to guide", () => {
       "images",
       "mimer",
       "projects",
+      "tasks",
       "templates",
       "vaults",
       "history",
@@ -71,9 +72,9 @@ describe("the how-to guide", () => {
   });
 
   it("finds a topic from a word in its text, and needs every word to match", () => {
-    expect(searchTopics("paperclip").map((t) => t.id)).toContain("mimer");
+    expect(searchTopics("dyslexia").map((t) => t.id)).toContain("mimer");
     expect(searchTopics("index page").map((t) => t.id)).toContain("links");
-    expect(searchTopics("paperclip zzzzz")).toEqual([]);
+    expect(searchTopics("dyslexia zzzzz")).toEqual([]);
     expect(searchTopics("")).toHaveLength(HELP_TOPICS.length);
   });
 

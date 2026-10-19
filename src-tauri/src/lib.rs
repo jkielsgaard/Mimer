@@ -16,11 +16,11 @@ pub mod markdown;
 pub mod order;
 pub mod projects;
 pub mod prompts;
-pub mod research;
 pub mod search;
 pub mod settings;
 pub mod skills;
 pub mod state;
+pub mod tasks;
 pub mod templates;
 pub mod vault;
 
@@ -60,7 +60,17 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        // The main window remembers its size and place (not whether it is shown: it starts hidden
+        // and is shown when the app has loaded); the start screen window is never remembered.
+        .plugin(
+            tauri_plugin_window_state::Builder::default()
+                .with_denylist(&["splash"])
+                .with_state_flags(
+                    tauri_plugin_window_state::StateFlags::all()
+                        & !tauri_plugin_window_state::StateFlags::VISIBLE,
+                )
+                .build(),
+        )
         .setup(|app| {
             let guard = init_logging(app.path().app_log_dir().ok());
             app.manage(guard);
@@ -77,9 +87,19 @@ pub fn run() {
             git::autosave::spawn_idle_task(app.handle().clone());
             engine::service::startup(app.handle());
             foundry::service::startup(app.handle());
+            // If the frontend never reports in (a broken start), show the window anyway.
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(Duration::from_secs(20)).await;
+                commands::app::show_main(&handle);
+            });
             Ok(())
         })
         .on_window_event(|window, event| {
+            // Only the main window closes the app; the start screen just goes away.
+            if window.label() != "main" {
+                return;
+            }
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 let app = window.app_handle().clone();
                 let state = app.state::<AppState>();
@@ -142,12 +162,12 @@ pub fn run() {
             commands::settings::test_provider,
             commands::ai::ai_chat,
             commands::ai::ai_inline,
-            commands::ai::raven_chat,
             commands::ai::ai_cancel,
             commands::ai::get_proposals,
             commands::ai::apply_proposals,
             commands::ai::discard_proposals,
             commands::app::finish_close,
+            commands::app::splash_done,
             commands::chats::list_chats,
             commands::chats::load_chat,
             commands::chats::save_chat,
@@ -157,11 +177,24 @@ pub fn run() {
             commands::skills::save_skill,
             commands::skills::remove_skill,
             commands::skills::preview_skill,
+            commands::tasks::list_tasks,
+            commands::tasks::task_set_done,
+            commands::tasks::task_set_meta,
+            commands::tasks::task_add_step,
+            commands::tasks::task_add_log,
+            commands::tasks::task_add,
+            commands::tasks::task_add_to_note,
+            commands::tasks::list_ideas,
+            commands::tasks::idea_add,
+            commands::tasks::idea_set_status,
+            commands::tasks::idea_edit,
+            commands::tasks::idea_delete,
+            commands::tasks::task_delete,
+            commands::tasks::task_set_title,
             commands::chats::list_prompts,
             commands::chats::add_prompt,
             commands::chats::remove_prompt,
             commands::index_page::create_index_page,
-            commands::research::build_research_prompt,
             commands::devtools::open_devtools,
             commands::order::get_tree_order,
             commands::order::set_folder_order,

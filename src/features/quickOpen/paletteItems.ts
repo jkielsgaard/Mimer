@@ -27,17 +27,20 @@ export function skillItems(
   run: (skill: Skill, target: PaletteTarget) => void,
 ): PaletteItem[] {
   if (target === null) return [];
-  return skills
-    .filter((s) => skillFits(s, target.isDir))
-    .map((s) => ({
-      id: `skill:${s.id}`,
-      group: "Skills" as const,
-      label: s.name,
-      hint: s.description,
-      run: () => {
-        run(s, target);
-      },
-    }));
+  return (
+    skills
+      // Only Mimer's own AI commands; skills made in older versions are no longer offered.
+      .filter((s) => s.builtin && skillFits(s, target.isDir))
+      .map((s) => ({
+        id: `skill:${s.id}`,
+        group: "Skills" as const,
+        label: s.name,
+        hint: s.description,
+        run: () => {
+          run(s, target);
+        },
+      }))
+  );
 }
 
 const ORDER: PaletteGroup[] = ["Skills", "Notes", "Actions"];

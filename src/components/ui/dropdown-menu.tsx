@@ -1,9 +1,20 @@
+import { ChevronRight } from "lucide-react";
 import * as Primitive from "@radix-ui/react-dropdown-menu";
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import {
+  menuContent,
+  menuItem,
+  menuLabel,
+  menuSeparator,
+  menuShortcut,
+  menuSubContent,
+  menuSubTrigger,
+} from "./menuStyles";
 
 export const DropdownMenu = Primitive.Root;
 export const DropdownMenuTrigger = Primitive.Trigger;
+export const DropdownMenuSub = Primitive.Sub;
 
 export function DropdownMenuContent({
   className,
@@ -14,7 +25,7 @@ export function DropdownMenuContent({
       <Primitive.Content
         align="start"
         sideOffset={4}
-        className={cn("z-50 min-w-56 rounded-md border bg-card p-1 text-sm shadow-lg", className)}
+        className={cn(menuContent, className)}
         {...props}
       />
     </Primitive.Portal>
@@ -25,28 +36,28 @@ export function DropdownMenuItem({
   className,
   ...props
 }: React.ComponentProps<typeof Primitive.Item>) {
-  return (
-    <Primitive.Item
-      className={cn(
-        "flex cursor-default select-none items-center justify-between gap-6 rounded-sm px-2 py-1.5 outline-none data-[disabled]:opacity-40 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground",
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <Primitive.Item className={cn(menuItem, className)} {...props} />;
+}
+
+/** A heading over a group of items. */
+export function DropdownMenuLabel({
+  className,
+  ...props
+}: React.ComponentProps<typeof Primitive.Label>) {
+  return <Primitive.Label className={cn(menuLabel, className)} {...props} />;
+}
+
+/** A shortcut hint at the right end of a menu item. */
+export function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<"span">) {
+  return <span className={cn(menuShortcut, className)} {...props} />;
 }
 
 export function DropdownMenuSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof Primitive.Separator>) {
-  return <Primitive.Separator className={cn("-mx-1 my-1 h-px bg-border", className)} {...props} />;
+  return <Primitive.Separator className={cn(menuSeparator, className)} {...props} />;
 }
-
-export const DropdownMenuSub = Primitive.Sub;
-
-const itemClass =
-  "flex cursor-default select-none items-center justify-between gap-6 rounded-sm px-2 py-1.5 outline-none data-[disabled]:opacity-40 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[state=open]:bg-accent";
 
 export function DropdownMenuSubTrigger({
   className,
@@ -54,11 +65,9 @@ export function DropdownMenuSubTrigger({
   ...props
 }: React.ComponentProps<typeof Primitive.SubTrigger>) {
   return (
-    <Primitive.SubTrigger className={cn(itemClass, className)} {...props}>
+    <Primitive.SubTrigger className={cn(menuSubTrigger, className)} {...props}>
       {children}
-      <span aria-hidden className="text-xs text-muted-foreground">
-        ▸
-      </span>
+      <ChevronRight className="ml-auto text-muted-foreground" aria-hidden />
     </Primitive.SubTrigger>
   );
 }
@@ -69,11 +78,7 @@ export function DropdownMenuSubContent({
 }: React.ComponentProps<typeof Primitive.SubContent>) {
   return (
     <Primitive.Portal>
-      <Primitive.SubContent
-        sideOffset={2}
-        className={cn("z-50 min-w-56 rounded-md border bg-card p-1 text-sm shadow-lg", className)}
-        {...props}
-      />
+      <Primitive.SubContent sideOffset={2} className={cn(menuSubContent, className)} {...props} />
     </Primitive.Portal>
   );
 }

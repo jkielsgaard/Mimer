@@ -43,6 +43,11 @@ export class LinkResolver {
     return pick(this.byStem.get(lower)) ?? pick(this.byFilename.get(lower));
   }
 
+  /** True when the vault has a file at exactly this path (letter case ignored). */
+  has(path: string): boolean {
+    return this.byPath.has(path.toLowerCase());
+  }
+
   /** Shortest unambiguous link text for a file: name if unique, otherwise path. */
   shortestForm(path: string): string {
     if (isMarkdown(path)) {

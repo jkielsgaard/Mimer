@@ -31,12 +31,17 @@ const RULES: &str = "Rules:
 - Several changes need several tool calls. If a tool call returns an error, fix the arguments and call it again.
 - When you are done, say in one or two sentences what you proposed, and list the notes proposed for deletion.";
 
-/// Knowledge rule when the user has NOT allowed Mimer to write from memory (the default).
-const KNOWLEDGE_RULE_STRICT: &str = "- You have no internet access, and your own knowledge can be outdated or wrong. Do not write new factual content (documentation, explanations, specifications) from memory. Work with what is in the user's notes and what the user tells you: structure, correct, merge, summarise, link and reformat it.
-- When the user wants new documentation or information about a subject, do not write it yourself. Use the write_research_prompt tool: it makes a prompt the user can take to a cloud AI with internet access (the Raven tab, or any other cloud AI), and the answer can be saved or imported into the vault. Tell the user so in one or two sentences.";
+/// Rules for the plain chat ("Ask about my notes"): it only reads and answers. Changes are made
+/// with the fixed AI commands in the app, which run as skills with their own rules.
+const CHAT_RULES: &str = "Rules:
+- Notes are Markdown. Never invent facts about the user's notes. Use the search_notes, read_note and list_folder tools to look things up, and say which note an answer comes from.
+- In this chat you only answer. You cannot change, create, move or delete notes, and you have no tools for it. Never say that you changed something.
+- When the user wants a note changed, say in one sentence that they can do it with the AI button above the note, the AI bar over selected text, or by right-clicking a folder and choosing AI.
+- Keep answers concise. Answer in the language the user writes in.";
 
-/// Knowledge rule when the user has allowed Mimer to write from its own knowledge.
-const KNOWLEDGE_RULE_OPEN: &str = "- You have no internet access, and your own knowledge can be outdated or wrong. You may write new content from your general knowledge when the user asks for it, but say clearly that it comes from memory and should be checked. For anything that needs current facts, offer the write_research_prompt tool instead.";
+/// What Mimer says about writing new facts: it has no internet access, so it does not write
+/// documentation from memory.
+const KNOWLEDGE_RULE: &str = "- You have no internet access, and your own knowledge can be outdated or wrong. You cannot write new documentation or facts about a subject. If the user asks for that, say so in one or two sentences and offer what you can do: structure, correct, merge, summarise, link and reformat what is in the notes. Work with what is in the user's notes and what the user tells you.";
 
 const TOOL_RESULT_LIMIT: usize = 6_000;
 
@@ -45,8 +50,6 @@ const TOOL_RESULT_LIMIT: usize = 6_000;
 pub struct PromptInput<'a> {
     /// Who Mimer is; blank means [`DEFAULT_BASE_INSTRUCTION`].
     pub base_instruction: &'a str,
-    /// True when the user lets Mimer write new content from its own knowledge.
-    pub allow_own_knowledge: bool,
     pub global_instructions: &'a str,
     pub project: Option<&'a Project>,
     /// Project folder, or `None` for the whole vault.
@@ -57,6 +60,8 @@ pub struct PromptInput<'a> {
     pub mentions: &'a [(String, String)],
     pub selection: Option<&'a str>,
     pub tools_enabled: bool,
+    /// The plain chat: only reading tools, and rules that say so.
+    pub read_only: bool,
 }
 
 /// Truncates the middle of a string to at most `max` chars, marking the cut.
@@ -81,13 +86,9 @@ pub fn build_system_prompt(i: &PromptInput, note_override: Option<&str>) -> Stri
         base
     });
     out.push_str("\n\n");
-    out.push_str(RULES);
+    out.push_str(if i.read_only { CHAT_RULES } else { RULES });
     out.push('\n');
-    out.push_str(if i.allow_own_knowledge {
-        KNOWLEDGE_RULE_OPEN
-    } else {
-        KNOWLEDGE_RULE_STRICT
-    });
+    out.push_str(KNOWLEDGE_RULE);
     out.push_str(&format!(
         "\n- You may only access files inside: {}.",
         i.scope.unwrap_or("the whole vault")
@@ -216,7 +217,6 @@ mod tests {
     fn input<'a>(note: Option<(&'a str, &'a str)>) -> PromptInput<'a> {
         PromptInput {
             base_instruction: "",
-            allow_own_knowledge: false,
             global_instructions: "",
             project: None,
             scope: None,
@@ -224,7 +224,21 @@ mod tests {
             mentions: &[],
             selection: None,
             tools_enabled: true,
+            read_only: false,
         }
+    }
+
+    #[test]
+    fn the_plain_chat_is_told_it_only_answers() {
+        let s = build_system_prompt(
+            &PromptInput {
+                read_only: true,
+                ..input(None)
+            },
+            None,
+        );
+        assert!(s.contains("In this chat you only answer"));
+        assert!(!s.contains("propose_"));
     }
 
     #[test]
@@ -241,7 +255,6 @@ mod tests {
         };
         let i = PromptInput {
             base_instruction: "",
-            allow_own_knowledge: false,
             global_instructions: "Reply in Danish",
             project: Some(&p),
             scope: Some("Work/Sec"),
@@ -249,6 +262,7 @@ mod tests {
             mentions: &[],
             selection: Some("sel"),
             tools_enabled: true,
+            read_only: false,
         };
         let s = build_system_prompt(&i, None);
         let a = s.find("You are Mimer").unwrap();
@@ -395,22 +409,11 @@ mod tests {
     }
 
     #[test]
-    fn by_default_mimer_is_told_not_to_write_new_knowledge_and_to_offer_a_research_prompt() {
+    fn mimer_is_told_it_cannot_write_new_documentation() {
         let s = build_system_prompt(&input(None), None);
         assert!(s.contains("no internet access"));
-        assert!(s.contains("Do not write new factual content"));
-        assert!(s.contains("write_research_prompt"));
-        assert!(!s.contains("You may write new content from your general knowledge"));
-    }
-
-    #[test]
-    fn when_the_user_allows_it_mimer_may_write_from_memory_but_must_say_so() {
-        let mut i = input(None);
-        i.allow_own_knowledge = true;
-        let s = build_system_prompt(&i, None);
-        assert!(s.contains("You may write new content from your general knowledge"));
-        assert!(s.contains("should be checked"));
-        assert!(!s.contains("Do not write new factual content"));
+        assert!(s.contains("You cannot write new documentation or facts"));
+        assert!(!s.contains("write_research_prompt"));
         assert!(s.contains("You cannot write files directly"));
     }
 }

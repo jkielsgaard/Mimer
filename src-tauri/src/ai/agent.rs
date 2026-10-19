@@ -56,6 +56,8 @@ pub async fn run_chat(
 ) -> AppResult<()> {
     let state = app.state::<AppState>();
     let mut req = req;
+    // The plain chat only reads and answers; a skill (from the AI menus) may propose changes.
+    let read_only = req.skill.is_none();
     // A skill that is not a plain answer is carried out by Mimer itself, note by note.
     if let Some(id) = req.skill.clone() {
         let file = state
@@ -127,6 +129,9 @@ pub async fn run_chat(
     let tools_enabled = cfg.supports_tools;
     let tool_defs = if tools_enabled {
         tools::definitions()
+            .into_iter()
+            .filter(|d| !read_only || !d.name.starts_with("propose_"))
+            .collect()
     } else {
         Vec::new()
     };
@@ -152,7 +157,6 @@ pub async fn run_chat(
         });
         let input = prompt::PromptInput {
             base_instruction: &settings.ai.base_instruction,
-            allow_own_knowledge: settings.ai.allow_own_knowledge,
             global_instructions: &settings.ai.global_instructions,
             project: project.as_ref(),
             scope: scope.as_deref(),
@@ -160,6 +164,7 @@ pub async fn run_chat(
             mentions: &attached.notes,
             selection: req.selection.as_deref(),
             tools_enabled,
+            read_only,
         };
         let (system, fitted) = prompt::assemble(&input, msgs.clone(), cfg.context_tokens);
         let llm = LlmRequest {
@@ -184,7 +189,7 @@ pub async fn run_chat(
         let mut calls = resp.tool_calls.clone();
         // Small models sometimes write the list of moves as text instead of calling the tool.
         // The moves are only proposals, so they are queued for review just the same.
-        if calls.is_empty() && rescued < MAX_RESCUES && !cancel.is_cancelled() {
+        if !read_only && calls.is_empty() && rescued < MAX_RESCUES && !cancel.is_cancelled() {
             if let Some(call) = tools::rescue_moves(&resp.text, rescued) {
                 rescued += 1;
                 calls.push(call);
@@ -199,19 +204,17 @@ pub async fn run_chat(
                 name: call.name.clone(),
                 detail: tools::describe_call(call),
             });
-            let out = if call.name == "semantic_search" {
+            let out = if read_only && call.name.starts_with("propose_") {
+                // The plain chat has no change tools; a model that calls one anyway is told so.
+                tools::ToolOutcome {
+                    result: "This chat cannot change notes. Answer the user instead.".into(),
+                    summary: "Not available in this chat".into(),
+                }
+            } else if call.name == "semantic_search" {
                 semantic_tool(&vault, &settings, semantic_ok, scope.as_deref(), call).await
             } else {
                 tools::execute(&vault, scope.as_deref(), &mut set, call)
             };
-            if call.name == "write_research_prompt" {
-                if let Ok(card) = tools::research_card(call) {
-                    let _ = channel.send(ChatEvent::ResearchPrompt {
-                        title: card.title,
-                        text: card.text,
-                    });
-                }
-            }
             let _ = channel.send(ChatEvent::ToolCall {
                 name: call.name.clone(),
                 summary: out.summary,

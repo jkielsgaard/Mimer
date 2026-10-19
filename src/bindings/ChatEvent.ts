@@ -5,7 +5,7 @@ import type { RunTarget } from "./RunTarget";
 /**
  * Events streamed to the frontend through a Tauri `Channel`.
  */
-export type ChatEvent = { "type": "textDelta", text: string, } | { "type": "step", step: number, max: number, } | { "type": "toolStart", name: string, detail: string, } | { "type": "toolCall", name: string, summary: string, } | { "type": "proposalsReady", setId: string, } | { "type": "researchPrompt", title: string, text: string, } | { "type": "skillTrial", skillId: string, skillName: string, 
+export type ChatEvent = { "type": "textDelta", text: string, } | { "type": "step", step: number, max: number, } | { "type": "toolStart", name: string, detail: string, } | { "type": "toolCall", name: string, summary: string, } | { "type": "proposalsReady", setId: string, } | { "type": "skillTrial", skillId: string, skillName: string, 
 /**
  * Notes done in the trial.
  */

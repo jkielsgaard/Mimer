@@ -9,7 +9,7 @@ Mimer is a desktop app for Markdown notes with a built-in AI assistant that help
 - **Plain files.** Your notes are normal `.md` files in normal folders. A vault works without Mimer.
 - **Never lose data.** Every vault is a local Git repository, so any change can be restored from the history.
 - **You are in control.** The AI only _proposes_ changes. Nothing is written until you approve it.
-- **Local first.** Mimer, the notes AI, runs on your own machine, with the built-in AI (llama.cpp or Microsoft's [Foundry Local](https://learn.microsoft.com/azure/foundry-local/), which can use a neural processor) or [LM Studio](https://lmstudio.ai), and nothing else: your notes are never sent to a cloud service. A cloud AI is available in a separate tab, Raven, which has no access to your notes.
+- **Local first.** Mimer, the notes AI, runs on your own machine, with the built-in AI (llama.cpp or Microsoft's [Foundry Local](https://learn.microsoft.com/azure/foundry-local/), which can use a neural processor) or [LM Studio](https://lmstudio.ai), and nothing else: your notes are never sent to a cloud service.
 
 ## Why Mimer?
 
@@ -17,7 +17,7 @@ Mimer is one app, built around three promises:
 
 - **Nothing is lost.** Every vault is a Git repository, and every change, including every change the AI makes, is a commit. You can restore any version of a note, or a note you deleted.
 - **The AI only proposes.** It can search and read your notes, but it cannot write to them. You review each proposed change, file by file, and nothing is saved until you accept it.
-- **Your notes stay local.** The notes AI only ever talks to a model on your own computer. Cloud AI lives in a separate tab, Raven, that has no access to your notes at all.
+- **Your notes stay local.** The notes AI only ever talks to a model on your own computer.
 
 There is nothing to assemble: no plugins to find, install or keep in step with each other. Your notes stay plain Markdown files, so you can open the same folder in any other editor at any time.
 
@@ -28,7 +28,6 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
 - Full-text search, plus search by meaning with an embedding model
 - Version history per note: compare, restore, recover deleted notes
 - AI chat that can search and read your notes and propose edits you review file by file, with a built-in local AI (download, **Wake Mimer**, **Sleep Mimer**) or LM Studio
-- **Raven**: a separate chat with a cloud AI for knowledge from the internet. It cannot see your notes, and an answer can be saved as a note marked "needs review"
 - Inline AI commands on selected text (fix spelling, shorten, rewrite …)
 - Projects: a folder with its own AI instructions and its own tree
 - Import from a folder (for example a OneNote export) and export to HTML, Word and PDF
@@ -48,7 +47,7 @@ Download the build for your system from the **Releases** page. There are builds 
 
 ### Option A: the built-in AI (no other program needed)
 
-Open **Settings → Built-in AI** and choose the engine. **Foundry Local** (Microsoft; Windows 11 24H2 or later, and Linux; the only engine in the Microsoft Store version) picks the best hardware by itself, including a neural processor (NPU), and offers Qwen, Phi, Gemma and other models that can use tools. **llama.cpp** (Windows and Linux, not in the Store version) works with Nvidia, AMD and Intel graphics cards and with Google's Gemma models. Choose a model and press **Download**. Then press **Wake Mimer** in the Mimer tab. **Sleep Mimer** unloads the model and frees the memory. It works on Windows and Linux with AMD, Intel and Nvidia graphics cards, or on the processor alone.
+Open **Settings → Built-in AI** and choose the engine. **Foundry Local** (Microsoft; Windows 11 24H2 or later, and Linux; the only engine in the Microsoft Store version) picks the best hardware by itself, including a neural processor (NPU), and offers Qwen, Phi, Gemma and other models that can use tools. **llama.cpp** (Windows and Linux, not in the Store version) works with Nvidia, AMD and Intel graphics cards and with Google's Gemma models. Choose a model and press **Download**. Then press **Wake** in the status bar. **Sleep Mimer** unloads the model and frees the memory. It works on Windows and Linux with AMD, Intel and Nvidia graphics cards, or on the processor alone.
 
 ### Option B: LM Studio
 
@@ -57,10 +56,6 @@ Open **Settings → Built-in AI** and choose the engine. **Foundry Local** (Micr
 3. In Mimer open **Settings → AI providers → LM Studio**, load the models, pick one and press **Test connection**.
 
 Give the model a context length of at least 16k in LM Studio, and use the same value in Mimer's settings.
-
-### Raven (optional, cloud AI)
-
-To get knowledge from the internet, add an **Anthropic** or **OpenAI-compatible** provider in **Settings → AI providers** and choose it under **Settings → AI → Raven's provider**. A **Raven** tab appears next to Mimer. Raven never sees your notes, and what you type in it is sent to that provider. Cloud AI providers receive whatever you send them: use them only with information you are willing to share with that provider. API keys are stored in your system keychain, never in a file.
 
 ## Build from source
 
@@ -73,7 +68,7 @@ pnpm tauri build      # build an installer for the current system
 pnpm check            # everything CI runs: format, lint, types, tests, clippy
 ```
 
-Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v0.10.2` makes GitHub Actions build the installers (`.github/workflows/release.yml`).
+Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v0.11.0` makes GitHub Actions build the installers (`.github/workflows/release.yml`).
 
 ## More
 

@@ -6,10 +6,10 @@ import importMd from "./topics/import.md?raw";
 import linksMd from "./topics/links.md?raw";
 import mimerMd from "./topics/mimer.md?raw";
 import projectsMd from "./topics/projects.md?raw";
-import ravenMd from "./topics/raven.md?raw";
 import searchMd from "./topics/search.md?raw";
 import shortcutsMd from "./topics/shortcuts.md?raw";
 import startMd from "./topics/start.md?raw";
+import tasksMd from "./topics/tasks.md?raw";
 import templatesMd from "./topics/templates.md?raw";
 import titleMd from "./topics/title.md?raw";
 import vaultsMd from "./topics/vaults.md?raw";
@@ -64,10 +64,10 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     body: builtinMd,
   },
   {
-    id: "raven",
-    title: "Raven, the cloud AI",
-    summary: "Knowledge from the internet, without your notes",
-    body: ravenMd,
+    id: "tasks",
+    title: "Tasks and focus",
+    summary: "One list from all notes, steps, a log, focus",
+    body: tasksMd,
   },
   {
     id: "projects",

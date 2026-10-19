@@ -67,9 +67,7 @@ export function VaultSwitcher() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-72" align="start">
-          <div className="px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            Vaults
-          </div>
+          <div className="px-2 py-1 section-label">Vaults</div>
           {recent.map((p) => {
             const isCurrent = normalizeVaultPath(p) === current;
             return (

@@ -16,7 +16,7 @@ const ONLY_REPLACEMENT: &str = "Return ONLY the replacement text. No explanation
 fn task(req: &InlineRequest) -> String {
     let custom = req.instruction.as_deref().unwrap_or("").trim().to_string();
     match req.command {
-        InlineCommand::FixSpelling => "Fix spelling and grammar mistakes in the text. Do not change the meaning, tone or Markdown formatting.".into(),
+        InlineCommand::FixSpelling => "Fix spelling and grammar mistakes in the text, in the language the text is written in (it can be Danish, English or another language). Do not change the meaning, tone or Markdown formatting.".into(),
         InlineCommand::Rewrite => "Rewrite the text to be clearer and easier to read. Keep the meaning and the Markdown formatting.".into(),
         InlineCommand::Shorten => "Shorten the text while keeping its key information. Keep the Markdown formatting.".into(),
         InlineCommand::Expand => "Expand the text with more detail and explanation. Keep the Markdown formatting.".into(),

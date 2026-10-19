@@ -95,7 +95,7 @@ export function ProposalReview() {
               return (
                 <section key={g.key} aria-label={g.label} className="mb-2">
                   <div className="flex items-center gap-2 px-2 py-1">
-                    <h3 className="min-w-0 flex-1 truncate text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <h3 className="min-w-0 flex-1 truncate section-label">
                       {g.label} · {g.items.length}
                     </h3>
                     <button

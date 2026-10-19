@@ -230,7 +230,7 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
       <p className="text-xs text-muted-foreground">
         {effectiveLocation === "local"
           ? "Local: used by Mimer, which reads your notes. It runs on this computer."
-          : "Cloud: used by Raven only. Your notes are never sent to a cloud provider."}
+          : "Cloud: not used. Your notes are never sent to a cloud provider."}
       </p>
       <div className="flex items-center gap-4">
         <label className="flex items-center gap-2 text-sm">

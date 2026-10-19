@@ -1,7 +1,8 @@
 import { X } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/lib/api";
-import { cn, noteTitle } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { tabLabels } from "./tabLabels";
 import { useEditorStore } from "@/stores/editorStore";
 import { reportError } from "@/stores/uiStore";
 import { useWorkspaceStore, type PaneId } from "@/stores/workspaceStore";
@@ -61,6 +62,7 @@ export function TabBar({ paneId }: Props) {
     }
   };
 
+  const labels = tabLabels(pane.tabs);
   return (
     <div
       role="tablist"
@@ -78,7 +80,10 @@ export function TabBar({ paneId }: Props) {
     >
       {pane.tabs.map((path, index) => {
         const selected = pane.active === path;
-        const title = noteTitle(path);
+        const label = labels.get(path);
+        const title = label?.title ?? path;
+        const hint = label?.hint ?? null;
+        const name = hint === null ? title : `${title} (${hint})`;
         return (
           <ContextMenu key={path}>
             <ContextMenuTrigger asChild>
@@ -125,6 +130,11 @@ export function TabBar({ paneId }: Props) {
                 }}
               >
                 <span className="truncate">{title}</span>
+                {hint !== null && (
+                  <span className="min-w-0 max-w-[80px] shrink truncate text-[10px] text-muted-foreground">
+                    {hint}
+                  </span>
+                )}
                 {selected && status !== "saved" && (
                   <span className="text-[10px] text-primary" aria-label="Unsaved changes">
                     ●
@@ -132,7 +142,7 @@ export function TabBar({ paneId }: Props) {
                 )}
                 <button
                   type="button"
-                  aria-label={`Close ${title}`}
+                  aria-label={`Close ${name}`}
                   className="rounded p-0.5 opacity-60 hover:bg-muted hover:opacity-100"
                   onClick={(e) => {
                     e.stopPropagation();

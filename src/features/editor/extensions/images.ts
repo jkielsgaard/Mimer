@@ -1,6 +1,6 @@
 import { WidgetType, type EditorView } from "@codemirror/view";
 import { IMAGE_SIZES, withImageWidth } from "@/lib/imageMarkdown";
-import { resolveRelativePath } from "@/lib/utils";
+import { basename, resolveRelativePath } from "@/lib/utils";
 import { useUiStore } from "@/stores/uiStore";
 import type { PreviewConfig } from "./previewConfig";
 
@@ -84,6 +84,13 @@ export function setImageWidth(view: EditorView, wrap: HTMLElement, width: number
 /** Webview-loadable URL for a Markdown image URL, or null if it cannot be shown. */
 export function imageSrc(cfg: PreviewConfig, url: string): string | null {
   if (/^(https?:|data:)/i.test(url)) return url;
-  const vaultPath = resolveRelativePath(cfg.notePath, url);
-  return vaultPath === null ? null : cfg.assetUrl(vaultPath);
+  let vaultPath = resolveRelativePath(cfg.notePath, url);
+  if (vaultPath === null) return null;
+  // The link may point where the picture no longer is (the note or the picture was moved by
+  // something that did not update it). If the file is not there but one with that name is, show it.
+  if (cfg.fileExists && !cfg.fileExists(vaultPath)) {
+    const moved = cfg.resolveLink(basename(vaultPath));
+    if (moved !== null) vaultPath = moved;
+  }
+  return cfg.assetUrl(vaultPath);
 }

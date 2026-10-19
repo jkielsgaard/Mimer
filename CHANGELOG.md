@@ -6,6 +6,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-19
+
+### Added
+
+- **Tasks.** A task is a checklist line in any note (`- [ ] Renew the licence due:2026-11-01`). Mimer reads them in every note and shows one list: **Today** on top, **Moved from earlier** without blame, **This week** and **Later**, grouped by when, note or tag. Add a task with one line (a date word at the end becomes the due date). Press the Tasks icon or Ctrl/Cmd+Shift+T.
+- **One task** has a status (To do, Doing, Waiting), a due date, a time, steps (indented checklist lines) and a **log** of dated lines (`> 2026-10-14 …`) that reads as a timeline. **Break it down** lets the local AI propose small steps; you choose which stay. Everything is written back into the note as plain Markdown, and an edit is refused if the line changed since it was read.
+- **Focus.** Press Focus on a task: one step, a 15/25/45 minute timer, "Help me start" (the AI suggests one tiny first step), and a box to park a thought as a task. Everything else is hidden.
+- **A task you type in is for today.** Without a date it gets `plan:` today, because that is why it was written. Write a date (`tomorrow`, `fri`) to give it a due date, or end with `later` to put it away.
+- **Find tasks in this note**: the local AI reads the open note and suggests tasks. You choose which to keep, and they are added to the end of that note as checklist lines (tasks the note already has are not added twice). Button in the Tasks list, and in the command palette.
+- **`Tasks.md` is hidden from the file tree** (it is still found by the task list and opens with *See the file*).
+- **New note from a starter** is also under **New** above the file tree and on the empty editor screen (File menu and command palette as before): Meeting, Status update, Reply to an e-mail or Idea. You answer a few questions and Mimer writes the note, with `[blanks]` to fill in. No AI is used.
+
+- **Ideas** are an area of their own (the light bulb at the left edge), next to Files, Search and Tasks. An idea is a dated line in the hidden note `Ideas` (`- 2026-10-19 Text #tag`). *Make a task* puts it in the task list under Later, *Make a note* makes a note in Quick notes and opens it; the idea stays, marked as turned into something. Archive and Bring back are there too. The panel on the left lists the ideas (Open, Used, Archived); a picked idea opens in the middle, where its title and a small note can be changed. The note is written indented under the idea, and goes with it when it becomes a task (into the log) or a note.
+- **Tasks have their own panel** on the left: add a task, filter the list by Today, Moved, This week, Later, Done or a tag, and see today's tasks with a box to tick while you write.
+- **A note with a task or an idea** in the write-it-down box: "Add a note" opens a small note box.
+- **Write it down** (Ctrl/Cmd+Shift+N, File menu, command palette, and inside Focus): one box where you choose Task, Idea or Note as you write. Focus uses it for what pops up while you work, and stays open. Select text in a note and choose *As a task* or *As an idea* in the bar over the selection.
+
+- **AI where you work, with fixed commands instead of a chat to type into.**
+  - **Selected text:** Fix, Rewrite and Shorten in the bar, and **AI ▾** for the rest: rewrite with simpler words, more formal or friendlier (same meaning), make it a list, translate to Danish or English, **Explain this** (an answer, nothing changes) and **Find tasks in it**. A rewrite shows whether its numbers, links, addresses and tags are all still there.
+  - **The whole note:** an **AI** button above the note with fix spelling, tidy the structure, a **short summary at the top**, **a title and tags**, find tasks, split into notes, **an e-mail from the note** (three new built-in skills) and your own skills.
+  - **Search** shows **Answer from my notes** when the search reads like a question: the local AI reads the notes that fit (by meaning when semantic search is on, else by the words) and answers, with the notes it used.
+  - **Tasks:** **Write a status line from the log**. **Ideas:** **Think it through** (three questions for the idea's note) and **Suggest first steps** (they become one task with those steps under it).
+  - **Spelling help** for dyslexia: the local AI marks misspelt words with a wavy line a moment after you stop typing. Click a word to use the right spelling, ignore it, add it to **my words**, or fix all marked words. Nothing changes by itself; the marks are never written into the note. On and off in the status bar and in Settings → General (off by default).
+- **Without an AI everything else still works.** Every AI button is greyed out and says why (no AI set up, not local, asleep, not running), with **Set up AI**. The notes, search, tasks, ideas, outline, links, history and images do not need it, and the system spellcheck still works.
+- **The right side is a narrow row of icons.** **Outline** (the headings of the note; click one to go there), **Links** (notes that link here, the links in this note, and *Maybe related* notes found by the title and tags, with a + to link them; no AI), **History** and **Images** open a small panel that is closed by default. The chat is a window over the note (Ctrl/Cmd+L or the speech bubble), and Raven has its own button.
+- **Make an index page** for a folder (right-click) without AI: a note with a link to every note in it, grouped by subfolder.
+- **Delete a task or an idea.** The task page and the idea have **Delete**, which asks in the same window as deleting a note. The note is committed first, so the task or idea can be brought back from History.
+
+### Removed
+
+- **Raven (the cloud chat) is gone**, with the research prompt, *Import an answer from a cloud AI*, the *Allow Mimer to write from its own knowledge* setting and Raven's provider setting. If you ask Mimer for new documentation or facts, it says that it has no internet access and cannot write it, and offers to structure what is in your notes. Mimer only ever uses an AI on this computer; the Add provider window offers LM Studio and other local servers.
+
+### Changed
+
+- **The chat is only a chat.** "Ask about my notes" has a message box, *Include the open note*, the chat history and New chat. It reads and searches the notes to answer, but it can no longer change them: the change tools are not offered to it, and it is told to point to the AI buttons instead. Skill cards, the Skills and Prompts menus and attaching notes with `/` are gone from it. Raven uses the same header and message box.
+- **Settings → Skills is gone.** The AI commands are fixed and built in; skills made in an older version are kept in their file but no longer offered.
+- **The menus are File, Go and Help** instead of one long File menu: File for notes, import and export and the vault; Go for quick open, search, tasks, ideas, the chat and the history; Help for the guide, reports and About. Import has its own submenu.
+- **Every menu, panel and page looks the same**: one style for drop-down and right-click menus (labels, shortcuts, submenu arrows), one header for the side panels and one for the pages in the middle (with *Back to notes*), one style for the small headings over groups.
+- **The chat is no longer a column on the right.** It opens as a window when you ask for it, so the note gets the width. Skills started from a menu open it to show their progress and the review.
+- **"I am stuck" in Focus is called "Help me start"**, with a tooltip that says what it does.
+- **Ideas are open, used or archived.** "Keep" is gone; an idea that was kept is simply open.
+
+### Fixed
+
+- **The AI menu over selected text closes** when you click outside it, and has a close button.
+- **The start screen is a small window of its own** with a fixed size. The app window opens after it, at the size and place it had when it was closed (a normal size the first time).
+- **New app icon and start picture.**
+- **The chat is simpler**: no model switch and no Wake button (a sleeping built-in AI is woken when you send a message, or use an AI command), and **/** or the paperclip points at a note or a folder again.
+- **A task can be renamed** on its page (click the title). Tags, dates and status stay.
+- **Tasks and ideas are never opened as notes.** *See the file* on a task is now **Show Markdown**, which shows the task's lines in the task page itself. Tasks and Ideas no longer appear under Recent, in Quick open, in the palette or in search results, and opening them from anywhere goes to the Tasks or Ideas area.
+- **An idea becomes one task with steps**, not one task for each step.
+- **Spelling help checks in the language of the text** (also Danish), not only English. The system's own underline follows the language of the computer.
+- **Pictures survive moving a note.** A note that is moved or renamed into another folder (by dragging, "Move to…", a folder rename or the Sort into folders skill) keeps its pictures and relative links: `![](attachments/a.png)` becomes `![](../../attachments/a.png)` as needed. Before, the picture could not be found when the note was opened again. A picture whose link is already wrong is still shown if a file with that name exists in the vault.
+- **Tabs with the same name can be told apart.** Two open notes called "Meeting" now show their folder next to the name (`Meeting  Acme`, `Meeting  Bygma`), and the Close button names the folder too.
+
 ## [0.10.2] - 2026-10-18
 
 ### Fixed

@@ -9,7 +9,7 @@ const skill = (id: string, name: string, appliesTo: Skill["appliesTo"]): Skill =
   kind: "rewrite",
   appliesTo,
   instruction: "x",
-  builtin: false,
+  builtin: true,
 });
 const item = (group: PaletteItem["group"], label: string): PaletteItem => ({
   id: `${group}:${label}`,

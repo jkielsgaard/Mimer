@@ -20,7 +20,7 @@ export function SidebarSection({ title, storageKey, count, children }: Props) {
       <button
         type="button"
         aria-expanded={open}
-        className="flex w-full items-center gap-1 px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground hover:text-foreground"
+        className="flex w-full items-center gap-1 px-2 py-1 section-label hover:text-foreground"
         onClick={() => {
           setOpen(storageKey, !open);
         }}

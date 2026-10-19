@@ -17,7 +17,6 @@ describe("chat streaming", () => {
           proposalSetId: null,
           error: null,
           mentions: [],
-          research: [],
         },
         {
           id: 2,
@@ -27,7 +26,6 @@ describe("chat streaming", () => {
           proposalSetId: null,
           error: null,
           mentions: [],
-          research: [],
         },
       ],
     });
@@ -63,13 +61,5 @@ describe("chat streaming", () => {
       .applyEvent({ type: "error", error: { code: "ProviderBlocked", message: "blocked" } });
     expect(useChatStore.getState().streaming).toBe(false);
     expect(useChatStore.getState().messages[1]?.error).toBe("blocked");
-  });
-
-  it("keeps a research prompt Mimer wrote as a card on the answer", () => {
-    const { applyEvent } = useChatStore.getState();
-    applyEvent({ type: "researchPrompt", title: "Research: Zero trust", text: "You are…" });
-    expect(useChatStore.getState().messages[1]?.research).toEqual([
-      { title: "Research: Zero trust", text: "You are…" },
-    ]);
   });
 });

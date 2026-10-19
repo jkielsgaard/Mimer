@@ -5,7 +5,7 @@ import { appVersion } from "@/lib/version";
 export const REPORT_URL = "https://github.com/jkielsgaard/Mimer/issues/new";
 
 /** Which AI the answer came from. */
-export type ReportSource = "Mimer" | "Raven" | "inline command";
+export type ReportSource = "Mimer" | "inline command";
 
 /**
  * The address of a new issue that is already filled in: it says what is being reported and which

@@ -21,7 +21,6 @@ import { ProviderEditor } from "./ProviderEditor";
 import { AddProviderDialog } from "./AddProviderDialog";
 import { BuiltInAiTab } from "@/features/engine/BuiltInAiTab";
 import { VaultSettingsTab } from "./VaultSettingsTab";
-import { SkillsTab } from "./SkillsTab";
 import { MimerInstructionSettings } from "./MimerInstructionSettings";
 import { SemanticSearchSettings } from "./SemanticSearchSettings";
 import { appVersion, buildDateLabel, releaseStage } from "@/lib/version";
@@ -30,13 +29,12 @@ import { InfoHint } from "@/components/InfoHint";
 /** The one entry in the provider list that stands for both built-in engines. */
 const BUILTIN_ROW = "__builtin__";
 
-type Tab = "general" | "providers" | "ai" | "builtin" | "skills" | "history" | "vault";
+type Tab = "general" | "providers" | "ai" | "builtin" | "history" | "vault";
 const TABS: { id: Tab; label: string }[] = [
   { id: "general", label: "General" },
   { id: "providers", label: "AI providers" },
   { id: "ai", label: "AI" },
   { id: "builtin", label: "Built-in AI" },
-  { id: "skills", label: "Skills" },
   { id: "history", label: "Version history" },
   { id: "vault", label: "Vault" },
 ];
@@ -46,7 +44,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
   const [draft, setDraft] = useState<Settings>(() => structuredClone(stored));
   const [tab, setTab] = useState<Tab>(() => {
     const wanted = useUiStore.getState().settingsTab;
-    return wanted === "builtin" || wanted === "skills" ? wanted : "general";
+    return wanted === "builtin" ? wanted : "general";
   });
   const [providerId, setProviderId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
@@ -65,7 +63,6 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
   const provider = draft.ai.providers.find((p) => p.id === providerId) ?? null;
   // Notes only go to local providers; cloud providers can only be used by Raven.
   const localProviders = usableProviders(draft).filter((p) => effectiveLocation(p) === "local");
-  const cloudProviders = draft.ai.providers.filter((p) => effectiveLocation(p) === "cloud");
 
   return (
     <DialogContent className="h-[640px] max-w-4xl">
@@ -174,8 +171,45 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                     update({ editor: { ...draft.editor, spellcheck: e.target.checked } });
                   }}
                 />
-                Spellcheck
+                Spellcheck (the system's own, works without AI)
               </label>
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={draft.editor.aiSpelling}
+                  onChange={(e) => {
+                    update({ editor: { ...draft.editor, aiSpelling: e.target.checked } });
+                  }}
+                />
+                <span>
+                  Spelling help with the local AI
+                  <span className="block text-xs text-muted-foreground">
+                    A moment after you stop typing, the paragraph is checked and misspelt words get
+                    a wavy line. Nothing changes until you click a word and choose. Made for
+                    dyslexia. Needs a local AI; without one, the system spellcheck still works.
+                  </span>
+                </span>
+              </label>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="own-words" className="text-sm">
+                  My words (never marked), one per line
+                </label>
+                <textarea
+                  id="own-words"
+                  rows={3}
+                  className="rounded-md border bg-transparent px-2 py-1 text-sm"
+                  value={draft.editor.ownWords.join("\n")}
+                  onChange={(e) => {
+                    update({
+                      editor: {
+                        ...draft.editor,
+                        ownWords: e.target.value.split("\n"),
+                      },
+                    });
+                  }}
+                />
+              </div>
               <p className="mt-2 border-t pt-3 text-xs text-muted-foreground">
                 Mimer version {appVersion} ({releaseStage}) · built {buildDateLabel()}
               </p>
@@ -213,7 +247,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                     >
                       {p.name}
                       <span className="block text-[11px] text-muted-foreground">
-                        {effectiveLocation(p) === "local" ? "local · Mimer" : "cloud · Raven only"}
+                        {effectiveLocation(p) === "local" ? "local · Mimer" : "cloud · not used"}
                       </span>
                     </button>
                   ))}
@@ -234,8 +268,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                     <p className="text-muted-foreground">
                       This is Mimer's own AI. It runs on this computer, so your notes never leave
                       it. Choose the engine (Foundry Local or llama.cpp) and the model, and download
-                      it, under Built-in AI. Only a local AI can be used by Mimer; Raven works only
-                      with a cloud AI.
+                      it, under Built-in AI. Mimer only uses an AI on this computer.
                     </p>
                     <div>
                       <Button
@@ -274,10 +307,6 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                             draft.ai.defaultProviderId === provider.id
                               ? (firstLocal?.id ?? "")
                               : draft.ai.defaultProviderId,
-                          ravenProviderId:
-                            draft.ai.ravenProviderId === provider.id
-                              ? null
-                              : draft.ai.ravenProviderId,
                         },
                       });
                       setProviderId(null);
@@ -287,9 +316,8 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                   <div className="flex flex-col gap-2 text-sm text-muted-foreground">
                     <p>Choose a provider on the left to change it, or press Add provider.</p>
                     <p>
-                      <strong className="text-foreground">Local</strong> providers are used by
-                      Mimer. <strong className="text-foreground">Cloud</strong> providers are used
-                      by Raven only.
+                      Mimer only uses an AI that runs on this computer, so your notes never leave
+                      it.
                     </p>
                   </div>
                 )}
@@ -321,55 +349,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                   ))}
                 </Select>
               </div>
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-1.5">
-                  <Label htmlFor="set-raven">Raven's provider (cloud AI)</Label>
-                  <InfoHint
-                    label="Raven"
-                    text="Raven is a separate chat for knowledge from the internet. It uses a cloud AI and never sees your notes. Choose Off to hide the Raven tab."
-                    topic="raven"
-                  />
-                </div>
-                <Select
-                  id="set-raven"
-                  value={draft.ai.ravenProviderId ?? ""}
-                  onChange={(e) => {
-                    update({ ai: { ...draft.ai, ravenProviderId: e.target.value || null } });
-                  }}
-                >
-                  <option value="">Off</option>
-                  {cloudProviders.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Raven is for knowledge from the internet, so it needs a <strong>cloud</strong> AI.
-                  LM Studio and the built-in AI run on this computer and cannot search the internet,
-                  so they cannot be used here. What you type in Raven is sent to the cloud provider.
-                  Add one under AI providers first.
-                </p>
-              </div>
               <MimerInstructionSettings draft={draft} onChange={setDraft} />
-              <label className="flex items-start gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  className="mt-1"
-                  checked={draft.ai.allowOwnKnowledge}
-                  onChange={(e) => {
-                    update({ ai: { ...draft.ai, allowOwnKnowledge: e.target.checked } });
-                  }}
-                />
-                <span>
-                  Let Mimer write new content from its own knowledge
-                  <InfoHint
-                    label="Own knowledge"
-                    text="Mimer has no internet access and can be wrong or out of date. By default it works with your notes (structure, merging, correcting) and writes a research prompt for a cloud AI when you need new facts. Turn this on to let it write from memory too; it will say so."
-                    topic="mimer"
-                  />
-                </span>
-              </label>
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1.5">
                   <Label htmlFor="set-instr">Global instructions</Label>
@@ -393,7 +373,6 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
             </div>
           )}
           {tab === "builtin" && <BuiltInAiTab draft={draft} onChange={setDraft} />}
-          {tab === "skills" && <SkillsTab />}
           {tab === "vault" && <VaultSettingsTab />}
           {tab === "history" && (
             <div className="flex flex-col gap-3">

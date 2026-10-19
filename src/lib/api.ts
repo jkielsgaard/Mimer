@@ -9,7 +9,6 @@ import type { CommitEntry } from "@/bindings/CommitEntry";
 import type { CommitReason } from "@/bindings/CommitReason";
 import type { DeletedFile } from "@/bindings/DeletedFile";
 import type { InlineRequest } from "@/bindings/InlineRequest";
-import type { RavenRequest } from "@/bindings/RavenRequest";
 import type { NoteContent } from "@/bindings/NoteContent";
 import type { Project } from "@/bindings/Project";
 import type { ProposalSetView } from "@/bindings/ProposalSetView";
@@ -30,7 +29,10 @@ import type { VaultInfo } from "@/bindings/VaultInfo";
 import type { ChatSummary } from "@/bindings/ChatSummary";
 import type { StoredChat } from "@/bindings/StoredChat";
 import type { SavedPrompt } from "@/bindings/SavedPrompt";
+import type { Idea } from "@/bindings/Idea";
+import type { MetaPatch } from "@/bindings/MetaPatch";
 import type { PreviewResult } from "@/bindings/PreviewResult";
+import type { Task } from "@/bindings/Task";
 import type { Skill } from "@/bindings/Skill";
 import type { TemplateInfo } from "@/bindings/TemplateInfo";
 import type { SeedReport } from "@/bindings/SeedReport";
@@ -47,7 +49,6 @@ import type { ImageUsage } from "@/bindings/ImageUsage";
 import type { ImportEvent } from "@/bindings/ImportEvent";
 import type { ImportPlan } from "@/bindings/ImportPlan";
 import type { ImportReport } from "@/bindings/ImportReport";
-import type { ResearchSpec } from "@/bindings/ResearchSpec";
 import type { TreeOrder } from "@/bindings/TreeOrder";
 
 /** Error thrown by every API wrapper; `code` drives behaviour, `message` is shown in a toast. */
@@ -90,7 +91,7 @@ async function call<T>(cmd: string, args?: Record<string, unknown>): Promise<T> 
 /** Runs a streaming command; `onEvent` receives every `ChatEvent`. Resolves to the task id. */
 async function stream(
   cmd: string,
-  request: ChatRequest | InlineRequest | RavenRequest,
+  request: ChatRequest | InlineRequest,
   onEvent: (e: ChatEvent) => void,
 ): Promise<string> {
   const channel = new Channel<ChatEvent>();
@@ -114,9 +115,6 @@ export const api = {
   engineWake: () => call<undefined>("engine_wake"),
   engineSleep: () => call<undefined>("engine_sleep"),
   engineRemove: (what: RemoveWhat) => call<undefined>("engine_remove", { what }),
-
-  // Research prompts for a cloud AI
-  buildResearchPrompt: (spec: ResearchSpec) => call<string>("build_research_prompt", { spec }),
 
   // Vault
   openVault: (path: string) => call<VaultInfo>("open_vault", { path }),
@@ -152,6 +150,9 @@ export const api = {
   deletedFiles: () => call<DeletedFile[]>("deleted_files"),
   restoreDeleted: (path: string, sha: string) => call<undefined>("restore_deleted", { path, sha }),
 
+  // The start screen
+  splashDone: () => call<undefined>("splash_done"),
+
   // Search / links
   search: (query: SearchQuery) => call<SearchHit[]>("search", { query }),
   backlinks: (path: string) => call<Backlink[]>("backlinks", { path }),
@@ -180,9 +181,6 @@ export const api = {
     stream("ai_chat", request, onEvent),
   aiInline: (request: InlineRequest, onEvent: (e: ChatEvent) => void) =>
     stream("ai_inline", request, onEvent),
-  /** A chat with the cloud AI of Raven: messages only, no notes. */
-  ravenChat: (request: RavenRequest, onEvent: (e: ChatEvent) => void) =>
-    stream("raven_chat", request, onEvent),
   aiCancel: (taskId: string) => call<undefined>("ai_cancel", { taskId }),
   getProposals: (setId: string) => call<ProposalSetView>("get_proposals", { setId }),
   applyProposals: (setId: string, acceptedIds: string[], confirmedChangedIds: string[]) =>
@@ -229,6 +227,37 @@ export const api = {
   listSkills: () => call<Skill[]>("list_skills"),
   saveSkill: (skill: Skill) => call<Skill>("save_skill", { skill }),
   removeSkill: (id: string) => call<undefined>("remove_skill", { id }),
+  // Tasks
+  listTasks: () => call<Task[]>("list_tasks"),
+  taskSetDone: (path: string, line: number, key: string, done: boolean) =>
+    call<Task[]>("task_set_done", { path, line, key, done }),
+  taskSetMeta: (path: string, line: number, key: string, patch: MetaPatch) =>
+    call<Task[]>("task_set_meta", { path, line, key, patch }),
+  taskAddStep: (path: string, line: number, key: string, text: string) =>
+    call<Task[]>("task_add_step", { path, line, key, text }),
+  taskAddLog: (path: string, line: number, key: string, date: string, text: string) =>
+    call<Task[]>("task_add_log", { path, line, key, date, text }),
+  taskAdd: (text: string, note?: string, date?: string, steps?: string[]) =>
+    call<Task[]>("task_add", {
+      text,
+      note: note ?? null,
+      date: date ?? null,
+      steps: steps ?? null,
+    }),
+  taskSetTitle: (path: string, line: number, key: string, title: string) =>
+    call<Task[]>("task_set_title", { path, line, key, title }),
+  taskDelete: (path: string, line: number, key: string) =>
+    call<Task[]>("task_delete", { path, line, key }),
+  listIdeas: () => call<Idea[]>("list_ideas"),
+  ideaDelete: (line: number, key: string) => call<Idea[]>("idea_delete", { line, key }),
+  ideaAdd: (date: string, text: string, note?: string) =>
+    call<Idea[]>("idea_add", { date, text, note: note ?? null }),
+  ideaEdit: (line: number, key: string, text: string, note: string) =>
+    call<Idea[]>("idea_edit", { line, key, text, note }),
+  ideaSetStatus: (line: number, key: string, status: string | null) =>
+    call<Idea[]>("idea_set_status", { line, key, status }),
+  taskAddToNote: (path: string, texts: string[]) =>
+    call<Task[]>("task_add_to_note", { path, texts }),
   previewSkill: (skill: Skill, path: string) =>
     call<PreviewResult>("preview_skill", { skill, path }),
   foundrySetupHardware: () => call<undefined>("foundry_setup_hardware"),

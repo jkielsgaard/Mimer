@@ -11,6 +11,11 @@ import { useEmbeddingStore } from "@/stores/embeddingStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { InfoHint } from "@/components/InfoHint";
+import { PanelHeader } from "@/components/PanelHeader";
+import { looksLikeQuestion } from "@/lib/question";
+import { useAiBlocked } from "@/lib/useAiBlocked";
+import { AnswerCard } from "./AnswerCard";
+import { isManagedNote } from "@/features/fileTree/treeUtils";
 
 type Mode = "keyword" | "meaning" | "both";
 const MODES: { id: Mode; label: string }[] = [
@@ -29,6 +34,7 @@ export function SearchPanel() {
   const indexNonce = useVaultStore((s) => s.indexNonce);
   const status = useEmbeddingStore((s) => s.status);
   const semanticReady = status?.enabled === true && status.chunks > 0;
+  const aiOff = useAiBlocked();
   const [mode, setMode] = useState<Mode>("keyword");
   const [text, setText] = useState(seed);
   const [hits, setHits] = useState<SearchHit[]>([]);
@@ -108,6 +114,7 @@ export function SearchPanel() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
+      <PanelHeader title="Search" />
       <div className="relative p-2">
         <Search className="pointer-events-none absolute left-4 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -183,6 +190,9 @@ export function SearchPanel() {
             </div>
           </div>
         )}
+        {aiOff === null && looksLikeQuestion(text) && (
+          <AnswerCard question={text.trim()} semantic={semanticReady} />
+        )}
         {pending && text.trim() !== "" && (
           <p className="p-2 text-xs text-muted-foreground">Searching…</p>
         )}
@@ -190,25 +200,27 @@ export function SearchPanel() {
           <p className="p-2 text-xs text-muted-foreground">No results.</p>
         )}
         <ul>
-          {hits.map((h) => (
-            <li key={h.path}>
-              <button
-                type="button"
-                className="w-full rounded px-2 py-1.5 text-left hover:bg-muted"
-                onClick={() => {
-                  void openFile(h.path);
-                }}
-              >
-                <div className="truncate text-[13px] font-medium">{h.title}</div>
-                <div className="truncate text-[11px] text-muted-foreground">{h.path}</div>
-                {h.snippet !== "" && (
-                  <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                    {renderSnippet(h.snippet)}
-                  </div>
-                )}
-              </button>
-            </li>
-          ))}
+          {hits
+            .filter((h) => !isManagedNote(h.path))
+            .map((h) => (
+              <li key={h.path}>
+                <button
+                  type="button"
+                  className="w-full rounded px-2 py-1.5 text-left hover:bg-muted"
+                  onClick={() => {
+                    void openFile(h.path);
+                  }}
+                >
+                  <div className="truncate text-[13px] font-medium">{h.title}</div>
+                  <div className="truncate text-[11px] text-muted-foreground">{h.path}</div>
+                  {h.snippet !== "" && (
+                    <div className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                      {renderSnippet(h.snippet)}
+                    </div>
+                  )}
+                </button>
+              </li>
+            ))}
         </ul>
       </div>
     </div>

@@ -3,8 +3,8 @@ import type { Project } from "@/bindings/Project";
 import type { RenamePreview } from "@/bindings/RenamePreview";
 import { toApiError } from "@/lib/api";
 
-export type LeftTab = "files" | "search";
-export type RightTab = "assistant" | "raven" | "images" | "history";
+export type LeftTab = "files" | "search" | "tasks" | "ideas";
+export type RightTab = "outline" | "links" | "history" | "images";
 const SOURCE_MODE_KEY = "mimer.sourceMode";
 
 /** Whether notes are shown as Markdown source (remembered between runs). */
@@ -67,8 +67,29 @@ interface UiState {
   openImagePreview: (preview: ImagePreview | null) => void;
   leftTab: LeftTab;
   rightTab: RightTab;
+  /** The chat window over the note is open. */
+  askOpen: boolean;
+  setAskOpen: (open: boolean) => void;
   leftCollapsed: boolean;
   rightCollapsed: boolean;
+  /** What fills the middle of the window: the notes, the task list or one task. */
+  centerView: "notes" | "tasks" | "task" | "ideas";
+  setCenterView: (v: "notes" | "tasks" | "task" | "ideas") => void;
+  /** Shows the tasks or the ideas: their own panel on the left and their page in the middle. */
+  openArea: (area: "tasks" | "ideas") => void;
+  /** The write-it-down box (Ctrl+Shift+N), opened with this kind chosen. */
+  captureKind: "task" | "idea" | "note" | null;
+  openCapture: (kind?: "task" | "idea" | "note") => void;
+  closeCapture: () => void;
+  /** The focus screen is open. */
+  focusOpen: boolean;
+  setFocusOpen: (open: boolean) => void;
+  findTasksOpen: boolean;
+  /** Look for tasks in this text instead of the whole open note (a selection). */
+  findTasksIn: string | null;
+  setFindTasksOpen: (open: boolean, text?: string) => void;
+  starterOpen: boolean;
+  setStarterOpen: (open: boolean) => void;
   quickOpen: boolean;
   commandPalette: boolean;
   settingsOpen: boolean;
@@ -76,21 +97,12 @@ interface UiState {
   settingsTab: string | null;
   /** Opens Settings on the Built-in AI tab. */
   openBuiltInSettings: () => void;
-  /** Opens Settings on the Skills tab. */
-  /** Opens Settings → Skills, optionally with one skill chosen. */
-  openSkillsSettings: (skillId?: string) => void;
-  /** The skill Settings → Skills should open with (read once, then cleared). */
-  skillsFocus: string | null;
   recoverOpen: boolean;
   templatePickerOpen: boolean;
   vaultSwitcherOpen: boolean;
   setVaultSwitcherOpen: (open: boolean) => void;
   importOpen: boolean;
   setImportOpen: (open: boolean) => void;
-  researchOpen: boolean;
-  setResearchOpen: (open: boolean) => void;
-  importAnswerOpen: boolean;
-  setImportAnswerOpen: (open: boolean) => void;
   aboutOpen: boolean;
   setAboutOpen: (open: boolean) => void;
   helpOpen: boolean;
@@ -106,7 +118,6 @@ interface UiState {
   linkUpdate: LinkUpdatePrompt | null;
   toasts: Toast[];
   focusChatNonce: number;
-  focusRavenNonce: number;
   focusSearchNonce: number;
   /** Search text pushed from elsewhere (e.g. a tag click). */
   searchSeed: string;
@@ -121,8 +132,6 @@ interface UiState {
   setRecoverOpen: (open: boolean) => void;
   openProjectDialog: (state: ProjectDialogState | null) => void;
   focusChat: () => void;
-  /** Opens the Raven tab and focuses its message box. */
-  focusRaven: () => void;
   focusSearch: (seed?: string) => void;
   toast: (message: string, kind?: Toast["kind"], action?: Toast["action"]) => void;
   dismissToast: (id: number) => void;
@@ -161,19 +170,44 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({ sourceMode });
   },
   leftTab: "files",
-  rightTab: "assistant",
+  rightTab: "outline",
+  askOpen: false,
+  setAskOpen: (askOpen) => {
+    set({ askOpen });
+  },
   leftCollapsed: false,
-  rightCollapsed: false,
+  // The right panel opens only when asked for: the note gets the width.
+  rightCollapsed: true,
+  centerView: "notes",
+  captureKind: null,
+  openCapture: (kind) => {
+    set({ captureKind: kind ?? "idea" });
+  },
+  closeCapture: () => {
+    set({ captureKind: null });
+  },
+  setCenterView: (centerView) => {
+    set({ centerView });
+  },
+  focusOpen: false,
+  setFocusOpen: (focusOpen) => {
+    set({ focusOpen });
+  },
+  findTasksOpen: false,
+  findTasksIn: null,
+  setFindTasksOpen: (findTasksOpen, text) => {
+    set({ findTasksOpen, findTasksIn: findTasksOpen ? (text ?? null) : null });
+  },
+  starterOpen: false,
+  setStarterOpen: (starterOpen) => {
+    set({ starterOpen });
+  },
   quickOpen: false,
   commandPalette: false,
   settingsOpen: false,
   settingsTab: null,
   openBuiltInSettings: () => {
     set({ settingsOpen: true, settingsTab: "builtin" });
-  },
-  skillsFocus: null,
-  openSkillsSettings: (skillId) => {
-    set({ settingsOpen: true, settingsTab: "skills", skillsFocus: skillId ?? null });
   },
   recoverOpen: false,
   templatePickerOpen: false,
@@ -188,14 +222,6 @@ export const useUiStore = create<UiState>((set, get) => ({
   importOpen: false,
   setImportOpen: (importOpen) => {
     set({ importOpen });
-  },
-  researchOpen: false,
-  setResearchOpen: (researchOpen) => {
-    set({ researchOpen });
-  },
-  importAnswerOpen: false,
-  setImportAnswerOpen: (importAnswerOpen) => {
-    set({ importAnswerOpen });
   },
   aboutOpen: false,
   setAboutOpen: (aboutOpen) => {
@@ -220,10 +246,12 @@ export const useUiStore = create<UiState>((set, get) => ({
   linkUpdate: null,
   toasts: [],
   focusChatNonce: 0,
-  focusRavenNonce: 0,
   focusSearchNonce: 0,
   searchSeed: "",
 
+  openArea: (area) => {
+    set({ leftTab: area, leftCollapsed: false, centerView: area });
+  },
   setLeftTab: (leftTab) => {
     set({ leftTab, leftCollapsed: false });
   },
@@ -252,18 +280,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({ projectDialog });
   },
   focusChat: () => {
-    set((s) => ({
-      rightTab: "assistant",
-      rightCollapsed: false,
-      focusChatNonce: s.focusChatNonce + 1,
-    }));
-  },
-  focusRaven: () => {
-    set((s) => ({
-      rightTab: "raven",
-      rightCollapsed: false,
-      focusRavenNonce: s.focusRavenNonce + 1,
-    }));
+    set((s) => ({ askOpen: true, focusChatNonce: s.focusChatNonce + 1 }));
   },
   focusSearch: (seed) => {
     set((s) => ({

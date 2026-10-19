@@ -42,7 +42,7 @@ describe("HelpDialog", () => {
     useUiStore.getState().openHelp();
     render(<HelpDialog />);
     const user = userEvent.setup();
-    await user.type(screen.getByLabelText("Search the guide"), "paperclip");
+    await user.type(screen.getByLabelText("Search the guide"), "dyslexia");
     const nav = screen.getByRole("navigation", { name: "Topics" });
     expect(nav).toHaveTextContent("Mimer, the assistant");
     expect(nav).not.toHaveTextContent("Version history");

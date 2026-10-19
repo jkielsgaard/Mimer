@@ -8,6 +8,7 @@ import {
   FolderPlus,
   Plus,
   Search,
+  Sparkles,
   Users,
   Zap,
 } from "lucide-react";
@@ -55,7 +56,8 @@ export function TreeToolbar() {
   };
 
   return (
-    <div className="flex items-center gap-1 border-b px-2 py-1 text-muted-foreground">
+    <div className="flex h-9 shrink-0 items-center gap-1 border-b px-3 text-muted-foreground">
+      <h2 className="flex-1 truncate text-xs font-semibold text-foreground">Files</h2>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
@@ -77,6 +79,14 @@ export function TreeToolbar() {
               <FilePlus className="size-4" /> Note
             </span>
             <span className="text-xs text-muted-foreground">{formatShortcut("Mod+N")}</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="justify-start gap-2"
+            onSelect={() => {
+              useUiStore.getState().setStarterOpen(true);
+            }}
+          >
+            <Sparkles className="size-4" /> From a starter…
           </DropdownMenuItem>
           <DropdownMenuItem
             className="justify-start gap-2"

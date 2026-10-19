@@ -4,6 +4,10 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Toasts } from "@/components/layout/Toasts";
 import { ProjectDialog } from "@/features/projects/ProjectDialog";
 import { ProposalReview } from "@/features/proposals/ProposalReview";
+import { QuickCapture } from "@/features/capture/QuickCapture";
+import { FindTasksDialog } from "@/features/tasks/FindTasksDialog";
+import { FocusMode } from "@/features/tasks/FocusMode";
+import { StarterDialog } from "@/features/starters/StarterDialog";
 import { FirstRunDialog } from "@/features/welcome/FirstRunDialog";
 import { CommandPalette } from "@/features/quickOpen/CommandPalette";
 import { QuickOpen } from "@/features/quickOpen/QuickOpen";
@@ -17,8 +21,6 @@ import { HelpDialog } from "@/features/help/HelpDialog";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { AppContextMenu } from "@/components/AppContextMenu";
 import { ImportDialog } from "@/features/import/ImportDialog";
-import { ResearchDialog } from "@/features/research/ResearchDialog";
-import { ImportAnswerDialog } from "@/features/research/ImportAnswerDialog";
 import { PrintView } from "@/features/export/PrintView";
 import {
   closeActiveTab,
@@ -177,6 +179,14 @@ export function App() {
       "Mod+p": () => {
         useUiStore.getState().setQuickOpen(true);
       },
+      "Mod+Shift+n": () => {
+        useUiStore.getState().openCapture();
+      },
+      "Mod+Shift+t": () => {
+        const ui = useUiStore.getState();
+        if (ui.centerView === "tasks" || ui.centerView === "task") ui.setCenterView("notes");
+        else ui.openArea("tasks");
+      },
       "Mod+Shift+p": () => {
         useUiStore.getState().setCommandPalette(true);
       },
@@ -251,6 +261,10 @@ export function App() {
       <QuickOpen />
       <CommandPalette />
       <FirstRunDialog />
+      <FocusMode />
+      <FindTasksDialog />
+      <QuickCapture />
+      <StarterDialog />
       <SettingsDialog />
       <RecoverDeletedDialog />
       <TemplatePicker />
@@ -260,8 +274,6 @@ export function App() {
       <ImageLightbox />
       <NoticeDialog />
       <NewNoteDialog />
-      <ResearchDialog />
-      <ImportAnswerDialog />
       <AboutDialog />
       <HelpDialog />
       <PrintView />

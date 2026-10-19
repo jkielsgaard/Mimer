@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import type { ChatEvent } from "@/bindings/ChatEvent";
-import type { ResearchCard } from "@/bindings/ResearchCard";
 import type { RunTarget } from "@/bindings/RunTarget";
 import type { Skill } from "@/bindings/Skill";
 import type { ChatSummary } from "@/bindings/ChatSummary";
@@ -9,7 +8,6 @@ import type { StoredMessage } from "@/bindings/StoredMessage";
 import { api, toApiError } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
 import { MAX_MENTIONS } from "@/lib/mentionQuery";
-import { pushRecentSkill } from "@/lib/recentSkills";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { currentFolder, projectForPath, useVaultStore } from "./vaultStore";
 
@@ -69,7 +67,6 @@ export interface ChatMessage {
   /** Notes the user attached to this message with the `/` picker. */
   mentions: string[];
   /** Prompts for a cloud AI that Mimer wrote in this answer. */
-  research: ResearchCard[];
   /** Live progress of an assistant message that is still being written. */
   progress?: ChatProgress;
   /** Set when a long skill run did only its first notes. */
@@ -128,7 +125,6 @@ export function toStored(
           m.role === "assistant" &&
           m.content === "" &&
           m.activity.length === 0 &&
-          m.research.length === 0 &&
           m.error === null
         ),
     )
@@ -139,7 +135,6 @@ export function toStored(
       activity: m.activity,
       error: m.error,
       mentions: m.mentions,
-      research: m.research,
     }));
   return {
     schemaVersion: 1,
@@ -236,9 +231,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
             continued: false,
           };
           break;
-        case "researchPrompt":
-          updated.research = [...updated.research, { title: e.title, text: e.text }];
-          break;
         case "error":
           updated.error = e.error.message;
           delete updated.progress;
@@ -267,7 +259,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
         ? typed
         : `Skill: ${skill.name}${typed === "" ? "" : `\n${typed}`}`;
     if (get().chatId === null) set({ chatId: crypto.randomUUID() });
-    if (skill !== null && !cont) pushRecentSkill(skill.id);
     const vault = useVaultStore.getState();
     const mentions = cont ? [] : get().draftMentions;
     const user: ChatMessage = {
@@ -278,7 +269,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
       proposalSetId: null,
       error: null,
       mentions,
-      research: [],
     };
     const assistant: ChatMessage = {
       id: nextId++,
@@ -288,7 +278,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
       proposalSetId: null,
       error: null,
       mentions: [],
-      research: [],
     };
     const history = [...get().messages, user];
     const startedAt = Date.now();
@@ -415,7 +404,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
         proposalSetId: null,
         error: m.error,
         mentions: m.mentions,
-        research: m.research,
       }));
       nextId = Math.max(nextId, ...messages.map((m) => m.id + 1));
       set({ messages, chatId: chat.id, taskId: null, streaming: false });

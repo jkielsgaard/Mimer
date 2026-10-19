@@ -32,7 +32,6 @@ describe("chat persistence", () => {
         proposalSetId: null,
         error: null,
         mentions: [],
-        research: [],
       },
       {
         id: 2,
@@ -42,7 +41,6 @@ describe("chat persistence", () => {
         proposalSetId: null,
         error: null,
         mentions: [],
-        research: [],
       },
     ];
     const stored = toStored(msgs, "3f6c1e2a-1111-4222-8333-444455556666", null);
@@ -91,7 +89,6 @@ describe("chat persistence", () => {
           proposalSetId: null,
           error: null,
           mentions: [],
-          research: [],
         },
       ],
       chatId: "a",
@@ -118,7 +115,6 @@ describe("chat persistence", () => {
           activity: [],
           error: null,
           mentions: ["Work/Plan.md"],
-          research: [],
         },
       ],
     });
@@ -137,7 +133,6 @@ describe("chat persistence", () => {
           proposalSetId: null,
           error: null,
           mentions: ["Work/Plan.md", "Home.md"],
-          research: [],
         },
       ],
       "3f6c1e2a-1111-4222-8333-444455556666",
@@ -201,7 +196,6 @@ describe("attached notes", () => {
           proposalSetId: null,
           error: null,
           mentions: [],
-          research: [],
         },
         {
           id: 2,
@@ -211,7 +205,6 @@ describe("attached notes", () => {
           proposalSetId: null,
           error: null,
           mentions: [],
-          research: [],
         },
       ],
     });

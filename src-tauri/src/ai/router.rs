@@ -1,5 +1,4 @@
-//! Picks the provider for a request. Notes only ever go to local providers; cloud providers are
-//! reachable only through Raven, which never receives any note content.
+//! Picks the provider for a request. Notes only ever go to local providers.
 
 use crate::error::{AppError, AppResult};
 use crate::projects::Project;
@@ -31,25 +30,6 @@ impl LocalProvider {
     }
 }
 
-/// The cloud provider chosen for Raven. Can only be created by [`select_cloud`].
-#[derive(Debug, Clone)]
-pub struct CloudProvider {
-    config: ProviderConfig,
-}
-
-impl Approved for CloudProvider {
-    fn config(&self) -> &ProviderConfig {
-        &self.config
-    }
-}
-
-impl CloudProvider {
-    /// The provider configuration that was approved for this request.
-    pub fn config(&self) -> &ProviderConfig {
-        &self.config
-    }
-}
-
 fn is_local(config: &ProviderConfig) -> bool {
     config.effective_location() == Location::Local
 }
@@ -64,7 +44,7 @@ pub fn select_local(settings: &Settings, provider_id: Option<&str>) -> AppResult
         .ok_or_else(|| AppError::Provider(format!("AI provider “{id}” is not configured")))?;
     if !is_local(&config) {
         return Err(AppError::ProviderBlocked(format!(
-            "“{}” is a cloud provider. Your notes are only sent to local AI. Choose a local provider, or use Raven for cloud AI.",
+            "“{}” is a cloud provider. Your notes are only sent to local AI. Choose a local provider.",
             config.name
         )));
     }
@@ -81,24 +61,6 @@ pub fn select_for_project(
         .and_then(|p| p.provider_id.as_deref())
         .filter(|id| settings.provider(id).is_some_and(is_local));
     select_local(settings, own)
-}
-
-/// Chooses Raven's cloud provider. Fails when Raven is off or its provider is not a cloud one.
-pub fn select_cloud(settings: &Settings) -> AppResult<CloudProvider> {
-    let id = settings.ai.raven_provider_id.as_deref().ok_or_else(|| {
-        AppError::Provider("Raven is off. Choose a cloud provider for it in Settings → AI.".into())
-    })?;
-    let config = settings
-        .provider(id)
-        .cloned()
-        .ok_or_else(|| AppError::Provider(format!("AI provider “{id}” is not configured")))?;
-    if is_local(&config) {
-        return Err(AppError::ProviderBlocked(format!(
-            "“{}” is a local provider. Raven uses cloud AI only.",
-            config.name
-        )));
-    }
-    Ok(CloudProvider { config })
 }
 
 #[cfg(test)]
@@ -231,23 +193,5 @@ mod tests {
             select_local(&settings(), Some("nope")),
             Err(AppError::Provider(_))
         ));
-    }
-
-    #[test]
-    fn raven_needs_a_cloud_provider() {
-        let mut s = settings();
-        assert!(
-            matches!(select_cloud(&s), Err(AppError::Provider(_))),
-            "off"
-        );
-        s.ai.raven_provider_id = Some("cloud".into());
-        assert_eq!(select_cloud(&s).unwrap().config().id, "cloud");
-        s.ai.raven_provider_id = Some("lmstudio-default".into());
-        assert!(matches!(
-            select_cloud(&s),
-            Err(AppError::ProviderBlocked(_))
-        ));
-        s.ai.raven_provider_id = Some("missing".into());
-        assert!(matches!(select_cloud(&s), Err(AppError::Provider(_))));
     }
 }

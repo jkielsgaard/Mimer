@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Settings } from "@/bindings/Settings";
 import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
@@ -6,8 +7,7 @@ import { engineStatus } from "@/test/engineFixtures";
 
 const api = vi.hoisted(() => ({
   listChats: vi.fn().mockResolvedValue([]),
-  listPrompts: vi.fn().mockResolvedValue([]),
-  listSkills: vi.fn().mockResolvedValue([]),
+  engineWake: vi.fn(),
   saveChat: vi.fn(),
   aiChat: vi.fn(),
   aiCancel: vi.fn(),
@@ -16,6 +16,7 @@ vi.mock("@/lib/api", () => ({ api, toApiError: (e: unknown) => ({ message: Strin
 vi.mock("@/lib/flush", () => ({ flushPendingWrites: vi.fn().mockResolvedValue(undefined) }));
 
 import { ChatPanel } from "./ChatPanel";
+import { useChatStore } from "@/stores/chatStore";
 import { useEngineStore } from "@/stores/engineStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useVaultStore } from "@/stores/vaultStore";
@@ -26,15 +27,20 @@ function settings(defaultProviderId: string): Settings {
     recentVaults: [],
     lastVault: null,
     theme: "system",
-    editor: { fontSize: 15, lineWidth: 760, spellcheck: true, recentNotes: 4 },
+    editor: {
+      fontSize: 15,
+      lineWidth: 760,
+      spellcheck: true,
+      recentNotes: 4,
+      aiSpelling: false,
+      ownWords: [],
+    },
     git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
     ai: {
       defaultProviderId,
-      ravenProviderId: null,
       builtin: DEFAULT_BUILTIN,
       foundry: { model: "" },
       baseInstruction: "",
-      allowOwnKnowledge: false,
       globalInstructions: "",
       embeddings: { enabled: false, providerId: "lm", model: "" },
       providers: [
@@ -63,11 +69,13 @@ function settings(defaultProviderId: string): Settings {
   };
 }
 
-describe("the Mimer tab with the built-in AI", () => {
+describe("the chat with the built-in AI", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     api.listChats.mockResolvedValue([]);
-    api.listPrompts.mockResolvedValue([]);
+    api.saveChat.mockImplementation((c: unknown) => Promise.resolve(c));
+    api.aiChat.mockResolvedValue("task-1");
+    useChatStore.getState().resetForVault();
     useVaultStore.setState({
       vault: null,
       files: [],
@@ -78,37 +86,39 @@ describe("the Mimer tab with the built-in AI", () => {
     });
   });
 
-  it("the message box and Send are locked until Mimer is awake, and say why", () => {
+  it("has no Wake button and no model switch: the message box is always open", () => {
     useSettingsStore.setState({ settings: settings("builtin") });
     useEngineStore.setState({ status: engineStatus({ state: "asleep" }) });
     render(<ChatPanel />);
-    const box = screen.getByLabelText("Message Mimer");
-    expect(box).toBeDisabled();
-    expect(box).toHaveAttribute("placeholder", "Wake Mimer to start chatting");
-    expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: /Wake Mimer/ })).toBeInTheDocument();
-  });
-
-  it("stays locked while the model is loading", () => {
-    useSettingsStore.setState({ settings: settings("builtin") });
-    useEngineStore.setState({ status: engineStatus({ state: "waking", message: "Loading…" }) });
-    render(<ChatPanel />);
-    expect(screen.getByLabelText("Message Mimer")).toBeDisabled();
-  });
-
-  it("is open for writing when Mimer is awake", () => {
-    useSettingsStore.setState({ settings: settings("builtin") });
-    useEngineStore.setState({ status: engineStatus({ state: "awake" }) });
-    render(<ChatPanel />);
     expect(screen.getByLabelText("Message Mimer")).toBeEnabled();
-    expect(screen.getByRole("button", { name: /Sleep Mimer/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Wake Mimer/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Change AI/ })).toBeNull();
   });
 
-  it("another provider is not affected and shows no Wake bar", () => {
+  it("wakes a sleeping built-in AI when a message is sent, then sends it", async () => {
+    useSettingsStore.setState({ settings: settings("builtin") });
+    useEngineStore.setState({ status: engineStatus({ state: "asleep" }) });
+    api.engineWake.mockImplementation(() => {
+      useEngineStore.setState({ status: engineStatus({ state: "awake" }) });
+      return Promise.resolve(undefined);
+    });
+    render(<ChatPanel />);
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Message Mimer"), "Hello{Enter}");
+    await waitFor(() => {
+      expect(api.aiChat).toHaveBeenCalled();
+    });
+    expect(api.engineWake).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not wake anything for another provider", async () => {
     useSettingsStore.setState({ settings: settings("lm") });
     useEngineStore.setState({ status: engineStatus({ state: "asleep" }) });
     render(<ChatPanel />);
-    expect(screen.getByLabelText("Message Mimer")).toBeEnabled();
-    expect(screen.queryByTestId("engine-bar")).toBeNull();
+    await userEvent.setup().type(screen.getByLabelText("Message Mimer"), "Hello{Enter}");
+    await waitFor(() => {
+      expect(api.aiChat).toHaveBeenCalled();
+    });
+    expect(api.engineWake).not.toHaveBeenCalled();
   });
 });

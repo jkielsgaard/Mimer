@@ -1,17 +1,17 @@
 ## The built-in AI
 
-Mimer can run its own AI **on this computer**, so you do not need LM Studio. Your notes never leave the computer. The built-in AI is what Mimer uses from the start. You can choose LM Studio instead under **Settings → AI → Mimer's provider**, and a cloud AI is only for **Raven**, which cannot see your notes.
+Mimer can run its own AI **on this computer**, so you do not need LM Studio. Your notes never leave the computer. The built-in AI is what Mimer uses from the start. You can choose LM Studio instead under **Settings → AI → Mimer's provider**.
 
 ## Set it up
 
-1. Open **Settings → Built-in AI** (or press **Set up** in the Mimer tab).
+1. Open **Settings → Built-in AI** (or press **Set up** in the status bar).
 2. Choose the **engine**. **Foundry Local** (Microsoft) picks the best hardware by itself, including a neural processor (NPU), and shows only models that can use tools; it needs Windows 11 24H2 or later, or Linux, and is the only engine in the Microsoft Store version. **llama.cpp** works on many graphics cards with Google's Gemma models, but not in the Store version. You can download both and switch between them. For llama.cpp, choose your **processor** and your **graphics card**. Mimer pre-selects what it finds. The engine follows the graphics card: **Vulkan** works with AMD, Intel and Nvidia, **CUDA** is fastest on Nvidia, **CPU only** works everywhere but is slow.
 3. Choose a **model**. **Gemma 4 12B** is the recommended one and needs about 12 GB of memory. **E4B** and **E2B** are lighter. You can also add your own `.gguf` file.
 4. Press **Download**. This fetches two things, and nothing is downloaded before you press it: the **engine** (the open-source program llama.cpp, MIT licence) from github.com, and the **model** (Google Gemma 4, Apache-2.0) from huggingface.co. Together they are several GB, shown before you start, and they take about as much disk space. The files are checked after the download and kept in Mimer's own folder. If the connection breaks, press Download again: it continues where it stopped.
 
 ## Wake and sleep
 
-In the **Mimer tab**, **Wake Mimer** loads the model into memory. It takes some seconds to a minute. Until Mimer is awake the message box is locked. **Sleep Mimer** unloads the model and gives the memory back, so use it when you need the memory for something else. Closing Mimer, or a crash, also stops it. In Settings you can choose that Mimer sleeps by itself after some idle minutes.
+**Wake** in the status bar loads the model into memory. It takes some seconds to a minute. Until Mimer is awake the message box is locked. **Sleep Mimer** unloads the model and gives the memory back, so use it when you need the memory for something else. Closing Mimer, or a crash, also stops it. In Settings you can choose that Mimer sleeps by itself after some idle minutes.
 
 ## When something goes wrong
 

@@ -25,20 +25,19 @@ describe("Header", () => {
     expect(useUiStore.getState().helpOpen).toBe(true);
   });
 
-  it("the File menu also has the guide", async () => {
+  it("the Help menu also has the guide", async () => {
     render(<Header />);
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "File menu" }));
+    await user.click(screen.getByRole("button", { name: "Help menu" }));
     await user.click(await screen.findByRole("menuitem", { name: /How to use Mimer/ }));
     expect(useUiStore.getState().helpOpen).toBe(true);
   });
 
-  it("has a Report submenu with the bug, feature and AI-content reports", async () => {
+  it("has the bug, feature and AI-content reports in the Help menu", async () => {
     open.mockResolvedValue(undefined);
     render(<Header />);
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "File menu" }));
-    await user.click(await screen.findByRole("menuitem", { name: /Report/ }));
+    await user.click(screen.getByRole("button", { name: "Help menu" }));
     expect(await screen.findByRole("menuitem", { name: /Report a bug/ })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: /Suggest a feature/ })).toBeInTheDocument();
     const ai = screen.getByRole("menuitem", { name: /Report inappropriate AI content/ });
@@ -47,5 +46,20 @@ describe("Header", () => {
     await vi.waitFor(() => {
       expect(open).toHaveBeenCalledWith(expect.stringContaining("Inappropriate%20AI%20content"));
     });
+  });
+});
+
+describe("Header menus", () => {
+  it("keeps File for notes and the vault, Go for places and Help for help", async () => {
+    render(<Header />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "File menu" }));
+    expect(
+      await screen.findByRole("menuitem", { name: /New note from a starter/ }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /About Mimer/ })).toBeNull();
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: "Go menu" }));
+    expect(await screen.findByRole("menuitem", { name: /Ask about my notes/ })).toBeInTheDocument();
   });
 });

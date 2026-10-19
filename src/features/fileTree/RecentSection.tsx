@@ -5,13 +5,14 @@ import { useRecent } from "@/stores/recentStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { SidebarSection } from "./SidebarSection";
+import { isManagedNote } from "./treeUtils";
 
 /** The notes opened last, newest first. Hidden until there is one. */
 export function RecentSection() {
   const remembered = useRecent((s) => s.paths);
   const limit = useSettingsStore((s) => s.settings?.editor.recentNotes ?? 4);
   const activePath = useVaultStore((s) => s.activePath);
-  const paths = remembered.slice(0, limit);
+  const paths = remembered.filter((p) => !isManagedNote(p)).slice(0, limit);
   if (paths.length === 0) return null;
   return (
     <SidebarSection title="Recent" storageKey="recent" count={paths.length}>

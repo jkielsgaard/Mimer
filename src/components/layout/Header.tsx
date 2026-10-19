@@ -1,5 +1,5 @@
-import { CircleHelp, Menu, PanelLeft, PanelRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { CircleHelp, PanelLeft, PanelRight } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import { PromptDialog } from "@/components/PromptDialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,9 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { api } from "@/lib/api";
@@ -26,7 +24,7 @@ import { useProposalStore } from "@/stores/proposalStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { activeTitle, useVaultStore } from "@/stores/vaultStore";
 
-/** Title bar row: app menu, "vault — note" title and panel toggles. */
+/** Title bar row: the File, Go and Help menus, "vault — note" title and panel toggles. */
 export function Header() {
   const vault = useVaultStore((s) => s.vault);
   const activePath = useVaultStore((s) => s.activePath);
@@ -48,8 +46,18 @@ export function Header() {
   const item = (label: string, combo: string | null, run: () => void, disabled = false) => (
     <DropdownMenuItem disabled={disabled} onSelect={run}>
       <span>{label}</span>
-      {combo && <span className="text-xs text-muted-foreground">{formatShortcut(combo)}</span>}
+      {combo && <DropdownMenuShortcut>{formatShortcut(combo)}</DropdownMenuShortcut>}
     </DropdownMenuItem>
+  );
+  const menu = (name: string, children: ReactNode) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" aria-label={`${name} menu`}>
+          {name}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="min-w-64">{children}</DropdownMenuContent>
+    </DropdownMenu>
   );
 
   const saveTemplate = async (name: string): Promise<void> => {
@@ -65,28 +73,29 @@ export function Header() {
 
   return (
     <header className="flex h-9 shrink-0 items-center gap-1 border-b bg-sidebar px-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" aria-label="File menu">
-            <Menu /> File
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
+      {menu(
+        "File",
+        <>
           {item("New note", "Mod+N", newNoteInCurrentFolder)}
-          {item("New note from template…", null, () => {
+          {item("New note from a starter…", null, () => {
+            ui.setStarterOpen(true);
+          })}
+          {item("New note from a template…", null, () => {
             ui.setTemplatePickerOpen(true);
           })}
-          {item("Open today's daily note", "Mod+Shift+D", () => void openDailyNote())}
+          {item("Today's daily note", "Mod+Shift+D", () => void openDailyNote())}
+          {item("Write something down…", "Mod+Shift+N", () => {
+            ui.openCapture();
+          })}
           <DropdownMenuSeparator />
           {item(
-            "Save current note as template…",
+            "Save the note as a template…",
             null,
             () => {
               setTemplateName(noteTitle(activePath ?? ""));
             },
             activePath === null,
           )}
-          <DropdownMenuSeparator />
           {item(
             "Export…",
             null,
@@ -95,66 +104,81 @@ export function Header() {
             },
             activePath === null,
           )}
-          {item("Import notes from folder…", null, () => {
+          {item("Import notes from a folder…", null, () => {
             ui.setImportOpen(true);
           })}
-          {item("Write a research prompt…", null, () => {
-            ui.setResearchOpen(true);
-          })}
-          {item("Import an answer from a cloud AI…", null, () => {
-            ui.setImportAnswerOpen(true);
-          })}
-          {item("Quick open…", "Mod+P", () => {
-            ui.setQuickOpen(true);
-          })}
-          {item("Search in vault", "Mod+Shift+F", () => {
-            ui.focusSearch();
-          })}
           <DropdownMenuSeparator />
-          {item("Version history", "Mod+Shift+H", () => {
-            ui.setRightTab("history");
+          {item("Recover deleted notes…", null, () => {
+            ui.setRecoverOpen(true);
           })}
           {item(
-            "Undo last AI change",
+            "Undo the last AI change",
             null,
             () => {
               void useProposalStore.getState().undoLast();
             },
             lastApplied === null,
           )}
-          {item("Recover deleted notes…", null, () => {
-            ui.setRecoverOpen(true);
-          })}
           <DropdownMenuSeparator />
-          {item(ui.sourceMode ? "Show live preview" : "Show Markdown source", "Mod+Alt+M", () => {
-            ui.setSourceMode(!ui.sourceMode);
-          })}
           {item("Settings…", "Mod+,", () => {
             ui.setSettingsOpen(true);
           })}
+          {item("Close the vault", null, () => void closeVault())}
+        </>,
+      )}
+      {menu(
+        "Go",
+        <>
+          {item("Quick open…", "Mod+P", () => {
+            ui.setQuickOpen(true);
+          })}
+          {item("Command palette…", "Mod+Shift+P", () => {
+            ui.setCommandPalette(true);
+          })}
+          {item("Search", "Mod+Shift+F", () => {
+            ui.focusSearch();
+          })}
+          <DropdownMenuSeparator />
+          {item("Tasks", "Mod+Shift+T", () => {
+            ui.openArea("tasks");
+          })}
+          {item("Ideas", null, () => {
+            ui.openArea("ideas");
+          })}
+          {item("Ask about my notes", "Mod+L", () => {
+            ui.focusChat();
+          })}
+          <DropdownMenuSeparator />
+          {item("History of the note", "Mod+Shift+H", () => {
+            ui.setRightTab("history");
+          })}
+          {item(ui.sourceMode ? "Show live preview" : "Show Markdown source", "Mod+Alt+M", () => {
+            ui.setSourceMode(!ui.sourceMode);
+          })}
+        </>,
+      )}
+      {menu(
+        "Help",
+        <>
           {item("How to use Mimer", "F1", () => {
             ui.openHelp();
           })}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Report</DropdownMenuSubTrigger>
-            <DropdownMenuSubContent>
-              {item("Report a bug…", null, () => {
-                reportIssue("bug").catch(reportError);
-              })}
-              {item("Suggest a feature…", null, () => {
-                reportIssue("feature").catch(reportError);
-              })}
-              {item("Report inappropriate AI content…", null, () => {
-                reportAi(ui.rightTab === "raven" ? "Raven" : "Mimer").catch(reportError);
-              })}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
+          <DropdownMenuSeparator />
+          {item("Report a bug…", null, () => {
+            reportIssue("bug").catch(reportError);
+          })}
+          {item("Suggest a feature…", null, () => {
+            reportIssue("feature").catch(reportError);
+          })}
+          {item("Report inappropriate AI content…", null, () => {
+            reportAi("Mimer").catch(reportError);
+          })}
+          <DropdownMenuSeparator />
           {item("About Mimer…", null, () => {
             ui.setAboutOpen(true);
           })}
-          {item("Close vault", null, () => void closeVault())}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </>,
+      )}
       <VaultSwitcher />
       <div
         className="flex-1 truncate text-center text-xs text-muted-foreground"

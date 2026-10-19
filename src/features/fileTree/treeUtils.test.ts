@@ -10,6 +10,7 @@ import {
   placeNames,
   stepName,
   visibleNames,
+  withoutManagedNotes,
   sortTree,
   topLevelPaths,
   withoutFolders,
@@ -216,5 +217,20 @@ describe("withoutImages", () => {
     const got = withoutImages(imported);
     const names = (got[0]?.children ?? []).map((n) => n.name);
     expect(names).toEqual(["Page.md", "doc.pdf", "Empty"]);
+  });
+});
+
+describe("withoutManagedNotes", () => {
+  it("hides the notes Mimer keeps itself, only in the vault root", () => {
+    const node = (path: string, isDir = false): TreeNode => ({
+      name: path.split("/").pop() ?? path,
+      path,
+      isDir,
+      children: [],
+      modified: 0,
+    });
+    const tree = [node("Tasks.md"), node("Home.md"), node("Work", true), node("Work/Tasks.md")];
+    const shown = withoutManagedNotes(tree).map((n) => n.path);
+    expect(shown).toEqual(["Home.md", "Work", "Work/Tasks.md"]);
   });
 });

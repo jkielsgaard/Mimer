@@ -14,9 +14,7 @@ export function ChecksList({
   const failed = checks.filter((c) => !c.ok);
   return (
     <section aria-label="Mimer's checks" className="flex flex-col gap-1.5">
-      <h4 className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        Mimer checked the change
-      </h4>
+      <h4 className="section-label">Mimer checked the change</h4>
       <ul className="flex flex-wrap gap-1.5">
         {checks.map((c) => (
           <li

@@ -7,7 +7,6 @@ pub mod mentions;
 pub mod prompt;
 pub mod proposals;
 pub mod providers;
-pub mod raven;
 pub mod router;
 pub mod skill_run;
 pub mod tools;
@@ -46,11 +45,6 @@ pub enum ChatEvent {
     },
     ProposalsReady {
         set_id: Uuid,
-    },
-    /// A prompt for a cloud AI, shown as a card with copy and import buttons.
-    ResearchPrompt {
-        title: String,
-        text: String,
     },
     /// A long skill run did its first notes only; the rest waits for the user to say go on.
     SkillTrial {

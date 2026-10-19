@@ -71,3 +71,43 @@ describe("image widget", () => {
     v.destroy();
   });
 });
+
+describe("a picture whose link is stale", () => {
+  function viewFor(notePath: string, doc: string): EditorView {
+    const resolver = new LinkResolver(["attachments/pic one.png", "Work/Sec/Note.md"]);
+    return new EditorView({
+      parent: document.body,
+      state: EditorState.create({
+        doc,
+        selection: { anchor: doc.length },
+        extensions: [
+          markdown({ base: markdownLanguage }),
+          livePreview(),
+          previewConfig.of({
+            ...defaultPreviewConfig,
+            notePath,
+            resolveLink: (t) => resolver.resolve(t),
+            fileExists: (p) => resolver.has(p),
+            assetUrl: (p) => `asset://${p}`,
+          }),
+        ],
+      }),
+    });
+  }
+
+  it("is found by its name when the note was moved and the link was not updated", () => {
+    // The note lives two folders down, but the link still has the depth it had in the vault root.
+    const v = viewFor("Work/Sec/Note.md", "![](attachments/pic%20one.png)\n\nend");
+    const img = v.dom.querySelector<HTMLImageElement>("img.cm-image");
+    expect(img?.src).toBe("asset://attachments/pic%20one.png");
+    v.destroy();
+  });
+
+  it("keeps the path when the file is where the link says", () => {
+    const v = viewFor("Work/Sec/Note.md", "![](../../attachments/pic%20one.png)\n\nend");
+    expect(v.dom.querySelector<HTMLImageElement>("img.cm-image")?.src).toBe(
+      "asset://attachments/pic%20one.png",
+    );
+    v.destroy();
+  });
+});

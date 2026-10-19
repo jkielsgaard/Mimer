@@ -5,13 +5,16 @@ import {
   PanelResizeHandle,
   type ImperativePanelHandle,
 } from "react-resizable-panels";
-import { ChatPanel } from "@/features/chat/ChatPanel";
 import { EditorArea } from "@/features/workspace/EditorArea";
+import { IdeasPanel } from "@/features/capture/IdeasPanel";
+import { IdeasView } from "@/features/capture/IdeasView";
+import { TaskPage } from "@/features/tasks/TaskPage";
+import { TasksPanel } from "@/features/tasks/TasksPanel";
+import { TasksView } from "@/features/tasks/TasksView";
+import { cn } from "@/lib/utils";
 import { FilesPanel } from "@/features/fileTree/FilesPanel";
 import { HistoryPanel } from "@/features/history/HistoryPanel";
 import { ImagesPanel } from "@/features/images/ImagesPanel";
-import { RavenPanel } from "@/features/raven/RavenPanel";
-import { useRaven } from "@/features/raven/useRaven";
 import { SearchPanel } from "@/features/search/SearchPanel";
 import { panelStorage } from "@/lib/safeStorage";
 
@@ -19,29 +22,25 @@ import { type RightTab, useUiStore } from "@/stores/uiStore";
 import { Header } from "./Header";
 import { StatusBar } from "./StatusBar";
 import { usePanelCollapse } from "./usePanelCollapse";
-import { useChatStore } from "@/stores/chatStore";
-import { useRavenStore } from "@/stores/ravenStore";
-import { Tabs } from "./Tabs";
 import { ActivityRail } from "./ActivityRail";
+import { AskWindow } from "./AskWindow";
+import { RightRail } from "./RightRail";
+import { LinksPanel } from "@/features/notePanels/LinksPanel";
+import { OutlinePanel } from "@/features/notePanels/OutlinePanel";
+import { X } from "lucide-react";
+import { PanelHeader } from "@/components/PanelHeader";
 
-const RIGHT_TABS: { id: RightTab; label: string }[] = [
-  { id: "assistant", label: "Mimer" },
-  { id: "images", label: "Images" },
-  { id: "history", label: "History" },
-];
-const RAVEN_TAB: { id: RightTab; label: string } = { id: "raven", label: "Raven" };
+const RIGHT_LABELS: Record<RightTab, string> = {
+  outline: "Outline",
+  links: "Links",
+  history: "History",
+  images: "Images",
+};
 
 /** Title bar, three resizable/collapsible columns and the status bar. */
 export function AppShell() {
   const ui = useUiStore();
-  const streaming = useChatStore((s) => s.streaming);
-  const ravenStreaming = useRavenStore((s) => s.streaming);
-  // The Raven tab is there only when a cloud provider has been chosen for it.
-  const raven = useRaven();
-  const rightTabs = raven
-    ? [RIGHT_TABS[0] ?? RAVEN_TAB, RAVEN_TAB, ...RIGHT_TABS.slice(1)]
-    : RIGHT_TABS;
-  const rightTab = ui.rightTab === "raven" && !raven ? "assistant" : ui.rightTab;
+  const rightTab = ui.rightTab;
   const left = useRef<ImperativePanelHandle>(null);
   const right = useRef<ImperativePanelHandle>(null);
 
@@ -79,21 +78,26 @@ export function AppShell() {
             className="bg-sidebar"
           >
             <div className="flex h-full min-h-0 flex-col">
-              {ui.leftTab === "files" ? (
-                <>
-                  <FilesPanel />
-                </>
-              ) : (
+              {ui.leftTab === "files" && <FilesPanel />}
+              {ui.leftTab === "search" && (
                 <div className="min-h-0 flex-1">
                   <SearchPanel />
                 </div>
               )}
+              {ui.leftTab === "tasks" && <TasksPanel />}
+              {ui.leftTab === "ideas" && <IdeasPanel />}
             </div>
           </Panel>
           <PanelResizeHandle className="w-px bg-border transition-colors hover:bg-primary data-[resize-handle-active]:bg-primary" />
           <Panel id="center" order={2} minSize={30}>
             <main className="h-full min-h-0">
-              <EditorArea />
+              {/* The notes stay mounted while the tasks are shown, so nothing typed is lost. */}
+              <div className={cn("h-full min-h-0", ui.centerView !== "notes" && "hidden")}>
+                <EditorArea />
+              </div>
+              {ui.centerView === "tasks" && <TasksView />}
+              {ui.centerView === "task" && <TaskPage />}
+              {ui.centerView === "ideas" && <IdeasView />}
             </main>
           </Panel>
           <PanelResizeHandle className="w-px bg-border transition-colors hover:bg-primary data-[resize-handle-active]:bg-primary" />
@@ -101,8 +105,8 @@ export function AppShell() {
             ref={right}
             id="right"
             order={3}
-            defaultSize={26}
-            minSize={16}
+            defaultSize={20}
+            minSize={14}
             maxSize={50}
             collapsible
             collapsedSize={0}
@@ -117,26 +121,28 @@ export function AppShell() {
             className="bg-sidebar"
           >
             <div className="flex h-full min-h-0 flex-col">
-              <Tabs
-                tabs={rightTabs}
-                value={rightTab}
-                onChange={ui.setRightTab}
-                label="Right panel"
-                busy={[
-                  ...(streaming ? (["assistant"] as const) : []),
-                  ...(ravenStreaming ? (["raven"] as const) : []),
-                ]}
-              />
+              <PanelHeader title={RIGHT_LABELS[rightTab]}>
+                <button
+                  type="button"
+                  aria-label="Close the panel"
+                  className="rounded p-1 text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={ui.toggleRight}
+                >
+                  <X className="size-3.5" />
+                </button>
+              </PanelHeader>
               <div className="min-h-0 flex-1">
-                {rightTab === "assistant" && <ChatPanel />}
-                {rightTab === "raven" && <RavenPanel />}
+                {rightTab === "outline" && <OutlinePanel />}
+                {rightTab === "links" && <LinksPanel />}
                 {rightTab === "images" && <ImagesPanel />}
                 {rightTab === "history" && <HistoryPanel />}
               </div>
             </div>
           </Panel>
         </PanelGroup>
+        <RightRail />
       </div>
+      <AskWindow />
       <StatusBar />
     </div>
   );

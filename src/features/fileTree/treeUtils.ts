@@ -109,6 +109,19 @@ export function folderNoteCounts(nodes: readonly TreeNode[]): Map<string, number
   return out;
 }
 
+/** Notes Mimer keeps for itself in the vault root. They are not shown in the file tree. */
+export const MANAGED_NOTES: readonly string[] = ["Tasks.md", "Ideas.md"];
+
+/** Whether a path is one of the notes Mimer keeps for itself (Tasks and Ideas). */
+export function isManagedNote(path: string): boolean {
+  return MANAGED_NOTES.includes(path);
+}
+
+/** The tree without the notes Mimer manages itself (only in the root of the vault). */
+export function withoutManagedNotes(nodes: readonly TreeNode[]): TreeNode[] {
+  return nodes.filter((n) => n.isDir || !MANAGED_NOTES.includes(n.path));
+}
+
 /** The tree without the folders in `folders` (used to take the projects out of "All files"). */
 export function withoutFolders(nodes: readonly TreeNode[], folders: readonly string[]): TreeNode[] {
   return nodes

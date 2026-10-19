@@ -2,7 +2,6 @@
 
 use super::proposals::{hash, Proposal, ProposalAction, ProposalSet};
 use super::providers::types::{parse_args, ToolCall, ToolDef};
-use crate::error::{AppError, AppResult};
 use crate::search::{search, SearchQuery};
 use crate::vault::{fs_ops, paths, tree, OpenVault};
 use serde_json::{json, Value};
@@ -97,22 +96,6 @@ pub fn definitions() -> Vec<ToolDef> {
             ),
         },
         ToolDef {
-            name: "write_research_prompt",
-            description: "Write a prompt the user can take to a cloud AI that has internet access, when the user wants NEW documentation or facts about a subject. The prompt tells that AI what to research and in which format to answer, so the answer can be imported into the vault. Use this instead of writing such content yourself. The prompt is shown to the user as a card; do not repeat it.",
-            parameters: s(
-                json!({
-                    "topic": {"type": "string", "description": "What to research"},
-                    "goal": {"type": "string", "description": "What the document is for"},
-                    "audience": {"type": "string"},
-                    "depth": {"type": "string", "enum": ["overview", "detailed", "expert"]},
-                    "kind": {"type": "string", "enum": ["documentation", "howto", "comparison", "summary", "checklist"]},
-                    "language": {"type": "string", "description": "Language of the answer, for example Danish"},
-                    "context": {"type": "string", "description": "What the user already has, so the answer fits"}
-                }),
-                &["topic"],
-            ),
-        },
-        ToolDef {
             name: "propose_delete",
             description: "Propose deleting a note. The user reviews it; deleted notes can be restored from history.",
             parameters: s(json!({"path": {"type": "string"}, "reason": {"type": "string"}}), &["path", "reason"]),
@@ -167,37 +150,6 @@ fn truncate(s: &str, max: usize) -> String {
     }
 }
 
-/// The card for a `write_research_prompt` call: a title and the prompt text.
-pub fn research_card(call: &ToolCall) -> AppResult<crate::research::ResearchCard> {
-    let args = parse_args(&call.arguments)
-        .map_err(|e| AppError::InvalidPath(format!("arguments are not valid JSON: {e}")))?;
-    let get = |k: &str| arg(&args, k).unwrap_or("").to_string();
-    let mut spec = crate::research::ResearchSpec {
-        topic: get("topic"),
-        goal: get("goal"),
-        audience: get("audience"),
-        context: get("context"),
-        ..crate::research::ResearchSpec::default()
-    };
-    for (key, slot) in [
-        ("depth", &mut spec.depth),
-        ("kind", &mut spec.kind),
-        ("language", &mut spec.language),
-    ] {
-        let v = get(key);
-        if !v.trim().is_empty() {
-            *slot = v;
-        }
-    }
-    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-    let text = crate::research::build_prompt(&spec, &today)?;
-    let topic: String = spec.topic.trim().chars().take(80).collect();
-    Ok(crate::research::ResearchCard {
-        title: format!("Research: {topic}"),
-        text,
-    })
-}
-
 /// Longest piece of an argument shown in a progress line.
 const DESCRIBE_LIMIT: usize = 60;
 
@@ -234,10 +186,6 @@ pub fn describe_call(call: &ToolCall) -> String {
         "propose_merge" => format!(
             "Preparing to merge into {}",
             or("target_path", "a new note")
-        ),
-        "write_research_prompt" => format!(
-            "Writing a research prompt about {}",
-            or("topic", "the subject")
         ),
         other => format!("Running {other}"),
     }
@@ -343,7 +291,9 @@ pub fn execute(
             };
             if args.get("recursive").and_then(Value::as_bool) == Some(true) {
                 let prefix = if path.is_empty() {
-                    scope.map(|s| format!("{}/", s.trim_matches('/'))).unwrap_or_default()
+                    scope
+                        .map(|s| format!("{}/", s.trim_matches('/')))
+                        .unwrap_or_default()
                 } else {
                     format!("{}/", path.trim_matches('/'))
                 };
@@ -354,7 +304,10 @@ pub fn execute(
                 let total = found.len();
                 let mut lines: Vec<String> = found.into_iter().take(RECURSIVE_LIMIT).collect();
                 if total > RECURSIVE_LIMIT {
-                    lines.push(format!("(… {} more notes not shown)", total - RECURSIVE_LIMIT));
+                    lines.push(format!(
+                        "(… {} more notes not shown)",
+                        total - RECURSIVE_LIMIT
+                    ));
                 }
                 return ToolOutcome {
                     result: if lines.is_empty() {
@@ -482,13 +435,6 @@ pub fn execute(
         }
         "propose_merge" => merge(v, scope, set, &args),
         "propose_move_many" => move_many(v, scope, set, &args),
-        "write_research_prompt" => match research_card(call) {
-            Ok(card) => ToolOutcome {
-                result: "The research prompt was shown to the user as a card with a Copy button, and a Send to Raven button when the user has the Raven tab. Tell the user in one or two sentences to take it to a cloud AI with internet access (Raven, or any other) and to bring the answer back, with Save as note in Raven or Import answer. Do not repeat the prompt.".into(),
-                summary: format!("Wrote a research prompt: {}", card.title),
-            },
-            Err(e) => err("Research prompt failed".into(), e),
-        },
         "propose_delete" => {
             let Some(path) = arg(&args, "path") else {
                 return missing("path");

@@ -1,71 +1,48 @@
 ## Meet Mimer
 
-**Mimer** is the assistant on the right. It helps you write, correct, restructure and find things in your notes. Type a question or a task in the box and press **Enter**.
+**Mimer** is the AI in the app. It is not one chat you have to type into: it is buttons where you work, and each one does one fixed thing. You never have to write a prompt.
 
 **Mimer only proposes changes. Nothing is written until you accept it.**
 
-## Tell Mimer which notes to work on
+## AI where you work
 
-- Keep **Include current note** ticked to let Mimer see the note you have open.
-- Type **/** in the message box and pick a note, or click the **paperclip**. The note becomes a chip above the box. Attach up to five notes. Remove one with the **×**.
-- You can also attach a **whole folder or project**: folders are in the same list, with a folder icon and a note count. Mimer then works on the notes in it. A folder of up to 12 notes is attached with its text (each shortened if very long). A bigger folder is attached as a list of its note names only, and Mimer reads the notes it needs. To sort a big folder, attach it and ask Mimer to organise it: Mimer proposes the moves (new folders are made by moving notes into them), and you apply them in the review.
-- In a project, only notes inside the project are offered.
+- **Selected text:** the bar over the selection has **Fix**, **Rewrite** and **Shorten**, and **AI ▾** for more: rewrite with simpler words, more formal or friendlier (always the same meaning), make it a list, translate to Danish or English, **Explain this** (an answer next to the text, nothing changes) and **Find tasks in it**. You see the change before it is written, with a check that numbers, links and names are still there. **Ctrl/Cmd+K** opens the same menu.
+- **The whole note:** the **AI** button above the note: fix spelling in the whole note, tidy the structure, a short summary at the top, a title and tags, find tasks, split into notes, an e-mail from the note, and your own skills. **Link related notes** opens the Links panel; it finds notes by the title and tags and needs no AI.
+- **A folder:** right-click it → **AI**: sort into folders, find duplicates, an index page and more. **Make an index page** right under it makes a list of links without AI.
+- **Search:** a search that reads like a question ("what is the service desk number?") shows **Answer from my notes**. Press **Get an answer**: the AI reads the notes that fit and answers, with the notes it used.
+- **A task:** Break it down, **Write a status line from the log**, and in Focus **Help me start**.
+- **An idea:** **Think it through** (three questions) and **Suggest first steps** (they become one task with those steps).
+- **Spelling help** (made for dyslexia): turn it on in the status bar or in Settings. A moment after you stop typing, misspelt words get a wavy line. Click a word to fix it, ignore it or add it to your words. Nothing changes by itself.
+
+## When there is no AI
+
+Everything that is not AI works as always: notes, search, tasks, ideas, the outline, links, history and images. The AI buttons are greyed out and say why (for example "No AI is set up" or "The built-in AI is asleep"), with **Set up AI**. The system spellcheck still works.
+
+## Ask about my notes
+
+For a free question, press **Ctrl/Cmd+L** or the speech bubble at the right edge. The chat opens as a window over the note; **Esc** or **×** closes it, and the chat is kept. Type a question and press **Enter**. Mimer reads the open note (untick **Include the open note** for general questions) and searches your notes to answer. The chat only answers: it never changes a note. **History** in its header reopens earlier chats; **New chat** starts over.
 
 ## Review what Mimer proposes
 
-When Mimer wants to change files you get a **Review changes** card. Open it to see every file, what changes, and why. Accept or reject each file, then **Apply selected**. Before anything is applied Mimer saves a snapshot, and afterwards all changes are one entry in the history, so everything can be undone.
+The AI commands that change notes (the note's **AI** button and right-click → **AI** on a folder) open the chat window to show their progress, then a **Review changes** card. Open it to see every file, what changes, and why. Accept or reject each file, then **Apply selected**. Before anything is applied Mimer saves a snapshot, and afterwards all changes are one entry in the history, so everything can be undone. **File → Undo the last AI change** takes the last one back.
 
-Ask Mimer for bigger jobs too, for example:
+**Mimer checks every change** before you see it: are the links, tags, numbers and dates, names, properties and code the same, did a part go missing, did the AI add words of its own in front? A change that fails a check is still shown, but it is not selected in the review and the review says why. **Fix spelling** only lets the AI send back the words that are wrong; nothing else in the note can change.
 
-- "Merge these three notes into one called Summary and remove the old ones." The review shows one new note and three deletions.
-- "Split this note into one note per heading and link them from an index."
+**Long runs start with three notes.** When a command works on more than five notes, Mimer does the first three and stops. Look at those changes, then press **Looks good, do the other …**, or reject them and stop there. A run handles up to 50 notes when changing text, 300 when sorting and 30 when writing one note from many.
 
-## While Mimer works
+You see what Mimer is doing while it works, and **Stop** cancels at any time.
 
-You see what it is doing: waiting for the model, writing, or reading a note, and **Step 3 of 15** for longer tasks. A local model can be slow to load; after a quiet moment Mimer tells you. Press **Stop** at any time.
+## New facts
 
-## Skills
-
-A small model often answers in the chat instead of changing your notes. A **skill** takes that choice away: Mimer does the work itself, one note at a time, and the model only writes the text for each step. You still review every change before anything is written.
-
-1. Attach the notes or a folder with `/` (or open a note).
-2. Press **Skills** over the message box and choose one, for example **Fix spelling and grammar**, **Improve the structure**, **Sort into folders** or **Summarise**.
-3. Add extra instructions if you want (for example "keep British spelling"), then press Enter.
-
-**Fix small mistakes** works differently from the rest: the AI only sends back the words that are wrong, and Mimer puts them in. Nothing else in the note can change.
-
-**Mimer checks every change** before you see it: are the links, tags, numbers and dates, names, properties and code the same, did a part go missing, did the AI add words of its own in front? A change that fails a check is still shown, but it is not selected in the review and the review says why.
-
-**Long runs start with three notes.** When a skill works on more than five notes, Mimer does the first three and stops. Look at those changes; press **Looks good, do the other …** to go on, or **Not right, change the skill**.
-
-A run handles up to 50 notes when changing text, 300 when sorting and 30 when writing one note from many; Mimer says if more were chosen.
-
-You can also right-click a note or a folder in the file tree and choose **AI**: the menu lists the skills that fit what you clicked and starts one at once. A skill needs a local AI that is running (the built-in AI awake, or LM Studio started); otherwise Mimer says what to start.
-
-Make your own in **Settings → Skills** in two steps:
-
-1. **Say what it should do** in your own words, for example "Translate my meeting notes to English and keep the names", and choose what should happen to the notes: fix small mistakes, change the text, move them into folders, make one new note, or just answer in the chat.
-2. **Try it on a note.** You see the note before and after and Mimer's checks. Nothing is changed. If it looks right, give it a name and save it.
-
-Your skills are kept with your settings and work in every vault.
-
-## New facts: use a cloud AI with internet
-
-Mimer has no internet access and only knows what it learned in training, so it can be out of date or wrong. By default it **does not write new facts** for you. It works with what is in your notes: structure, merging, correcting, summarising, linking.
-
-When you need new documentation about a subject, ask Mimer for it, or choose **Skills → Write a research prompt…**. Mimer writes a prompt for a cloud AI that can search the web. The prompt also tells that AI how to answer (title, sections, sources with links, open questions). Send it to **Raven** (see the Raven topic), or copy it, paste it in any cloud AI, copy the answer back and choose **Skills → Import an answer from a cloud AI…**. The answer becomes a new note marked **needs review**; nothing existing is changed.
-
-If you prefer, **Settings → AI → Let Mimer write new content from its own knowledge** lets Mimer write from memory too. It will then say so, and you should check the result.
+Mimer has no internet access and only knows what it learned in training, so it can be out of date or wrong. It **does not write new documentation or facts** for you: if you ask, it says so. It works with what is in your notes: structure, merging, correcting, summarising, linking. For new facts, find them yourself and paste them into a note; Mimer can then help you structure them.
 
 ## Choose which AI Mimer uses
 
-Mimer uses an AI that runs on your own computer: the **built-in AI**, **LM Studio**, **Foundry Local** (Windows and macOS; it can use a neural processor, an NPU) or another OpenAI-compatible server on this computer. Add and choose them under **Settings → AI providers**: when you pick the kind of provider, the settings list what you have to do to get it working. A cloud AI (Anthropic, or an OpenAI-compatible cloud service) is only for **Raven**, which cannot see your notes. A local AI cannot be used by Raven: Raven works only with a cloud AI, because only a cloud AI can look things up on the internet.
+Mimer uses an AI that runs on your own computer: the **built-in AI**, **LM Studio**, **Foundry Local** (Windows and macOS; it can use a neural processor, an NPU) or another OpenAI-compatible server on this computer. Add and choose them under **Settings → AI providers**: when you pick the kind of provider, the settings list what you have to do to get it working. Mimer never uses a cloud AI: your notes only go to an AI on this computer.
 
-**Add provider** asks which kind you want and tells you whether it is local (for Mimer) or cloud (for Raven only). To switch AI or model quickly, click the AI name under the tab's title (for example _LM Studio · qwen_) and choose from the menu: no need to open Settings. The choice is saved and applies to everything you ask from then on.
+**Add provider** asks which kind you want (LM Studio or another server on this computer). The model is chosen in the settings. A built-in AI that is asleep is woken by itself when you ask it something.
 
 ## More
 
-- **History** in the chat header reopens earlier chats. **Prompts** saves texts you use often.
-- Select text in a note and press **Ctrl/Cmd+K** for quick changes: fix spelling, rewrite, shorten and more. You review the result before it is used.
 - **Settings → AI** has Mimer's base instruction (who Mimer is), your own instructions, and the AI providers.
-- Mimer only ever uses an AI **on your own computer**: LM Studio, or his own **built-in AI** (see the Built-in AI topic). Your notes are never sent to a cloud AI. For a cloud AI there is a separate tab, **Raven**, that cannot see your notes.
+- Mimer only ever uses an AI **on your own computer**: LM Studio, or his own **built-in AI** (see the Built-in AI topic). Your notes are never sent to a cloud AI.

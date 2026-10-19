@@ -1,5 +1,6 @@
 import { countNotes, displayName, findFolder, topLevelPaths, type RowProps } from "./treeUtils";
 import { SkillsSubmenu } from "./SkillsSubmenu";
+import { makeLinkIndex } from "@/lib/linkIndex";
 import {
   ChevronDown,
   ChevronRight,
@@ -290,6 +291,16 @@ export function TreeRow({
               </ContextMenuItem>
               <ContextMenuSeparator />
               {skillTargets() && <SkillsSubmenu targets={skillTargets() ?? []} />}
+              {node.isDir && (
+                <ContextMenuItem
+                  title="A note with a link to every note in this folder. No AI is used."
+                  onSelect={() => {
+                    void makeLinkIndex(node.path);
+                  }}
+                >
+                  <ListTree className="size-4" aria-hidden /> Make an index page
+                </ContextMenuItem>
+              )}
               <ContextMenuItem
                 onSelect={() => {
                   onAction({ kind: "rename", node });

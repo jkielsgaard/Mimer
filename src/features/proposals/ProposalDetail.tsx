@@ -43,9 +43,7 @@ function NotePreview({ path }: { path: string }) {
   }, [path]);
   return (
     <section aria-label="Start of the note" className="rounded-md border bg-card p-3">
-      <h4 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-        Start of the note
-      </h4>
+      <h4 className="mb-1 section-label">Start of the note</h4>
       <pre className="whitespace-pre-wrap break-words font-sans text-sm text-muted-foreground">
         {text === null ? "Loading…" : text === "" ? "The note is empty." : text}
       </pre>
@@ -108,9 +106,7 @@ export function ProposalDetail({ item }: { item: ProposalView }) {
       </div>
       {p.reason !== "" && (
         <section className="rounded-md border bg-muted/50 p-3" aria-label="Why">
-          <h4 className="mb-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Why
-          </h4>
+          <h4 className="mb-0.5 section-label">Why</h4>
           <p className="text-sm">{p.reason}</p>
         </section>
       )}

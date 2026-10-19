@@ -16,9 +16,9 @@ import {
   type PaletteItem,
   type PaletteTarget,
 } from "./paletteItems";
-import { findFolder } from "@/features/fileTree/treeUtils";
+import { findFolder, isManagedNote } from "@/features/fileTree/treeUtils";
 
-/** Ctrl+Shift+P: notes, skills and actions in one search. */
+/** Ctrl+Shift+P: notes, AI commands and actions in one search. */
 export function CommandPalette() {
   const open = useUiStore((s) => s.commandPalette);
   const setOpen = useUiStore((s) => s.setCommandPalette);
@@ -55,15 +55,17 @@ export function CommandPalette() {
     const skillList = skillItems(skills, target, (s, t) => {
       void runSkillOn(s, [t.path]);
     });
-    const notes: PaletteItem[] = files.filter(isMarkdown).map((f) => ({
-      id: `note:${f}`,
-      group: "Notes" as const,
-      label: basename(f).replace(/\.md$/i, ""),
-      hint: dirname(f),
-      run: () => {
-        void openFile(f);
-      },
-    }));
+    const notes: PaletteItem[] = files
+      .filter((f) => isMarkdown(f) && !isManagedNote(f))
+      .map((f) => ({
+        id: `note:${f}`,
+        group: "Notes" as const,
+        label: basename(f).replace(/\.md$/i, ""),
+        hint: dirname(f),
+        run: () => {
+          void openFile(f);
+        },
+      }));
     const act = (id: string, label: string, run: () => void, hint?: string): PaletteItem => ({
       id: `action:${id}`,
       group: "Actions",
@@ -98,8 +100,30 @@ export function CommandPalette() {
         },
         formatShortcut("Mod+L"),
       ),
-      act("skills", "Open Settings → Skills", () => {
-        ui().openSkillsSettings();
+      act(
+        "tasks",
+        "Open the task list",
+        () => {
+          ui().openArea("tasks");
+        },
+        formatShortcut("Mod+Shift+T"),
+      ),
+      act(
+        "capture",
+        "Write something down (task, idea or note)",
+        () => {
+          ui().openCapture();
+        },
+        formatShortcut("Mod+Shift+N"),
+      ),
+      act("ideas", "Open the ideas list", () => {
+        ui().openArea("ideas");
+      }),
+      act("find-tasks", "Find tasks in this note (AI)", () => {
+        ui().setFindTasksOpen(true);
+      }),
+      act("starter", "New note from a starter…", () => {
+        ui().setStarterOpen(true);
       }),
       act(
         "settings",
@@ -139,18 +163,20 @@ export function CommandPalette() {
     const g = items[i]?.group;
     return g !== undefined && items[i - 1]?.group !== g ? g : null;
   };
-  const skillHeading = target ? `Skills · on “${target.name}”` : "Skills";
+  const skillHeading = target ? `AI · on “${target.name}”` : "AI";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="top-[18%] max-w-xl translate-y-0 gap-0 overflow-hidden p-0">
         <DialogTitle className="sr-only">Command palette</DialogTitle>
-        <DialogDescription className="sr-only">Search notes, skills and actions.</DialogDescription>
+        <DialogDescription className="sr-only">
+          Search notes, AI commands and actions.
+        </DialogDescription>
         <div className="border-b p-2">
           <Input
             autoFocus
-            aria-label="Search notes, skills and actions"
-            placeholder="Type a note, a skill or an action…"
+            aria-label="Search notes, AI commands and actions"
+            placeholder="Type a note, an AI command or an action…"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -176,7 +202,7 @@ export function CommandPalette() {
             return (
               <li key={it.id} role="presentation">
                 {h !== null && (
-                  <div className="px-2 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <div className="px-2 pb-0.5 pt-2 section-label">
                     {h === "Skills" ? skillHeading : h}
                   </div>
                 )}
@@ -210,12 +236,12 @@ export function CommandPalette() {
           )}
           {target === null && query.trim() === "" && (
             <li className="px-3 py-2 text-xs text-muted-foreground">
-              Open a note or select a folder to see the skills that fit it.
+              Open a note or select a folder to see the AI commands that fit it.
             </li>
           )}
         </ul>
         <div className="flex items-center gap-2 border-t bg-sidebar px-3 py-2 text-[11px] text-muted-foreground">
-          <span className="flex-1">Notes, skills and actions in one search.</span>
+          <span className="flex-1">Notes, AI commands and actions in one search.</span>
           <kbd className="rounded border px-1">↑</kbd>
           <kbd className="rounded border px-1">↓</kbd>
           <kbd className="rounded border px-1">Enter</kbd>

@@ -31,24 +31,22 @@ export const PROVIDER_HELP: Record<ProviderKind, ProviderHelp> = {
       "Enter the base URL of the server, usually ending in /v1. For Ollama on this computer it is http://localhost:11434/v1.",
       "If the service needs an API key, paste it below and press Save key. It is kept in the system keychain, never in a file.",
       "Press Load models, choose the model, and press Test connection.",
-      "A cloud service is chosen under Settings → AI → Raven's provider. A program on this computer is chosen as Mimer's provider.",
+      "Choose it as Mimer's provider under Settings → AI. Only a program on this computer can be used.",
     ],
     notes: [
       "Only an address on this computer (localhost, 127.0.0.1 or ::1) can be local. Anything else is cloud.",
-      "A cloud provider is used by Raven only. Your notes are never sent to it.",
+      "A cloud service cannot be used: your notes are only ever sent to an AI on this computer.",
     ],
   },
   anthropic: {
-    summary: "Claude, a cloud AI from Anthropic. Used by Raven, which cannot see your notes.",
+    summary:
+      "Claude, a cloud AI from Anthropic. Mimer does not use cloud AI, so it cannot be used.",
     steps: [
       "Create an account at console.anthropic.com and make an API key there. Using it costs money, billed by Anthropic.",
       "Paste the key below and press Save key. It is kept in the system keychain.",
       "Press Load models, choose a model, and press Test connection.",
-      "Choose it under Settings → AI → Raven's provider.",
     ],
-    notes: [
-      "Raven sends only what you type to the cloud. Mimer, which reads your notes, never uses a cloud provider.",
-    ],
+    notes: ["Mimer, which reads your notes, never uses a cloud provider."],
   },
   foundry_local: {
     summary: "Mimer's Foundry Local, set up under Settings → Built-in AI.",

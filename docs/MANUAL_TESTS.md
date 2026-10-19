@@ -245,7 +245,7 @@ Prepare a note with a heading, bold text, a table, a task list, a code block, an
 
 ### 22. Import notes from a folder
 
-- [ ] Make a small test folder (or export a small OneNote notebook following [docs/IMPORT-ONENOTE.md](docs/IMPORT-ONENOTE.md)) and use **File → Import notes from folder…** in a throw-away vault: the preview counts match the folder, and hidden files and unsupported files appear under "Left out".
+- [ ] Make a small test folder (or export a small OneNote notebook following [docs/IMPORT-ONENOTE.md](docs/IMPORT-ONENOTE.md)) and use **File → Import → Notes from a folder…** in a throw-away vault: the preview counts match the folder, and hidden files and unsupported files appear under "Left out".
 - [ ] Import: a progress bar runs, then the report. The notes open, images show, and `[[links]]` that point inside the import work.
 - [ ] Import the same folder again: the copies get a number (` 1`) and nothing is overwritten.
 - [ ] History shows `Import: … notes from "…"`, and `Snapshot before import…` if you had unsaved work. Restoring from History works.
@@ -256,7 +256,7 @@ Prepare a note with a heading, bold text, a table, a task list, a code block, an
 ### 23. Start screen, About and icon
 
 - [ ] When the app starts, the Mimer picture is shown for about two seconds with the version, then fades. A click or any key skips the wait.
-- [ ] **File → About Mimer…** shows the picture, the version and build date, a text about the app and the idea behind it, and "Developed by Jesper Ahasverusen Kielsgaard". Esc closes it.
+- [ ] **Help → About Mimer…** shows the picture, the version and build date, a text about the app and the idea behind it, and "Developed by Jesper Ahasverusen Kielsgaard". Esc closes it.
 - [ ] The welcome screen (no vault open) has the Mimer picture as background and an **About** link.
 - [ ] The window, taskbar and installer use the new "M" icon (check on Windows after installing).
 
@@ -296,7 +296,7 @@ Prepare a note with a heading, bold text, a table, a task list, a code block, an
 
 ### 29. How-to guide and hints
 
-- [ ] The **?** button in the top bar, **File → How to use Mimer** and **F1** open the guide (F1 and the link at the bottom of the welcome screen also work there). The list has fourteen topics; the search box narrows it ("paperclip" finds _Mimer, the assistant_).
+- [ ] The **?** button in the top bar, **Help → How to use Mimer** and **F1** open the guide (F1 and the link at the bottom of the welcome screen also work there). The list has fourteen topics; the search box narrows it ("paperclip" finds _Mimer, the assistant_).
 - [ ] Choosing a topic shows its text with tables and lists. Esc closes the guide.
 - [ ] Point at a **?** (settings, chat "Include current note", search modes, Images tab, import dialog, toolbar, file tree): a bubble explains it. It also opens with the keyboard (Tab to it) and by clicking, and Esc closes it.
 - [ ] **Read more in the guide** in a bubble opens the guide at the right topic.
@@ -359,7 +359,7 @@ Prepare a note with a heading, bold text, a table, a task list, a code block, an
 
 ### 34. Research prompts
 
-- [ ] **File → Write a research prompt…**: enter a topic only, choose "Write the prompt". The prompt names the topic and today's date, and ends with an exact output format (front matter, Summary, Sources, Open questions). **Copy prompt** puts it on the clipboard.
+- [ ] **File → Import → Write a research prompt for a cloud AI…**: enter a topic only, choose "Write the prompt". The prompt names the topic and today's date, and ends with an exact output format (front matter, Summary, Sources, Open questions). **Copy prompt** puts it on the clipboard.
 - [ ] Ask Mimer "Write documentation about the Linux firewalld basics" with **Let Mimer write new content from its own knowledge** off: Mimer does not write the document; a prompt card appears with **Copy prompt** and **Import the answer**.
 - [ ] Turn the setting on and ask again: Mimer may write the text, and says it comes from memory.
 - [ ] Paste the prompt in a cloud AI with internet access. Copy its answer. **Tasks → Import an answer from a cloud AI…**: paste. The title is filled in; with no sources a warning is shown. **Save as note**: a new note opens with `status: needs review`. Importing the same title again gives `… 2`; nothing is overwritten.
@@ -505,4 +505,29 @@ Needs Windows (a virtual machine or Windows Sandbox). See docs/MSIX.md.
 - [ ] **Fix spelling and grammar** on a note with spelling mistakes: only the wrong words change (look at the diff); links, tags, numbers and code blocks stay as they were.
 - [ ] A skill whose change drops a tag or changes a date: the review shows the change unselected with "Not selected, because the AI may have made a mistake" and the reason.
 - [ ] Run a skill on a folder with more than five notes: only three are done, then **Looks good, do the other N** finishes the rest and **Not right, change the skill** opens the skill in Settings.
+- [ ] Paste a picture into a note in the vault root, then drag the note into a folder two levels down (and back): the picture is still shown after opening the note again, and the Markdown shows `../../attachments/...` and then `attachments/...`. Rename the folder that contains the note: the picture is still shown.
+- [ ] Open two notes with the same name from different folders: both tabs show the folder; with only one of them open the tab shows the name alone.
+- [ ] Tasks: in a note write `- [ ] Test task due:tomorrow`, a nested `  - [ ] a step` and `  > 2026-10-19 a log line`. Press the Tasks icon (or Ctrl+Shift+T): the task is listed under This week with "0 of 1 steps". Tick it in the list: the note shows `[x]`. Edit the note by hand, come back to the list: the list follows.
+- [ ] Add a task in the box with `Call Mette fri ~15m`: it is added to `Tasks.md` in the vault root with `due:` and `est:15m`. Today / Later buttons write `plan:`. A task that was due earlier is under "Moved from earlier" with a calm text.
+- [ ] Open a task: change status (a log line "Status: …" appears), the due date and the time; add a step and a log line; the Markdown in the note is correct and the editor shows it without losing text you were typing.
+- [ ] **Break it down** with a local AI: steps are suggested, you untick one, press Add: only the kept ones are written. With no AI running a message says what to start. **Make the steps smaller** asks again.
+- [ ] **Focus**: one step is shown, **Done, next step** ticks it in the note, the timer counts down and can be paused, **Help me start** shows a suggestion that is only added when you press Add, a parked thought appears as a task with `#inbox`, Esc leaves focus.
+- [ ] File → **New note from a starter…**: each of the four starters shows a live preview with `[blanks]`, and Create makes the note in the right folder and opens it.
+- [ ] Ideas: press the light bulb. The left panel shows the ideas; write one there and it opens in the middle. Change its title and its note, click away: `Ideas.md` has the note indented under the line. Make a task: it is in the task list under Later with the note in its log, and the idea is under Used. Make a note: a note with the idea's note opens in Quick notes. Archive and Bring back work.
+- [ ] Tasks: press the check-list icon. The left panel has a box to add a task, All open/Today/Moved/This week/Later/Done with counts, the tags, and today's tasks with a box to tick. Choosing one filters the list in the middle; "Show everything" clears it.
+- [ ] Write it down (Ctrl+Shift+N or Focus): for Task and Idea, "Add a note" opens a note box; the note is saved with it. In Focus, **Help me start** gives one tiny first step. `Ideas.md` is not shown in the file tree and its lines are not listed as tasks.
+- [ ] Ctrl+Shift+N from inside a note: choose Task, Idea and Note in turn and save each; the note you were writing is unchanged and the box closes. In Focus, the same box saves without leaving Focus, and a task goes under Later.
+- [ ] Select text in a note: the bar offers "As a task" and "As an idea"; each shows a message and the item appears in its list.
 - [ ] Try it with a small Foundry Local or llama.cpp model, and with LM Studio: the notes are changed (as proposals), not only described in the chat.
+
+## AI where you work, and without an AI
+
+- [ ] Select text: the bar has Fix, Rewrite, Shorten, **AI ▾**, As a task, As an idea. AI ▾ (and Ctrl+K) lists the fixed commands; none asks you to type. Rewrite: simpler words shows a diff and "Same numbers, links and names"; delete a number in a test and see "Check: … is gone". Explain this shows an answer with Copy and changes nothing. Find tasks in it opens the task finder for the selection.
+- [ ] The **AI** button above a note: Short summary at the top, Suggest a title and tags and An e-mail from this note open the chat window with a review. Link related notes opens the Links panel.
+- [ ] Right-click a folder: **AI** has the skills; **Make an index page** makes a note with a link to every note in the folder (also with the AI off).
+- [ ] Search for "what is …?": **Answer from my notes** → Get an answer gives an answer and the notes it used; a normal search shows no card.
+- [ ] A task with a log: **Write a status line from the log** → Add it to the log. An idea: Think it through → Add to the idea's note; Suggest first steps → Make a task with the steps (under Later).
+- [ ] Spelling help on (status bar): type a paragraph with a misspelt word and wait: it gets a wavy line. Click it: the right spelling, Ignore, Add to my words (Settings → General lists it), Fix all. The note text only changes when you choose.
+- [ ] The right edge: Outline, Links, History, Images open and close a narrow panel (closed at start). The speech bubble and Ctrl+L open the chat window over the note; Esc closes it and the chat is still there when it opens again. With Raven set up, the globe opens Raven.
+- [ ] **No AI**: choose no provider (or let the built-in AI sleep). Every AI button is greyed out with the reason and Set up AI; As a task/As an idea, notes, search, tasks, ideas, Focus, outline, links, history and images all work; the system spellcheck still underlines.
+- [ ] Delete a task (task page) and an idea: it asks once more; afterwards History of the note has "Snapshot before delete".

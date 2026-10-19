@@ -131,6 +131,21 @@ pub fn rename_no_commit(
     v.refresh_files();
     let after: std::sync::Arc<LinkResolver> = v.resolver();
     let mut changed = Vec::new();
+    // A moved note keeps its own relative links and images working (`../attachments/a.png`
+    // needs another number of `../` in another folder). This is not optional: without it the
+    // note would lose its pictures.
+    for (old, new) in moves.iter().filter(|(_, n)| tree::is_markdown(n)) {
+        let Ok(abs) = paths::resolve(&v.root, new, None) else {
+            continue;
+        };
+        let Ok(content) = std::fs::read_to_string(abs) else {
+            continue;
+        };
+        if let Some(r) = rewrite::rewrite_relative(&content, old, new, &moves) {
+            fs_ops::write_note(&v.root, new, &r.content)?;
+            changed.push(new.clone());
+        }
+    }
     if update_links && !moves.is_empty() {
         for f in v.file_list().iter().filter(|f| tree::is_markdown(f)) {
             let Ok(abs) = paths::resolve(&v.root, f, None) else {
@@ -145,6 +160,8 @@ pub fn rename_no_commit(
             }
         }
     }
+    changed.sort();
+    changed.dedup();
     commit_paths.extend(changed.iter().cloned());
 
     // Index: drop old paths, add new ones, refresh rewritten notes.
@@ -526,6 +543,40 @@ mod tests {
             })
             .collect();
         assert!(texts.contains(&"new A".to_string()));
+    }
+
+    #[test]
+    fn a_note_moved_into_a_folder_keeps_its_picture() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        std::fs::create_dir_all(d.path().join("attachments")).unwrap();
+        std::fs::write(d.path().join("attachments/pic one.png"), b"png").unwrap();
+        std::fs::create_dir_all(d.path().join("Work/Sec")).unwrap();
+        write_note(&v, "Note.md", "# N\n\n![](attachments/pic%20one.png)\n").unwrap();
+        v.refresh_files();
+        v.commit(CommitReason::new(CommitKind::Save, Some("x".into())), None)
+            .unwrap();
+        // Move into a folder two levels down, with and without link updates.
+        let r = rename_path(&v, "Note.md", "Work/Sec/Note.md", false).unwrap();
+        assert!(r.changed_files.contains(&"Work/Sec/Note.md".to_string()));
+        let text = std::fs::read_to_string(d.path().join("Work/Sec/Note.md")).unwrap();
+        assert!(
+            text.contains("![](../../attachments/pic%20one.png)"),
+            "{text}"
+        );
+        // The picture the link names exists from the note's new place.
+        assert!(d
+            .path()
+            .join("Work/Sec")
+            .join("../../attachments/pic one.png")
+            .exists());
+        // Moving a folder with the note keeps the link working too.
+        rename_path(&v, "Work", "Jobs", true).unwrap();
+        let text = std::fs::read_to_string(d.path().join("Jobs/Sec/Note.md")).unwrap();
+        assert!(
+            text.contains("![](../../attachments/pic%20one.png)"),
+            "{text}"
+        );
     }
 
     #[test]

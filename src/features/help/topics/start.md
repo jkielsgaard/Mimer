@@ -10,14 +10,15 @@ A **vault** is the folder that holds your notes. When Mimer starts, open a folde
 
 - **Left:** _Files_ (your folders and notes) and _Search_.
 - **Middle:** the note you are writing. Open several notes as tabs.
-- **Right:** _Mimer_ (the assistant), _Images_ and _History_.
+- **Right:** a narrow row of icons: _Outline_, _Links_, _History_ and _Images_ open a small panel (press the icon again to close it); the speech bubble opens the chat about your notes (Ctrl/Cmd+L).
+- **AI:** where you work, not in a column of its own: over selected text, the **AI** button above the note, right-click a folder, in search, tasks and ideas. See _Meet Mimer_.
 - **Bottom:** the save status, the project, the AI in use and the version of the app.
 
 ## Good to know
 
 - You never press "save". Notes are saved a moment after you stop typing, and committed to the version history. Nothing is lost.
 - Pause the mouse over a button to see what it does. A small **?** next to a setting explains it.
-- Everything in this guide can be reached from the **?** button in the top bar, from **File → How to use Mimer**, or by pressing **F1**.
+- Everything in this guide can be reached from the **?** button in the top bar, from **Help → How to use Mimer**, or by pressing **F1**.
 
 ## Your own order
 

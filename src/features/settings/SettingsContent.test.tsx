@@ -25,15 +25,20 @@ const stored: Settings = {
   recentVaults: [],
   lastVault: null,
   theme: "system",
-  editor: { fontSize: 15, lineWidth: 760, spellcheck: true, recentNotes: 4 },
+  editor: {
+    fontSize: 15,
+    lineWidth: 760,
+    spellcheck: true,
+    recentNotes: 4,
+    aiSpelling: false,
+    ownWords: [],
+  },
   git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
   ai: {
     defaultProviderId: "lm",
-    ravenProviderId: null,
     builtin: DEFAULT_BUILTIN,
     foundry: { model: "" },
     baseInstruction: "",
-    allowOwnKnowledge: false,
     globalInstructions: "",
     embeddings: { enabled: false, providerId: "lm", model: "" },
     providers: [
@@ -71,7 +76,7 @@ const stored: Settings = {
   },
 };
 
-describe("Settings → AI: local for notes, cloud for Raven", () => {
+describe("Settings → AI: only local AI for notes", () => {
   const save = vi.fn().mockResolvedValue(undefined);
 
   beforeEach(() => {
@@ -100,23 +105,10 @@ describe("Settings → AI: local for notes, cloud for Raven", () => {
     ).toEqual(["LM Studio"]);
   });
 
-  it("lists cloud providers for Raven, and Off", async () => {
+  it("has no Raven setting and no own-knowledge setting any more", async () => {
     await openAiTab();
-    const raven = screen.getByLabelText("Raven's provider (cloud AI)");
-    expect(
-      within(raven)
-        .getAllByRole("option")
-        .map((o) => o.textContent),
-    ).toEqual(["Off", "Claude", "Far LM Studio"]);
-  });
-
-  it("saves the chosen Raven provider", async () => {
-    const user = await openAiTab();
-    await user.selectOptions(screen.getByLabelText("Raven's provider (cloud AI)"), "claude");
-    await user.click(screen.getByRole("button", { name: "Save" }));
-    const saved = save.mock.calls[0]?.[0] as Settings | undefined;
-    expect(saved?.ai.ravenProviderId).toBe("claude");
-    expect(saved?.ai.defaultProviderId).toBe("lm");
+    expect(screen.queryByLabelText("Raven's provider (cloud AI)")).toBeNull();
+    expect(screen.queryByText(/write new content from its own knowledge/)).toBeNull();
   });
 });
 
@@ -146,18 +138,15 @@ describe("Settings → AI providers", () => {
     expect(screen.getAllByRole("button", { name: /LM Studio/ }).length).toBeGreaterThan(0);
   });
 
-  it("Add provider asks which kind, says local AI cannot be used by Raven, and adds the one chosen", async () => {
+  it("Add provider offers only local kinds and adds the one chosen", async () => {
     const user = await openProviders();
     await user.click(screen.getByRole("button", { name: /Add provider/ }));
     const note = await screen.findByTestId("add-provider-note");
-    expect(note).toHaveTextContent("cannot be used by Raven");
-    expect(note).toHaveTextContent("Raven works only with a cloud AI");
+    expect(note).toHaveTextContent("never leave it");
     const add = screen.getByRole("button", { name: "Add" });
     expect(add).toBeDisabled();
-    expect(screen.getByRole("radio", { name: /LM Studio/ })).toHaveTextContent("Local · for Mimer");
-    expect(screen.getByRole("radio", { name: /Anthropic/ })).toHaveTextContent(
-      "Cloud · for Raven only",
-    );
+    expect(screen.getByRole("radio", { name: /LM Studio/ })).toHaveTextContent("Local");
+    expect(screen.queryByRole("radio", { name: /Anthropic/ })).toBeNull();
     await user.click(screen.getByRole("radio", { name: /Another server on this computer/ }));
     expect(add).toBeEnabled();
     await user.click(add);
@@ -168,7 +157,7 @@ describe("Settings → AI providers", () => {
   it("Cancel in the Add window adds nothing", async () => {
     const user = await openProviders();
     await user.click(screen.getByRole("button", { name: /Add provider/ }));
-    await user.click(await screen.findByRole("radio", { name: /Anthropic/ }));
+    await user.click(await screen.findByRole("radio", { name: /LM Studio/ }));
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     expect(screen.queryByTestId("add-provider-note")).toBeNull();
     expect(screen.getByText(/Choose a provider on the left/)).toBeInTheDocument();

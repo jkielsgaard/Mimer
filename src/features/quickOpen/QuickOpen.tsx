@@ -6,12 +6,14 @@ import { fuzzyFilter } from "@/lib/fuzzy";
 import { basename, cn, isMarkdown } from "@/lib/utils";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { isManagedNote } from "@/features/fileTree/treeUtils";
 
 /** Mod+P: fuzzy file-name match over the tree. */
 export function QuickOpen() {
   const open = useUiStore((s) => s.quickOpen);
   const setOpen = useUiStore((s) => s.setQuickOpen);
-  const files = useVaultStore((s) => s.files);
+  const allFiles = useVaultStore((s) => s.files);
+  const files = useMemo(() => allFiles.filter((f) => !isManagedNote(f)), [allFiles]);
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState(0);
 

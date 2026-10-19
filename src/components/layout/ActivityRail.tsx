@@ -1,10 +1,12 @@
-import { Files, Search, Settings } from "lucide-react";
+import { Files, Lightbulb, ListChecks, Search, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type LeftTab, useUiStore } from "@/stores/uiStore";
 
 const TABS: { id: LeftTab; label: string; Icon: typeof Files }[] = [
   { id: "files", label: "Files", Icon: Files },
   { id: "search", label: "Search", Icon: Search },
+  { id: "ideas", label: "Ideas", Icon: Lightbulb },
+  { id: "tasks", label: "Tasks", Icon: ListChecks },
 ];
 
 /**
@@ -42,7 +44,8 @@ export function ActivityRail() {
                   ui.toggleLeft();
                   return;
                 }
-                ui.setLeftTab(id);
+                if (id === "ideas" || id === "tasks") ui.openArea(id);
+                else ui.setLeftTab(id);
               }}
             >
               <Icon className="size-4" aria-hidden />

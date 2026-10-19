@@ -60,7 +60,7 @@ describe("localAiProblem", () => {
 
   it("blocks when the built-in AI is not running", async () => {
     useProvider("builtin");
-    expect(await localAiProblem()).toMatch(/not running/);
+    expect(await localAiProblem()).toMatch(/not set up or has a problem/);
   });
 
   it("allows the built-in AI once it is awake", async () => {
@@ -99,7 +99,7 @@ describe("runSkillOn", () => {
     const s = useChatStore.getState();
     expect(s.draftMentions).toEqual(["Notes/A.md", "Inbox"]);
     expect(s.draftSkill?.id).toBe("u1");
-    expect(useUiStore.getState().rightTab).toBe("assistant");
+    expect(useUiStore.getState().askOpen).toBe(true);
     expect(sendMock).toHaveBeenCalledWith("");
   });
 

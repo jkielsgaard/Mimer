@@ -2,6 +2,16 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* The small heading over a group (in panels, menus, lists and pages): one look everywhere. */
+@utility section-label {
+  font-size: 11px;
+  line-height: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--muted-foreground);
+}
+
 :root {
   --background: oklch(0.99 0 0);
   --foreground: oklch(0.2 0.01 270);

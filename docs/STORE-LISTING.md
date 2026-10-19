@@ -51,7 +51,7 @@ Mimer is a beta version. The app is in English; the assistant answers in the lan
 
 ## What's new in this version
 
-Skills: jobs Mimer carries out on a note or a whole folder, from the right-click menu, the chat or the command palette (Ctrl+Shift+P). Make your own in two steps and try it on a note first. "Fix spelling and grammar" now changes only the wrong words, every change is checked before you review it, long runs start with three notes, and the last AI change can be undone with one click. A new look: an AI status chip, a clearer review, an icon bar, a bar over selected text and a short welcome on first start.
+Tasks, ideas and focus: tasks are lines in your notes, with steps and a log, and a calm Focus mode. Ideas have their own area, and one box writes down a task, an idea or a note from anywhere. The AI is now fixed commands where you work (over selected text, above a note, on a folder, in search, tasks and ideas) instead of a chat you must write prompts in, with a spelling help for dyslexia. Everything that is not AI works without one. The right side is a narrow row of icons, the chat opens as a window, and the menus and windows look the same everywhere. New app icon and start screen.
 
 ## Search terms (up to seven)
 

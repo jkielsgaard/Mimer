@@ -42,20 +42,6 @@ export const PROVIDER_CHOICES: Choice[] = [
       contextTokens: 16000,
     }),
   },
-  {
-    id: "anthropic",
-    title: "Anthropic (Claude)",
-    where: "cloud",
-    text: "A cloud AI. Needs an account and an API key from Anthropic, and costs money.",
-    make: () => newProvider("anthropic"),
-  },
-  {
-    id: "cloud_openai",
-    title: "Cloud AI with the OpenAI interface",
-    where: "cloud",
-    text: "OpenAI, Azure OpenAI and other cloud services. Needs an account and an API key.",
-    make: () => newProvider("openai_compatible"),
-  },
 ];
 
 interface Props {
@@ -89,13 +75,8 @@ export function AddProviderDialog({ open, onCancel, onAdd }: Props) {
           className="rounded-md border bg-muted/40 p-2 text-xs text-muted-foreground"
         >
           <p>
-            <strong className="text-foreground">Local AI</strong> runs on this computer and is used
-            by <strong>Mimer</strong>, which reads your notes. A local AI cannot be used by Raven.
-          </p>
-          <p className="mt-1">
-            <strong className="text-foreground">Raven works only with a cloud AI</strong>, because
-            only a cloud AI can look things up on the internet. Raven never sees your notes, and
-            Mimer never uses a cloud AI.
+            Mimer uses an AI that runs on this computer, so your notes never leave it. The built-in
+            AI is set up under Built-in AI; add LM Studio or another local server here.
           </p>
         </div>
         <div role="radiogroup" aria-label="Kind of AI" className="flex flex-col gap-2">
@@ -123,7 +104,7 @@ export function AddProviderDialog({ open, onCancel, onAdd }: Props) {
                       : "bg-warning/20 text-foreground",
                   )}
                 >
-                  {c.where === "local" ? "Local · for Mimer" : "Cloud · for Raven only"}
+                  Local
                 </span>
               </span>
               <span className="block text-xs text-muted-foreground">{c.text}</span>

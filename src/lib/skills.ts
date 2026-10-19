@@ -1,6 +1,8 @@
 import type { Skill } from "@/bindings/Skill";
 import { activeAi } from "@/features/chat/useActiveAi";
 import { api } from "@/lib/api";
+import { aiBlocked } from "@/lib/aiStatus";
+import { wakeIfNeeded } from "@/lib/wake";
 import { MAX_MENTIONS } from "@/lib/mentionQuery";
 import { useChatStore } from "@/stores/chatStore";
 import { useEngineStore } from "@/stores/engineStore";
@@ -20,17 +22,13 @@ export function skillFits(skill: Skill, isDir: boolean): boolean {
  */
 export async function localAiProblem(): Promise<string | null> {
   const { provider } = activeAi(useSettingsStore.getState().settings, useVaultStore.getState());
-  if (!provider) return "No AI is set up. Choose one in Settings → AI.";
-  if (provider.location !== "local") {
-    return "Skills need a local AI, and the chosen AI is not local. Choose a local one in Settings → AI.";
-  }
-  if (provider.kind === "builtin" && useEngineStore.getState().status?.state !== "awake") {
-    return "The built-in AI is not running. Start it in the chat panel or in Settings → Built-in AI.";
-  }
-  if (provider.kind === "foundry_local" && useFoundryStore.getState().status?.state !== "awake") {
-    return "Foundry Local is not running. Start it in the chat panel or in Settings → Built-in AI.";
-  }
-  if (provider.kind === "builtin" || provider.kind === "foundry_local") return null;
+  const blocked = aiBlocked(
+    provider,
+    useEngineStore.getState().status?.state,
+    useFoundryStore.getState().status?.state,
+  );
+  if (blocked !== null || !provider) return blocked;
+  if (provider.kind === "builtin" || provider.kind === "foundry_local") return wakeIfNeeded();
   try {
     const r = await api.testProvider(provider.id);
     return r.ok ? null : `${provider.name} is not reachable: ${r.message}`;
@@ -56,6 +54,6 @@ export async function runSkillOn(skill: Skill, paths: string[]): Promise<void> {
     return;
   }
   useChatStore.setState({ draftMentions: paths, draftSkill: skill });
-  ui.setRightTab("assistant");
+  ui.setAskOpen(true);
   void useChatStore.getState().send("");
 }

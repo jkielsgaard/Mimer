@@ -10,12 +10,13 @@ const mk = (id: string, name: string, appliesTo: Skill["appliesTo"]): Skill => (
   kind: "rewrite",
   appliesTo,
   instruction: "Do.",
-  builtin: false,
+  builtin: true,
 });
 const { apiMock, runMock } = vi.hoisted(() => ({
   apiMock: { listSkills: vi.fn() },
   runMock: vi.fn(),
 }));
+vi.mock("@/lib/useAiBlocked", () => ({ useAiBlocked: () => null }));
 vi.mock("@/lib/api", () => ({
   api: apiMock,
   toApiError: (e: unknown) => ({ message: String(e) }),
@@ -63,6 +64,17 @@ describe("SkillsSubmenu", () => {
     expect(screen.queryByText("For folders")).toBeNull();
     fireEvent.click(screen.getByText("For notes"));
     expect(runMock).toHaveBeenCalledWith(expect.objectContaining({ id: "a" }), ["N/A.md"]);
+  });
+
+  it("leaves out skills made in older versions", async () => {
+    apiMock.listSkills.mockResolvedValue([
+      mk("a", "For notes", "note"),
+      { ...mk("u", "My old skill", "note"), builtin: false },
+    ]);
+    menu([{ path: "N/A.md", isDir: false }]);
+    await userEvent.setup().click(await screen.findByText("AI"));
+    expect(await screen.findByText("For notes")).toBeInTheDocument();
+    expect(screen.queryByText("My old skill")).toBeNull();
   });
 
   it("lists the folder skills for a folder", async () => {

@@ -1,14 +1,13 @@
 import type { EditorView } from "@codemirror/view";
-import { Sparkles } from "lucide-react";
+import { ChevronDown, Sparkles } from "lucide-react";
 import { useEffect, useState, type RefObject } from "react";
 import type { InlineStart } from "@/features/inlineAi/InlineAiPopup";
 import { formatShortcut } from "@/lib/shortcuts";
 
-const ACTIONS: { label: string; start: InlineStart }[] = [
-  { label: "Fix", start: { id: "fixSpelling" } },
-  { label: "Rewrite", start: { id: "rewrite" } },
-  { label: "Shorten", start: { id: "shorten" } },
-  { label: "Ask Mimer…", start: { id: "custom" } },
+const ACTIONS: { label: string; title: string; start: InlineStart }[] = [
+  { label: "Fix", title: "Fix spelling and grammar", start: { id: "fix" } },
+  { label: "Rewrite", title: "Rewrite clearer, same meaning", start: { id: "clearer" } },
+  { label: "Shorten", title: "Shorten, keeping every fact", start: { id: "shorten" } },
 ];
 
 /** The least text that is worth offering the AI for (a stray double click is not). */
@@ -22,12 +21,19 @@ export function SelectionBubble({
   host,
   viewRef,
   hidden,
+  aiOff = null,
   onChoose,
+  onCapture,
 }: {
   host: RefObject<HTMLDivElement | null>;
   viewRef: RefObject<EditorView | null>;
   hidden: boolean;
-  onChoose: (start: InlineStart) => void;
+  /** Why the AI cannot be used now: its buttons are then off, and say why. */
+  aiOff?: string | null;
+  /** A command to start, or `undefined` to open the menu of all AI commands. */
+  onChoose: (start: InlineStart | undefined) => void;
+  /** Writes the selected text down as a task or an idea. */
+  onCapture?: (kind: "task" | "idea") => void;
 }) {
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
 
@@ -80,7 +86,9 @@ export function SelectionBubble({
         <button
           key={a.label}
           type="button"
-          className="rounded px-2 py-1 text-xs hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+          disabled={aiOff !== null}
+          title={aiOff ?? a.title}
+          className="rounded px-2 py-1 text-xs hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:hover:bg-transparent"
           onClick={() => {
             setAt(null);
             onChoose(a.start);
@@ -89,6 +97,36 @@ export function SelectionBubble({
           {a.label}
         </button>
       ))}
+      <button
+        type="button"
+        aria-label="More AI commands"
+        title={aiOff ?? "More AI commands: rewrite, translate, explain, find tasks"}
+        className="flex items-center gap-0.5 rounded px-2 py-1 text-xs font-semibold text-primary hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+        onClick={() => {
+          setAt(null);
+          onChoose(undefined);
+        }}
+      >
+        AI <ChevronDown className="size-3" aria-hidden />
+      </button>
+      {onCapture && (
+        <>
+          <span className="mx-1 h-4 w-px bg-border" aria-hidden />
+          {(["task", "idea"] as const).map((k) => (
+            <button
+              key={k}
+              type="button"
+              className="rounded px-2 py-1 text-xs hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => {
+                setAt(null);
+                onCapture(k);
+              }}
+            >
+              {k === "task" ? "As a task" : "As an idea"}
+            </button>
+          ))}
+        </>
+      )}
       <kbd className="mx-1 rounded border px-1 text-[10px] text-muted-foreground">
         {formatShortcut("Mod+K")}
       </kbd>

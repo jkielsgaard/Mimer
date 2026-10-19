@@ -9,15 +9,20 @@ const settings: Settings = {
   recentVaults: ["/home/me/Notes"],
   lastVault: null,
   theme: "light",
-  editor: { fontSize: 15, lineWidth: 760, spellcheck: true, recentNotes: 4 },
+  editor: {
+    fontSize: 15,
+    lineWidth: 760,
+    spellcheck: true,
+    recentNotes: 4,
+    aiSpelling: false,
+    ownWords: [],
+  },
   git: { authorName: "Mimer", authorEmail: "mdvault@localhost", idleCommitMinutes: 5 },
   ai: {
     defaultProviderId: "lmstudio-default",
-    ravenProviderId: null,
     builtin: DEFAULT_BUILTIN,
     foundry: { model: "" },
     baseInstruction: "",
-    allowOwnKnowledge: false,
     globalInstructions: "",
     embeddings: { enabled: false, providerId: "lmstudio-default", model: "" },
     providers: [
@@ -153,8 +158,15 @@ describe("App smoke test", () => {
     await user.click(await screen.findByText("/home/me/Notes"));
     expect(await screen.findByRole("tree", { name: "Files" })).toBeInTheDocument();
     expect(screen.getByTestId("save-status")).toHaveTextContent("Saved");
-    expect(screen.getByRole("tab", { name: "Mimer" })).toBeInTheDocument();
-    expect(screen.getAllByText("LM Studio · qwen")).toHaveLength(2); // chat header + status bar
+    // No chat column: the chat opens as a window from the right edge.
+    expect(screen.queryByRole("tab", { name: "Mimer" })).toBeNull();
+    expect(screen.getAllByText("LM Studio · qwen")).toHaveLength(1); // status bar
+    await user.click(screen.getByRole("button", { name: "Ask about my notes" }));
+    expect(
+      await screen.findByRole("complementary", { name: "Ask about my notes" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText("LM Studio · qwen")).toHaveLength(1);
+    await user.click(screen.getByRole("button", { name: "Close the chat" }));
 
     await user.click(screen.getByTestId("tree-Home.md"));
     await waitFor(() => {
@@ -171,14 +183,14 @@ describe("App smoke test", () => {
     const user = userEvent.setup();
     render(<App />);
     // The whole app renders here, which can take longer than the default wait on a busy machine.
-    const slow = { timeout: 5000 };
+    const slow = { timeout: 10000 };
     await user.click(await screen.findByText("/home/me/Notes", undefined, slow));
     await user.click(await screen.findByRole("tab", { name: "History" }, slow));
     expect(
       await screen.findByText(/Open a note to see its history/, undefined, slow),
     ).toBeInTheDocument();
     expect(screen.queryByRole("tab", { name: "Backlinks" })).toBeNull();
-  });
+  }, 20000);
 
   it("shows a blocking error when settings.json cannot be loaded", async () => {
     apiMock.getSettings.mockRejectedValue({ code: "Settings", message: "schema version 99" });

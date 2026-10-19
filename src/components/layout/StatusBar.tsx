@@ -2,6 +2,7 @@ import { useActiveAi } from "@/features/chat/useActiveAi";
 import { appVersion, buildDateLabel, releaseStage } from "@/lib/version";
 import { saveStatusLabel, useFocusedSaveStatus } from "@/stores/editorStore";
 import { AiChip } from "./AiChip";
+import { SpellingToggle } from "./SpellingToggle";
 
 /** Save status · project · AI chip · app version. */
 export function StatusBar() {
@@ -14,6 +15,9 @@ export function StatusBar() {
       </span>
       <span className="truncate">{project ? `Project: ${project.name}` : "No project"}</span>
       <span className="ml-auto">
+        <SpellingToggle />
+      </span>
+      <span>
         <AiChip />
       </span>
       <span data-testid="app-version" title={`Mimer ${appVersion}, built ${buildDateLabel()}`}>

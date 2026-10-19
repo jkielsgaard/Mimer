@@ -43,7 +43,7 @@ describe("ProviderEditor help", () => {
 
     await user.selectOptions(kind, "anthropic");
     expect(help()).toContain("console.anthropic.com");
-    expect(help()).toContain("Raven");
+    expect(help()).toContain("never uses a cloud provider");
   });
 
   it("Foundry Local is not made here: it is set up under Built-in AI", () => {

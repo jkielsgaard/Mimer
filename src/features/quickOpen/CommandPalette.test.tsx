@@ -52,7 +52,7 @@ describe("CommandPalette", () => {
   it("lists the skills for the open note and runs one with Enter", async () => {
     render(<CommandPalette />);
     const user = userEvent.setup();
-    expect(await screen.findByText("Skills · on “Home”")).toBeInTheDocument();
+    expect(await screen.findByText("AI · on “Home”")).toBeInTheDocument();
     expect(screen.getByRole("option", { name: /Fix spelling and grammar/ })).toBeInTheDocument();
     await user.keyboard("{Enter}");
     expect(runMock).toHaveBeenCalledWith(expect.objectContaining({ id: fix.id }), ["Home.md"]);
@@ -62,7 +62,7 @@ describe("CommandPalette", () => {
   it("finds a note by name and opens it", async () => {
     render(<CommandPalette />);
     const user = userEvent.setup();
-    await user.type(await screen.findByLabelText("Search notes, skills and actions"), "firew");
+    await user.type(await screen.findByLabelText("Search notes, AI commands and actions"), "firew");
     await user.click(screen.getByRole("option", { name: /Firewall plan/ }));
     expect(openMock).toHaveBeenCalledWith("Work/Firewall plan.md");
   });
@@ -71,6 +71,7 @@ describe("CommandPalette", () => {
     useVaultStore.setState({ activePath: null });
     render(<CommandPalette />);
     expect(await screen.findByText(/Open a note or select a folder/)).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /New note/ })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /^New note(?! from)/ })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /Open the task list/ })).toBeInTheDocument();
   });
 });

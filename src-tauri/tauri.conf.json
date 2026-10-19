@@ -20,12 +20,31 @@
         "minWidth": 900,
         "minHeight": 600,
         "dragDropEnabled": false,
-        "backgroundColor": "#0a0a0a"
+        "backgroundColor": "#0a0a0a",
+        "visible": false
+      },
+      {
+        "label": "splash",
+        "title": "Mimer",
+        "url": "index.html?splash=1",
+        "width": 760,
+        "height": 428,
+        "decorations": false,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "center": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "dragDropEnabled": false,
+        "backgroundColor": "#000000"
       }
     ],
     "security": {
       "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data: blob:; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost",
-      "dangerousDisableAssetCspModification": ["style-src"],
+      "dangerousDisableAssetCspModification": [
+        "style-src"
+      ],
       "assetProtocol": {
         "enable": true,
         "scope": []
