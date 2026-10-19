@@ -10,3 +10,4 @@ src-tauri/gen
 # Foundry Local's native libraries are fetched by scripts/fetch-foundry-native.* (not kept in git)
 src-tauri/foundry-native/*
 !src-tauri/foundry-native/README.txt
+screenshots/
