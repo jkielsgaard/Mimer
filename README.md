@@ -6,8 +6,8 @@ Mimer is a desktop app for Markdown notes with a built-in AI assistant that help
 
 ![Mimer showing a note with the AI menu over selected text](docs/screenshots/notes-ai.png)
 
-| Tasks | Ideas |
-| --- | --- |
+| Tasks                                        | Ideas                                                |
+| -------------------------------------------- | ---------------------------------------------------- |
 | ![The task list](docs/screenshots/tasks.png) | ![An idea with its note](docs/screenshots/ideas.png) |
 
 - **Plain files.** Your notes are normal `.md` files in normal folders. A vault works without Mimer.
