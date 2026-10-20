@@ -1,114 +1,137 @@
-import { Plus, Sparkles, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { PromptDialog } from "@/components/PromptDialog";
+import { ViewHeader } from "@/components/ViewHeader";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  durationLabel,
-  filterTasks,
-  groupTasks,
-  isOpen,
-  noteName,
-  todayIso,
-  totalMinutes,
-} from "@/lib/taskLogic";
+import { epicGroups, noteName, todayIso, type EpicGroup } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
-import { useTaskStore, type GroupBy, type TaskWhen } from "@/stores/taskStore";
+import { useAiBlocked } from "@/lib/useAiBlocked";
+import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { TaskRow } from "./TaskRow";
-import { ViewHeader } from "@/components/ViewHeader";
-import { useAiBlocked } from "@/lib/useAiBlocked";
 
-const BANNER_KEY = "mimer.tasksBannerDay";
-
-function bannerSeen(day: string): boolean {
-  try {
-    return localStorage.getItem(BANNER_KEY) === day;
-  } catch {
-    return false;
-  }
+/** How far an epic has come: a thin bar and "2 of 4". */
+export function EpicProgress({ group }: { group: EpicGroup }) {
+  const pct = group.total === 0 ? 0 : (group.done / group.total) * 100;
+  return (
+    <>
+      <span
+        role="progressbar"
+        aria-label={`${group.title} progress`}
+        aria-valuemin={0}
+        aria-valuemax={group.total}
+        aria-valuenow={group.done}
+        className="hidden h-1.5 w-24 overflow-hidden rounded-full bg-muted sm:block"
+      >
+        <span
+          className={cn("block h-full", group.allDone ? "bg-success" : "bg-primary")}
+          style={{ width: `${String(pct)}%` }}
+        />
+      </span>
+      <span className="text-xs font-semibold tabular-nums">
+        {group.done} of {group.total}
+      </span>
+    </>
+  );
 }
 
-function markBannerSeen(day: string): void {
-  try {
-    localStorage.setItem(BANNER_KEY, day);
-  } catch {
-    /* only a convenience */
-  }
-}
-
-const WHEN_NAMES: Record<Exclude<TaskWhen, "all">, string> = {
-  today: "today",
-  moved: "tasks moved from earlier",
-  week: "this week",
-  later: "later",
-  done: "done tasks",
-};
-
-const GROUPS: { id: GroupBy; label: string }[] = [
-  { id: "when", label: "When" },
-  { id: "note", label: "Note" },
-  { id: "tag", label: "Tag" },
-];
-
-/** The task list: today on top, then what was left over, this week and later. */
+/** The task list: every epic task (a note with tasks) as a box you can fold. */
 export function TasksView() {
   const tasks = useTaskStore((s) => s.tasks);
+  const epics = useTaskStore((s) => s.epics);
   const loaded = useTaskStore((s) => s.loaded);
-  const groupBy = useTaskStore((s) => s.groupBy);
-  const showDone = useTaskStore((s) => s.showDone);
-  const when = useTaskStore((s) => s.when);
-  const tag = useTaskStore((s) => s.tag);
+  const folded = useTaskStore((s) => s.folded);
   const activePath = useVaultStore((s) => s.activePath);
   const aiOff = useAiBlocked();
-  const [draft, setDraft] = useState("");
-  const [later, setLater] = useState(false);
+  const [naming, setNaming] = useState(false);
   const today = todayIso();
-  const [banner, setBanner] = useState(() => !bannerSeen(today));
 
   useEffect(() => {
     void useTaskStore.getState().load();
   }, []);
 
-  const groups = useMemo(
-    () =>
-      groupTasks(filterTasks(tasks, when, tag, today), groupBy, today, showDone || when === "done"),
-    [tasks, groupBy, today, showDone, when, tag],
-  );
-  const open = tasks.filter(isOpen).length;
+  const groups = useMemo(() => epicGroups(tasks, epics, today), [tasks, epics, today]);
+  const open = groups.filter((g) => !g.allDone);
+  const done = groups.filter((g) => g.allDone);
 
-  const add = (): void => {
-    const text = draft;
-    setDraft("");
-    void useTaskStore.getState().add(text);
+  const box = (g: EpicGroup) => {
+    const isFolded = g.allDone ? folded[g.path] !== false : folded[g.path] === true;
+    return (
+      <section
+        key={g.path}
+        aria-label={g.title}
+        className={cn("rounded-lg border bg-card p-1.5", g.allDone && "bg-sidebar")}
+      >
+        <div className="flex items-center gap-3 px-2 py-1.5">
+          <button
+            type="button"
+            aria-expanded={!isFolded}
+            aria-label={`${isFolded ? "Unfold" : "Fold"} ${g.title}`}
+            className="rounded p-0.5 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={() => {
+              useTaskStore.getState().toggleFold(g.path);
+            }}
+          >
+            {isFolded ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
+          </button>
+          <button
+            type="button"
+            className={cn(
+              "min-w-0 flex-1 truncate text-left text-sm font-semibold hover:underline focus-visible:ring-2 focus-visible:ring-ring",
+              g.allDone && "text-muted-foreground",
+            )}
+            onClick={() => {
+              useTaskStore.getState().openEpic(g.path);
+            }}
+          >
+            {g.title}
+          </button>
+          {g.source !== null && (
+            <span className="hidden text-xs text-muted-foreground md:inline">
+              from {noteName(g.source)}
+            </span>
+          )}
+          {!g.native && (
+            <span className="hidden text-xs text-muted-foreground md:inline">in a note</span>
+          )}
+          <EpicProgress group={g} />
+          {g.allDone && <span className="rounded-full border px-2 text-xs text-success">Done</span>}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              useTaskStore.getState().openEpic(g.path);
+            }}
+          >
+            Open
+          </Button>
+        </div>
+        {!isFolded && (
+          <ul>
+            {g.tasks.map((t) => (
+              <TaskRow
+                key={`${t.path}:${String(t.line)}`}
+                task={t}
+                today={today}
+                planButtons={false}
+                showNote={false}
+              />
+            ))}
+            {g.tasks.length === 0 && (
+              <li className="px-4 py-2 text-xs text-muted-foreground">
+                No tasks yet. Open the epic to add some.
+              </li>
+            )}
+          </ul>
+        )}
+      </section>
+    );
   };
 
   return (
     <section aria-label="Tasks" className="flex h-full min-h-0 flex-col bg-background">
       <ViewHeader title="Tasks">
-        <div
-          role="group"
-          aria-label="Group by"
-          className="flex overflow-hidden rounded-md border text-xs"
-        >
-          {GROUPS.map((g, i) => (
-            <button
-              key={g.id}
-              type="button"
-              aria-pressed={groupBy === g.id}
-              className={cn(
-                "px-3 py-1.5",
-                i > 0 && "border-l",
-                groupBy === g.id ? "bg-accent text-accent-foreground" : "hover:bg-muted",
-              )}
-              onClick={() => {
-                useTaskStore.getState().setGroupBy(g.id);
-              }}
-            >
-              {g.label}
-            </button>
-          ))}
-        </div>
         <Button
           size="sm"
           variant="outline"
@@ -127,153 +150,53 @@ export function TasksView() {
         </Button>
         <Button
           size="sm"
-          variant="outline"
-          aria-pressed={showDone}
           onClick={() => {
-            useTaskStore.getState().setShowDone(!showDone);
+            setNaming(true);
           }}
         >
-          {showDone ? "Hide done" : "Show done"}
+          <Plus /> New epic task
         </Button>
       </ViewHeader>
-
-      {(when !== "all" || tag !== null) && (
-        <div className="flex items-center gap-2 px-5 pt-3 text-xs text-muted-foreground">
-          <span>
-            Showing {when === "all" ? "all open tasks" : WHEN_NAMES[when]}
-            {tag !== null && ` with #${tag}`}
-          </span>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              useTaskStore.getState().setWhen("all");
-              useTaskStore.getState().setTag(null);
-            }}
-          >
-            Show everything
-          </Button>
-        </div>
-      )}
-
-      <form
-        className="flex gap-2 px-5 pb-1 pt-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (draft.trim() !== "") add();
-        }}
-      >
-        <div className="relative flex-1">
-          <Plus
-            className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-muted-foreground"
-            aria-hidden
-          />
-          <Input
-            aria-label="Add a task"
-            className="h-9 pl-8"
-            placeholder="Add a task and press Enter. Add a date with “tomorrow” or “fri”."
-            value={draft}
-            onChange={(e) => {
-              setDraft(e.target.value);
-            }}
-          />
-        </div>
-      </form>
-
-      <div className="min-h-0 flex-1 overflow-auto px-5 pb-4">
-        {banner && open > 0 && groupBy === "when" && (
-          <div
-            role="note"
-            className="my-2 flex items-start gap-3 rounded-lg border border-primary/30 bg-accent px-4 py-3 text-accent-foreground"
-          >
-            <div className="flex-1">
-              <p className="text-sm font-semibold">Good morning. What matters today?</p>
-              <p className="text-xs">
-                Press <b>Today</b> on the things that matter. Three is plenty. The rest can wait.
-              </p>
-            </div>
-            <button
-              type="button"
-              aria-label="Dismiss"
-              className="rounded p-1 hover:bg-background/60"
-              onClick={() => {
-                markBannerSeen(today);
-                setBanner(false);
-              }}
-            >
-              <X className="size-4" />
-            </button>
-          </div>
-        )}
-
+      <div className="min-h-0 flex-1 space-y-3 overflow-auto px-5 py-4">
         {!loaded && <p className="py-6 text-sm text-muted-foreground">Reading your notes…</p>}
         {loaded && groups.length === 0 && (
           <div className="py-10 text-center text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">No tasks yet.</p>
+            <p className="font-medium text-foreground">No epic tasks yet.</p>
             <p>
-              Add one above, or write <code>- [ ] something</code> in any note. Mimer finds it.
+              An epic task is a note with tasks. Press <b>New epic task</b>, or write{" "}
+              <code>- [ ] something</code> in any note. Mimer finds it.
             </p>
           </div>
         )}
-
-        {groups.map((g) => {
-          const collapsed = groupBy === "when" && g.id === "later" && !later && g.tasks.length > 3;
-          const moved = g.id === "moved";
-          return (
-            <section key={g.id} aria-label={g.label} className="mt-4">
-              <div className="flex items-center gap-2 px-3 pb-1">
-                <h3 className="flex-1 section-label">
-                  {g.label} · {g.tasks.length}
-                </h3>
-                {g.id === "today" && totalMinutes(g.tasks) > 0 && (
-                  <span className="text-xs text-muted-foreground">
-                    about {durationLabel(totalMinutes(g.tasks))}
-                  </span>
-                )}
-                {g.id === "later" && g.tasks.length > 3 && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setLater(!later);
-                    }}
-                  >
-                    {later ? "Hide" : "Show"}
-                  </Button>
-                )}
-              </div>
-              {g.id === "today" && g.tasks.length > 3 && (
-                <p className="px-3 pb-1 text-xs text-muted-foreground">
-                  That is more than three. Move some to later if it feels like too much.
-                </p>
-              )}
-              {moved && (
-                <p className="px-3 pb-1 text-xs text-muted-foreground">
-                  These were not finished. That happens. Nothing is lost.
-                </p>
-              )}
-              {!collapsed && (
-                <ul className={cn(moved && "rounded-lg bg-warning/10")}>
-                  {g.tasks.map((t) => (
-                    <TaskRow
-                      key={`${t.path}:${String(t.line)}`}
-                      task={t}
-                      today={today}
-                      planButtons={g.id !== "today" || true}
-                    />
-                  ))}
-                </ul>
-              )}
-            </section>
-          );
-        })}
+        {open.map(box)}
+        {done.length > 0 && (
+          <>
+            <h3 className="section-label px-1 pt-2">Done · {done.length}</h3>
+            {done.map(box)}
+          </>
+        )}
+        {loaded && groups.length > 0 && (
+          <p className="px-1 text-xs text-muted-foreground">
+            Fold an epic to hide its tasks. When every task in it is done, it moves to Done by
+            itself.
+          </p>
+        )}
       </div>
-
-      <p className="border-t bg-sidebar px-5 py-2 text-[11px] text-muted-foreground">
-        {loaded
-          ? `Found in ${String(new Set(tasks.map((t) => t.path)).size)} notes. Each task is a line in the note where you wrote it.`
-          : ""}
-      </p>
+      <PromptDialog
+        open={naming}
+        title="New epic task"
+        label="Name"
+        confirmLabel="Make it"
+        initialValue=""
+        validate={(v) => (v.trim() === "" ? "Enter a name" : null)}
+        onCancel={() => {
+          setNaming(false);
+        }}
+        onSubmit={(name) => {
+          setNaming(false);
+          void useTaskStore.getState().createEpic(name);
+        }}
+      />
     </section>
   );
 }

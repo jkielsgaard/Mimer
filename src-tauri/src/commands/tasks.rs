@@ -1,6 +1,7 @@
 use crate::error::AppError;
 use crate::git::{CommitKind, CommitReason};
 use crate::state::AppState;
+use crate::tasks::epics::{self, Epic};
 use crate::tasks::ideas::{self, Idea};
 use crate::tasks::{self, MetaPatch, Task};
 use crate::vault::{fs_ops, ops, tree, OpenVault};
@@ -8,9 +9,6 @@ use tauri::State;
 
 /// The most tasks one list holds.
 const MAX_TASKS: usize = 5_000;
-
-/// The note that tasks added without a note go into.
-const TASKS_NOTE: &str = "Tasks.md";
 
 /// The note that holds the ideas.
 const IDEAS_NOTE: &str = "Ideas.md";
@@ -73,10 +71,12 @@ pub async fn list_tasks(state: State<'_, AppState>) -> Result<Vec<Task>, AppErro
     Ok(all_tasks(&v))
 }
 
-/// Adds a task to the note `Tasks` in the root of the vault (made when it is missing).
-/// A note given with it goes into the log of the task, one dated line for each line of the note.
-pub(crate) fn add_to_tasks_note(
+/// Adds a task to the epic note `path` (made when it is missing and is in `Tasks/`).
+/// A note given with it goes into the log of the task, one dated line for each line of the note,
+/// and `steps` go under it as indented checklist lines.
+pub(crate) fn add_task_to(
     v: &OpenVault,
+    path: &str,
     text: &str,
     note: &str,
     date: &str,
@@ -85,26 +85,118 @@ pub(crate) fn add_to_tasks_note(
     if text.trim().is_empty() {
         return Err(AppError::InvalidPath("The task is empty".into()));
     }
-    let existing = fs_ops::read_note(&v.root, TASKS_NOTE)
-        .map(|n| n.content)
-        .unwrap_or_else(|_| "# Tasks\n".to_string());
+    check_path(path)?;
+    let existing = match fs_ops::read_note(&v.root, path) {
+        Ok(n) => n.content,
+        Err(_) if epics::is_epic_path(path) => {
+            std::fs::create_dir_all(v.root.join(epics::EPICS_DIR))?;
+            let title = if path == epics::INBOX {
+                "Inbox".to_string()
+            } else {
+                path.rsplit('/')
+                    .next()
+                    .unwrap_or(path)
+                    .trim_end_matches(".md")
+                    .to_string()
+            };
+            epics::new_epic_text(&title, None)?
+        }
+        Err(e) => return Err(e),
+    };
     let mut new = tasks::append_task(&existing, text);
     for step in steps.iter().filter(|s| !s.trim().is_empty()) {
-        if let Some(t) = tasks::parse(TASKS_NOTE, &new).into_iter().next_back() {
+        if let Some(t) = tasks::parse(path, &new).into_iter().next_back() {
             new = tasks::add_step(&new, t.line, &t.key, step)?;
         }
     }
     if !note.trim().is_empty() {
-        let added = tasks::parse(TASKS_NOTE, &new).into_iter().next_back();
+        let added = tasks::parse(path, &new).into_iter().next_back();
         if let Some(t) = added {
             for l in note.lines().filter(|l| !l.trim().is_empty()) {
                 new = tasks::add_log(&new, t.line, &t.key, date, l)?;
             }
         }
     }
-    ops::write_note(v, TASKS_NOTE, &new)?;
+    ops::write_note(v, path, &new)?;
     v.refresh_files();
-    Ok(tasks_of(v, TASKS_NOTE))
+    Ok(tasks_of(v, path))
+}
+
+/// The epic of a note: the note itself when it is in `Tasks/`, else the epic made for it (made
+/// now when there is none yet).
+pub(crate) fn epic_for_note(v: &OpenVault, note: &str) -> Result<Epic, AppError> {
+    check_path(note)?;
+    if epics::is_epic_path(note) {
+        let n = fs_ops::read_note(&v.root, note)?;
+        return Ok(epics::read_epic(note, &n.content));
+    }
+    let target = epics::link_target(note);
+    for e in all_epics(v) {
+        if e.source.as_deref() == Some(target.as_str()) {
+            return Ok(e);
+        }
+    }
+    let base = epics::file_name_for(
+        note.rsplit('/')
+            .next()
+            .unwrap_or(note)
+            .trim_end_matches(".md"),
+    );
+    create_epic_note(v, &base, Some(&target))
+}
+
+/// Makes an epic note in `Tasks/` with a name that is free.
+fn create_epic_note(v: &OpenVault, title: &str, source: Option<&str>) -> Result<Epic, AppError> {
+    let text = epics::new_epic_text(title, source)?;
+    let base = epics::file_name_for(title);
+    std::fs::create_dir_all(v.root.join(epics::EPICS_DIR))?;
+    let path = fs_ops::create_note(&v.root, epics::EPICS_DIR, Some(&base)).or_else(|_| {
+        (2..100)
+            .find_map(|i| {
+                fs_ops::create_note(&v.root, epics::EPICS_DIR, Some(&format!("{base} {i}"))).ok()
+            })
+            .ok_or_else(|| AppError::AlreadyExists(format!("{base} already exists")))
+    })?;
+    ops::write_note(v, &path, &text)?;
+    v.refresh_files();
+    Ok(epics::read_epic(&path, &text))
+}
+
+/// Every epic note (the notes in `Tasks/`).
+pub(crate) fn all_epics(v: &OpenVault) -> Vec<Epic> {
+    let mut out: Vec<Epic> = v
+        .file_list()
+        .iter()
+        .filter(|f| epics::is_epic_path(f))
+        .filter_map(|f| {
+            fs_ops::read_note(&v.root, f)
+                .ok()
+                .map(|n| epics::read_epic(f, &n.content))
+        })
+        .collect();
+    out.sort_by_key(|a| a.title.to_lowercase());
+    out
+}
+
+/// The epic notes, for the task list.
+#[tauri::command]
+pub async fn list_epics(state: State<'_, AppState>) -> Result<Vec<Epic>, AppError> {
+    let v = state.current_vault()?;
+    Ok(all_epics(&v))
+}
+
+/// Makes a new, empty epic task: a note in `Tasks/`.
+#[tauri::command]
+pub async fn epic_create(state: State<'_, AppState>, title: String) -> Result<Epic, AppError> {
+    let v = state.current_vault()?;
+    create_epic_note(&v, &title, None)
+}
+
+/// The epic task of a note. A task written in an ordinary note lives in an epic of its own.
+#[tauri::command]
+pub async fn epic_for_note_cmd(state: State<'_, AppState>, note: String) -> Result<Epic, AppError> {
+    let v = state.current_vault()?;
+    epic_for_note(&v, &note)
 }
 
 /// Ticks or unticks a task or a step.
@@ -248,7 +340,7 @@ pub async fn task_add_to_note(
     add_to_note(&v, &path, &texts)
 }
 
-/// Adds a task to the note `Tasks` in the root of the vault and returns that note's tasks.
+/// Adds a task to an epic (the Inbox when none is given) and returns that note's tasks.
 #[tauri::command]
 pub async fn task_add(
     state: State<'_, AppState>,
@@ -256,10 +348,12 @@ pub async fn task_add(
     note: Option<String>,
     date: Option<String>,
     steps: Option<Vec<String>>,
+    path: Option<String>,
 ) -> Result<Vec<Task>, AppError> {
     let v = state.current_vault()?;
-    add_to_tasks_note(
+    add_task_to(
         &v,
+        path.as_deref().unwrap_or(epics::INBOX),
         &text,
         note.as_deref().unwrap_or(""),
         date.as_deref()
@@ -470,15 +564,23 @@ mod tests {
     }
 
     #[test]
-    fn a_task_added_without_a_note_goes_into_tasks_md() {
+    fn a_quick_task_goes_into_the_inbox_epic() {
         let d = tempfile::tempdir().unwrap();
         let v = open_for_test(d.path());
-        let list =
-            add_to_tasks_note(&v, "Call Mette due:2026-10-20", "", "2026-10-19", &[]).unwrap();
+        let list = add_task_to(
+            &v,
+            epics::INBOX,
+            "Call Mette due:2026-10-20",
+            "",
+            "2026-10-19",
+            &[],
+        )
+        .unwrap();
         assert_eq!(list.len(), 1);
         assert_eq!(list[0].title, "Call Mette");
-        let list = add_to_tasks_note(
+        let list = add_task_to(
             &v,
+            epics::INBOX,
             "Order headsets",
             "Ask Mette\n\nThe grey ones",
             "2026-10-19",
@@ -490,15 +592,57 @@ mod tests {
         assert_eq!(log, ["Ask Mette", "The grey ones"]);
         let steps: Vec<&str> = list[1].steps.iter().map(|s| s.text.as_str()).collect();
         assert_eq!(steps, ["Find the model", "Order"]);
-        let text = std::fs::read_to_string(d.path().join("Tasks.md")).unwrap();
-        assert!(text.starts_with("# Tasks\n\n- [ ] Call Mette"), "{text}");
-        assert!(add_to_tasks_note(&v, "  ", "", "2026-10-19", &[]).is_err());
-        let after = delete_task(&v, "Tasks.md", list[1].line, &list[1].key).unwrap();
+        let text = std::fs::read_to_string(d.path().join("Tasks/Inbox.md")).unwrap();
+        assert!(text.starts_with("# Inbox\n\n- [ ] Call Mette"), "{text}");
+        assert!(add_task_to(&v, epics::INBOX, "  ", "", "2026-10-19", &[]).is_err());
+        let after = delete_task(&v, epics::INBOX, list[1].line, &list[1].key).unwrap();
         assert_eq!(after.len(), 1);
-        assert!(!std::fs::read_to_string(d.path().join("Tasks.md"))
+        assert!(!std::fs::read_to_string(d.path().join("Tasks/Inbox.md"))
             .unwrap()
             .contains("Order headsets"));
         assert_eq!(all_tasks(&v).len(), 1);
+    }
+
+    #[test]
+    fn a_task_in_an_ordinary_note_gets_an_epic_that_points_back_and_is_reused() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        std::fs::create_dir_all(d.path().join("IT")).unwrap();
+        std::fs::write(d.path().join("IT/VPN guide.md"), "# VPN guide\n\nText.\n").unwrap();
+        v.refresh_files();
+        let e = epic_for_note(&v, "IT/VPN guide.md").unwrap();
+        assert_eq!(e.path, "Tasks/VPN guide.md");
+        assert_eq!(e.source.as_deref(), Some("IT/VPN guide"));
+        add_task_to(&v, &e.path, "Write the steps", "", "2026-10-20", &[]).unwrap();
+        // The note itself is not changed.
+        assert_eq!(
+            std::fs::read_to_string(d.path().join("IT/VPN guide.md")).unwrap(),
+            "# VPN guide\n\nText.\n"
+        );
+        // Asking again gives the same epic; an epic is its own epic.
+        assert_eq!(epic_for_note(&v, "IT/VPN guide.md").unwrap(), e);
+        assert_eq!(epic_for_note(&v, &e.path).unwrap().path, e.path);
+        assert_eq!(all_epics(&v).len(), 1);
+        assert_eq!(all_tasks(&v).len(), 1);
+        // Another note with the same name gets its own epic.
+        std::fs::create_dir_all(d.path().join("Other")).unwrap();
+        std::fs::write(d.path().join("Other/VPN guide.md"), "x").unwrap();
+        v.refresh_files();
+        let e2 = epic_for_note(&v, "Other/VPN guide.md").unwrap();
+        assert_ne!(e2.path, e.path);
+        assert_eq!(all_epics(&v).len(), 2);
+    }
+
+    #[test]
+    fn a_new_epic_is_a_note_in_tasks_and_names_do_not_collide() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        let a = create_epic_note(&v, "Office move", None).unwrap();
+        let b = create_epic_note(&v, "Office move", None).unwrap();
+        assert_eq!(a.path, "Tasks/Office move.md");
+        assert_eq!(b.path, "Tasks/Office move 2.md");
+        assert_eq!(a.title, "Office move");
+        assert!(create_epic_note(&v, "  ", None).is_err());
     }
 
     #[test]

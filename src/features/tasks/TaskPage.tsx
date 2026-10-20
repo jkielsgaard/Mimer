@@ -1,7 +1,6 @@
 import { ArrowLeft, Check, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { isManagedNote } from "@/features/fileTree/treeUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -79,6 +78,8 @@ export function TaskPage() {
   };
   const store = useTaskStore.getState();
   const aiOff = useAiBlocked();
+  const epics = useTaskStore((s) => s.epics);
+  const epic = task ? epics.find((e) => e.path === task.path) : undefined;
 
   if (!task) {
     return (
@@ -172,20 +173,26 @@ export function TaskPage() {
                 }}
               />
               <p className="mt-1 px-1 text-xs text-muted-foreground">
-                in{" "}
-                {isManagedNote(task.path) ? (
-                  <span>your task list</span>
-                ) : (
-                  <button
-                    type="button"
-                    className="text-primary underline"
-                    onClick={() => {
-                      void useVaultStore.getState().openNote(task.path);
-                    }}
-                  >
-                    {noteName(task.path)}
-                  </button>
-                )}
+                in epic task{" "}
+                <button
+                  type="button"
+                  className="text-primary underline"
+                  onClick={() => {
+                    useTaskStore.getState().openEpic(task.path);
+                  }}
+                >
+                  {epic?.title ?? noteName(task.path)}
+                </button>
+                {" · "}
+                <button
+                  type="button"
+                  className="text-primary underline"
+                  onClick={() => {
+                    void useVaultStore.getState().openNote(task.path);
+                  }}
+                >
+                  open the note
+                </button>
                 {task.tags.length > 0 && ` · ${task.tags.map((t) => `#${t}`).join(" ")}`}
               </p>
             </div>

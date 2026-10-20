@@ -2,7 +2,13 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const apiMock = vi.hoisted(() => ({ readNote: vi.fn(), taskAddToNote: vi.fn() }));
+const apiMock = vi.hoisted(() => ({
+  readNote: vi.fn(),
+  taskAddToNote: vi.fn(),
+  epicForNote: vi.fn(),
+  listTasks: vi.fn(),
+  listEpics: vi.fn(),
+}));
 const askMock = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/api", () => ({
   api: apiMock,
@@ -24,27 +30,36 @@ describe("FindTasksDialog", () => {
       mtime: 0,
     });
     apiMock.taskAddToNote.mockReset().mockResolvedValue([makeTask()]);
+    apiMock.epicForNote
+      .mockReset()
+      .mockResolvedValue({ path: "Tasks/Acme.md", title: "Acme", source: "Møder/Acme" });
+    apiMock.listTasks.mockReset().mockResolvedValue([]);
+    apiMock.listEpics.mockReset().mockResolvedValue([]);
     askMock.mockReset().mockImplementation(() => ({
       promise: Promise.resolve("- Send the quote fri\n- Ask Lene for the template"),
       cancel: vi.fn(),
     }));
     useVaultStore.setState({ activePath: "Møder/Acme.md" });
-    useUiStore.setState({ findTasksOpen: true });
+    useUiStore.setState({
+      findTasksOpen: true,
+      findTasksOpts: { path: null, mode: "tasks" },
+    });
   });
 
-  it("reads the open note, shows the tasks it finds, and adds only the kept ones to that note", async () => {
+  it("reads the open note, shows the tasks it finds, and adds only the kept ones to the epic task of that note", async () => {
     render(<FindTasksDialog />);
     const user = userEvent.setup();
     expect(await screen.findByText("Send the quote fri")).toBeInTheDocument();
     expect(askMock.mock.calls[0]?.[1]).toBe("Peter sends the quote by friday.");
     expect(apiMock.taskAddToNote).not.toHaveBeenCalled();
     await user.click(screen.getByRole("checkbox", { name: /Ask Lene/ }));
-    await user.click(screen.getByRole("button", { name: "Add 1 task to the note" }));
+    await user.click(screen.getByRole("button", { name: "Add 1 task to the epic task" }));
     await vi.waitFor(() => {
       expect(apiMock.taskAddToNote).toHaveBeenCalled();
     });
     const [path, texts] = apiMock.taskAddToNote.mock.calls[0] as [string, string[]];
-    expect(path).toBe("Møder/Acme.md");
+    expect(path).toBe("Tasks/Acme.md");
+    expect(apiMock.epicForNote).toHaveBeenCalledWith("Møder/Acme.md");
     // The date word became a due date, and no plan was added.
     expect(texts).toHaveLength(1);
     expect(texts[0]).toMatch(/^Send the quote due:\d{4}-\d{2}-\d{2}$/);

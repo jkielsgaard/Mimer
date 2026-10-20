@@ -6,6 +6,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-20
+
+### Added
+
+- **Epic tasks.** An epic task is a note with tasks in it. The task list shows each epic as a box with progress ("2 of 4") that can be folded; an epic whose tasks are all done moves to Done by itself. A new epic is a note in the folder `Tasks/`. A task made from another note (**As a task**, **Find tasks in a note**) goes into an epic of its own for that note (a note in `Tasks/` with a `source:` line; the note you were in is not changed). A note with tasks you typed yourself is an epic too. The epic page has *Go to the epic's note*, *Came from* and *Suggest steps from the note* (the AI reads the note, and you choose which steps are added). Deleting the note removes the epic from the lists. Quick tasks go into the epic **Inbox**.
+- **Landing.** Meetings, Quick notes and Tasks are kept together in a Landing section above the projects instead of in All files. New notes there have a NEW mark for a week; a button and *Move to…* in the right-click menu move a note to a project or a folder.
+- **Daily notes on a calendar** at the top of the Files panel: a month with a dot on the days that have a note; a click opens or makes that day's note. The daily notes folder is no longer listed in All files.
+- **Mermaid diagrams** are drawn in live preview from a fenced `mermaid` block, and show the code again when you click them (new dependency: `mermaid`, loaded only when a note has a diagram).
+- **Tag suggestions.** Typing `#` suggests the tags you already use; the Outline panel shows the tags of the note with a **+ tag** button.
+- **Break it down** reads the note the task is in, not only its title.
+
+### Changed
+
+- **The Tasks panel lists the epic tasks**, with no filters and no box for writing a task. The filters (All open, Today, Moved from earlier, This week, Later) and the grouping are gone: you fold an epic instead. The Ideas panel has a **New idea** button instead of a box.
+- **The `Tasks.md` note in the root is an ordinary note again** (an old vault shows it as an epic); epic notes can be opened like any note.
+
 ## [0.11.0] - 2026-10-19
 
 ### Added

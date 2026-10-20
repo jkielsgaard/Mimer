@@ -8,7 +8,7 @@ A **vault** is the folder that holds your notes. When Mimer starts, open a folde
 
 ## The window
 
-- **Left:** _Files_ (your folders and notes) and _Search_.
+- **Left:** _Files_ (with a **calendar** for the daily notes and **Landing** for new notes), _Search_, _Ideas_ and _Tasks_.
 - **Middle:** the note you are writing. Open several notes as tabs.
 - **Right:** a narrow row of icons: _Outline_, _Links_, _History_ and _Images_ open a small panel (press the icon again to close it); the speech bubble opens the chat about your notes (Ctrl/Cmd+L).
 - **AI:** where you work, not in a column of its own: over selected text, the **AI** button above the note, right-click a folder, in search, tasks and ideas. See _Meet Mimer_.
@@ -35,3 +35,8 @@ The file panel has three parts. **Recent** lists the notes you opened last (4 by
 ## Found a bug, or have an idea?
 
 Use **File → Report → Report a bug…** or **File → Report → Suggest a feature…**. The same submenu has **Report inappropriate AI content…** for an AI answer that was wrong or harmful. Your browser opens a page on GitHub with the form already started (Mimer version and system filled in). You need a free GitHub account to send it. Do not paste private notes.
+
+## Landing and daily notes
+
+- **Landing** in the Files panel holds the folders new notes land in: Meetings, Quick notes and Tasks. New notes have a **NEW** mark for a week until you open them. Use the button, or right-click → **Move to…**, to move a note to a project or a folder when it has a home.
+- **Daily notes** are a calendar at the top of the Files panel, with a dot on every day that has a note. Click a day to open its note, or to make it. **Today** opens today's note (Ctrl/Cmd+Shift+D does too). The daily notes folder is not listed in All files: the calendar is the way to them.

@@ -229,8 +229,8 @@ describe("withoutManagedNotes", () => {
       children: [],
       modified: 0,
     });
-    const tree = [node("Tasks.md"), node("Home.md"), node("Work", true), node("Work/Tasks.md")];
+    const tree = [node("Ideas.md"), node("Home.md"), node("Work", true), node("Work/Ideas.md")];
     const shown = withoutManagedNotes(tree).map((n) => n.path);
-    expect(shown).toEqual(["Home.md", "Work", "Work/Tasks.md"]);
+    expect(shown).toEqual(["Home.md", "Work", "Work/Ideas.md"]);
   });
 });

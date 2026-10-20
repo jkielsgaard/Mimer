@@ -1,14 +1,16 @@
-## Tasks
+## Tasks and epic tasks
 
-A task in Mimer is an ordinary line in an ordinary note: `- [ ] Renew the licence`. Mimer reads these lines in **every** note and shows them in one list. Press the **Tasks** icon at the left edge, or **Ctrl/Cmd+Shift+T**. The notes stay yours: without Mimer the lines are still a checklist in any Markdown editor.
+A task in Mimer is an ordinary line in an ordinary note: `- [ ] Renew the licence`. Mimer reads these lines in **every** note. Press the **Tasks** icon at the left edge, or **Ctrl/Cmd+Shift+T**. The notes stay yours: without Mimer the lines are still a checklist in any Markdown editor.
 
-### The list
+### Epic tasks
 
-- **Today** is on top: the things you chose for today, or that are due today. Press **Today** on a task to put it there, **Later** to push it away. Three is plenty.
-- **Moved from earlier** shows what was not finished, without blame. Choose Today, Later or drop it. Nothing is lost.
-- **This week** and **Later** hold the rest. Group the list by **When**, **Note** or **Tag**.
-- Type in the box at the top to add a task. Without a date it is for today (that is why you wrote it); end with `later` to put it away. A date at the end becomes its due date: `tomorrow`, `fri`, `in 3 days`, `2026-11-01`. `~15m` is the time it takes. A new task goes into the note `Tasks` in the vault root.
-- The first time each day a short note asks what matters today. Close it, and it stays away until tomorrow.
+An **epic task** is a note with tasks in it. The list shows each epic as a box with a bar and "2 of 4"; **fold** it when you do not want to see its tasks. When every task in it is done, the epic moves to **Done** by itself. The left panel lists the epic tasks so they are one click away.
+
+- **New epic task** asks for a name and makes a note in the folder **Tasks** (shown in Landing). The tasks are written in that note, so it also works in any other editor.
+- A task you make from a note elsewhere (**As a task** over selected text, or **Find tasks in a note**) goes into an epic of its own for that note: a note in **Tasks** with a `source:` line that points back. The note you were in is not changed. A note where you typed `- [ ]` yourself is an epic too.
+- Open an epic to add tasks, **Go to the epic's note**, go to the note it **Came from**, or **Suggest steps from the note**: the AI reads the note (and the note it came from) and suggests the next tasks, and only the ones you choose are added.
+- Delete the note and the epic and its tasks disappear from the lists (History still has the note).
+- A task typed in the write-it-down box without an epic goes into the epic **Inbox**.
 
 ### One task
 
@@ -16,7 +18,7 @@ Press a task to open it. There you set the **status** (To do, Doing, Waiting), t
 
 - **Steps** are small tasks under the task. The next step is marked. Press **Break it down** and the AI suggests steps; you choose which ones stay, and nothing is written until you press Add. It needs a local AI that is running.
 - **What has happened** is a log. Write a line and it gets today's date. A change of status is written there too. It reads as a timeline.
-- **See the file** opens the note the task is in.
+- Click the **title** to rename the task. **Show Markdown** shows its lines as written. Under the title are links to its epic and to the note.
 
 ### How it looks in the file
 
@@ -32,7 +34,7 @@ Steps are indented checklist lines. The log lines start with `>` and a date. `du
 
 ### Find tasks in a note
 
-Open a note and press **Find tasks in a note** in the task list (or use the command palette). The local AI reads the note and suggests tasks. You choose which ones to keep, and only those are added to the end of the note as checklist lines. Tasks the note already has are not added twice.
+Open a note and press **Find tasks in a note** in the task list (or use the command palette). The local AI reads the note and suggests tasks. You choose which ones to keep, and only those are added to the epic task of that note. Tasks it already has are not added twice.
 
 ### Ideas
 

@@ -59,95 +59,69 @@ export function bucketOf(t: Task, today: string): Bucket {
   return date <= addDays(today, 7) ? "week" : "later";
 }
 
-export interface TaskGroup {
-  id: string;
-  label: string;
-  tasks: Task[];
-}
-
 function byDateThenTitle(a: Task, b: Task): number {
   const da = effectiveDate(a) ?? "9999";
   const db = effectiveDate(b) ?? "9999";
   return da === db ? a.title.localeCompare(b.title) : da < db ? -1 : 1;
 }
 
-const WHEN: { id: Bucket | "done"; label: string }[] = [
-  { id: "today", label: "Today" },
-  { id: "moved", label: "Moved from earlier" },
-  { id: "week", label: "This week" },
-  { id: "later", label: "Later" },
-  { id: "done", label: "Done" },
-];
-
-/** Groups tasks as the list shows them. Empty groups are left out. */
-export function groupTasks(
-  tasks: readonly Task[],
-  by: "when" | "note" | "tag",
-  today: string,
-  showDone: boolean,
-): TaskGroup[] {
-  const shown = tasks.filter((t) => showDone || isOpen(t));
-  if (by === "when") {
-    return WHEN.map((w) => ({
-      id: w.id,
-      label: w.label,
-      tasks: shown
-        .filter((t) => (isOpen(t) ? bucketOf(t, today) === w.id : w.id === "done"))
-        .sort(byDateThenTitle),
-    })).filter((g) => g.tasks.length > 0);
-  }
-  const groups = new Map<string, Task[]>();
-  for (const t of shown) {
-    const keys =
-      by === "note"
-        ? [t.path.replace(/\.md$/i, "")]
-        : t.tags.length > 0
-          ? t.tags.map((x) => `#${x}`)
-          : ["No tag"];
-    for (const k of keys) groups.set(k, [...(groups.get(k) ?? []), t]);
-  }
-  return [...groups.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([label, list]) => ({ id: label, label, tasks: list.sort(byDateThenTitle) }));
+/** An epic task: a note with its tasks. */
+export interface EpicGroup {
+  /** The note. */
+  path: string;
+  title: string;
+  /** The note the epic was made from, as a link target. */
+  source: string | null;
+  /** The note is in `Tasks/` (an epic of its own); otherwise it is an ordinary note with tasks. */
+  native: boolean;
+  tasks: Task[];
+  /** Tasks that are done or dropped. */
+  done: number;
+  total: number;
+  /** Every task is done: the epic counts as done. */
+  allDone: boolean;
 }
 
-/** The tasks the list shows for a time filter and a tag. `done` also brings the done ones. */
-export function filterTasks(
-  tasks: readonly Task[],
-  when: "all" | Bucket | "done",
-  tag: string | null,
-  today: string,
-): Task[] {
-  return tasks.filter((t) => {
-    if (tag !== null && !t.tags.includes(tag)) return false;
-    if (when === "all") return true;
-    if (when === "done") return !isOpen(t);
-    return isOpen(t) && bucketOf(t, today) === when;
-  });
-}
+const BUCKET_RANK: Record<Bucket, number> = { moved: 0, today: 1, week: 2, later: 3 };
 
-/** How many open tasks are in each part of the time line, and how many are done. */
-export function countByWhen(
+/**
+ * The epic tasks of the vault: every epic note in `Tasks/` (also when empty) and every other note
+ * that has tasks. Open epics first (the ones with something for today on top), then the done ones.
+ */
+export function epicGroups(
   tasks: readonly Task[],
+  epics: readonly { path: string; title: string; source: string | null }[],
   today: string,
-): Record<"all" | Bucket | "done", number> {
-  const n = { all: 0, today: 0, moved: 0, week: 0, later: 0, done: 0 };
-  for (const t of tasks) {
-    if (isOpen(t)) {
-      n.all += 1;
-      n[bucketOf(t, today)] += 1;
-    } else if (t.done) n.done += 1;
+): EpicGroup[] {
+  const byPath = new Map<string, Task[]>();
+  for (const t of tasks) byPath.set(t.path, [...(byPath.get(t.path) ?? []), t]);
+  const make = (path: string, title: string, source: string | null, native: boolean): EpicGroup => {
+    const list = (byPath.get(path) ?? []).sort(byDateThenTitle);
+    const done = list.filter((t) => !isOpen(t)).length;
+    return {
+      path,
+      title,
+      source,
+      native,
+      tasks: list,
+      done,
+      total: list.length,
+      allDone: list.length > 0 && done === list.length,
+    };
+  };
+  const groups = epics.map((e) => make(e.path, e.title, e.source, true));
+  const known = new Set(epics.map((e) => e.path));
+  for (const path of byPath.keys()) {
+    if (!known.has(path)) groups.push(make(path, noteName(path), null, false));
   }
-  return n;
-}
-
-/** The tags of the open tasks with how many tasks each has, most used first. */
-export function tagCounts(tasks: readonly Task[]): { tag: string; count: number }[] {
-  const m = new Map<string, number>();
-  for (const t of tasks.filter(isOpen)) for (const g of t.tags) m.set(g, (m.get(g) ?? 0) + 1);
-  return [...m.entries()]
-    .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+  const rank = (g: EpicGroup): number =>
+    g.allDone
+      ? 9
+      : Math.min(4, ...g.tasks.filter(isOpen).map((t) => BUCKET_RANK[bucketOf(t, today)]));
+  return groups.sort(
+    (a, b) =>
+      rank(a) - rank(b) || a.title.localeCompare(b.title, undefined, { sensitivity: "base" }),
+  );
 }
 
 /** Minutes the tasks are estimated to take (tasks without an estimate count as nothing). */

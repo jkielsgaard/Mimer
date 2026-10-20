@@ -531,3 +531,16 @@ Needs Windows (a virtual machine or Windows Sandbox). See docs/MSIX.md.
 - [ ] The right edge: Outline, Links, History, Images open and close a narrow panel (closed at start). The speech bubble and Ctrl+L open the chat window over the note; Esc closes it and the chat is still there when it opens again. With Raven set up, the globe opens Raven.
 - [ ] **No AI**: choose no provider (or let the built-in AI sleep). Every AI button is greyed out with the reason and Set up AI; As a task/As an idea, notes, search, tasks, ideas, Focus, outline, links, history and images all work; the system spellcheck still underlines.
 - [ ] Delete a task (task page) and an idea: it asks once more; afterwards History of the note has "Snapshot before delete".
+
+## Epic tasks, Landing, daily calendar, Mermaid and tags
+
+- [ ] Tasks → **New epic task** "Office move": a note `Tasks/Office move.md` is made and the epic page opens. Add three tasks; tick two: "2 of 3". Tick the third: the epic moves to **Done** and is folded. Untick one: it comes back.
+- [ ] Open an ordinary note, select a line and choose **As a task**: `Tasks/<note name>.md` has a `source:` line and the task; the note itself is unchanged. Do it again in the same note: the same epic is used. The epic page shows **Came from** and goes there.
+- [ ] Write `- [ ] something` by hand in another note: that note shows as an epic ("in a note") and cannot be deleted from the epic page.
+- [ ] On the epic page: **Go to the epic's note** opens the note; **Suggest steps from the note** (with an AI) shows suggestions and adds only the ones you tick. Without an AI the button is off and everything else works. Delete the epic note: the epic is gone from the list.
+- [ ] The left Tasks panel lists the epics with counts and Done last; it has no filters and no add box. The Ideas panel has **New idea** and no box.
+- [ ] Files: Meetings, Quick notes and Tasks are in **Landing**, not in All files. A new quick note shows NEW and a Move button; open it and NEW goes away. Right-click a note → **Move to…**.
+- [ ] The app starts on the notes, as before (there is no dashboard).
+- [ ] The Files panel has **Daily notes** at the top: a calendar with a dot on days that have a note. A click opens or makes that day's note, Today works, and the Daily folder is not in All files.
+- [ ] Mermaid: write a ```mermaid block with `flowchart LR` and two nodes; leave it: a diagram. Click it: the code. Break the code: a message and the code.
+- [ ] Type `#d` in a note: your tags are suggested; pick one. Outline panel → **+ tag** types a # and opens the list; a tag there searches for it.

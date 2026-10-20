@@ -110,11 +110,34 @@ export function folderNoteCounts(nodes: readonly TreeNode[]): Map<string, number
 }
 
 /** Notes Mimer keeps for itself in the vault root. They are not shown in the file tree. */
-export const MANAGED_NOTES: readonly string[] = ["Tasks.md", "Ideas.md"];
+export const MANAGED_NOTES: readonly string[] = ["Ideas.md"];
 
 /** Whether a path is one of the notes Mimer keeps for itself (Tasks and Ideas). */
 export function isManagedNote(path: string): boolean {
   return MANAGED_NOTES.includes(path);
+}
+
+/** The folder the epic tasks are kept in. */
+export const EPICS_FOLDER = "Tasks";
+
+/** The top-level folders that are shown in the Landing section, in the order they are given. */
+export function landingNodes(tree: readonly TreeNode[], folders: readonly string[]): TreeNode[] {
+  return folders
+    .map((f) => tree.find((n) => n.isDir && n.path === f))
+    .filter((n): n is TreeNode => n !== undefined);
+}
+
+/** Every note (not folders) inside the given nodes, newest first. */
+export function newNotesIn(nodes: readonly TreeNode[]): TreeNode[] {
+  const out: TreeNode[] = [];
+  const walk = (list: readonly TreeNode[]): void => {
+    for (const n of list) {
+      if (n.isDir) walk(n.children);
+      else if (isMarkdown(n.path)) out.push(n);
+    }
+  };
+  walk(nodes);
+  return out.sort((a, b) => b.modified - a.modified);
 }
 
 /** The tree without the notes Mimer manages itself (only in the root of the vault). */

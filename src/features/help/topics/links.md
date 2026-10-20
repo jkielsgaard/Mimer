@@ -27,3 +27,7 @@ Right-click a folder (or a project) and choose **Create index page**. Mimer make
 ## When you rename or move a note
 
 Mimer asks whether to update the links in other notes. Say yes and nothing breaks.
+
+## Tags
+
+Write `#tag` anywhere in a note. When you type `#`, Mimer suggests the tags you already use, most used first; press Esc or keep typing to ignore it, and nothing is added unless you choose one. In the **Outline** panel you see the tags of the open note (click one to search for it) and **+ tag** to add one. In the search panel, tags with their counts are shown while the search box is empty. The AI button above a note has **Suggest a title and tags**.

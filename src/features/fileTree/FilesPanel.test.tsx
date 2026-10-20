@@ -5,7 +5,7 @@ import type { Project } from "@/bindings/Project";
 import type { TreeNode } from "@/bindings/TreeNode";
 
 vi.mock("@/lib/api", () => ({
-  api: { listSkills: () => Promise.resolve([]) },
+  api: { listSkills: () => Promise.resolve([]), listDailyDates: () => Promise.resolve([]) },
   toApiError: (e: unknown) => ({ message: String(e) }),
 }));
 const actions = vi.hoisted(() => ({
@@ -300,30 +300,6 @@ describe("FilesPanel", () => {
       expect(rows()).toEqual(["Home.md", "Work"]);
     });
 
-    it("does not pin Meetings and Quick notes to the top by itself", () => {
-      useVaultStore.setState({
-        tree: [dir("Archive", [file("Archive/a.md")]), dir("Meetings", [file("Meetings/m.md")])],
-        vault: {
-          path: "/v",
-          name: "v",
-          config: {
-            schemaVersion: 1,
-            attachmentsFolder: "attachments",
-            newNoteFolder: "",
-            meetingsFolder: "Meetings",
-            quickNotesFolder: "Quick notes",
-            dailyNotesFolder: "Daily",
-            dailyNoteFormat: "YYYY-MM-DD",
-            dailyTemplate: "",
-            imageLinkStyle: "markdown",
-          },
-        },
-      });
-      useTreeStore.setState({ order: {} });
-      render(<FilesPanel />);
-      expect(rows()).toEqual(["Archive", "Meetings"]);
-    });
-
     it("Move down in the menu saves the new order of the folder", async () => {
       const setFolderOrder = vi.fn().mockResolvedValue(undefined);
       useTreeStore.setState({ setFolderOrder });
@@ -349,12 +325,13 @@ describe("FilesPanel", () => {
     });
   });
 
-  it("Meetings and Quick notes are at the top of All files", () => {
+  it("Meetings, Quick notes and Tasks have a Landing section of their own, not All files", () => {
     useVaultStore.setState({
       tree: [
         dir("Archive", [file("Archive/a.md")]),
         dir("Quick notes", [file("Quick notes/q.md")]),
         dir("Meetings", [file("Meetings/m.md")]),
+        dir("Tasks", [file("Tasks/VPN.md")]),
         ...tree,
       ],
       vault: {
@@ -374,10 +351,43 @@ describe("FilesPanel", () => {
       },
     });
     render(<FilesPanel />);
-    const rows = within(screen.getByRole("tree", { name: "Files" }))
+    const landing = screen.getByRole("region", { name: "Landing" });
+    for (const f of ["Meetings", "Quick notes", "Tasks"]) {
+      expect(within(landing).getByTestId(`tree-${f}`)).toBeInTheDocument();
+    }
+    const all = within(screen.getByRole("tree", { name: "Files" }))
       .getAllByRole("treeitem")
       .map((r) => r.getAttribute("data-tree-path"));
-    expect(rows.slice(0, 3)).toEqual(["Meetings", "Quick notes", "Archive"]);
+    expect(all).not.toContain("Meetings");
+    expect(all).toContain("Archive");
+  });
+
+  it("has the calendar at the top, and the daily notes folder is not listed", () => {
+    useVaultStore.setState({
+      tree: [dir("Daily", [file("Daily/2026-10-20.md")]), ...tree],
+      vault: {
+        path: "/v",
+        name: "v",
+        config: {
+          schemaVersion: 1,
+          attachmentsFolder: "attachments",
+          newNoteFolder: "",
+          meetingsFolder: "Meetings",
+          quickNotesFolder: "Quick notes",
+          dailyNotesFolder: "Daily",
+          dailyNoteFormat: "YYYY-MM-DD",
+          dailyTemplate: "",
+          imageLinkStyle: "markdown",
+        },
+      },
+    });
+    render(<FilesPanel />);
+    expect(screen.getByRole("region", { name: "Daily notes" })).toBeInTheDocument();
+    expect(screen.getByRole("grid")).toBeInTheDocument();
+    const all = within(screen.getByRole("tree", { name: "Files" }))
+      .getAllByRole("treeitem")
+      .map((r) => r.getAttribute("data-tree-path"));
+    expect(all).not.toContain("Daily");
   });
 
   it("the Recent section shows as many notes as the setting allows", () => {

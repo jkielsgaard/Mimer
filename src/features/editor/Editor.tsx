@@ -23,6 +23,7 @@ import { api } from "@/lib/api";
 import { planTitleRename } from "@/lib/noteTitle";
 import { useIdeaStore } from "@/stores/ideaStore";
 import { useTaskStore } from "@/stores/taskStore";
+import { useTagStore } from "@/stores/tagStore";
 import { useTitleFollow } from "@/stores/titleFollowStore";
 import { assetUrlFor, openHref, openWikiLink, searchForTag } from "@/lib/actions";
 import { reportError, useUiStore } from "@/stores/uiStore";
@@ -67,6 +68,10 @@ export function Editor({ paneId }: { paneId: PaneId }) {
   const conflict = useEditorStore((s) => s.conflicts[paneId]);
   const sourceMode = useUiStore((s) => s.sourceMode);
   const aiOff = useAiBlocked();
+  const indexNonce = useVaultStore((s) => s.indexNonce);
+  useEffect(() => {
+    void useTagStore.getState().load();
+  }, [indexNonce]);
   const aiSpellingOn = useSettingsStore((s) => s.settings?.editor.aiSpelling ?? false);
   const ownWords = useSettingsStore((s) => s.settings?.editor.ownWords) ?? NO_WORDS;
   const [spell, setSpell] = useState<{ mark: SpellMark; x: number; y: number } | null>(null);
@@ -301,8 +306,17 @@ export function Editor({ paneId }: { paneId: PaneId }) {
           if (text === "") return;
           const ui = useUiStore.getState();
           if (kind === "task") {
-            void useTaskStore.getState().add(text);
-            ui.toast("Added as a task for today.", "success");
+            const note = activePath;
+            if (note === null) return;
+            // The task goes into the epic task of this note (made now if the note has none).
+            void useTaskStore
+              .getState()
+              .epicFor(note)
+              .then((epic) => {
+                if (epic !== null)
+                  void useTaskStore.getState().add(text, undefined, undefined, epic);
+              });
+            ui.toast("Added as a task in the epic task of this note.", "success");
           } else {
             void useIdeaStore.getState().add(text);
             ui.toast("Written down as an idea.", "success");

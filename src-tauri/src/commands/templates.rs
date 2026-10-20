@@ -41,10 +41,27 @@ pub async fn seed_standard_templates(state: State<'_, AppState>) -> Result<SeedR
 }
 
 #[tauri::command]
-pub async fn open_daily_note(state: State<'_, AppState>) -> Result<String, AppError> {
+pub async fn open_daily_note(
+    state: State<'_, AppState>,
+    date: Option<String>,
+) -> Result<String, AppError> {
     let v = state.current_vault()?;
     let now = Local::now();
-    templates::open_daily_note(&v, None::<NaiveDate>, &now)
+    let date = match date {
+        Some(d) => Some(
+            NaiveDate::parse_from_str(&d, "%Y-%m-%d")
+                .map_err(|_| AppError::InvalidPath(format!("{d} is not a date")))?,
+        ),
+        None => None,
+    };
+    templates::open_daily_note(&v, date, &now)
+}
+
+/// The dates that have a daily note.
+#[tauri::command]
+pub async fn list_daily_dates(state: State<'_, AppState>) -> Result<Vec<String>, AppError> {
+    let v = state.current_vault()?;
+    Ok(templates::daily_dates(&v))
 }
 
 #[tauri::command]

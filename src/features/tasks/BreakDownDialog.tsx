@@ -10,22 +10,33 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { api } from "@/lib/api";
 import { askAi, type AiAnswer } from "@/lib/askAi";
 import { stepsFromAnswer } from "@/lib/taskLogic";
 import { useTaskStore } from "@/stores/taskStore";
 
 const INSTRUCTION =
-  "Break the task into 3 to 6 small, concrete steps. Each step starts with a verb and can be done in 5 to 50 minutes. Put the very first step first. Answer with one step per line, starting with '- ', and nothing else. Write in the language of the task.";
+  "Break the task into 3 to 6 small, concrete steps. Use what the note says, so the steps fit it. Each step starts with a verb and can be done in 5 to 50 minutes. Put the very first step first. Answer with one step per line, starting with '- ', and nothing else. Write in the language of the task.";
 
 const SMALLER =
   "Break the task into 4 to 8 VERY small steps, each doable in under 15 minutes. Put the very first step first. Answer with one step per line, starting with '- ', and nothing else. Write in the language of the task.";
 
-function context(t: Task): string {
+/** The most of the note that is sent along with the task. */
+const NOTE_CHARS = 6_000;
+
+/** What the AI reads: the task, its steps and the note it is in, so the steps fit the note. */
+async function context(t: Task): Promise<string> {
   const have =
     t.steps.length > 0
       ? `\nSteps already there:\n${t.steps.map((s) => `- ${s.text}`).join("\n")}`
       : "";
-  return `Task: ${t.title}${have}`;
+  let note = "";
+  try {
+    note = (await api.readNote(t.path)).content.slice(0, NOTE_CHARS);
+  } catch {
+    // The title alone is enough to go on.
+  }
+  return `Task: ${t.title}${have}${note === "" ? "" : `\n\nThe note the task is in:\n---\n${note}\n---`}`;
 }
 
 /**
@@ -43,7 +54,20 @@ export function BreakDownDialog({ task, onClose }: { task: Task; onClose: () => 
     run.current?.cancel();
     setSteps(null);
     setError(null);
-    const answer = askAi(instruction, context(task), task.path);
+    let cancelled = false;
+    const answer = {
+      cancel: (): void => {
+        cancelled = true;
+        inner?.cancel();
+      },
+      promise: Promise.resolve("").then(async () => {
+        const text = await context(task);
+        if (cancelled) throw new Error("Stopped");
+        inner = askAi(instruction, text, task.path);
+        return inner.promise;
+      }),
+    };
+    let inner: AiAnswer | null = null;
     run.current = answer;
     answer.promise
       .then((text) => {

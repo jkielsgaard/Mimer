@@ -11,6 +11,7 @@ import { Decoration, EditorView, WidgetType, type DecorationSet } from "@codemir
 import { parseSizedAlt } from "@/lib/imageMarkdown";
 import { parseTable } from "@/lib/markdownTable";
 import { imageSrc, ImageWidget } from "./images";
+import { MermaidWidget, mermaidSource } from "./mermaidWidget";
 import { TableWidget } from "./tableWidget";
 import { previewConfig } from "./previewConfig";
 import { findTags, tagDecorations } from "./tags";
@@ -214,6 +215,19 @@ export function buildDecorations(state: EditorState): DecorationSet {
         case "FencedCode":
         case "CodeBlock": {
           codeRanges.push([node.from, node.to]);
+          if (name === "FencedCode" && !lineActive(node.from, node.to)) {
+            const diagram = mermaidSource(doc.sliceString(node.from, node.to));
+            if (diagram !== null) {
+              renderedTables.push([node.from, node.to]);
+              ranges.push(
+                Decoration.replace({ widget: new MermaidWidget(diagram), block: true }).range(
+                  node.from,
+                  node.to,
+                ),
+              );
+              return false;
+            }
+          }
           addLines(node.from, node.to, "cm-codeblock");
           if (name === "FencedCode") {
             addLines(node.from, node.from, "cm-codefence");

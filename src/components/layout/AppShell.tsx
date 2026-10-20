@@ -8,6 +8,7 @@ import {
 import { EditorArea } from "@/features/workspace/EditorArea";
 import { IdeasPanel } from "@/features/capture/IdeasPanel";
 import { IdeasView } from "@/features/capture/IdeasView";
+import { EpicPage } from "@/features/tasks/EpicPage";
 import { TaskPage } from "@/features/tasks/TaskPage";
 import { TasksPanel } from "@/features/tasks/TasksPanel";
 import { TasksView } from "@/features/tasks/TasksView";
@@ -96,6 +97,7 @@ export function AppShell() {
                 <EditorArea />
               </div>
               {ui.centerView === "tasks" && <TasksView />}
+              {ui.centerView === "epic" && <EpicPage />}
               {ui.centerView === "task" && <TaskPage />}
               {ui.centerView === "ideas" && <IdeasView />}
             </main>

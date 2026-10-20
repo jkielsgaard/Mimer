@@ -16,6 +16,9 @@ import { reportError, useUiStore } from "@/stores/uiStore";
 import { useTaskStore } from "@/stores/taskStore";
 import { useVaultStore } from "@/stores/vaultStore";
 
+const STEPS_INSTRUCTION =
+  "Read the note below (and the note it came from, if it is given). Suggest the next tasks that are still missing to get the work done. Write each as one short line that starts with '- ' and a verb. Do not repeat tasks that are already in it, and do not invent facts. Put the very first one first. If nothing is missing, answer exactly NONE. Write in the language of the note.";
+
 const INSTRUCTION =
   "List the tasks in this note: things that someone has to do. Write each task as one short line that starts with '- ' and a verb. Add who does it, or when, in a few words only if the note says so. Do not invent tasks. Leave out things that are already ticked. If there are no tasks, answer exactly NONE. Write in the language of the note.";
 
@@ -24,16 +27,18 @@ const MAX_CHARS = 12_000;
 
 /**
  * "Find tasks in this note": the local AI reads the open note and proposes tasks. You choose which
- * ones to keep, and only those are added to the note as checklist lines.
+ * ones to keep, and only those are added, as checklist lines, to the epic task of the note.
  */
 export function FindTasksDialog() {
   const open = useUiStore((s) => s.findTasksOpen);
-  const path = useVaultStore((s) => s.activePath);
+  const opts = useUiStore((s) => s.findTasksOpts);
+  const active = useVaultStore((s) => s.activePath);
+  const path = opts.path ?? active;
   if (!open || path === null) return null;
-  return <Finder path={path} />;
+  return <Finder path={path} mode={opts.mode} />;
 }
 
-function Finder({ path }: { path: string }) {
+function Finder({ path, mode }: { path: string; mode: "tasks" | "steps" }) {
   const [found, setFound] = useState<string[] | null>(null);
   const [chosen, setChosen] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
@@ -49,9 +54,22 @@ function Finder({ path }: { path: string }) {
     void (async () => {
       try {
         const selection = useUiStore.getState().findTasksIn;
-        const content = selection ?? (await api.readNote(path)).content;
+        let content = selection ?? (await api.readNote(path)).content;
+        if (mode === "steps") {
+          // The note the epic came from tells what the work is about.
+          const epic = useTaskStore.getState().epics.find((e) => e.path === path);
+          const from = epic?.source ? useVaultStore.getState().resolver.resolve(epic.source) : null;
+          if (from !== null) {
+            const origin = (await api.readNote(from)).content.slice(0, MAX_CHARS / 2);
+            content = `The epic's note:\n${content}\n\nThe note it came from (${noteName(from)}):\n${origin}`;
+          }
+        }
         if (!alive()) return;
-        const answer = askAi(INSTRUCTION, content.slice(0, MAX_CHARS), path);
+        const answer = askAi(
+          mode === "steps" ? STEPS_INSTRUCTION : INSTRUCTION,
+          content.slice(0, MAX_CHARS),
+          path,
+        );
         run.current = answer;
         const text = await answer.promise;
         if (!alive()) return;
@@ -66,7 +84,7 @@ function Finder({ path }: { path: string }) {
       life.alive = false;
       run.current?.cancel();
     };
-  }, [path]);
+  }, [path, mode]);
 
   const add = async (): Promise<void> => {
     if (found === null) return;
@@ -78,7 +96,10 @@ function Finder({ path }: { path: string }) {
       const texts = found
         .filter((_, i) => chosen.has(i))
         .map((t) => quickTaskText(t, today).replace(/\s+plan:\S+$/, ""));
-      await useTaskStore.getState().addToNote(path, texts);
+      // Tasks found in an ordinary note go into the epic task made for it; steps go into the epic.
+      const target = mode === "steps" ? path : await useTaskStore.getState().epicFor(path);
+      if (target === null) return;
+      await useTaskStore.getState().addToNote(target, texts);
       close();
     } catch (e) {
       reportError(e);
@@ -96,10 +117,14 @@ function Finder({ path }: { path: string }) {
     >
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Find tasks in this note</DialogTitle>
+          <DialogTitle>
+            {mode === "steps" ? "Suggest steps from the note" : "Find tasks in this note"}
+          </DialogTitle>
           <DialogDescription>
-            {noteName(path)}. The AI reads the note and suggests tasks. You choose which ones to
-            keep, and only those are added to the end of the note.
+            {noteName(path)}.{" "}
+            {mode === "steps"
+              ? "The AI reads the note and suggests the next steps. You choose which ones to keep, and only those are added to the epic task."
+              : "The AI reads the note and suggests tasks. You choose which ones to keep, and only those are added to the epic task of this note."}
           </DialogDescription>
         </DialogHeader>
         <div className="min-h-28">
@@ -157,7 +182,7 @@ function Finder({ path }: { path: string }) {
           >
             {adding
               ? "Adding…"
-              : `Add ${String(chosen.size)} task${chosen.size === 1 ? "" : "s"} to the note`}
+              : `Add ${String(chosen.size)} task${chosen.size === 1 ? "" : "s"} to the epic task`}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -28,6 +28,8 @@ import { previewConfig, type PreviewConfig } from "./extensions/previewConfig";
 import { dropLink } from "./extensions/dropLink";
 import { trackEditor } from "./extensions/trackEditor";
 import { wikiLinkCompletion } from "./extensions/wikiLinks";
+import { tagCompletion } from "./extensions/tags";
+import { useTagStore } from "@/stores/tagStore";
 import { editorTheme, sourceModeTheme } from "./editorTheme";
 import { registerView } from "@/lib/editorViews";
 import { aiSpelling, type SpellingConfig } from "./extensions/aiSpelling";
@@ -201,7 +203,10 @@ export function useNoteSession({
         editorTheme,
         search({ top: true }),
         autocompletion({
-          override: [wikiLinkCompletion(() => useVaultStore.getState().files)],
+          override: [
+            wikiLinkCompletion(() => useVaultStore.getState().files),
+            tagCompletion(() => useTagStore.getState().tags),
+          ],
           icons: false,
         }),
         // Read the path at paste time: states are reused when switching tabs.

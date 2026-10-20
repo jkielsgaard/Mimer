@@ -1,3 +1,4 @@
+import { startCompletion } from "@codemirror/autocomplete";
 import type { EditorView } from "@codemirror/view";
 import { useWorkspaceStore, type PaneId } from "@/stores/workspaceStore";
 
@@ -13,6 +14,20 @@ export function registerView(pane: PaneId, view: EditorView | null): void {
 export function focusedView(): EditorView | null {
   const pane = useWorkspaceStore.getState().layout.focused;
   return views.get(pane) ?? views.get("primary") ?? null;
+}
+
+/** Types a `#` at the cursor of the focused editor and opens the list of tags you already use. */
+export function startTag(): void {
+  const view = focusedView();
+  if (!view) return;
+  const at = view.state.selection.main.head;
+  const lead = at > 0 && !/\s/.test(view.state.sliceDoc(at - 1, at)) ? " " : "";
+  view.dispatch({
+    changes: { from: at, insert: `${lead}#` },
+    selection: { anchor: at + lead.length + 1 },
+  });
+  view.focus();
+  startCompletion(view);
 }
 
 /** Moves the cursor of the focused editor to the start of a line (0-based) and shows it. */

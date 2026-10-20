@@ -3,6 +3,7 @@
 //! date (`> 2026-10-14 What happened`) are its log. Everything is plain Markdown, so a note
 //! with tasks works in any other editor. This module reads those lines and edits them in place.
 
+pub mod epics;
 pub mod ideas;
 
 use crate::error::{AppError, AppResult};

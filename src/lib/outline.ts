@@ -59,3 +59,17 @@ export function searchWords(title: string): string[] {
     .sort((a, b) => b.length - a.length)
     .slice(0, 3);
 }
+
+/** The `#tags` of a note, each once, outside code blocks and the front matter. */
+export function tagsOf(content: string): string[] {
+  const body = content
+    .replace(/^---\r?\n[\s\S]*?\r?\n---/, "")
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/`[^`\n]*`/g, "");
+  const seen = new Set<string>();
+  for (const m of body.matchAll(/(^|[\s(])#([\p{L}\p{N}_\-/]+)/gmu)) {
+    const tag = (m[2] ?? "").replace(/[/-]+$/, "").toLowerCase();
+    if (tag !== "" && !/^\d+$/.test(tag)) seen.add(tag);
+  }
+  return [...seen];
+}

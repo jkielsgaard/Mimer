@@ -168,12 +168,14 @@ describe("Ideas", () => {
     expect(useUiStore.getState().centerView).toBe("ideas");
   });
 
-  it("writes an idea from the panel and opens it", async () => {
-    apiMock.ideaAdd.mockImplementation(() => Promise.resolve(useIdeaStore.getState().ideas));
+  it("has a New idea button instead of a box to write in, and it opens the new-idea page", async () => {
+    useIdeaStore.setState({ selectedLine: 4 });
+    useUiStore.setState({ centerView: "notes" });
     render(<IdeasPanel />);
-    const user = userEvent.setup();
-    await user.type(await screen.findByLabelText("Write an idea here"), "Another{Enter}");
-    expect(apiMock.ideaAdd.mock.calls[0]?.[1]).toBe("Another");
+    expect(screen.queryByLabelText("Write an idea here")).toBeNull();
+    await userEvent.setup().click(await screen.findByRole("button", { name: /New idea/ }));
+    expect(useIdeaStore.getState().selectedLine).toBeNull();
+    expect(useUiStore.getState().centerView).toBe("ideas");
   });
 
   it("shows the picked idea with its note and saves a change when you leave the box", async () => {

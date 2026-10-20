@@ -1,7 +1,7 @@
-import { StickyNote } from "lucide-react";
+import { Plus, StickyNote } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { PanelHeader } from "@/components/PanelHeader";
-import { useEffect, useMemo, useState } from "react";
-import { Input } from "@/components/ui/input";
+import { useEffect, useMemo } from "react";
 import { shortDate, todayIso } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { useIdeaStore, type IdeaFilter } from "@/stores/ideaStore";
@@ -23,7 +23,6 @@ export function IdeasPanel() {
   const loaded = useIdeaStore((s) => s.loaded);
   const filter = useIdeaStore((s) => s.filter);
   const selected = useIdeaStore((s) => s.selectedLine);
-  const [draft, setDraft] = useState("");
   const today = todayIso();
 
   useEffect(() => {
@@ -42,27 +41,18 @@ export function IdeasPanel() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <PanelHeader title="Ideas" />
-      <form
-        className="px-3 pt-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const text = draft.trim();
-          if (text === "") return;
-          setDraft("");
-          void useIdeaStore.getState().add(text, "", true);
-        }}
-      >
-        <Input
-          aria-label="Write an idea here"
-          className="h-9"
-          placeholder="Write an idea…"
-          value={draft}
-          onChange={(e) => {
-            setDraft(e.target.value);
+      <PanelHeader title="Ideas">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            useIdeaStore.getState().select(null);
+            useUiStore.getState().setCenterView("ideas");
           }}
-        />
-      </form>
+        >
+          <Plus /> New idea
+        </Button>
+      </PanelHeader>
       <div
         role="group"
         aria-label="Show ideas"
@@ -89,7 +79,7 @@ export function IdeasPanel() {
       <div className="min-h-0 flex-1 overflow-auto px-2 pb-3 pt-2">
         {loaded && shown.length === 0 && (
           <p className="px-2 py-3 text-xs text-muted-foreground">
-            {filter === "open" ? "No open ideas. Write one above." : "Nothing here yet."}
+            {filter === "open" ? "No open ideas. Press New idea." : "Nothing here yet."}
           </p>
         )}
         <ul>

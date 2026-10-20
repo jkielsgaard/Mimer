@@ -33,3 +33,15 @@ Every note you open gets a tab. Close with the **×** or **Ctrl/Cmd+W**. Press *
 ## See the Markdown
 
 Click the **</>** button at the right end of the toolbar (or **File → Show Markdown source**, or **Ctrl/Cmd+Alt+M**) to see the note exactly as it is stored: every `#`, `**` and `[[...]]` visible, in a monospace font. Click the eye button to go back to the formatted view. Mimer remembers your choice. Nothing in the note changes when you switch.
+
+## Diagrams
+
+A fenced block written with the language `mermaid` is drawn as a diagram while the cursor is somewhere else; click the picture to edit the code. It is plain Markdown (GitHub draws it too), and it is drawn on this computer. A diagram with a mistake shows what is wrong and its code.
+
+````
+```mermaid
+flowchart LR
+  A[Idea] --> B{Worth it?}
+  B -- yes --> C[Epic task]
+```
+````

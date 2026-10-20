@@ -5,104 +5,100 @@ import { makeTask } from "@/test/taskFixtures";
 
 const apiMock = vi.hoisted(() => ({
   listTasks: vi.fn(),
-  taskAdd: vi.fn(),
+  listEpics: vi.fn(),
+  epicCreate: vi.fn(),
   taskSetDone: vi.fn(),
-  taskSetMeta: vi.fn(),
 }));
 vi.mock("@/lib/api", () => ({
   api: apiMock,
   toApiError: (e: unknown) => ({ code: "Unknown", message: String(e) }),
 }));
 vi.mock("@/lib/flush", () => ({ flushPendingWrites: () => Promise.resolve() }));
+vi.mock("@/lib/useAiBlocked", () => ({ useAiBlocked: () => null }));
 
 import { TasksView } from "./TasksView";
-import { addDays, todayIso } from "@/lib/taskLogic";
 import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
+import { useVaultStore } from "@/stores/vaultStore";
 
 describe("TasksView", () => {
-  const today = todayIso();
   beforeEach(() => {
     localStorage.clear();
     for (const f of Object.values(apiMock)) f.mockReset();
     apiMock.listTasks.mockResolvedValue([
-      makeTask({
-        line: 1,
-        title: "Ask Peter",
-        plan: today,
-        estMinutes: 15,
-        steps: [
-          { line: 2, text: "a", done: true, key: "s" },
-          { line: 3, text: "b", done: false, key: "s2" },
-        ],
-      }),
-      makeTask({ line: 4, title: "Old thing", due: addDays(today, -3) }),
-      makeTask({ line: 6, title: "Send quote", due: addDays(today, 2) }),
-      makeTask({ line: 8, title: "Done thing", done: true }),
+      makeTask({ path: "Tasks/VPN guide.md", line: 3, title: "Write the steps" }),
+      makeTask({ path: "Tasks/VPN guide.md", line: 4, title: "Test on a Mac", done: true }),
+      makeTask({ path: "Tasks/Done one.md", line: 2, title: "Order headsets", done: true }),
+      makeTask({ path: "Møder/Acme.md", line: 5, title: "Renew the licence" }),
     ]);
-    useTaskStore.setState({ tasks: [], loaded: false, groupBy: "when", showDone: false });
+    apiMock.listEpics.mockResolvedValue([
+      { path: "Tasks/VPN guide.md", title: "VPN guide", source: "IT/VPN client guide" },
+      { path: "Tasks/Done one.md", title: "Office move", source: null },
+      { path: "Tasks/Empty.md", title: "Empty one", source: null },
+    ]);
+    useTaskStore.setState({ tasks: [], epics: [], loaded: false, folded: {}, epicPath: null });
     useUiStore.setState({ centerView: "tasks", focusOpen: false });
+    useVaultStore.setState({ activePath: null });
   });
 
-  it("shows today first, then what was left over, then the week, and hides done tasks", async () => {
+  it("shows every epic as a box with its progress, and moves a finished one to Done", async () => {
     render(<TasksView />);
-    const headings = (await screen.findAllByRole("heading", { level: 3 })).map(
-      (h) => h.textContent,
-    );
-    expect(headings).toEqual(["Today · 1", "Moved from earlier · 1", "This week · 1"]);
-    const todayList = screen.getByRole("region", { name: "Today" });
-    expect(within(todayList).getByText("Ask Peter")).toBeInTheDocument();
-    expect(within(todayList).getByText(/1 of 2 steps/)).toBeInTheDocument();
-    expect(screen.queryByText("Done thing")).toBeNull();
-    await userEvent.setup().click(screen.getByRole("button", { name: "Show done" }));
-    expect(screen.getByText("Done thing")).toBeInTheDocument();
+    const vpn = await screen.findByRole("region", { name: "VPN guide" });
+    expect(within(vpn).getByRole("progressbar")).toHaveAttribute("aria-valuenow", "1");
+    expect(within(vpn).getByText("1 of 2")).toBeInTheDocument();
+    expect(within(vpn).getByText("Write the steps")).toBeInTheDocument();
+    // A note that only has tasks written in it is an epic too.
+    expect(screen.getByRole("region", { name: "Acme" })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Empty one" })).toBeInTheDocument();
+    // The finished epic is under Done, and folded.
+    expect(screen.getByRole("heading", { name: "Done · 1" })).toBeInTheDocument();
+    expect(screen.queryByText("Order headsets")).toBeNull();
   });
 
-  it("adds a task from the box and ticks one off", async () => {
-    apiMock.taskAdd.mockResolvedValue([makeTask({ path: "Tasks.md", title: "Call Mette" })]);
-    apiMock.taskSetDone.mockResolvedValue([makeTask({ line: 4, title: "Old thing", done: true })]);
-    render(<TasksView />);
-    const user = userEvent.setup();
-    await user.type(await screen.findByLabelText("Add a task"), "Call Mette{Enter}");
-    expect(apiMock.taskAdd).toHaveBeenCalledWith(`Call Mette plan:${today}`);
-    await user.click(screen.getByRole("checkbox", { name: /Mark as done: Old thing/ }));
-    expect(apiMock.taskSetDone).toHaveBeenCalledWith("Møder/Acme.md", 4, "key-1", true);
-  });
-
-  it("puts one on today's list and starts focus on another", async () => {
-    apiMock.taskSetMeta.mockResolvedValue([makeTask()]);
+  it("folds an epic and remembers it", async () => {
     render(<TasksView />);
     const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "Focus on Send quote" }));
-    expect(useUiStore.getState().focusOpen).toBe(true);
-    expect(useTaskStore.getState().selected?.title).toBe("Send quote");
-    await user.click(screen.getByRole("button", { name: "Put on today's list: Send quote" }));
-    expect((apiMock.taskSetMeta.mock.calls[0]?.[3] as { plan: string }).plan).toBe(today);
+    await screen.findByText("Write the steps");
+    await user.click(screen.getByRole("button", { name: "Fold VPN guide" }));
+    expect(screen.queryByText("Write the steps")).toBeNull();
+    expect(useTaskStore.getState().folded["Tasks/VPN guide.md"]).toBe(true);
+    expect(localStorage.getItem("mimer.foldedEpics")).toContain("Tasks/VPN guide.md");
+    await user.click(screen.getByRole("button", { name: "Unfold VPN guide" }));
+    expect(screen.getByText("Write the steps")).toBeInTheDocument();
   });
 
-  it("opens a task on its page", async () => {
-    render(<TasksView />);
-    await userEvent.setup().click(await screen.findByText("Send quote"));
-    expect(useUiStore.getState().centerView).toBe("task");
-    expect(useTaskStore.getState().selected?.title).toBe("Send quote");
-  });
-
-  it("shows the good morning note once a day", async () => {
-    const { unmount } = render(<TasksView />);
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: "Dismiss" }));
-    expect(screen.queryByText(/Good morning/)).toBeNull();
-    unmount();
-    render(<TasksView />);
-    await screen.findByText("Today · 1");
-    expect(screen.queryByText(/Good morning/)).toBeNull();
-  });
-
-  it("groups by note", async () => {
+  it("opens an epic, and makes a new one from a name", async () => {
+    apiMock.epicCreate.mockResolvedValue({
+      path: "Tasks/New one.md",
+      title: "New one",
+      source: null,
+    });
     render(<TasksView />);
     const user = userEvent.setup();
-    await screen.findByText("Today · 1");
-    await user.click(screen.getByRole("button", { name: "Note" }));
-    expect(screen.getByRole("heading", { name: /Møder\/Acme · 3/ })).toBeInTheDocument();
+    await user.click((await screen.findAllByRole("button", { name: "Open" }))[0] as HTMLElement);
+    expect(useUiStore.getState().centerView).toBe("epic");
+    await user.click(screen.getByRole("button", { name: /New epic task/ }));
+    await user.type(screen.getByLabelText("Name"), "New one{Enter}");
+    expect(apiMock.epicCreate).toHaveBeenCalledWith("New one");
+  });
+
+  it("has no filters and no add box: epics are folded instead", async () => {
+    render(<TasksView />);
+    await screen.findByText("Write the steps");
+    for (const gone of [/All open/, /Today/, /Moved from earlier/, /Show done/]) {
+      expect(screen.queryByRole("button", { name: gone })).toBeNull();
+    }
+    expect(screen.queryByLabelText("Add a task")).toBeNull();
+  });
+
+  it("ticks a task off from its row", async () => {
+    apiMock.taskSetDone.mockResolvedValue([
+      makeTask({ path: "Møder/Acme.md", line: 5, done: true }),
+    ]);
+    render(<TasksView />);
+    await userEvent
+      .setup()
+      .click(await screen.findByRole("checkbox", { name: /Mark as done: Renew the licence/ }));
+    expect(apiMock.taskSetDone).toHaveBeenCalledWith("Møder/Acme.md", 5, "key-1", true);
   });
 });

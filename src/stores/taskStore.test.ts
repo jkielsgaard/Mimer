@@ -3,6 +3,7 @@ import { makeTask } from "@/test/taskFixtures";
 
 const apiMock = vi.hoisted(() => ({
   listTasks: vi.fn(),
+  listEpics: vi.fn(),
   taskAdd: vi.fn(),
   taskSetDone: vi.fn(),
   taskSetMeta: vi.fn(),
@@ -18,7 +19,7 @@ vi.mock("@/lib/api", () => ({
 }));
 vi.mock("@/lib/flush", () => ({ flushPendingWrites: () => Promise.resolve() }));
 
-import { findTask, useTaskStore } from "./taskStore";
+import { findTask, INBOX_PATH, useTaskStore } from "./taskStore";
 import { useUiStore } from "./uiStore";
 import { useVaultStore } from "./vaultStore";
 
@@ -32,17 +33,28 @@ describe("taskStore", () => {
 
   it("loads every task", async () => {
     apiMock.listTasks.mockResolvedValue([makeTask()]);
+    apiMock.listEpics.mockResolvedValue([]);
     await useTaskStore.getState().load();
     expect(useTaskStore.getState().tasks).toHaveLength(1);
     expect(useTaskStore.getState().loaded).toBe(true);
   });
 
   it("adds a task with the date word turned into a due date", async () => {
-    apiMock.taskAdd.mockResolvedValue([makeTask({ path: "Tasks.md", title: "Call Mette" })]);
+    apiMock.taskAdd.mockResolvedValue([makeTask({ path: INBOX_PATH, title: "Call Mette" })]);
+    apiMock.listTasks.mockResolvedValue([makeTask({ path: INBOX_PATH, title: "Call Mette" })]);
+    apiMock.listEpics.mockResolvedValue([]);
     await useTaskStore.getState().add("Call Mette today");
     const sent = apiMock.taskAdd.mock.calls[0]?.[0] as string;
     expect(sent).toMatch(/^Call Mette due:\d{4}-\d{2}-\d{2}$/);
-    expect(useTaskStore.getState().tasks[0]?.path).toBe("Tasks.md");
+    expect(useTaskStore.getState().tasks[0]?.path).toBe(INBOX_PATH);
+  });
+
+  it("puts a task in the epic it is given, and makes an epic for a note once", async () => {
+    apiMock.taskAdd.mockResolvedValue([makeTask({ path: "Tasks/VPN.md" })]);
+    apiMock.listTasks.mockResolvedValue([]);
+    apiMock.listEpics.mockResolvedValue([]);
+    await useTaskStore.getState().add("Write it", undefined, undefined, "Tasks/VPN.md");
+    expect(apiMock.taskAdd.mock.calls[0]?.[4]).toBe("Tasks/VPN.md");
   });
 
   it("replaces only the tasks of the changed note and reloads the note when it is open", async () => {

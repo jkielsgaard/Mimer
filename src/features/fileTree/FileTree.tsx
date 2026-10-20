@@ -25,6 +25,8 @@ interface Props {
   emptyText?: string;
   /** Top-level folders shown first (Meetings and Quick notes in "All files"). */
   pinned?: readonly string[];
+  /** The name of the tree for screen readers (default: Files). */
+  label?: string;
   className?: string;
   onAction: (a: Action) => void;
 }
@@ -37,6 +39,7 @@ export function FileTree({
   rootFolder,
   emptyText,
   pinned = NO_FOLDERS,
+  label,
   className,
   onAction,
 }: Props) {
@@ -74,7 +77,10 @@ export function FileTree({
             onDropOn(rootFolder, e);
           }}
         >
-          <ul role="tree" aria-label={rootFolder === "" ? "Files" : `Files in ${rootFolder}`}>
+          <ul
+            role="tree"
+            aria-label={label ?? (rootFolder === "" ? "Files" : `Files in ${rootFolder}`)}
+          >
             {shown.map((n) => (
               <TreeRow
                 key={n.path}

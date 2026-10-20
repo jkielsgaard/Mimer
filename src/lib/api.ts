@@ -29,6 +29,7 @@ import type { VaultInfo } from "@/bindings/VaultInfo";
 import type { ChatSummary } from "@/bindings/ChatSummary";
 import type { StoredChat } from "@/bindings/StoredChat";
 import type { SavedPrompt } from "@/bindings/SavedPrompt";
+import type { Epic } from "@/bindings/Epic";
 import type { Idea } from "@/bindings/Idea";
 import type { MetaPatch } from "@/bindings/MetaPatch";
 import type { PreviewResult } from "@/bindings/PreviewResult";
@@ -201,7 +202,7 @@ export const api = {
   listTemplates: () => call<TemplateInfo[]>("list_templates"),
   createNoteFromTemplate: (folder: string, name: string, template: string | null) =>
     call<string>("create_note_from_template", { folder, name, template }),
-  openDailyNote: () => call<string>("open_daily_note"),
+  openDailyNote: (date?: string) => call<string>("open_daily_note", { date: date ?? null }),
   createStandardNote: (kind: StandardKind, title?: string) =>
     call<string>("create_standard_note", { kind, title: title ?? null }),
   seedStandardTemplates: () => call<SeedReport>("seed_standard_templates"),
@@ -237,13 +238,18 @@ export const api = {
     call<Task[]>("task_add_step", { path, line, key, text }),
   taskAddLog: (path: string, line: number, key: string, date: string, text: string) =>
     call<Task[]>("task_add_log", { path, line, key, date, text }),
-  taskAdd: (text: string, note?: string, date?: string, steps?: string[]) =>
+  taskAdd: (text: string, note?: string, date?: string, steps?: string[], path?: string) =>
     call<Task[]>("task_add", {
       text,
       note: note ?? null,
       date: date ?? null,
       steps: steps ?? null,
+      path: path ?? null,
     }),
+  listEpics: () => call<Epic[]>("list_epics"),
+  epicCreate: (title: string) => call<Epic>("epic_create", { title }),
+  epicForNote: (note: string) => call<Epic>("epic_for_note_cmd", { note }),
+  listDailyDates: () => call<string[]>("list_daily_dates"),
   taskSetTitle: (path: string, line: number, key: string, title: string) =>
     call<Task[]>("task_set_title", { path, line, key, title }),
   taskDelete: (path: string, line: number, key: string) =>

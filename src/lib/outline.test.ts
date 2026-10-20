@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { outlineOf, searchWords, wikiTargets } from "./outline";
+import { outlineOf, searchWords, tagsOf, wikiTargets } from "./outline";
 
 describe("outline and links of a note", () => {
   it("lists the headings outside the front matter and code", () => {
@@ -21,5 +21,13 @@ describe("outline and links of a note", () => {
 
   it("picks the words of a title worth searching for", () => {
     expect(searchWords("Notes about the VPN client guide")).toEqual(["client", "guide"]);
+  });
+});
+
+describe("tagsOf", () => {
+  it("finds each tag once, outside code and front matter, and not headings or numbers", () => {
+    const note =
+      "---\ntags: [x]\n---\n# Title #notatag\n\nText #drift and #Drift, (#vpn) and #12.\n\n```\n#code\n```\n`#inline`\n#a/b-\n";
+    expect(tagsOf(note)).toEqual(["notatag", "drift", "vpn", "a/b"]);
   });
 });

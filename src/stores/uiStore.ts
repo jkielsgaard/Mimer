@@ -4,6 +4,13 @@ import type { RenamePreview } from "@/bindings/RenamePreview";
 import { toApiError } from "@/lib/api";
 
 export type LeftTab = "files" | "search" | "tasks" | "ideas";
+/** What fills the middle of the window. */
+export type CenterView = "notes" | "tasks" | "epic" | "task" | "ideas";
+
+/** The task list, an epic or a task: all of them are the Tasks area. */
+export function isTasksView(v: CenterView): boolean {
+  return v === "tasks" || v === "epic" || v === "task";
+}
 export type RightTab = "outline" | "links" | "history" | "images";
 const SOURCE_MODE_KEY = "mimer.sourceMode";
 
@@ -73,8 +80,8 @@ interface UiState {
   leftCollapsed: boolean;
   rightCollapsed: boolean;
   /** What fills the middle of the window: the notes, the task list or one task. */
-  centerView: "notes" | "tasks" | "task" | "ideas";
-  setCenterView: (v: "notes" | "tasks" | "task" | "ideas") => void;
+  centerView: CenterView;
+  setCenterView: (v: CenterView) => void;
   /** Shows the tasks or the ideas: their own panel on the left and their page in the middle. */
   openArea: (area: "tasks" | "ideas") => void;
   /** The write-it-down box (Ctrl+Shift+N), opened with this kind chosen. */
@@ -87,7 +94,13 @@ interface UiState {
   findTasksOpen: boolean;
   /** Look for tasks in this text instead of the whole open note (a selection). */
   findTasksIn: string | null;
-  setFindTasksOpen: (open: boolean, text?: string) => void;
+  /** What the task finder reads and does: look for tasks in a note, or suggest missing steps. */
+  findTasksOpts: { path: string | null; mode: "tasks" | "steps" };
+  setFindTasksOpen: (
+    open: boolean,
+    text?: string,
+    opts?: { path: string; mode: "tasks" | "steps" },
+  ) => void;
   starterOpen: boolean;
   setStarterOpen: (open: boolean) => void;
   quickOpen: boolean;
@@ -195,8 +208,13 @@ export const useUiStore = create<UiState>((set, get) => ({
   },
   findTasksOpen: false,
   findTasksIn: null,
-  setFindTasksOpen: (findTasksOpen, text) => {
-    set({ findTasksOpen, findTasksIn: findTasksOpen ? (text ?? null) : null });
+  findTasksOpts: { path: null, mode: "tasks" },
+  setFindTasksOpen: (findTasksOpen, text, opts) => {
+    set({
+      findTasksOpen,
+      findTasksIn: findTasksOpen ? (text ?? null) : null,
+      findTasksOpts: findTasksOpen && opts ? opts : { path: null, mode: "tasks" },
+    });
   },
   starterOpen: false,
   setStarterOpen: (starterOpen) => {

@@ -11,6 +11,7 @@ import {
   FileText,
   Folder,
   FolderKanban,
+  FolderInput,
   FolderOpen,
   FolderPlus,
   History,
@@ -290,6 +291,13 @@ export function TreeRow({
                 <FolderPlus className="size-4" aria-hidden /> New folder
               </ContextMenuItem>
               <ContextMenuSeparator />
+              <ContextMenuItem
+                onSelect={() => {
+                  onAction({ kind: "moveMany", paths: [node.path] });
+                }}
+              >
+                <FolderInput className="size-4" aria-hidden /> Move to…
+              </ContextMenuItem>
               {skillTargets() && <SkillsSubmenu targets={skillTargets() ?? []} />}
               {node.isDir && (
                 <ContextMenuItem

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useSeen } from "@/stores/seenStore";
 import { isManagedNote } from "@/features/fileTree/treeUtils";
 import type { StandardKind } from "@/bindings/StandardKind";
 import type { Project } from "@/bindings/Project";
@@ -56,7 +57,8 @@ export interface VaultState {
     name: string,
     template: string | null,
   ) => Promise<string | null>;
-  openDailyNote: () => Promise<string | null>;
+  /** Opens the daily note of a day (`YYYY-MM-DD`, default today), made when there is none. */
+  openDailyNote: (date?: string) => Promise<string | null>;
   /** Creates a meeting note (with a title) or a quick note and opens it. */
   createStandardNote: (kind: StandardKind, title?: string) => Promise<string | null>;
   /** Creates (or refreshes) the index page of a folder and opens it. */
@@ -174,7 +176,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     }
     // Tasks and Ideas are not notes to the user: they are shown in their own areas.
     if (isManagedNote(path)) {
-      useUiStore.getState().openArea(path === "Ideas.md" ? "ideas" : "tasks");
+      useUiStore.getState().openArea("ideas");
       return;
     }
     try {
@@ -184,6 +186,7 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     }
     // Opens (or focuses) the tab in the focused pane. Switching away from the previous note is
     // handled by the editor, which saves and commits it.
+    useSeen.getState().mark(path);
     useWorkspaceStore.getState().open(path);
     useUiStore.getState().setCenterView("notes");
   },
@@ -315,9 +318,9 @@ export const useVaultStore = create<VaultState>((set, get) => ({
     }
   },
 
-  openDailyNote: async () => {
+  openDailyNote: async (date) => {
     try {
-      const path = await api.openDailyNote();
+      const path = await api.openDailyNote(date);
       await get().refreshTree();
       await get().openNote(path);
       return path;

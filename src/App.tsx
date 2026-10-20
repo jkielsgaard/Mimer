@@ -47,7 +47,7 @@ import { useEmbeddingStore } from "@/stores/embeddingStore";
 import { flushPendingWrites } from "@/lib/flush";
 import { useShortcuts } from "@/lib/shortcuts";
 import { useSettingsStore } from "@/stores/settingsStore";
-import { useUiStore } from "@/stores/uiStore";
+import { isTasksView, useUiStore } from "@/stores/uiStore";
 import "@/stores/workspaceSync";
 import "@/stores/chatSync";
 import { useVaultStore } from "@/stores/vaultStore";
@@ -184,7 +184,7 @@ export function App() {
       },
       "Mod+Shift+t": () => {
         const ui = useUiStore.getState();
-        if (ui.centerView === "tasks" || ui.centerView === "task") ui.setCenterView("notes");
+        if (isTasksView(ui.centerView)) ui.setCenterView("notes");
         else ui.openArea("tasks");
       },
       "Mod+Shift+p": () => {

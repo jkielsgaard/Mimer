@@ -51,7 +51,7 @@ Mimer is a beta version. The app is in English; the assistant answers in the lan
 
 ## What's new in this version
 
-Tasks, ideas and focus: tasks are lines in your notes, with steps and a log, and a calm Focus mode. Ideas have their own area, and one box writes down a task, an idea or a note from anywhere. The AI is now fixed commands where you work (over selected text, above a note, on a folder, in search, tasks and ideas) instead of a chat you must write prompts in, with a spelling help for dyslexia. Everything that is not AI works without one. The right side is a narrow row of icons, the chat opens as a window, and the menus and windows look the same everywhere. New app icon and start screen.
+Epic tasks: an epic task is a note with tasks in it. Fold it away when you do not want to see it, and it moves to Done by itself when every task is done. A task made from another note gets an epic of its own that points back to the note. The AI can read the note and suggest the next steps, and you choose which ones to add. A Landing section keeps Meetings, Quick notes and Tasks together, with a mark on new notes. Daily notes are a calendar at the top of the file panel. Mermaid diagrams are drawn in the editor, and typing # suggests the tags you already use. Also: a start screen window, a plainer chat, and menus and windows that look the same everywhere.
 
 ## Search terms (up to seven)
 

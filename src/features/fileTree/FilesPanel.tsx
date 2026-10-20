@@ -7,7 +7,15 @@ import { RecentSection } from "./RecentSection";
 import { TreeDialogs } from "./TreeDialogs";
 import { TreeFilter } from "./TreeFilter";
 import { TreeToolbar } from "./TreeToolbar";
-import { withoutFolders, withoutImages, withoutManagedNotes, type Action } from "./treeUtils";
+import { CalendarSection } from "@/features/daily/CalendarSection";
+import { LandingSection } from "./LandingSection";
+import {
+  EPICS_FOLDER,
+  withoutFolders,
+  withoutImages,
+  withoutManagedNotes,
+  type Action,
+} from "./treeUtils";
 
 /** The whole Files tab: toolbar, filter, Recent, Projects and the file tree of everything else. */
 export function FilesPanel() {
@@ -16,38 +24,46 @@ export function FilesPanel() {
   const config = useVaultStore((s) => s.vault?.config);
   const attachments = config?.attachmentsFolder;
   const [action, setAction] = useState<Action | null>(null);
+  const landing = useMemo(
+    () =>
+      [config?.meetingsFolder, config?.quickNotesFolder, EPICS_FOLDER].filter(
+        (f): f is string => !!f,
+      ),
+    [config?.meetingsFolder, config?.quickNotesFolder],
+  );
   const others = useMemo(
     () =>
       withoutFolders(withoutManagedNotes(withoutImages(tree)), [
         ...projects.map((p) => p.folder),
+        // Meetings, quick notes and epic tasks have their own place above; the daily notes are
+        // reached from the calendar, so their folder is not listed.
+        ...landing,
+        ...(config?.dailyNotesFolder ? [config.dailyNotesFolder] : []),
         // Pictures are listed in the Images tab.
         ...(attachments ? [attachments] : []),
       ]),
-    [tree, projects, attachments],
-  );
-  const pinned = useMemo(
-    () => [config?.meetingsFolder, config?.quickNotesFolder].filter((f): f is string => !!f),
-    [config?.meetingsFolder, config?.quickNotesFolder],
+    [tree, projects, attachments, landing, config?.dailyNotesFolder],
   );
   return (
     <div className="flex h-full min-h-0 flex-col">
       <TreeToolbar />
       <TreeFilter />
       <div className="min-h-0 flex-1 overflow-auto">
+        <CalendarSection />
         <RecentSection />
+        <LandingSection folders={landing} onAction={setAction} />
         <ProjectsSection onAction={setAction} />
         <div className="flex items-center gap-1.5 px-2 pt-1.5 section-label">
           All files
           <InfoHint
             label="The file tree"
-            text="Everything that is not in a project. Meetings and Quick notes are kept at the top. Right-click a folder or a note for more, and drag notes to move them, also into a project."
+            text="Everything that is not in a project. Meetings, Quick notes and Tasks have their own place, Landing, above. Right-click a folder or a note for more, and drag notes to move them, also into a project."
             topic="start"
           />
         </div>
         <FileTree
           nodes={others}
           rootFolder=""
-          pinned={pinned}
           className="min-h-full"
           emptyText={
             tree.length === 0

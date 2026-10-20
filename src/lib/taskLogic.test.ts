@@ -4,7 +4,6 @@ import {
   addDays,
   bucketOf,
   durationLabel,
-  groupTasks,
   quickTaskText,
   stepsFromAnswer,
   whenLabel,
@@ -41,29 +40,6 @@ describe("buckets", () => {
     // The plan wins over the date, and `later` pushes a late task away.
     expect(bucketOf(task({ due: "2026-10-12", plan: "2026-10-19" }), TODAY)).toBe("today");
     expect(bucketOf(task({ due: "2026-10-12", plan: "later" }), TODAY)).toBe("later");
-  });
-});
-
-describe("groupTasks", () => {
-  const all = [
-    task({ title: "B", due: "2026-10-19" }),
-    task({ title: "A", due: "2026-10-19", tags: ["acme"] }),
-    task({ title: "Old", due: "2026-10-12" }),
-    task({ title: "Done one", done: true }),
-    task({ title: "Dropped", status: "dropped" }),
-  ];
-  it("groups by when, hides done and dropped, and sorts by name inside a day", () => {
-    const g = groupTasks(all, "when", TODAY, false);
-    expect(g.map((x) => x.id)).toEqual(["today", "moved"]);
-    expect(g[0]?.tasks.map((t) => t.title)).toEqual(["A", "B"]);
-    const withDone = groupTasks(all, "when", TODAY, true);
-    expect(withDone.at(-1)?.id).toBe("done");
-    expect(withDone.at(-1)?.tasks).toHaveLength(2);
-  });
-  it("groups by note and by tag", () => {
-    expect(groupTasks(all, "note", TODAY, false)[0]?.label).toBe("A");
-    const tags = groupTasks(all, "tag", TODAY, false).map((x) => x.label);
-    expect(tags).toEqual(["#acme", "No tag"]);
   });
 });
 

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { MetaPatch } from "@/bindings/MetaPatch";
+import type { Epic } from "@/bindings/Epic";
 import type { Task } from "@/bindings/Task";
 import { api, toApiError } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
@@ -14,32 +15,49 @@ export interface TaskRef {
   title: string;
 }
 
-export type GroupBy = "when" | "note" | "tag";
+/** The epic that quick tasks go into when no epic is chosen. */
+export const INBOX_PATH = "Tasks/Inbox.md";
 
-/** Which tasks the list shows: all open ones, one part of the time line, or the done ones. */
-export type TaskWhen = "all" | "today" | "moved" | "week" | "later" | "done";
+const FOLD_KEY = "mimer.foldedEpics";
+
+function readFolded(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(FOLD_KEY);
+    const parsed: unknown = raw === null ? {} : JSON.parse(raw);
+    return typeof parsed === "object" && parsed !== null ? (parsed as Record<string, boolean>) : {};
+  } catch {
+    return {};
+  }
+}
 
 interface TaskState {
   tasks: Task[];
   loaded: boolean;
   loading: boolean;
   selected: TaskRef | null;
-  groupBy: GroupBy;
-  showDone: boolean;
-  when: TaskWhen;
-  /** Only the tasks with this tag (`null` = all). */
-  tag: string | null;
-  setWhen: (w: TaskWhen) => void;
-  setTag: (t: string | null) => void;
-  setGroupBy: (g: GroupBy) => void;
-  setShowDone: (v: boolean) => void;
-  /** Reads every task from every note. */
+  /** The epic notes (the notes in `Tasks/`). Notes with tasks elsewhere are epics too. */
+  epics: Epic[];
+  /** The epic that is open on its page. */
+  epicPath: string | null;
+  /** Epics that are folded in the list (remembered). */
+  folded: Record<string, boolean>;
+  toggleFold: (path: string) => void;
+  /** Reads every task from every note, and the epics. */
   load: () => Promise<void>;
+  /** Opens an epic on its page. */
+  openEpic: (path: string) => void;
+  /** Makes a new epic task (a note in `Tasks/`) and opens it. Resolves to its note. */
+  createEpic: (title: string) => Promise<string | null>;
+  /** The epic note for a note: itself when it is in `Tasks/`, else the one made for it. */
+  epicFor: (note: string) => Promise<string | null>;
   select: (ref: TaskRef | null) => void;
   /** Opens a task on the task page. */
   open: (t: Task) => void;
-  /** Adds a task (a date word at the end becomes its due date) to the note `Tasks`. */
-  add: (text: string, note?: string, steps?: string[]) => Promise<void>;
+  /**
+   * Adds a task (a date word at the end becomes its due date) to an epic: the one at `path`, or the
+   * Inbox when none is given.
+   */
+  add: (text: string, note?: string, steps?: string[], path?: string) => Promise<void>;
   /** Changes the title of a task or one of its steps. */
   rename: (path: string, line: number, key: string, title: string) => Promise<void>;
   setDone: (path: string, line: number, key: string, done: boolean) => Promise<void>;
@@ -102,21 +120,53 @@ export const useTaskStore = create<TaskState>((set, get) => {
     loaded: false,
     loading: false,
     selected: null,
-    groupBy: "when",
-    showDone: false,
-    when: "all",
-    tag: null,
-    setGroupBy: (groupBy) => {
-      set({ groupBy });
+    epics: [],
+    epicPath: null,
+    folded: readFolded(),
+    toggleFold: (path) => {
+      const folded = { ...get().folded, [path]: !get().folded[path] };
+      set({ folded });
+      try {
+        localStorage.setItem(FOLD_KEY, JSON.stringify(folded));
+      } catch {
+        /* only a convenience */
+      }
     },
-    setShowDone: (showDone) => {
-      set({ showDone });
+    openEpic: (path) => {
+      set({ epicPath: path });
+      useUiStore.getState().setCenterView("epic");
+    },
+    createEpic: async (title) => {
+      try {
+        await flushPendingWrites();
+        const e = await api.epicCreate(title);
+        set((s) => ({ epics: [...s.epics.filter((x) => x.path !== e.path), e] }));
+        await useVaultStore.getState().refreshTree();
+        get().openEpic(e.path);
+        return e.path;
+      } catch (e) {
+        reportError(e);
+        return null;
+      }
+    },
+    epicFor: async (note) => {
+      try {
+        await flushPendingWrites();
+        const e = await api.epicForNote(note);
+        set((s) => ({ epics: [...s.epics.filter((x) => x.path !== e.path), e] }));
+        await useVaultStore.getState().refreshTree();
+        return e.path;
+      } catch (e) {
+        reportError(e);
+        return null;
+      }
     },
     load: async () => {
       set({ loading: true });
       try {
         await flushPendingWrites();
-        set({ tasks: await api.listTasks(), loaded: true });
+        const [tasks, epics] = await Promise.all([api.listTasks(), api.listEpics()]);
+        set({ tasks, epics, loaded: true });
       } catch (e) {
         reportError(e);
       } finally {
@@ -130,16 +180,22 @@ export const useTaskStore = create<TaskState>((set, get) => {
       set({ selected: { path: t.path, line: t.line, title: t.title } });
       useUiStore.getState().setCenterView("task");
     },
-    add: async (text, note, steps) => {
+    add: async (text, note, steps, path) => {
       const line = quickTaskText(text, todayIso());
       if (line === "") return;
       const extra = note?.trim() ?? "";
       const list = (steps ?? []).filter((s) => s.trim() !== "");
-      await mutate("Tasks.md", () =>
-        extra === "" && list.length === 0
+      const target = path ?? INBOX_PATH;
+      const fresh = await mutate(target, () =>
+        extra === "" && list.length === 0 && path === undefined
           ? api.taskAdd(line)
-          : api.taskAdd(line, extra, todayIso(), list),
+          : api.taskAdd(line, extra === "" ? undefined : extra, todayIso(), list, target),
       );
+      // A first task makes its note, so the epic list may have a new entry.
+      if (fresh !== null && !get().epics.some((e) => e.path === target)) {
+        await get().load();
+        await useVaultStore.getState().refreshTree();
+      }
     },
     rename: async (path, line, key, title) => {
       const fresh = await mutate(path, () => api.taskSetTitle(path, line, key, title));
@@ -148,12 +204,6 @@ export const useTaskStore = create<TaskState>((set, get) => {
         const now = fresh.find((t) => t.line === line);
         if (now) set({ selected: { ...sel, title: now.title } });
       }
-    },
-    setWhen: (when) => {
-      set({ when });
-    },
-    setTag: (tag) => {
-      set({ tag });
     },
     setDone: async (path, line, key, done) => {
       await mutate(path, () => api.taskSetDone(path, line, key, done));

@@ -12,12 +12,15 @@ export function TaskRow({
   today,
   planButtons = true,
   showWhen = true,
+  showNote = true,
 }: {
   task: Task;
   today: string;
   /** Show the Today and Later buttons. */
   planButtons?: boolean;
   showWhen?: boolean;
+  /** Show the name of the note under the title. */
+  showNote?: boolean;
 }) {
   const { setDone, open, plan } = useTaskStore.getState();
   const stepsDone = task.steps.filter((s) => s.done).length;
@@ -56,9 +59,15 @@ export function TaskRow({
           {task.title}
         </span>
         <span className="truncate text-[11px] text-muted-foreground">
-          {noteName(task.path)}
-          {task.steps.length > 0 && ` · ${String(stepsDone)} of ${String(task.steps.length)} steps`}
-          {when !== null && ` · ${when}`}
+          {[
+            showNote ? noteName(task.path) : null,
+            task.steps.length > 0
+              ? `${String(stepsDone)} of ${String(task.steps.length)} steps`
+              : null,
+            when,
+          ]
+            .filter((x) => x !== null)
+            .join(" · ")}
         </span>
       </button>
       {task.tags.slice(0, 2).map((t) => (

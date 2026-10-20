@@ -163,6 +163,35 @@ pub fn open_daily_note(
     create_note_from_template(v, &folder, &stem, template, &at)
 }
 
+/// The dates that have a daily note (`YYYY-MM-DD`), oldest first. A note counts when its file name
+/// in the daily folder reads as a date in the daily note format.
+pub fn daily_dates(v: &OpenVault) -> Vec<String> {
+    let cfg = v.config();
+    let folder = cfg.daily_notes_folder.trim_matches('/').to_string();
+    let prefix = if folder.is_empty() {
+        String::new()
+    } else {
+        format!("{folder}/")
+    };
+    let mut out: Vec<String> = v
+        .file_list()
+        .iter()
+        .filter_map(|f| {
+            let rest = f.strip_prefix(&prefix)?;
+            if rest.contains('/') {
+                return None;
+            }
+            let stem = rest.strip_suffix(".md")?;
+            NaiveDate::parse_from_str(stem, &cfg.daily_note_format)
+                .ok()
+                .map(|d| d.format("%Y-%m-%d").to_string())
+        })
+        .collect();
+    out.sort();
+    out.dedup();
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -228,6 +257,18 @@ mod tests {
             "# Kickoff\nDate: 2026-10-13"
         );
         assert!(create_note_from_template(&v, "Work/Meetings", "Kickoff", None, &now()).is_err());
+    }
+
+    #[test]
+    fn the_dates_with_a_daily_note_are_listed() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        let day = NaiveDate::from_ymd_opt(2026, 10, 14);
+        open_daily_note(&v, day, &now()).unwrap();
+        open_daily_note(&v, None, &now()).unwrap();
+        std::fs::write(d.path().join("Daily/not a date.md"), "x").unwrap();
+        v.refresh_files();
+        assert_eq!(daily_dates(&v), ["2026-10-13", "2026-10-14"]);
     }
 
     #[test]
