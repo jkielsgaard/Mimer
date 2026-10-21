@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { PromptDialog } from "@/components/PromptDialog";
 import { ViewHeader } from "@/components/ViewHeader";
 import { Button } from "@/components/ui/button";
-import { epicGroups, noteName, todayIso, type EpicGroup } from "@/lib/taskLogic";
+import { epicGroups, noteName, shortDate, type EpicGroup } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { useAiBlocked } from "@/lib/useAiBlocked";
 import { useTaskStore } from "@/stores/taskStore";
@@ -36,7 +36,43 @@ export function EpicProgress({ group }: { group: EpicGroup }) {
   );
 }
 
-/** The task list: every epic task (a note with tasks) as a box you can fold. */
+/** "+ Add a task" at the bottom of an open epic task: Enter adds it to that epic's note. */
+function AddTask({ group }: { group: EpicGroup }) {
+  const [text, setText] = useState("");
+  return (
+    <form
+      className="px-1 pb-1 pl-8"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const value = text.trim();
+        if (value === "") return;
+        setText("");
+        void useTaskStore.getState().add(value, undefined, undefined, group.path);
+      }}
+    >
+      <input
+        aria-label={`Add a task to ${group.title}`}
+        placeholder={`+ Add a task to ${group.title}`}
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+        }}
+        className="w-full rounded-md border border-dashed border-input bg-transparent px-2.5 py-1.5 text-sm placeholder:text-muted-foreground focus-visible:border-solid focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
+    </form>
+  );
+}
+
+/** Whether an epic is folded in the list: open ones are open, done ones folded, unless chosen. */
+export function isFolded(g: EpicGroup, folded: Record<string, boolean>): boolean {
+  const chosen = folded[g.path];
+  return chosen ?? g.allDone;
+}
+
+/**
+ * The task list: one outline of epic tasks, each a box you can fold, with its tasks, and their
+ * steps, which can be unfolded too. Done epics are folded together at the bottom.
+ */
 export function TasksView() {
   const tasks = useTaskStore((s) => s.tasks);
   const epics = useTaskStore((s) => s.epics);
@@ -45,18 +81,18 @@ export function TasksView() {
   const activePath = useVaultStore((s) => s.activePath);
   const aiOff = useAiBlocked();
   const [naming, setNaming] = useState(false);
-  const today = todayIso();
+  const [showDone, setShowDone] = useState(false);
 
   useEffect(() => {
     void useTaskStore.getState().load();
   }, []);
 
-  const groups = useMemo(() => epicGroups(tasks, epics, today), [tasks, epics, today]);
+  const groups = useMemo(() => epicGroups(tasks, epics), [tasks, epics]);
   const open = groups.filter((g) => !g.allDone);
   const done = groups.filter((g) => g.allDone);
 
   const box = (g: EpicGroup) => {
-    const isFolded = g.allDone ? folded[g.path] !== false : folded[g.path] === true;
+    const shut = isFolded(g, folded);
     return (
       <section
         key={g.path}
@@ -66,17 +102,18 @@ export function TasksView() {
         <div className="flex items-center gap-3 px-2 py-1.5">
           <button
             type="button"
-            aria-expanded={!isFolded}
-            aria-label={`${isFolded ? "Unfold" : "Fold"} ${g.title}`}
+            aria-expanded={!shut}
+            aria-label={`${shut ? "Unfold" : "Fold"} ${g.title}`}
             className="rounded p-0.5 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
             onClick={() => {
-              useTaskStore.getState().toggleFold(g.path);
+              useTaskStore.getState().setFolded([g.path], !shut);
             }}
           >
-            {isFolded ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
+            {shut ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
           </button>
           <button
             type="button"
+            title={`Open ${g.title}`}
             className={cn(
               "min-w-0 flex-1 truncate text-left text-sm font-semibold hover:underline focus-visible:ring-2 focus-visible:ring-ring",
               g.allDone && "text-muted-foreground",
@@ -86,6 +123,12 @@ export function TasksView() {
             }}
           >
             {g.title}
+            {g.made !== null && (
+              <span className="font-normal text-muted-foreground">
+                {" "}
+                · made {shortDate(g.made).replace(/^\S+ /, "")}
+              </span>
+            )}
           </button>
           {g.source !== null && (
             <span className="hidden text-xs text-muted-foreground md:inline">
@@ -96,35 +139,19 @@ export function TasksView() {
             <span className="hidden text-xs text-muted-foreground md:inline">in a note</span>
           )}
           <EpicProgress group={g} />
-          {g.allDone && <span className="rounded-full border px-2 text-xs text-success">Done</span>}
-          <Button
-            size="sm"
-            variant="outline"
-            aria-label={`Open ${g.title}`}
-            onClick={() => {
-              useTaskStore.getState().openEpic(g.path);
-            }}
-          >
-            Open <ChevronRight />
-          </Button>
         </div>
-        {!isFolded && (
-          <ul>
-            {g.tasks.map((t) => (
-              <TaskRow
-                key={`${t.path}:${String(t.line)}`}
-                task={t}
-                today={today}
-                planButtons={false}
-                showNote={false}
-              />
-            ))}
-            {g.tasks.length === 0 && (
-              <li className="px-4 py-2 text-xs text-muted-foreground">
-                No tasks yet. Open the epic to add some.
-              </li>
-            )}
-          </ul>
+        {!shut && (
+          <>
+            <ul>
+              {g.tasks.map((t) => (
+                <TaskRow key={`${t.path}:${String(t.line)}`} task={t} showNote={false} />
+              ))}
+              {g.tasks.length === 0 && (
+                <li className="px-8 py-1 text-xs text-muted-foreground">No tasks yet.</li>
+              )}
+            </ul>
+            {!g.allDone && <AddTask group={g} />}
+          </>
         )}
       </section>
     );
@@ -151,6 +178,32 @@ export function TasksView() {
         </Button>
         <Button
           size="sm"
+          variant="ghost"
+          disabled={open.length === 0}
+          onClick={() => {
+            useTaskStore.getState().setFolded(
+              open.map((g) => g.path),
+              true,
+            );
+          }}
+        >
+          Fold all
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          disabled={open.length === 0}
+          onClick={() => {
+            useTaskStore.getState().setFolded(
+              open.map((g) => g.path),
+              false,
+            );
+          }}
+        >
+          Unfold all
+        </Button>
+        <Button
+          size="sm"
           onClick={() => {
             setNaming(true);
           }}
@@ -172,14 +225,24 @@ export function TasksView() {
         {open.map(box)}
         {done.length > 0 && (
           <>
-            <h3 className="section-label px-1 pt-2">Done · {done.length}</h3>
-            {done.map(box)}
+            <button
+              type="button"
+              aria-expanded={showDone}
+              className="flex items-center gap-1 px-1 pt-2 section-label hover:text-foreground"
+              onClick={() => {
+                setShowDone(!showDone);
+              }}
+            >
+              {showDone ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+              Done · {done.length}
+            </button>
+            {showDone && done.map(box)}
           </>
         )}
         {loaded && groups.length > 0 && (
           <p className="px-1 text-xs text-muted-foreground">
-            Fold an epic to hide its tasks. When every task in it is done, it moves to Done by
-            itself.
+            Fold an epic task to see only its name and how far it is. When every task in it is done,
+            it moves to Done.
           </p>
         )}
       </div>

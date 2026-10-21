@@ -27,6 +27,11 @@ plan: string | null,
  */
 status: string | null, estMinutes: number | null, steps: Array<TaskStep>, log: Array<TaskLog>, 
 /**
- * The task's own note: the indented quote lines without a date, joined by newlines.
+ * The task's own note: the indented plain text lines (or, in older files, quote lines
+ * without a date), joined by newlines.
  */
-note: string, };
+note: string, 
+/**
+ * When the task was made (`made:YYYY-MM-DD`), written once by Mimer.
+ */
+made: string | null, };

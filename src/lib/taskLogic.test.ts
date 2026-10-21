@@ -1,15 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Task } from "@/bindings/Task";
-import {
-  addDays,
-  bucketOf,
-  durationLabel,
-  quickTaskText,
-  stepsFromAnswer,
-  whenLabel,
-} from "./taskLogic";
-
-const TODAY = "2026-10-19"; // a Monday
+import { INBOX, epicGroups, stepsFromAnswer, taskText } from "./taskLogic";
 
 function task(patch: Partial<Task>): Task {
   return {
@@ -27,61 +18,35 @@ function task(patch: Partial<Task>): Task {
     steps: [],
     log: [],
     note: "",
+    made: null,
     ...patch,
   };
 }
 
-describe("buckets", () => {
-  it("puts a task where it is planned, else where it is due", () => {
-    expect(bucketOf(task({ due: "2026-10-19" }), TODAY)).toBe("today");
-    expect(bucketOf(task({ due: "2026-10-12" }), TODAY)).toBe("moved");
-    expect(bucketOf(task({ due: "2026-10-23" }), TODAY)).toBe("week");
-    expect(bucketOf(task({ due: "2026-12-01" }), TODAY)).toBe("later");
-    expect(bucketOf(task({}), TODAY)).toBe("later");
-    // The plan wins over the date, and `later` pushes a late task away.
-    expect(bucketOf(task({ due: "2026-10-12", plan: "2026-10-19" }), TODAY)).toBe("today");
-    expect(bucketOf(task({ due: "2026-10-12", plan: "later" }), TODAY)).toBe("later");
+describe("taskText", () => {
+  it("keeps what was typed as the title: date words are not read", () => {
+    expect(taskText("  Call   Mette tomorrow ")).toBe("Call Mette tomorrow");
+    expect(taskText("Pay the bill fri ~15m")).toBe("Pay the bill fri ~15m");
   });
 });
 
-describe("quickTaskText", () => {
-  it("turns a date word at the end into due:", () => {
-    expect(quickTaskText("Call Mette tomorrow", TODAY)).toBe("Call Mette due:2026-10-20");
-    expect(quickTaskText("Send quote fri", TODAY)).toBe("Send quote due:2026-10-23");
-    expect(quickTaskText("Send quote mon", TODAY)).toBe("Send quote due:2026-10-26");
-    expect(quickTaskText("Renew in 3 days", TODAY)).toBe("Renew due:2026-10-22");
-    expect(quickTaskText("Renew 2026-11-01", TODAY)).toBe("Renew due:2026-11-01");
-    expect(quickTaskText("Buy milk", TODAY)).toBe("Buy milk plan:2026-10-19");
-  });
-  it("makes a task without a date a task for today, and `later` puts it away", () => {
-    expect(quickTaskText("Call the bank", TODAY)).toBe("Call the bank plan:2026-10-19");
-    expect(quickTaskText("Call the bank later", TODAY)).toBe("Call the bank plan:later");
-    expect(quickTaskText("Call the bank fri", TODAY)).toBe("Call the bank due:2026-10-23");
-    expect(quickTaskText("Call the bank due:2026-11-01", TODAY)).toBe(
-      "Call the bank due:2026-11-01",
-    );
-  });
-
-  it("reads ~15m as an estimate and keeps tags", () => {
-    expect(quickTaskText("Fix the guide #vpn today ~15m", TODAY)).toBe(
-      "Fix the guide #vpn due:2026-10-19 est:15m",
-    );
-  });
-});
-
-describe("labels", () => {
-  it("says when a task is due", () => {
-    expect(whenLabel(task({ due: "2026-10-19" }), TODAY)).toBe("Today");
-    expect(whenLabel(task({ due: "2026-10-20" }), TODAY)).toBe("Tomorrow");
-    expect(whenLabel(task({ due: "2026-10-23" }), TODAY)).toBe("Fri 23 Oct");
-    expect(whenLabel(task({ due: "2026-10-17" }), TODAY)).toBe("2 days late");
-    expect(whenLabel(task({}), TODAY)).toBeNull();
-    expect(addDays("2026-12-31", 1)).toBe("2027-01-01");
-  });
-  it("writes durations", () => {
-    expect(durationLabel(50)).toBe("50 min");
-    expect(durationLabel(75)).toBe("1 h 15 min");
-    expect(durationLabel(120)).toBe("2 h");
+describe("epicGroups", () => {
+  it("puts the Inbox first and keeps the tasks in the order of the note", () => {
+    const tasks = [
+      task({ path: "Tasks/B.md", line: 4, title: "Second" }),
+      task({ path: "Tasks/B.md", line: 2, title: "First", made: "2026-10-12" }),
+      task({ path: INBOX, line: 1, title: "Quick" }),
+    ];
+    const epics = [
+      { path: "Tasks/B.md", title: "B", source: null },
+      { path: INBOX, title: "Inbox", source: null },
+      { path: "Tasks/A.md", title: "A", source: null },
+    ];
+    const groups = epicGroups(tasks, epics);
+    expect(groups.map((g) => g.title)).toEqual(["Inbox", "A", "B"]);
+    const b = groups.find((g) => g.title === "B");
+    expect(b?.tasks.map((t) => t.title)).toEqual(["First", "Second"]);
+    expect(b?.made).toBe("2026-10-12");
   });
 });
 

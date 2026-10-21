@@ -60,9 +60,9 @@ describe("FindTasksDialog", () => {
     const [path, texts] = apiMock.taskAddToNote.mock.calls[0] as [string, string[]];
     expect(path).toBe("Tasks/Acme.md");
     expect(apiMock.epicForNote).toHaveBeenCalledWith("Møder/Acme.md");
-    // The date word became a due date, and no plan was added.
+    // What the AI found is the title: no date is read from it.
     expect(texts).toHaveLength(1);
-    expect(texts[0]).toMatch(/^Send the quote due:\d{4}-\d{2}-\d{2}$/);
+    expect(texts[0]).toBe("Send the quote fri");
     expect(useUiStore.getState().findTasksOpen).toBe(false);
   });
 

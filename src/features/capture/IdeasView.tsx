@@ -16,13 +16,13 @@ import { useTaskStore } from "@/stores/taskStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 
-/** Turns an idea into a task for later. The idea stays, marked as used. */
+/** Turns an idea into a task in the Inbox. The idea stays, marked as used. */
 export async function ideaToTask(idea: Idea): Promise<void> {
   await useTaskStore
     .getState()
-    .add(`${idea.text}${idea.tags.map((t) => ` #${t}`).join("")} later`, idea.note);
+    .add(`${idea.text}${idea.tags.map((t) => ` #${t}`).join("")}`, idea.note);
   await useIdeaStore.getState().setStatus(idea, "used");
-  useUiStore.getState().toast("Made a task. It is in your task list under Later.", "success");
+  useUiStore.getState().toast("Made a task. It is in the epic task Inbox.", "success");
 }
 
 /** Turns an idea into a note in Quick notes and opens it. The idea stays, marked as used. */
@@ -209,11 +209,11 @@ function IdeaEditor({ idea }: { idea: Idea }) {
                       // One task with the steps under it, not one task for each step.
                       await useTaskStore
                         .getState()
-                        .add(`${title.replace(/#\S+/g, "").trim()} later`, "", steps);
+                        .add(title.replace(/#\S+/g, "").trim(), "", steps);
                       useUiStore
                         .getState()
                         .toast(
-                          `Made one task with ${String(steps.length)} steps. It is in your task list under Later.`,
+                          `Made one task with ${String(steps.length)} steps. It is in the epic task Inbox.`,
                           "success",
                         );
                       close();
@@ -286,7 +286,6 @@ export function IdeasView() {
             </div>
             <CaptureBox
               initialKind="idea"
-              taskPlan="today"
               kinds={["idea"]}
               onSaved={() => {
                 useIdeaStore.getState().select(useIdeaStore.getState().ideas[0]?.line ?? null);

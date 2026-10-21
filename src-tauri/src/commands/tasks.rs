@@ -48,6 +48,11 @@ fn task_containing(tasks: &[Task], line: u32) -> Option<&Task> {
     tasks.iter().find(|t| t.line <= line && line <= t.end)
 }
 
+/// Today's date, written as `made:` on the tasks Mimer adds.
+fn today() -> String {
+    chrono::Local::now().format("%Y-%m-%d").to_string()
+}
+
 /// Traces work on the task at `line` in today's daily note (when the trace is on).
 fn trace_worked(state: &AppState, v: &OpenVault, tasks: &[Task], line: u32) {
     if let Some(t) = task_containing(tasks, line) {
@@ -122,7 +127,7 @@ pub(crate) fn add_task_to(
         }
         Err(e) => return Err(e),
     };
-    let mut new = tasks::append_task(&existing, text);
+    let mut new = tasks::append_task(&existing, text, Some(&today()));
     for step in steps.iter().filter(|s| !s.trim().is_empty()) {
         if let Some(t) = tasks::parse(path, &new).into_iter().next_back() {
             new = tasks::add_step(&new, t.line, &t.key, step)?;
@@ -424,6 +429,7 @@ pub(crate) fn add_to_note(
             .map(|t| t.title.to_lowercase())
             .collect();
         let mut out = content.to_string();
+        let made = today();
         for text in texts {
             let words = tasks::parse("", &format!("- [ ] {text}\n"));
             let title = words
@@ -433,7 +439,7 @@ pub(crate) fn add_to_note(
             if title.is_empty() || have.contains(&title) {
                 continue;
             }
-            out = tasks::append_task(&out, text);
+            out = tasks::append_task(&out, text, Some(&made));
         }
         Ok(out)
     })
@@ -675,9 +681,12 @@ mod tests {
         assert_eq!(after[1].title, "Send the quote");
         assert_eq!(after[1].due.as_deref(), Some("2026-10-23"));
         let text = std::fs::read_to_string(d.path().join("Meeting.md")).unwrap();
+        let made = today();
         assert_eq!(
             text,
-            "# Meeting\n\n- [ ] Ask Peter\n- [ ] Send the quote due:2026-10-23\n"
+            format!(
+                "# Meeting\n\n- [ ] Ask Peter\n- [ ] Send the quote due:2026-10-23 made:{made}\n"
+            )
         );
         assert!(add_to_note(&v, "../x.md", &["a".into()]).is_err());
     }
@@ -698,7 +707,8 @@ mod tests {
         )
         .unwrap();
         assert_eq!(list.len(), 2);
-        assert_eq!(list[1].note, "Ask Mette\n\nThe grey ones");
+        assert_eq!(list[1].note, "Ask Mette\nThe grey ones");
+        assert_eq!(list[1].made.as_deref(), Some(today().as_str()));
         assert!(list[1].log.is_empty());
         let steps: Vec<&str> = list[1].steps.iter().map(|s| s.text.as_str()).collect();
         assert_eq!(steps, ["Find the model", "Order"]);

@@ -55,24 +55,24 @@ describe("CaptureBox", () => {
     });
   });
 
-  it("writes an idea, a task (for today or later) and a note, and remembers the kind", async () => {
+  it("writes an idea, a task and a note, and remembers the kind", async () => {
     const onSaved = vi.fn();
-    const { unmount } = render(<CaptureBox taskPlan="today" onSaved={onSaved} />);
+    const { unmount } = render(<CaptureBox onSaved={onSaved} />);
     const user = userEvent.setup();
     await user.type(screen.getByLabelText("Write an idea"), "An idea{Enter}");
     expect(apiMock.ideaAdd.mock.calls[0]?.[1]).toBe("An idea");
     expect(onSaved).toHaveBeenCalledWith("an idea");
     await user.click(screen.getByRole("button", { name: "Task" }));
     await user.type(screen.getByLabelText("Write a task"), "Call Mette{Enter}");
-    expect(apiMock.taskAdd.mock.calls[0]?.[0]).toMatch(/^Call Mette plan:\d{4}-\d{2}-\d{2}$/);
+    expect(apiMock.taskAdd.mock.calls[0]?.[0]).toBe("Call Mette");
     await user.type(screen.getByLabelText("Write a task"), "Pay the bill fri{Enter}");
-    expect(apiMock.taskAdd.mock.calls[1]?.[0]).toMatch(/^Pay the bill due:/);
+    expect(apiMock.taskAdd.mock.calls[1]?.[0]).toBe("Pay the bill fri");
     unmount();
     // The choice is remembered.
-    render(<CaptureBox taskPlan="later" />);
+    render(<CaptureBox />);
     expect(screen.getByRole("button", { name: "Task" })).toHaveAttribute("aria-pressed", "true");
     await user.type(screen.getByLabelText("Write a task"), "Later task{Enter}");
-    expect(apiMock.taskAdd.mock.calls[2]?.[0]).toBe("Later task plan:later");
+    expect(apiMock.taskAdd.mock.calls[2]?.[0]).toBe("Later task");
     await user.click(screen.getByRole("button", { name: "Note" }));
     await user.type(screen.getByLabelText("Title of the note"), "Cheat sheet");
     await user.type(screen.getByLabelText("Write the note"), "VLAN 10 is the office");
@@ -85,7 +85,7 @@ describe("CaptureBox", () => {
   });
 
   it("lets a task and an idea have a small note", async () => {
-    render(<CaptureBox taskPlan="today" initialKind="idea" />);
+    render(<CaptureBox initialKind="idea" />);
     const user = userEvent.setup();
     await user.type(screen.getByLabelText("Write an idea"), "An idea");
     await user.click(screen.getByRole("button", { name: "Add a note" }));
@@ -207,7 +207,7 @@ describe("Ideas", () => {
     expect(apiMock.ideaAdd.mock.calls[0]?.[2]).toBe("Details");
   });
 
-  it("turns an idea into a task for later with its note, and marks it as used", async () => {
+  it("turns an idea into a task in the Inbox with its note, and marks it as used", async () => {
     useIdeaStore.setState({ selectedLine: 4 });
     render(<IdeasView />);
     const user = userEvent.setup();
@@ -215,7 +215,7 @@ describe("Ideas", () => {
     await waitFor(() => {
       expect(apiMock.ideaSetStatus).toHaveBeenCalledWith(4, "k", "used");
     });
-    expect(apiMock.taskAdd.mock.calls[0]?.[0]).toBe("Newest idea plan:later");
+    expect(apiMock.taskAdd.mock.calls[0]?.[0]).toBe("Newest idea");
     expect(apiMock.taskAdd.mock.calls[0]?.[1]).toBe("Why it matters");
   });
 
@@ -263,7 +263,7 @@ describe("Ideas", () => {
     await waitFor(() => {
       expect(apiMock.taskAdd).toHaveBeenCalledTimes(1);
     });
-    expect(apiMock.taskAdd.mock.calls[0]?.[0]).toBe("Newest idea plan:later");
+    expect(apiMock.taskAdd.mock.calls[0]?.[0]).toBe("Newest idea");
     expect(apiMock.taskAdd.mock.calls[0]?.[2]).toEqual([
       "Ask Lene",
       "Draft the template",

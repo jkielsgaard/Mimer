@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { api } from "@/lib/api";
 import { askAi, type AiAnswer } from "@/lib/askAi";
-import { noteName, quickTaskText, stepsFromAnswer, todayIso } from "@/lib/taskLogic";
+import { noteName, stepsFromAnswer, taskText } from "@/lib/taskLogic";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useTaskStore } from "@/stores/taskStore";
 import { useVaultStore } from "@/stores/vaultStore";
@@ -90,12 +90,7 @@ function Finder({ path, mode }: { path: string; mode: "tasks" | "steps" }) {
     if (found === null) return;
     setAdding(true);
     try {
-      const today = todayIso();
-      // A date word at the end of a line (for example "by friday") becomes the due date. A task
-      // without a date is left without one: it is in the note, and Mimer does not plan it.
-      const texts = found
-        .filter((_, i) => chosen.has(i))
-        .map((t) => quickTaskText(t, today).replace(/\s+plan:\S+$/, ""));
+      const texts = found.filter((_, i) => chosen.has(i)).map(taskText);
       // Tasks found in an ordinary note go into the epic task made for it; steps go into the epic.
       const target = mode === "steps" ? path : await useTaskStore.getState().epicFor(path);
       if (target === null) return;

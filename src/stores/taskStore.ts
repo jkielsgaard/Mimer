@@ -5,7 +5,7 @@ import type { Task } from "@/bindings/Task";
 import type { TaskLog } from "@/bindings/TaskLog";
 import { api, toApiError } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
-import { quickTaskText, todayIso } from "@/lib/taskLogic";
+import { taskText, todayIso } from "@/lib/taskLogic";
 import { reportError, useUiStore } from "./uiStore";
 import { useVaultStore } from "./vaultStore";
 
@@ -40,9 +40,14 @@ interface TaskState {
   epics: Epic[];
   /** The epic that is open on its page. */
   epicPath: string | null;
-  /** Epics that are folded in the list (remembered). */
+  /** Epics that are folded (`true`) or unfolded (`false`) in the list, remembered. An epic that
+   * is not in it is open, unless all its tasks are done. */
   folded: Record<string, boolean>;
-  toggleFold: (path: string) => void;
+  /** Folds or unfolds epics (several at once for "Fold all"). */
+  setFolded: (paths: readonly string[], folded: boolean) => void;
+  /** Tasks whose steps are shown in the list (`path:line`), for this session only. */
+  openTasks: Record<string, boolean>;
+  toggleTaskOpen: (id: string) => void;
   /** Reads every task from every note, and the epics. */
   load: () => Promise<void>;
   /** Opens an epic on its page. */
@@ -55,16 +60,14 @@ interface TaskState {
   /** Opens a task on the task page. */
   open: (t: Task) => void;
   /**
-   * Adds a task (a date word at the end becomes its due date) to an epic: the one at `path`, or the
-   * Inbox when none is given.
+   * Adds a task to an epic: the one at `path`, or the Inbox when none is given. What was typed is
+   * the title; Mimer adds the day it was made.
    */
   add: (text: string, note?: string, steps?: string[], path?: string) => Promise<void>;
   /** Changes the title of a task or one of its steps. */
   rename: (path: string, line: number, key: string, title: string) => Promise<void>;
   setDone: (path: string, line: number, key: string, done: boolean) => Promise<void>;
   setMeta: (t: Task, patch: MetaPatch) => Promise<void>;
-  /** Plans a task for today or for later. */
-  plan: (t: Task, when: "today" | "later") => Promise<void>;
   /** Changes the status and writes it in the log. */
   setStatus: (t: Task, status: string | null) => Promise<void>;
   addStep: (t: Task, text: string) => Promise<void>;
@@ -132,14 +135,19 @@ export const useTaskStore = create<TaskState>((set, get) => {
     epics: [],
     epicPath: null,
     folded: readFolded(),
-    toggleFold: (path) => {
-      const folded = { ...get().folded, [path]: !get().folded[path] };
+    setFolded: (paths, value) => {
+      const folded = { ...get().folded };
+      for (const p of paths) folded[p] = value;
       set({ folded });
       try {
         localStorage.setItem(FOLD_KEY, JSON.stringify(folded));
       } catch {
         /* only a convenience */
       }
+    },
+    openTasks: {},
+    toggleTaskOpen: (id) => {
+      set((s) => ({ openTasks: { ...s.openTasks, [id]: !s.openTasks[id] } }));
     },
     openEpic: (path) => {
       set({ epicPath: path });
@@ -190,7 +198,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
       useUiStore.getState().setCenterView("task");
     },
     add: async (text, note, steps, path) => {
-      const line = quickTaskText(text, todayIso());
+      const line = taskText(text);
       if (line === "") return;
       const extra = note?.trim() ?? "";
       const list = (steps ?? []).filter((s) => s.trim() !== "");
@@ -219,9 +227,6 @@ export const useTaskStore = create<TaskState>((set, get) => {
     },
     setMeta: async (t, patch) => {
       await mutate(t.path, () => api.taskSetMeta(t.path, t.line, t.key, patch));
-    },
-    plan: async (t, when) => {
-      await get().setMeta(t, { plan: when === "today" ? todayIso() : "later" });
     },
     setStatus: async (t, status) => {
       const fresh = await mutate(t.path, () =>

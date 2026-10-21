@@ -87,12 +87,12 @@ describe("FocusMode", () => {
     expect(screen.getByRole("timer")).toHaveTextContent("15:00");
   });
 
-  it("writes down a thing that popped up, as a task for later, without leaving the focus", async () => {
+  it("writes down a thing that popped up, as a task, without leaving the focus", async () => {
     render(<FocusMode />);
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Task" }));
     await user.type(screen.getByLabelText("Write a task"), "Call the bank{Enter}");
-    expect(apiMock.taskAdd.mock.calls[0]?.[0]).toBe("Call the bank plan:later");
+    expect(apiMock.taskAdd.mock.calls[0]?.[0]).toBe("Call the bank");
     expect(await screen.findByText(/1 written down/)).toBeInTheDocument();
     expect(useUiStore.getState().focusOpen).toBe(true);
   });

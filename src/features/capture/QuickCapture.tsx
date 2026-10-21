@@ -32,7 +32,6 @@ export function QuickCapture() {
           <CaptureBox
             autoFocus
             initialKind={kind}
-            taskPlan="today"
             onSaved={(what) => {
               toast(`Saved ${what}.`, "success");
               useUiStore.getState().closeCapture();

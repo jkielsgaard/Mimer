@@ -8,6 +8,8 @@ const apiMock = vi.hoisted(() => ({
   listEpics: vi.fn(),
   epicCreate: vi.fn(),
   taskSetDone: vi.fn(),
+  taskAdd: vi.fn(),
+  taskAddStep: vi.fn(),
 }));
 vi.mock("@/lib/api", () => ({
   api: apiMock,
@@ -26,7 +28,13 @@ describe("TasksView", () => {
     localStorage.clear();
     for (const f of Object.values(apiMock)) f.mockReset();
     apiMock.listTasks.mockResolvedValue([
-      makeTask({ path: "Tasks/VPN guide.md", line: 3, title: "Write the steps" }),
+      makeTask({
+        path: "Tasks/VPN guide.md",
+        line: 3,
+        title: "Write the steps",
+        made: "2026-10-19",
+        steps: [{ line: 4, text: "Draft it", done: true, key: "s1" }],
+      }),
       makeTask({ path: "Tasks/VPN guide.md", line: 4, title: "Test on a Mac", done: true }),
       makeTask({ path: "Tasks/Done one.md", line: 2, title: "Order headsets", done: true }),
       makeTask({ path: "Møder/Acme.md", line: 5, title: "Renew the licence" }),
@@ -51,8 +59,13 @@ describe("TasksView", () => {
     expect(screen.getByRole("region", { name: "Acme" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Empty one" })).toBeInTheDocument();
     // The finished epic is under Done, and folded.
-    expect(screen.getByRole("heading", { name: "Done · 1" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Done · 1" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
     expect(screen.queryByText("Order headsets")).toBeNull();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Done · 1" }));
+    expect(screen.getByRole("region", { name: "Office move" })).toBeInTheDocument();
   });
 
   it("folds an epic and remembers it", async () => {
@@ -75,20 +88,49 @@ describe("TasksView", () => {
     });
     render(<TasksView />);
     const user = userEvent.setup();
-    await user.click((await screen.findAllByRole("button", { name: /^Open / }))[0] as HTMLElement);
+    await user.click(await screen.findByRole("button", { name: /^VPN guide/ }));
     expect(useUiStore.getState().centerView).toBe("epic");
     await user.click(screen.getByRole("button", { name: /New epic task/ }));
     await user.type(screen.getByLabelText("Name"), "New one{Enter}");
     expect(apiMock.epicCreate).toHaveBeenCalledWith("New one");
   });
 
-  it("has no filters and no add box: epics are folded instead", async () => {
+  it("has no Today or Later: only epics, tasks, steps and the day a task was made", async () => {
     render(<TasksView />);
     await screen.findByText("Write the steps");
-    for (const gone of [/All open/, /Today/, /Moved from earlier/, /Show done/]) {
+    for (const gone of [/All open/, /Today/, /Later/, /Moved from earlier/, /Show done/]) {
       expect(screen.queryByRole("button", { name: gone })).toBeNull();
     }
-    expect(screen.queryByLabelText("Add a task")).toBeNull();
+    expect(screen.getByText("1 of 1 · 19 Oct")).toBeInTheDocument();
+  });
+
+  it("folds and unfolds every epic at once", async () => {
+    render(<TasksView />);
+    const user = userEvent.setup();
+    await screen.findByText("Write the steps");
+    await user.click(screen.getByRole("button", { name: "Fold all" }));
+    expect(screen.queryByText("Write the steps")).toBeNull();
+    expect(screen.queryByText("Renew the licence")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Unfold all" }));
+    expect(screen.getByText("Write the steps")).toBeInTheDocument();
+  });
+
+  it("shows a task's steps in the list, and adds a step and a task there", async () => {
+    apiMock.taskAddStep.mockResolvedValue([]);
+    apiMock.taskAdd.mockResolvedValue([]);
+    render(<TasksView />);
+    const user = userEvent.setup();
+    await user.click(
+      await screen.findByRole("button", { name: "Show the steps of Write the steps" }),
+    );
+    expect(
+      screen.getByRole("checkbox", { name: /Mark as not done: Draft it/ }),
+    ).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Add a step to Write the steps"), "Check it{Enter}");
+    expect(apiMock.taskAddStep).toHaveBeenCalledWith("Tasks/VPN guide.md", 3, "key-1", "Check it");
+    await user.type(screen.getByLabelText("Add a task to VPN guide"), "Test on Linux{Enter}");
+    expect(apiMock.taskAdd.mock.calls[0]?.[0]).toBe("Test on Linux");
+    expect(apiMock.taskAdd.mock.calls[0]?.[3]).toBe("Tasks/VPN guide.md");
   });
 
   it("ticks a task off from its row", async () => {

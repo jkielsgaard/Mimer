@@ -29,7 +29,7 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
 - Live-preview Markdown editor with a formatting toolbar, tabs, split view, a table editor and Mermaid diagrams
 - `[[Wiki-links]]`, tags (typing `#` suggests the ones you use), images, templates and index pages
 - Daily notes in a calendar at the top of the file panel, and **Trace my work**: one line a day under "Worked on" for each note and task you worked on (off by default)
-- Tasks as checklist lines in your notes, with steps, a note, a log of what happened and due dates; **epic tasks** group them, and **Focus** shows one task at a time
+- Tasks as checklist lines in your notes, with steps, a note and a log of what happened, in an outline of **epic tasks** you can fold; **Focus** shows one task at a time
 - Ideas: write something down from anywhere (`Ctrl/Cmd+Shift+N`) and turn it into a task or a note later
 - Full-text search, plus search by meaning with a local embedding model
 - Version history per note: compare, restore, recover deleted notes
@@ -40,7 +40,7 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
 <table>
   <tr>
     <td width="50%"><img src="docs/screenshots/notes-editor.png" alt="A note with headings, a table, tags and a link, next to the file panel with the calendar"></td>
-    <td width="50%"><img src="docs/screenshots/tasks-list.png" alt="The task list, grouped by epic task, with due dates, tags and progress"></td>
+    <td width="50%"><img src="docs/screenshots/tasks-list.png" alt="The task list: epic tasks you can fold, with their tasks, steps and progress"></td>
   </tr>
   <tr>
     <td><img src="docs/screenshots/task-page.png" alt="A task with its epic task, the note, the steps and the log of what happened"></td>

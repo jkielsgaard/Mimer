@@ -1,127 +1,167 @@
-import { Check, Target } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Target } from "lucide-react";
+import { useState } from "react";
 import type { Task } from "@/bindings/Task";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { durationLabel, noteName, whenLabel } from "@/lib/taskLogic";
+import { noteName, shortDate } from "@/lib/taskLogic";
 import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 
-/** One task in the list: tick it, open it, plan it or focus on it. */
+/** A checkbox for a task or a step. */
+function Tick({ done, label, onToggle }: { done: boolean; label: string; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={done}
+      aria-label={`${done ? "Mark as not done" : "Mark as done"}: ${label}`}
+      className={cn(
+        "flex size-[18px] shrink-0 items-center justify-center rounded-[5px] border-2 border-muted-foreground bg-card focus-visible:ring-2 focus-visible:ring-ring",
+        done && "border-primary bg-primary text-primary-foreground",
+      )}
+      onClick={onToggle}
+    >
+      {done && <Check className="size-3" aria-hidden />}
+    </button>
+  );
+}
+
+/** `19 Oct` (the day a task was made). */
+function madeLabel(iso: string): string {
+  return shortDate(iso).replace(/^\S+ /, "");
+}
+
+/**
+ * One task in the list: tick it, open it, or focus on it. A task with steps can be unfolded to
+ * tick its steps or add one right in the list. It shows its status (when not To do), how many
+ * steps are done and the day it was made.
+ */
 export function TaskRow({
   task,
-  today,
-  planButtons = true,
-  showWhen = true,
   showNote = true,
 }: {
   task: Task;
-  today: string;
-  /** Show the Today and Later buttons. */
-  planButtons?: boolean;
-  showWhen?: boolean;
   /** Show the name of the note under the title. */
   showNote?: boolean;
 }) {
-  const { setDone, open, plan } = useTaskStore.getState();
+  const { setDone, open, addStep } = useTaskStore.getState();
+  const id = `${task.path}:${String(task.line)}`;
+  const stepsOpen = useTaskStore((s) => s.openTasks[id] === true);
+  const [step, setStep] = useState("");
   const stepsDone = task.steps.filter((s) => s.done).length;
-  const when = showWhen ? whenLabel(task, today) : null;
   const dim = task.done || task.status === "dropped";
+  const facts = [
+    showNote ? noteName(task.path) : null,
+    task.steps.length > 0 ? `${String(stepsDone)} of ${String(task.steps.length)}` : null,
+    task.made !== null ? madeLabel(task.made) : null,
+  ].filter((x) => x !== null);
   return (
-    <li className="group flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-muted">
-      <button
-        type="button"
-        role="checkbox"
-        aria-checked={task.done}
-        aria-label={`${task.done ? "Mark as not done" : "Mark as done"}: ${task.title}`}
-        className={cn(
-          "flex size-[18px] shrink-0 items-center justify-center rounded-[5px] border-2 border-muted-foreground bg-card focus-visible:ring-2 focus-visible:ring-ring",
-          task.done && "border-primary bg-primary text-primary-foreground",
+    <li className="flex flex-col">
+      <div className="group flex items-center gap-2 rounded-lg px-1 py-1.5 hover:bg-muted">
+        {task.steps.length > 0 ? (
+          <button
+            type="button"
+            aria-expanded={stepsOpen}
+            aria-label={`${stepsOpen ? "Hide" : "Show"} the steps of ${task.title}`}
+            className="rounded p-0.5 text-muted-foreground hover:bg-card focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={() => {
+              useTaskStore.getState().toggleTaskOpen(id);
+            }}
+          >
+            {stepsOpen ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+          </button>
+        ) : (
+          <span className="w-5 shrink-0" aria-hidden />
         )}
-        onClick={() => {
-          void setDone(task.path, task.line, task.key, !task.done);
-        }}
-      >
-        {task.done && <Check className="size-3" aria-hidden />}
-      </button>
-      <button
-        type="button"
-        className="flex min-w-0 flex-1 flex-col text-left focus-visible:ring-2 focus-visible:ring-ring"
-        onClick={() => {
-          open(task);
-        }}
-      >
-        <span
+        <Tick
+          done={task.done}
+          label={task.title}
+          onToggle={() => {
+            void setDone(task.path, task.line, task.key, !task.done);
+          }}
+        />
+        <button
+          type="button"
           className={cn(
-            "truncate text-sm font-semibold",
-            dim && "text-muted-foreground line-through",
+            "min-w-0 flex-1 truncate text-left text-sm font-semibold focus-visible:ring-2 focus-visible:ring-ring",
+            dim && "font-normal text-muted-foreground line-through",
           )}
-        >
-          {task.title}
-        </span>
-        <span className="truncate text-[11px] text-muted-foreground">
-          {[
-            showNote ? noteName(task.path) : null,
-            task.steps.length > 0
-              ? `${String(stepsDone)} of ${String(task.steps.length)} steps`
-              : null,
-            when,
-          ]
-            .filter((x) => x !== null)
-            .join(" · ")}
-        </span>
-      </button>
-      {task.tags.slice(0, 2).map((t) => (
-        <span
-          key={t}
-          className="hidden rounded-full bg-accent px-2 text-xs text-accent-foreground sm:inline"
-        >
-          #{t}
-        </span>
-      ))}
-      {task.status !== null && task.status !== "dropped" && (
-        <span className="rounded-full border px-2 text-xs capitalize">{task.status}</span>
-      )}
-      {task.estMinutes !== null && (
-        <span className="rounded-full border px-2 text-xs">{durationLabel(task.estMinutes)}</span>
-      )}
-      {!task.done && planButtons && (
-        <span className="flex gap-1">
-          <Button
-            size="sm"
-            variant="ghost"
-            aria-label={`Put on today's list: ${task.title}`}
-            onClick={() => {
-              void plan(task, "today");
-            }}
-          >
-            Today
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            aria-label={`Put off until later: ${task.title}`}
-            onClick={() => {
-              void plan(task, "later");
-            }}
-          >
-            Later
-          </Button>
-        </span>
-      )}
-      {!task.done && (
-        <Button
-          size="sm"
-          variant="outline"
-          aria-label={`Focus on ${task.title}`}
-          // Shown on the row under the mouse or with the keyboard focus; its space is kept.
-          className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100"
           onClick={() => {
-            useTaskStore.getState().select({ path: task.path, line: task.line, title: task.title });
-            useUiStore.getState().setFocusOpen(true);
+            open(task);
           }}
         >
-          <Target /> Focus
-        </Button>
+          {task.title}
+        </button>
+        {task.tags.slice(0, 2).map((t) => (
+          <span
+            key={t}
+            className="hidden rounded-full bg-accent px-2 text-xs text-accent-foreground sm:inline"
+          >
+            #{t}
+          </span>
+        ))}
+        {task.status !== null && task.status !== "dropped" && !task.done && (
+          <span className="rounded-full border px-2 text-xs capitalize">{task.status}</span>
+        )}
+        {facts.length > 0 && (
+          <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+            {facts.join(" · ")}
+          </span>
+        )}
+        {!task.done && (
+          <Button
+            size="sm"
+            variant="outline"
+            aria-label={`Focus on ${task.title}`}
+            // Shown on the row under the mouse or with the keyboard focus; its space is kept.
+            className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100"
+            onClick={() => {
+              useTaskStore
+                .getState()
+                .select({ path: task.path, line: task.line, title: task.title });
+              useUiStore.getState().setFocusOpen(true);
+            }}
+          >
+            <Target /> Focus
+          </Button>
+        )}
+      </div>
+      {stepsOpen && (
+        <ul aria-label={`Steps of ${task.title}`} className="mb-1 ml-12 flex flex-col gap-0.5">
+          {task.steps.map((s) => (
+            <li key={s.line} className="flex items-center gap-2 py-0.5 text-sm">
+              <Tick
+                done={s.done}
+                label={s.text}
+                onToggle={() => {
+                  void setDone(task.path, s.line, s.key, !s.done);
+                }}
+              />
+              <span className={cn(s.done && "text-muted-foreground line-through")}>{s.text}</span>
+            </li>
+          ))}
+          <li>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const text = step.trim();
+                if (text === "") return;
+                setStep("");
+                void addStep(task, text);
+              }}
+            >
+              <input
+                aria-label={`Add a step to ${task.title}`}
+                placeholder="+ Add a step"
+                value={step}
+                onChange={(e) => {
+                  setStep(e.target.value);
+                }}
+                className="w-full max-w-sm rounded-md border border-transparent bg-transparent px-1 py-0.5 text-sm placeholder:text-muted-foreground hover:border-input focus-visible:border-input focus-visible:outline-none"
+              />
+            </form>
+          </li>
+        </ul>
       )}
     </li>
   );

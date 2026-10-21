@@ -39,13 +39,13 @@ describe("taskStore", () => {
     expect(useTaskStore.getState().loaded).toBe(true);
   });
 
-  it("adds a task with the date word turned into a due date", async () => {
+  it("adds a task as it was typed: a date word is part of the title", async () => {
     apiMock.taskAdd.mockResolvedValue([makeTask({ path: INBOX_PATH, title: "Call Mette" })]);
     apiMock.listTasks.mockResolvedValue([makeTask({ path: INBOX_PATH, title: "Call Mette" })]);
     apiMock.listEpics.mockResolvedValue([]);
     await useTaskStore.getState().add("Call Mette today");
     const sent = apiMock.taskAdd.mock.calls[0]?.[0] as string;
-    expect(sent).toMatch(/^Call Mette due:\d{4}-\d{2}-\d{2}$/);
+    expect(sent).toBe("Call Mette today");
     expect(useTaskStore.getState().tasks[0]?.path).toBe(INBOX_PATH);
   });
 
@@ -90,14 +90,6 @@ describe("taskStore", () => {
     });
     expect(apiMock.taskAddLog.mock.calls[0]?.[2]).toBe("key-2");
     expect(apiMock.taskAddLog.mock.calls[0]?.[4]).toBe("Status: waiting");
-  });
-
-  it("plans a task for today or later", async () => {
-    apiMock.taskSetMeta.mockResolvedValue([makeTask()]);
-    await useTaskStore.getState().plan(makeTask(), "later");
-    expect(apiMock.taskSetMeta.mock.calls[0]?.[3]).toEqual({ plan: "later" });
-    await useTaskStore.getState().plan(makeTask(), "today");
-    expect((apiMock.taskSetMeta.mock.calls[1]?.[3] as { plan: string }).plan).toMatch(/^\d{4}-/);
   });
 
   it("finds a task again when its line moved", () => {

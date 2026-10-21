@@ -87,7 +87,7 @@ describe("TaskPage", () => {
     expect(apiMock.taskAddLog.mock.calls[0]?.[3]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
-  it("changes the status (and writes it in the log), the date and the time", async () => {
+  it("changes the status (and writes it in the log), and has no due date, time or today", async () => {
     render(<TaskPage />);
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Doing" }));
@@ -97,17 +97,24 @@ describe("TaskPage", () => {
     await waitFor(() => {
       expect(apiMock.taskAddLog.mock.calls[0]?.[4]).toBe("Status: doing");
     });
-    await user.selectOptions(screen.getByLabelText("How long it takes"), "25");
-    expect(apiMock.taskSetMeta).toHaveBeenCalledWith(task.path, 5, "key-1", { estMinutes: 25 });
+    expect(screen.queryByLabelText("How long it takes")).toBeNull();
+    expect(screen.queryByLabelText("Due date")).toBeNull();
+    expect(screen.queryByRole("button", { name: /today's list/ })).toBeNull();
   });
 
-  it("goes back to the list, and starts focus", async () => {
+  it("shows the day the task was made", () => {
+    useTaskStore.setState({ tasks: [makeTask({ made: "2026-10-19" })] });
+    render(<TaskPage />);
+    expect(screen.getByText("Mon 19 Oct")).toBeInTheDocument();
+  });
+
+  it("goes back to its epic task, and starts focus", async () => {
     render(<TaskPage />);
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Focus" }));
     expect(useUiStore.getState().focusOpen).toBe(true);
-    await user.click(screen.getByRole("button", { name: /Tasks/ }));
-    expect(useUiStore.getState().centerView).toBe("tasks");
+    await user.click(screen.getByRole("button", { name: "Acme" }));
+    expect(useUiStore.getState().centerView).toBe("epic");
   });
 
   it("deletes the task only after asking once more", async () => {

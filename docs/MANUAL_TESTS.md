@@ -84,20 +84,25 @@ Check with `git log --oneline` in the vault folder.
 
 ### 7. Tasks and epic tasks
 
-- [ ] `Ctrl/Cmd+Shift+T` or the Tasks icon: the list is grouped by epic task with "N of M" bars; an epic can be folded; the left panel lists the epics.
-- [ ] Write `- [ ] Test task due:tomorrow`, an indented `  - [ ] a step` and `  > 2026-10-19 a log line` in a note: the task is listed with "0 of 1 steps". Tick it in the list: the note shows `[x]`.
+- [ ] `Ctrl/Cmd+Shift+T` or the Tasks icon: one outline of epic tasks, each a box with "N of M" and a bar; the left panel lists the epics. There is no Today, Later, due date or "Moved from earlier" anywhere.
+- [ ] Fold an epic: only its name and progress are left. **Fold all** and **Unfold all** do every epic. Restart: what was folded is still folded. Finished epics are under **Done · N** at the bottom, folded; the button shows them.
+- [ ] A task with steps has an arrow: unfold it, tick a step and add one (**+ Add a step**) right in the list; the note shows the step.
+- [ ] **+ Add a task to …** at the bottom of an open epic: type "Print the guide tomorrow" and press Enter. The title is exactly that (no date is read from it) and the file has `made:<today>` at the end of the line; the list shows the day it was made.
 - [ ] **New epic task** "Office move": `Tasks/Office move.md` is made and opens. Add three tasks, tick all: the epic moves to **Done**; untick one: it comes back.
-- [ ] Select a line in a note → **As a task**: `Tasks/<note>.md` has a `source:` line and the task; the note is unchanged. The epic page shows **Came from**.
-- [ ] Task page: **Epic task: …** and **Open the note** are clear buttons under the title and go there. Status (a "Status: …" log line appears), due date, time, **Put on today's list**, steps.
-- [ ] Task page **Note**: write and click away: the note has `  > text` lines right under the task. An epic made with **New epic task** has a **Note** too (text under its heading); an epic that is only a note with tasks has none.
-- [ ] "What has happened": hold the mouse over a line; the pencil changes its text and date, the bin deletes it (it asks; History of the note still has it). A new line gets today's date.
+- [ ] Select a line in a note → **As a task**: `Tasks/<note>.md` has a `source:` line and the task (with `made:`); the note is unchanged. The epic page shows **Came from**.
+- [ ] Task page: two columns. Left: title, **Note**, steps, "What has happened". Right: status (a "Status: …" log line appears), **Made**, **Epic task: …**, **Open the note** and the tags. The way back at the top goes to the epic task. No due date, time or today's list.
+- [ ] Task page **Note**: write two lines and click away: the file has them as plain indented text right under the task. An epic made with **New epic task** has a **Note** too (text under its heading).
+- [ ] "What has happened": a new line is written as `  - <today> text` (a list item). Hold the mouse over a line: the pencil changes its text and date, the bin deletes it (it asks; History of the note still has it).
+- [ ] Old file: a task with `> 2026-10-19 …` log lines and a `> note` line still shows its log and note. Add a log line: that task's lines are now all in the new form; other tasks are untouched. Words like `due:2026-10-23` stay in the file but are not shown.
+- [ ] Open the epic's note in another Markdown editor (or GitHub): every log line is on its own line, and the note reads as text under the task.
+- [ ] **Focus** in the Tasks panel starts with the first open task of the epic that is open (or of the first epic).
 - [ ] **(AI)** **Break it down** suggests steps; only the ticked ones are added. **Write a status line from the log** uses the written lines, the steps and the note, not the "Status:" lines. **Suggest steps from the note** on an epic adds only the ticked ones.
 - [ ] Delete a task: it asks; History has "Snapshot before delete".
 
 ### 8. Ideas, write it down, Focus and starters
 
 - [ ] The light bulb: ideas Open / Used / Archived; **New idea**; change the title and note, click away: `Ideas.md` has the note indented under the line (hidden from the tree and not a task).
-- [ ] **Make a task**: under Later, with the idea's note as the task's note; the idea is Used. **Make a note**: a note in Quick notes opens. Archive and Bring back work.
+- [ ] **Make a task**: in the epic task Inbox, with the idea's note as the task's note; the idea is Used. **Make a note**: a note in Quick notes opens. Archive and Bring back work.
 - [ ] `Ctrl/Cmd+Shift+N` from inside a note: Task, Idea and Note each save and close; the note you were writing is unchanged.
 - [ ] **Focus** on a task: one step, a timer that can be paused, **Done, next step**, the write-it-down box keeps you in Focus; Esc leaves.
 - [ ] **(AI)** **Help me start** in Focus, **Think it through** and **Suggest first steps** on an idea: nothing is added until you press the button.

@@ -1,7 +1,9 @@
-//! Tasks that live in notes. A task is a Markdown checklist line (`- [ ] Title #tag due:2026-11-01`);
-//! indented checklist lines under it are its steps, and indented quote lines that start with a
-//! date (`> 2026-10-14 What happened`) are its log. Everything is plain Markdown, so a note
-//! with tasks works in any other editor. This module reads those lines and edits them in place.
+//! Tasks that live in notes. A task is a Markdown checklist line (`- [ ] Title #tag made:2026-10-14`).
+//! Under it, indented: checklist lines are its steps, list items that start with a date
+//! (`- 2026-10-14 What happened`) are its log, and plain text lines are its note. Everything is
+//! plain Markdown that reads well in any other editor. This module reads those lines and edits
+//! them in place. The older forms, quote lines for the log (`> 2026-10-14 …`) and the note
+//! (`> text`), are still read; a line Mimer writes uses the new form.
 
 pub mod epics;
 pub mod ideas;
@@ -61,8 +63,11 @@ pub struct Task {
     pub est_minutes: Option<u32>,
     pub steps: Vec<TaskStep>,
     pub log: Vec<TaskLog>,
-    /// The task's own note: the indented quote lines without a date, joined by newlines.
+    /// The task's own note: the indented plain text lines (or, in older files, quote lines
+    /// without a date), joined by newlines.
     pub note: String,
+    /// When the task was made (`made:YYYY-MM-DD`), written once by Mimer.
+    pub made: Option<String>,
 }
 
 /// What to change in a task's words. `None` leaves a word alone, `Some(None)` removes it.
@@ -104,11 +109,20 @@ static LOG_RE: LazyLock<Regex> = LazyLock::new(|| {
 });
 static NOTE_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(\s*)>\s?(.*)$").expect("valid note regex"));
+/// A log line as a list item: `- 2026-10-14 What happened`.
+static LOG_ITEM_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^(\s*)[-*+]\s+(\d{4}-\d{2}-\d{2})\s+(.*)$").expect("valid log item regex")
+});
+/// Any list item or quote line: not plain text.
+static MARKED_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"^\s*([-*+]\s|\d+[.)]\s|>|#{1,6}\s)").expect("valid marker regex")
+});
 static TAG_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(^|\s)#([\p{L}\p{N}_/-]*\p{L}[\p{L}\p{N}_/-]*)").expect("valid tag regex")
 });
-static WORD_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?:^|\s)(due|plan|status|est):(\S+)").expect("valid word regex"));
+static WORD_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"(?:^|\s)(due|plan|status|est|made):(\S+)").expect("valid word regex")
+});
 
 /// A fingerprint of a line, to notice that it changed.
 pub fn line_key(line: &str) -> String {
@@ -171,6 +185,7 @@ struct Words {
     plan: Option<String>,
     status: Option<String>,
     est: Option<u32>,
+    made: Option<String>,
 }
 
 fn split_words(text: &str) -> Words {
@@ -181,6 +196,7 @@ fn split_words(text: &str) -> Words {
         plan: None,
         status: None,
         est: None,
+        made: None,
     };
     for c in WORD_RE.captures_iter(text) {
         let (key, value) = (&c[1], c[2].to_string());
@@ -189,6 +205,7 @@ fn split_words(text: &str) -> Words {
             "plan" if is_date(&value) || value == "later" => w.plan = Some(value),
             "status" => w.status = Some(value.to_lowercase()),
             "est" => w.est = parse_minutes(&value),
+            "made" if is_date(&value) => w.made = Some(value),
             _ => {}
         }
     }
@@ -276,11 +293,15 @@ pub fn parse(path: &str, content: &str) -> Vec<Task> {
                 steps: Vec::new(),
                 log: Vec::new(),
                 note: String::new(),
+                made: w.made,
             });
             current = Some((tasks.len() - 1, indent));
             continue;
         }
-        if let (Some((idx, task_indent)), Some(c)) = (current, LOG_RE.captures(line)) {
+        if let (Some((idx, task_indent)), Some(c)) = (
+            current,
+            LOG_ITEM_RE.captures(line).or_else(|| LOG_RE.captures(line)),
+        ) {
             if indent_of(&c[1]) > task_indent {
                 let t = &mut tasks[idx];
                 t.log.push(TaskLog {
@@ -300,6 +321,25 @@ pub fn parse(path: &str, content: &str) -> Vec<Task> {
                     t.note.push('\n');
                 }
                 t.note.push_str(c[2].trim_end());
+                t.end = n as u32;
+                continue;
+            }
+        }
+        // Indented plain text under the task is its note.
+        if let Some((idx, task_indent)) = current {
+            if !line.trim().is_empty() && indent_of(line) > task_indent && !MARKED_RE.is_match(line)
+            {
+                let t = &mut tasks[idx];
+                if !t.note.is_empty() {
+                    t.note.push('\n');
+                }
+                let text = line.trim();
+                // A note line that would look like a list item or a quote is written with a `\`.
+                let text = match text.strip_prefix('\\') {
+                    Some(rest) if MARKED_RE.is_match(rest) => rest,
+                    _ => text,
+                };
+                t.note.push_str(text);
                 t.end = n as u32;
                 continue;
             }
@@ -453,15 +493,51 @@ pub fn add_step(content: &str, line: u32, key: &str, text: &str) -> AppResult<St
     let (start, _end, indent) = block_end(content, line, key)?;
     let tasks = parse("", content);
     let task = tasks.iter().find(|t| t.line as usize == start);
+    let lines: Vec<&str> = content.split('\n').collect();
     let after = task
         .and_then(|t| t.steps.last().map(|s| s.line as usize))
-        .unwrap_or(start);
+        .unwrap_or_else(|| note_end(&lines, start, indent));
     Ok(insert_after(
         content,
         after,
         indent + 2,
         format!("- [ ] {text}"),
     ))
+}
+
+/// Writes the older quote lines of the task that holds `line` in the new form: a dated `> …` log
+/// line becomes a list item, an undated `> …` note line plain text. Called after Mimer changed the
+/// task's log or note, so one task is never half in each form. Other lines are left alone.
+fn modernize(content: &str, line: u32) -> String {
+    let tasks = parse("", content);
+    let Some(task) = tasks.iter().find(|t| t.line <= line && line <= t.end) else {
+        return content.to_string();
+    };
+    let task_indent = indent_of(content.split('\n').nth(task.line as usize).unwrap_or(""));
+    let mut lines: Vec<String> = content.split('\n').map(str::to_string).collect();
+    for i in task.line as usize + 1..=task.end as usize {
+        let Some(l) = lines.get(i) else { break };
+        let cr = l.ends_with('\r');
+        let bare = l.trim_end_matches('\r');
+        let new = if let Some(c) = LOG_RE.captures(bare) {
+            Some(format!("{}- {} {}", &c[1], &c[2], c[3].trim()))
+        } else if let Some(c) = NOTE_RE.captures(bare) {
+            (indent_of(&c[1]) > task_indent).then(|| {
+                let text = c[2].trim();
+                let escape = if MARKED_RE.is_match(text) { "\\" } else { "" };
+                format!("{}{escape}{text}", &c[1])
+            })
+        } else {
+            None
+        };
+        if let Some(mut n) = new {
+            if cr {
+                n.push('\r');
+            }
+            lines[i] = n;
+        }
+    }
+    lines.join("\n")
 }
 
 /// Adds a dated line to the log of a task, at the end of its block.
@@ -474,12 +550,8 @@ pub fn add_log(content: &str, line: u32, key: &str, date: &str, text: &str) -> A
         return Err(AppError::InvalidPath("The note is empty".into()));
     }
     let (_start, end, indent) = block_end(content, line, key)?;
-    Ok(insert_after(
-        content,
-        end,
-        indent + 2,
-        format!("> {date} {text}"),
-    ))
+    let out = insert_after(content, end, indent + 2, format!("- {date} {text}"));
+    Ok(modernize(&out, line))
 }
 
 /// Changes the date and text of one log line. Its place and indent stay.
@@ -491,10 +563,11 @@ pub fn edit_log(content: &str, line: u32, key: &str, date: &str, text: &str) -> 
     if text.is_empty() {
         return Err(AppError::InvalidPath("The text is empty".into()));
     }
-    edit_line(content, line, key, |l| {
+    let out = edit_line(content, line, key, |l| {
         let indent: String = l.chars().take_while(|c| c.is_whitespace()).collect();
-        format!("{indent}> {date} {text}")
-    })
+        format!("{indent}- {date} {text}")
+    })?;
+    Ok(modernize(&out, line))
 }
 
 /// Removes one log line.
@@ -505,27 +578,45 @@ pub fn delete_log(content: &str, line: u32, key: &str) -> AppResult<String> {
         return Err(conflict());
     };
     let bare = current.trim_end_matches('\r');
-    if line_key(bare) != key || !LOG_RE.is_match(bare) {
+    if line_key(bare) != key || !(LOG_RE.is_match(bare) || LOG_ITEM_RE.is_match(bare)) {
         return Err(conflict());
     }
     lines.remove(i);
-    Ok(lines.join("\n"))
+    // The task starts above the removed line, so `line - 1` is still inside it.
+    Ok(modernize(&lines.join("\n"), line.saturating_sub(1)))
 }
 
-/// Sets the note of a task: indented quote lines right under the task line. An empty text removes
-/// the note.
+/// Whether a line is part of a task's note: indented plain text, or (older files) an indented
+/// quote line without a date.
+fn is_note_line(line: &str, task_indent: usize) -> bool {
+    let l = line.trim_end_matches('\r');
+    if l.trim().is_empty() || indent_of(l) <= task_indent {
+        return false;
+    }
+    if let Some(c) = NOTE_RE.captures(l) {
+        return !LOG_RE.is_match(l) && indent_of(&c[1]) > task_indent;
+    }
+    !MARKED_RE.is_match(l)
+}
+
+/// The last line of the note right under the task at `start` (`start` when it has none).
+fn note_end(lines: &[&str], start: usize, indent: usize) -> usize {
+    let mut i = start;
+    while lines.get(i + 1).is_some_and(|l| is_note_line(l, indent)) {
+        i += 1;
+    }
+    i
+}
+
+/// Sets the note of a task: indented plain text lines right under the task line. An empty text
+/// removes the note. A note in the older quote form is replaced.
 pub fn set_note(content: &str, line: u32, key: &str, text: &str) -> AppResult<String> {
     let (start, end, indent) = block_end(content, line, key)?;
     let mut lines: Vec<String> = content.split('\n').map(str::to_string).collect();
     let cr = lines[start].ends_with('\r');
     let mut i = end;
     while i > start {
-        let l = lines[i].trim_end_matches('\r');
-        let is_note = !LOG_RE.is_match(l)
-            && NOTE_RE
-                .captures(l)
-                .is_some_and(|c| indent_of(&c[1]) > indent);
-        if is_note {
+        if is_note_line(&lines[i], indent) {
             lines.remove(i);
         }
         i -= 1;
@@ -533,31 +624,21 @@ pub fn set_note(content: &str, line: u32, key: &str, text: &str) -> AppResult<St
     let pad = " ".repeat(indent + 2);
     let new: Vec<String> = text
         .lines()
-        .map(|l| l.trim_end())
-        .skip_while(|l| l.is_empty())
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
         .map(|l| {
-            let mut s = if l.is_empty() {
-                format!("{pad}>")
-            } else {
-                format!("{pad}> {l}")
-            };
+            let escape = if MARKED_RE.is_match(l) { "\\" } else { "" };
+            let mut s = format!("{pad}{escape}{l}");
             if cr {
                 s.push('\r');
             }
             s
         })
         .collect();
-    let mut new = new;
-    while new
-        .last()
-        .is_some_and(|l| l.trim_end_matches('\r').trim_end() == format!("{pad}>"))
-    {
-        new.pop();
-    }
     for (k, l) in new.into_iter().enumerate() {
         lines.insert(start + 1 + k, l);
     }
-    Ok(lines.join("\n"))
+    Ok(modernize(&lines.join("\n"), line))
 }
 
 /// Removes a task, with its steps and log, from the note.
@@ -569,8 +650,14 @@ pub fn delete(content: &str, line: u32, key: &str) -> AppResult<String> {
 }
 
 /// Adds a task at the end of a note (a new line, with a blank line before it after other text).
-pub fn append_task(content: &str, text: &str) -> String {
-    let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+/// `made` (a date) is written as `made:YYYY-MM-DD` unless the text already has one.
+pub fn append_task(content: &str, text: &str, made: Option<&str>) -> String {
+    let mut text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    if let Some(date) = made.filter(|d| is_date(d)) {
+        if !text.split_whitespace().any(|w| w.starts_with("made:")) {
+            text.push_str(&format!(" made:{date}"));
+        }
+    }
     let mut out = content.trim_end_matches('\n').to_string();
     if !out.is_empty() {
         out.push('\n');
@@ -688,10 +775,13 @@ mod tests {
         let t = &parse("n.md", n)[0];
         let l = &t.log[0];
         let out = edit_log(n, l.line, &l.key, "2026-10-13", "Fixed  text").unwrap();
-        assert!(out.contains("  > 2026-10-13 Fixed text\n"));
+        // A changed line is written in the new form, as a list item.
+        assert!(out.contains("  - 2026-10-13 Fixed text\n"));
         assert_eq!(parse("n.md", &out)[0].log.len(), 2);
+        // The task's other old log lines are written in the new form too.
+        assert!(out.contains("  - 2026-10-15 Two\n"));
         let out = delete_log(n, l.line, &l.key).unwrap();
-        assert_eq!(out, "- [ ] A\n  > 2026-10-15 Two\n- [ ] B\n");
+        assert_eq!(out, "- [ ] A\n  - 2026-10-15 Two\n- [ ] B\n");
         // A line that changed since it was read is not touched.
         assert!(delete_log(&out, l.line, &l.key).is_err());
         assert!(edit_log(n, l.line, &l.key, "tomorrow", "x").is_err());
@@ -703,17 +793,17 @@ mod tests {
         let t = &parse("n.md", n)[0];
         let out = set_note(n, t.line, &t.key, "First line\n\nSecond").unwrap();
         let t = &parse("n.md", &out)[0];
-        assert_eq!(t.note, "First line\n\nSecond");
+        assert_eq!(t.note, "First line\nSecond");
         assert_eq!(t.log.len(), 1);
-        assert!(out.starts_with("- [ ] A\n  > First line\n  >\n  > Second\n"));
+        assert!(out.starts_with("- [ ] A\n  First line\n  Second\n"));
         // Changing it replaces the old note and leaves steps and log alone.
         let out = set_note(&out, t.line, &t.key, "New").unwrap();
         let t = &parse("n.md", &out)[0];
         assert_eq!(t.note, "New");
         assert_eq!(t.log.len(), 1);
-        // An empty text removes it.
+        // An empty text removes it; the old log line is now in the new form.
         let out = set_note(&out, t.line, &t.key, "  ").unwrap();
-        assert_eq!(out, n);
+        assert_eq!(out, "- [ ] A\n  - 2026-10-14 Log\n- [ ] B\n");
         assert_eq!(parse("n.md", &out)[1].title, "B");
     }
 
@@ -723,6 +813,7 @@ mod tests {
         let out = add_step(NOTE, t.line, &t.key, "Send the quote").unwrap();
         let lines: Vec<&str> = out.lines().collect();
         assert_eq!(lines[8], "  - [ ] Send the quote", "after the last step");
+        // The older log form is still read and left as it is.
         assert_eq!(lines[9], "  > 2026-10-14 Mette wants 40 users.");
         let t2 = &parse("a.md", &out)[0];
         assert_eq!(t2.steps.len(), 3);
@@ -737,7 +828,52 @@ mod tests {
         let out = add_step(one, t.line, &t.key, "First").unwrap();
         assert_eq!(out, "- [ ] Alone\n  - [ ] First\n\nText\n");
         let out = add_log(&out, t.line, &t.key, "2026-10-19", "Started").unwrap();
-        assert!(out.starts_with("- [ ] Alone\n  - [ ] First\n  > 2026-10-19 Started\n"));
+        assert!(out.starts_with("- [ ] Alone\n  - [ ] First\n  - 2026-10-19 Started\n"));
+    }
+
+    #[test]
+    fn the_new_form_reads_well_without_mimer() {
+        let n = "- [ ] Book the movers #office made:2026-10-14\n  Ask for two quotes.\n  \\- not a step\n  - [ ] Call Movers A\n  - 2026-10-20 Movers B quoted\n- [ ] Next\n";
+        let t = &parse("n.md", n)[0];
+        assert_eq!(t.title, "Book the movers");
+        assert_eq!(t.made.as_deref(), Some("2026-10-14"));
+        assert_eq!(t.note, "Ask for two quotes.\n- not a step");
+        assert_eq!(t.steps.len(), 1);
+        assert_eq!(t.log.len(), 1);
+        assert_eq!(t.log[0].text, "Movers B quoted");
+        assert_eq!(parse("n.md", n)[1].title, "Next");
+        // A note line that looks like a list item is escaped, so it reads back the same.
+        let out = set_note(n, t.line, &t.key, "- buy boxes").unwrap();
+        assert!(out.contains("\n  \\- buy boxes\n"), "{out}");
+        assert_eq!(parse("n.md", &out)[0].note, "- buy boxes");
+        // A first step goes after the note, not between the task and its note.
+        let one = "- [ ] Alone\n  The note\n";
+        let t = &parse("a.md", one)[0];
+        let out = add_step(one, t.line, &t.key, "First").unwrap();
+        assert_eq!(out, "- [ ] Alone\n  The note\n  - [ ] First\n");
+        // The made date is added once, by Mimer.
+        assert_eq!(
+            append_task("", "Call", Some("2026-10-21")),
+            "- [ ] Call made:2026-10-21\n"
+        );
+        assert_eq!(
+            append_task("", "Call made:2026-01-01", Some("2026-10-21")),
+            "- [ ] Call made:2026-01-01\n"
+        );
+    }
+
+    #[test]
+    fn a_task_in_the_old_form_is_written_in_the_new_form_when_its_log_changes() {
+        let n = "- [ ] A\n  > A note\n  > 2026-10-14 One\n- [ ] B\n  > 2026-10-14 Other task\n";
+        let t = &parse("n.md", n)[0];
+        let out = add_log(n, t.line, &t.key, "2026-10-15", "Two").unwrap();
+        assert_eq!(
+            out,
+            "- [ ] A\n  A note\n  - 2026-10-14 One\n  - 2026-10-15 Two\n- [ ] B\n  > 2026-10-14 Other task\n"
+        );
+        let t = &parse("n.md", &out)[0];
+        assert_eq!(t.note, "A note");
+        assert_eq!(t.log.len(), 2);
     }
 
     #[test]
@@ -746,20 +882,20 @@ mod tests {
         let t = &parse("a.md", n)[0];
         assert_eq!(t.title, "One");
         let out = add_log(n, t.line, &t.key, "2026-10-19", "Hi").unwrap();
-        assert_eq!(out, "- [ ] One\r\n  - [ ] Step\r\n  > 2026-10-19 Hi\r\n");
+        assert_eq!(out, "- [ ] One\r\n  - [ ] Step\r\n  - 2026-10-19 Hi\r\n");
         let out = set_done(n, t.line, &t.key, true).unwrap();
         assert_eq!(out, "- [x] One\r\n  - [ ] Step\r\n");
     }
 
     #[test]
     fn a_new_task_is_added_at_the_end() {
-        assert_eq!(append_task("", "Call Mette"), "- [ ] Call Mette\n");
+        assert_eq!(append_task("", "Call Mette", None), "- [ ] Call Mette\n");
         assert_eq!(
-            append_task("# Tasks\n", "Call Mette"),
+            append_task("# Tasks\n", "Call Mette", None),
             "# Tasks\n\n- [ ] Call Mette\n"
         );
         assert_eq!(
-            append_task("- [ ] A\n", "B  due:2026-10-20"),
+            append_task("- [ ] A\n", "B  due:2026-10-20", None),
             "- [ ] A\n- [ ] B due:2026-10-20\n"
         );
     }

@@ -5,7 +5,7 @@ import { NoteBox } from "@/components/NoteBox";
 import { ViewHeader } from "@/components/ViewHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { epicGroups, noteName, todayIso } from "@/lib/taskLogic";
+import { epicGroups, noteName } from "@/lib/taskLogic";
 import { useAiBlocked } from "@/lib/useAiBlocked";
 import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
@@ -22,12 +22,10 @@ export function EpicPage() {
   const aiOff = useAiBlocked();
   const [draft, setDraft] = useState("");
   const [deleting, setDeleting] = useState(false);
-  const today = todayIso();
-
   const epic = epics.find((e) => e.path === epicPath);
   const group = useMemo(
-    () => epicGroups(tasks, epics, today).find((g) => g.path === epicPath) ?? null,
-    [tasks, epics, today, epicPath],
+    () => epicGroups(tasks, epics).find((g) => g.path === epicPath) ?? null,
+    [tasks, epics, epicPath],
   );
   const back = {
     label: "Tasks",
@@ -133,13 +131,7 @@ export function EpicPage() {
             <h3 className="section-label px-2 pb-1 pt-1">Tasks</h3>
             <ul>
               {group.tasks.map((t) => (
-                <TaskRow
-                  key={`${t.path}:${String(t.line)}`}
-                  task={t}
-                  today={today}
-                  planButtons={false}
-                  showNote={false}
-                />
+                <TaskRow key={`${t.path}:${String(t.line)}`} task={t} showNote={false} />
               ))}
             </ul>
             {group.tasks.length === 0 && (
@@ -165,7 +157,7 @@ export function EpicPage() {
                 <Input
                   aria-label="Add a task to this epic"
                   className="h-9 pl-8"
-                  placeholder="Add a task to this epic…  (a date word at the end is understood)"
+                  placeholder="Add a task to this epic…"
                   value={draft}
                   onChange={(e) => {
                     setDraft(e.target.value);

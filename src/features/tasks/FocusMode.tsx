@@ -313,7 +313,6 @@ export function FocusMode() {
         <div className="mt-2 flex w-full flex-col gap-1.5">
           <span className="section-label">Something popped into your head?</span>
           <CaptureBox
-            taskPlan="later"
             onSaved={() => {
               setParked((n) => n + 1);
             }}

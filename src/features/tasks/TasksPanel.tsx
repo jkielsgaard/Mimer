@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { PanelHeader } from "@/components/PanelHeader";
 import { Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { epicGroups, todayIso } from "@/lib/taskLogic";
+import { epicGroups, isOpen } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
@@ -17,16 +17,18 @@ export function TasksPanel() {
   const epicPath = useTaskStore((s) => s.epicPath);
   const loaded = useTaskStore((s) => s.loaded);
   const centerView = useUiStore((s) => s.centerView);
-  const today = todayIso();
 
   useEffect(() => {
     void useTaskStore.getState().load();
   }, []);
 
-  const groups = useMemo(() => epicGroups(tasks, epics, today), [tasks, epics, today]);
+  const groups = useMemo(() => epicGroups(tasks, epics), [tasks, epics]);
   const open = groups.filter((g) => !g.allDone);
   const done = groups.filter((g) => g.allDone);
-  const firstToday = tasks.find((t) => t.plan === today && !t.done);
+  // Focus starts with the first open task of the epic that is open, else of the first epic.
+  const first =
+    groups.find((g) => g.path === epicPath)?.tasks.find(isOpen) ??
+    open.flatMap((g) => g.tasks).find(isOpen);
 
   const row = (g: (typeof groups)[number]) => (
     <li key={g.path}>
@@ -56,15 +58,15 @@ export function TasksPanel() {
         <Button
           size="sm"
           variant="outline"
-          disabled={firstToday === undefined}
+          disabled={first === undefined}
           title={
-            firstToday === undefined ? "Put a task on today's list first" : "Work on one thing"
+            first === undefined ? "There is no open task" : `Work on one thing: ${first.title}`
           }
           onClick={() => {
-            if (firstToday) {
+            if (first) {
               useTaskStore
                 .getState()
-                .select({ path: firstToday.path, line: firstToday.line, title: firstToday.title });
+                .select({ path: first.path, line: first.line, title: first.title });
             }
             useUiStore.getState().setFocusOpen(true);
           }}

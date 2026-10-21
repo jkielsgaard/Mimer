@@ -24,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Names Windows cannot keep are refused** when you make or rename a folder, note or project, with a red box that says why: a dot at the end ("PAM div." could not be synced by OneDrive), the names `CON`, `NUL`, `COM1` and the like, and the characters `\ / : * ? " < > |`. The same rules hold in the backend, for the AI's proposals and on Linux, so a vault works on every system.
 - **The status line from the log** uses the written log lines (the latest ten, not Mimer's own "Status:" lines), the steps and the note, with a stricter prompt.
 
+### Changed (tasks)
+
+- **Tasks are an outline of epic tasks, tasks and steps.** Every epic task folds to one line with its progress, and **Fold all / Unfold all** do them all. A task with steps unfolds to tick its steps or add one right in the list, and each open epic has **+ Add a task**. Finished epic tasks are folded together under **Done**.
+- **No due dates, no Today and no Later.** The due date, the time it takes, today's list, "Moved from earlier" and the date words when you add a task (tomorrow, fri, later, ~30m) are gone: what you type is the title. Each task Mimer makes gets the day it was made (`made:2026-10-21`), shown in the list and on the task. Older words like `due:` stay in the file untouched.
+- **A task page in two columns:** the note, the steps and what has happened on the left; status, the day it was made, the epic task and the note in a card on the right. The way back goes to its epic task. Focus in the Tasks panel starts with the open epic's first open task.
+- **The task's file reads well in any editor.** The log is written as dated list items (`- 2026-10-20 …`) and the note as plain indented text, instead of `>` lines that other editors join into one paragraph. Older files are still read, and a task is written in the new form when Mimer changes its log or note.
+
 ### Changed (UI review)
 
 - **The panels follow what is on screen.** Files and Search on the left bring the note back to the middle; going back to the notes shows Files again instead of the Tasks or Ideas list. Outline, Links and History say which note they are about.

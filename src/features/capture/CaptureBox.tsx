@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
-import { quickTaskText, todayIso } from "@/lib/taskLogic";
+import { taskText } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { fileNameFrom } from "@/features/starters/StarterDialog";
 import { useIdeaStore } from "@/stores/ideaStore";
@@ -17,7 +17,7 @@ const KINDS: { id: CaptureKind; label: string; help: string }[] = [
   {
     id: "task",
     label: "Task",
-    help: "Goes to your task list. A date at the end is understood (tomorrow, fri).",
+    help: "Goes to the epic task Inbox in your task list.",
   },
   {
     id: "idea",
@@ -49,15 +49,12 @@ function lastKind(): CaptureKind {
 export function CaptureBox({
   initialKind,
   kinds,
-  taskPlan,
   onSaved,
   autoFocus = false,
 }: {
   initialKind?: CaptureKind;
   /** Offer only these kinds (default: all three). With one kind there is nothing to choose. */
   kinds?: CaptureKind[];
-  /** When a task has no date: for today, or put away until later. */
-  taskPlan: "today" | "later";
   /** Called after something was saved, with a short description. */
   onSaved?: (what: string) => void;
   autoFocus?: boolean;
@@ -94,7 +91,7 @@ export function CaptureBox({
     setBusy(true);
     try {
       if (kind === "task") {
-        await useTaskStore.getState().add(quickTaskText(value, todayIso(), taskPlan), note);
+        await useTaskStore.getState().add(taskText(value), note);
         onSaved?.("a task");
       } else if (kind === "idea") {
         if (await useIdeaStore.getState().add(value, note)) onSaved?.("an idea");

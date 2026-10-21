@@ -17,6 +17,7 @@ export function makeTask(patch: Partial<Task> = {}): Task {
     steps: [],
     log: [],
     note: "",
+    made: null,
     ...patch,
   };
 }
