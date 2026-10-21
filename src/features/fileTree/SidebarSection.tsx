@@ -23,7 +23,7 @@ export function SidebarSection({ title, storageKey, count, hint, children }: Pro
         <button
           type="button"
           aria-expanded={open}
-          className="flex min-w-0 flex-1 items-center gap-1 text-left hover:text-foreground"
+          className="flex min-w-0 flex-1 items-center gap-1 text-left section-label hover:text-foreground"
           onClick={() => {
             setOpen(storageKey, !open);
           }}

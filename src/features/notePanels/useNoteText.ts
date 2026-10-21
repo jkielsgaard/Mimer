@@ -1,15 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { focusedView } from "@/lib/editorViews";
 import { useEditorStore } from "@/stores/editorStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 /**
- * The text of the open note: what is in the editor, read again each time the note is saved.
- * Right after another note is opened the editor may still hold the previous one (it loads the new
- * note a moment later), so the first read of a note is from the file on disk, as it is when no
- * editor shows it.
+ * The text of the open note as it is saved, read again each time the note is saved or rewritten.
+ * It is read from the file rather than from the editor: right after another note is opened the
+ * editor can still hold the previous one, and the saved text is what the panels describe.
  */
 export function useNoteText(): { path: string | null; text: string } {
   const path = useVaultStore((s) => s.activePath);
@@ -17,17 +15,9 @@ export function useNoteText(): { path: string | null; text: string } {
   const status = useEditorStore((s) => s.statuses[pane]);
   const reload = useVaultStore((s) => s.reloadNonce);
   const [text, setText] = useState("");
-  const shown = useRef<string | null>(null);
   useEffect(() => {
-    const fresh = shown.current !== path;
-    shown.current = path;
     if (path === null) {
       setText("");
-      return;
-    }
-    const view = focusedView();
-    if (view && !fresh) {
-      setText(view.state.doc.toString());
       return;
     }
     let alive = true;

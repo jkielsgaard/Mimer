@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { SidebarSection } from "@/features/fileTree/SidebarSection";
 import { Button } from "@/components/ui/button";
@@ -74,7 +74,7 @@ export function CalendarSection() {
           <Button
             size="icon"
             variant="ghost"
-            className="size-7"
+            className={narrow ? "size-6" : "size-7"}
             aria-label="Previous month"
             onClick={() => {
               step(-1);
@@ -82,7 +82,12 @@ export function CalendarSection() {
           >
             <ChevronLeft />
           </Button>
-          <span className="flex-1 truncate text-center text-xs font-semibold">
+          <span
+            className={cn(
+              "min-w-0 flex-1 truncate text-center font-semibold",
+              narrow ? "text-[11px]" : "text-xs",
+            )}
+          >
             {narrow
               ? shortMonthTitle(shown.year, shown.month)
               : monthTitle(shown.year, shown.month)}
@@ -90,7 +95,7 @@ export function CalendarSection() {
           <Button
             size="icon"
             variant="ghost"
-            className="size-7"
+            className={narrow ? "size-6" : "size-7"}
             aria-label="Next month"
             onClick={() => {
               step(1);
@@ -99,16 +104,18 @@ export function CalendarSection() {
             <ChevronRight />
           </Button>
           <Button
-            size="sm"
+            size={narrow ? "icon" : "sm"}
             variant="outline"
-            className="ml-1 h-7"
+            className={narrow ? "ml-0.5 size-6" : "ml-1 h-7"}
+            aria-label="Today"
+            title="Today's note"
             onClick={() => {
               const [y, m] = today.split("-").map(Number);
               setShown({ year: y ?? 1970, month: (m ?? 1) - 1 });
               open(today);
             }}
           >
-            Today
+            {narrow ? <CalendarCheck /> : "Today"}
           </Button>
         </div>
         <div
