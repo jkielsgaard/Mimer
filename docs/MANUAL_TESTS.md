@@ -195,7 +195,7 @@ Check with `git log --oneline` in the vault folder.
 ### 19. Packaging
 
 - [ ] Windows 11: the `…-setup.exe` installs **without** an administrator prompt; Mimer starts from the Start menu with the purple "M" icon; pictures show; **Reveal in file manager** opens Explorer; uninstalling (which also removes `mimer-ai` next to the program) leaves the vaults untouched.
-- [ ] Linux: the `.AppImage` starts and Help → Report a bug… opens the browser (or a dialog shows the address). The `.rpm` and `.deb` install.
+- [ ] Linux: the `.AppImage` starts and Help → Report a bug… opens the browser (or a dialog shows the address). The `.rpm` installs.
 - [ ] Microsoft Store package ([docs/MSIX.md](MSIX.md)), in Windows Sandbox or a virtual machine: it installs and starts; a vault opens and saves; Settings and recent vaults are kept after a restart; the llama.cpp card says it is not available in the Store version and Foundry Local works; uninstalling leaves the notes.
 - [ ] The release run has the artifacts `mimer-msix` (unsigned) and `mimer-msix-test`.
 
