@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed (UI review)
 
+- **No "Back to notes" button** on the Tasks, task, epic and Ideas pages: Files at the left edge brings the notes back.
 - **The panels follow what is on screen.** Files and Search on the left bring the note back to the middle; going back to the notes shows Files again instead of the Tasks or Ideas list. Outline, Links and History say which note they are about.
 - **A calmer task list.** The Focus button shows on the task under the mouse (and with the keyboard), and each epic task has a clear **Open ›** button. Focus has one look everywhere.
 - **A narrow window.** The calendar uses one-letter weekdays and a short month when there is little room, and its help moved into a **?**. The tree tools go into a **⋯** menu when they do not fit.
