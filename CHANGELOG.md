@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-21
+
 ### Added
 
 - **Edit and delete a line in "What has happened".** Hold the mouse over a log line: a pencil changes its text and date, a bin deletes it (it asks first; History of the note has it).

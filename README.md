@@ -43,7 +43,7 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
     <td width="50%"><img src="docs/screenshots/tasks-list.png" alt="The task list: epic tasks you can fold, with their tasks, steps and progress"></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/task-page.png" alt="A task with its epic task, the note, the steps and the log of what happened"></td>
+    <td><img src="docs/screenshots/task-page.png" alt="A task in two columns: the note, the steps and the log, and a card with its status, the day it was made and its epic task"></td>
     <td><img src="docs/screenshots/epic-task-page.png" alt="An epic task with its note and its tasks"></td>
   </tr>
   <tr>
@@ -55,7 +55,7 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
     <td><img src="docs/screenshots/daily-note-trace.png" alt="Today's daily note with Worked on lines that link to the notes and epic tasks"></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/ideas.png" alt="Ideas, with one idea and its note open"></td>
+    <td><img src="docs/screenshots/ideas.png" alt="Ideas: the list, and the box to write one down"></td>
     <td><img src="docs/screenshots/task-log-edit-delete.png" alt="A log line of a task with buttons to edit or delete it"></td>
   </tr>
   <tr>

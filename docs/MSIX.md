@@ -26,10 +26,10 @@ On a Windows computer with the Windows SDK, Node, Rust and pnpm:
 ```powershell
 pnpm install
 pnpm tauri build
-./scripts/msix/Build-Msix.ps1 -Version 0.12.0 -TestSign -DisplayName "Mimer: Markdown Notes"
+./scripts/msix/Build-Msix.ps1 -Version 0.13.0 -TestSign -DisplayName "Mimer: Markdown Notes"
 ```
 
-This makes the folder `msix-out` with, among other files, `Mimer_0.12.0.0_x64.msix` (unsigned, for the Store), `Mimer_0.12.0.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
+This makes the folder `msix-out` with, among other files, `Mimer_0.13.0.0_x64.msix` (unsigned, for the Store), `Mimer_0.13.0.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
 
 **Windows Sandbox** (Windows 11 Pro, feature "Windows Sandbox" turned on): edit `scripts/msix/mimer-sandbox.wsb` so that `HostFolder` is the full path of `msix-out`, and double-click it. The sandbox installs Mimer; start it from the Start menu. Everything is gone when you close the sandbox.
 

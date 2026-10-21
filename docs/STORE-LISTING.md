@@ -27,8 +27,8 @@ Mimer is a notes app for people who want to own their notes. Your notes are ordi
 **Notes, tasks and ideas in one place**
 
 - A live-preview Markdown editor with a toolbar, tabs, split view and a table editor. Mermaid diagrams are drawn right in the note.
-- Tasks are plain checklist lines in your notes. A task made from a note gets an epic task of its own that points back to the note, folds away when you do not need it, and moves to Done when every task is done.
-- Quick tasks, an ideas list, and a Focus view that shows one task at a time.
+- Tasks are plain checklist lines in your notes, with steps, a note and a log. Epic tasks group them in one outline you can fold, and move to Done when every task is done. A task made from a note gets an epic task of its own that points back to the note.
+- An ideas list, and a Focus view that shows one task at a time.
 - Landing keeps Meetings, Quick notes and Tasks together, with a mark on new notes and a button to move them where they belong.
 - Daily notes in a calendar at the top of the file panel. Wiki-links, tags (typing # suggests the ones you already use), images, templates and index pages.
 - Full-text search, and search by meaning with a local embedding model.
@@ -55,7 +55,7 @@ Mimer is a beta version. The app is in English; the assistant answers in the lan
 
 ## What's new in this version
 
-Epic tasks: an epic task is a note with tasks in it. Fold it away when you do not want to see it, and it moves to Done by itself when every task is done. A task made from another note gets an epic of its own that points back to the note. The AI can read the note and suggest the next steps, and you choose which ones to add. A Landing section keeps Meetings, Quick notes and Tasks together, with a mark on new notes. Daily notes are a calendar at the top of the file panel. Mermaid diagrams are drawn in the editor, and typing # suggests the tags you already use. Also: a start screen window, a plainer chat, and menus and windows that look the same everywhere.
+Tasks are now one clear outline: fold an epic task to a single line with its progress, or fold and unfold them all at once, and open a task's steps right in the list to tick them or add one. There are no due dates or Today/Later lists to manage: each task simply shows the day it was made. A task opens in two columns, with what you write on the left and its status and epic task on the right. The task files read well in any other Markdown editor too. Also new: AI in every text box (fix spelling, rewrite, translate), a note on each task and epic task, editing and deleting log lines, an optional line in today's daily note for what you worked on, the AI can check its own answer, names Windows cannot keep are refused with the reason, and Mimer is now free software under the AGPL-3.0 licence.
 
 ## Search terms (up to seven)
 
