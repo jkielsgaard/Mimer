@@ -9,9 +9,13 @@ export const DialogDescription = DialogPrimitive.Description;
 
 export function DialogContent({
   className,
+  closeClassName,
   children,
   ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content>) {
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  /** Extra classes for the × (for example to keep it visible on a picture). */
+  closeClassName?: string;
+}) {
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
@@ -25,7 +29,10 @@ export function DialogContent({
         {children}
         <DialogPrimitive.Close
           aria-label="Close"
-          className="absolute right-3 top-3 rounded-sm text-muted-foreground hover:text-foreground"
+          className={cn(
+            "absolute right-3 top-3 rounded-sm text-muted-foreground hover:text-foreground",
+            closeClassName,
+          )}
         >
           <X className="size-4" />
         </DialogPrimitive.Close>

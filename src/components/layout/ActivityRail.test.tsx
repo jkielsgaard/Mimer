@@ -33,4 +33,21 @@ describe("ActivityRail", () => {
     await userEvent.setup().click(screen.getByRole("button", { name: "Settings" }));
     expect(useUiStore.getState().settingsOpen).toBe(true);
   });
+
+  it("brings the note back when Files is pressed while Tasks is in the middle", async () => {
+    useUiStore.getState().openArea("tasks");
+    render(<ActivityRail />);
+    await userEvent.setup().click(screen.getByRole("tab", { name: "Files" }));
+    expect(useUiStore.getState().leftTab).toBe("files");
+    expect(useUiStore.getState().centerView).toBe("notes");
+  });
+
+  it("shows the files again when the middle goes back to the notes", () => {
+    useUiStore.getState().openArea("ideas");
+    useUiStore.getState().setCenterView("notes");
+    expect(useUiStore.getState().leftTab).toBe("files");
+    useUiStore.setState({ leftTab: "search" });
+    useUiStore.getState().setCenterView("notes");
+    expect(useUiStore.getState().leftTab).toBe("search");
+  });
 });

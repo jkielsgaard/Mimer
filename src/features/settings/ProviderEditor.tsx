@@ -14,11 +14,13 @@ const KIND_DEFAULTS: Record<
   { baseUrl: string; name: string; contextTokens: number }
 > = {
   lmstudio: { baseUrl: "http://localhost:1234/v1", name: "LM Studio", contextTokens: 16000 },
+  // A server on this computer by default (Ollama's address): Mimer only uses a local AI.
   openai_compatible: {
-    baseUrl: "https://api.openai.com/v1",
+    baseUrl: "http://localhost:11434/v1",
     name: "OpenAI-compatible",
-    contextTokens: 32000,
+    contextTokens: 16000,
   },
+  // Only for an Anthropic provider kept in an older settings file; it cannot be chosen.
   anthropic: { baseUrl: "https://api.anthropic.com", name: "Anthropic", contextTokens: 100000 },
   // Foundry Local is set up under Settings → Built-in AI; it is never made here.
   foundry_local: {
@@ -168,7 +170,9 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
         >
           <option value="lmstudio">LM Studio</option>
           <option value="openai_compatible">OpenAI-compatible</option>
-          <option value="anthropic">Anthropic</option>
+          {provider.kind === "anthropic" && (
+            <option value="anthropic">Anthropic (cloud, not used)</option>
+          )}
         </Select>,
       )}
       <ProviderHelpBox kind={provider.kind} />

@@ -40,12 +40,8 @@ export const PROVIDER_HELP: Record<ProviderKind, ProviderHelp> = {
   },
   anthropic: {
     summary:
-      "Claude, a cloud AI from Anthropic. Mimer does not use cloud AI, so it cannot be used.",
-    steps: [
-      "Create an account at console.anthropic.com and make an API key there. Using it costs money, billed by Anthropic.",
-      "Paste the key below and press Save key. It is kept in the system keychain.",
-      "Press Load models, choose a model, and press Test connection.",
-    ],
+      "Claude, a cloud AI from Anthropic, from an older version of Mimer. Mimer only uses an AI on this computer, so it is not used.",
+    steps: ["Remove it, or leave it: nothing is ever sent to it."],
     notes: ["Mimer, which reads your notes, never uses a cloud provider."],
   },
   foundry_local: {

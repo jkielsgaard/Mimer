@@ -99,12 +99,13 @@ export function TasksView() {
           {g.allDone && <span className="rounded-full border px-2 text-xs text-success">Done</span>}
           <Button
             size="sm"
-            variant="ghost"
+            variant="outline"
+            aria-label={`Open ${g.title}`}
             onClick={() => {
               useTaskStore.getState().openEpic(g.path);
             }}
           >
-            Open
+            Open <ChevronRight />
           </Button>
         </div>
         {!isFolded && (

@@ -15,7 +15,10 @@ export function AboutDialog() {
   const setOpen = useUiStore((s) => s.setAboutOpen);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-h-[90vh] max-w-xl overflow-auto p-0">
+      <DialogContent
+        className="max-h-[90vh] max-w-xl overflow-auto p-0"
+        closeClassName="rounded-full bg-black/55 p-1 text-white hover:bg-black/70 hover:text-white"
+      >
         <img
           src={aboutImage}
           alt="Mimer, keeper of the well of wisdom"

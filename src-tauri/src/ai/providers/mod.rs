@@ -1,6 +1,5 @@
 //! LLM providers behind one interface.
 
-pub mod anthropic;
 pub mod lmstudio;
 pub mod openai_compat;
 pub mod types;
@@ -44,9 +43,8 @@ pub async fn chat(
         }
     };
     let mut resp = match p.kind {
-        ProviderKind::Anthropic => {
-            anthropic::chat_stream(client, p, key, req, cancel, &mut shown).await?
-        }
+        // A cloud AI: kept in old settings files, but Mimer never talks to it.
+        ProviderKind::Anthropic => return Err(not_used()),
         ProviderKind::LmStudio
         | ProviderKind::OpenAiCompatible
         | ProviderKind::BuiltIn
@@ -69,9 +67,17 @@ pub async fn list_models(
     key: Option<&str>,
 ) -> AppResult<Vec<String>> {
     match p.kind {
-        ProviderKind::Anthropic => anthropic::list_models(client, &p.base_url, key).await,
+        ProviderKind::Anthropic => Err(not_used()),
         _ => openai_compat::list_models(client, &p.base_url, key).await,
     }
+}
+
+/// The error for a cloud provider (Anthropic) from an older settings file.
+fn not_used() -> AppError {
+    AppError::ProviderBlocked(
+        "Anthropic is a cloud AI. Mimer only uses an AI on this computer, so it is not used."
+            .into(),
+    )
 }
 
 #[derive(Debug, Clone, Serialize, TS)]

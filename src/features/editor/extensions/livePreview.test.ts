@@ -3,7 +3,7 @@ import { EditorSelection, EditorState } from "@codemirror/state";
 import { Decoration } from "@codemirror/view";
 import { describe, expect, it } from "vitest";
 import { LinkResolver } from "@/lib/links";
-import { buildDecorations, findFrontmatter } from "./livePreview";
+import { buildDecorations, findFrontmatter, livePreview, setFocused } from "./livePreview";
 import { defaultPreviewConfig, previewConfig } from "./previewConfig";
 
 function makeState(doc: string, cursor: number): EditorState {
@@ -163,5 +163,22 @@ describe("live preview of index page markers", () => {
   it("leaves other HTML comments alone", () => {
     const found = inspect(makeState("<!-- my note to self -->\n\ntext", 30));
     expect(found.hidden).toEqual([]);
+  });
+});
+
+describe("markers before the editor has the focus", () => {
+  function focusState(doc: string, cursor: number): EditorState {
+    return EditorState.create({
+      doc,
+      selection: EditorSelection.single(cursor),
+      extensions: [markdown({ base: markdownLanguage }), livePreview({ untilFocused: true })],
+    });
+  }
+
+  it("hides the title's # right after opening, and shows it once the note has the focus", () => {
+    const state = focusState("# Title\n\nText\n", 0);
+    expect(inspect(state).hidden).toContain("# ");
+    const focused = state.update({ effects: setFocused.of(true) }).state;
+    expect(inspect(focused).hidden).not.toContain("# ");
   });
 });

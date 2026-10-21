@@ -50,6 +50,11 @@ export function monthTitle(year: number, month: number): string {
   return `${MONTHS[month] ?? ""} ${String(year)}`;
 }
 
+/** `Oct 2026`, for a narrow calendar. */
+export function shortMonthTitle(year: number, month: number): string {
+  return `${(MONTHS[month] ?? "").slice(0, 3)} ${String(year)}`;
+}
+
 /** The same day one month earlier (the last day of that month if it is shorter), as `YYYY-MM-DD`. */
 export function sameDayLastMonth(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);

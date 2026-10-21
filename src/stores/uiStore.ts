@@ -201,7 +201,14 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({ captureKind: null });
   },
   setCenterView: (centerView) => {
-    set({ centerView });
+    // Back to the notes: the left panel shows the files again, not the Tasks or Ideas list.
+    set((s) => ({
+      centerView,
+      leftTab:
+        centerView === "notes" && (s.leftTab === "tasks" || s.leftTab === "ideas")
+          ? "files"
+          : s.leftTab,
+    }));
   },
   focusOpen: false,
   setFocusOpen: (focusOpen) => {

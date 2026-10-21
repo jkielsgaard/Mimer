@@ -22,9 +22,28 @@ export const refreshPreview = StateEffect.define();
 
 const hide = Decoration.replace({});
 
+/** Tells the preview whether the editor has the focus. Exported for tests. */
+export const setFocused = StateEffect.define<boolean>();
+
+/**
+ * Whether the editor has the focus. Installed by `livePreview({ untilFocused: true })`: until the
+ * user clicks or types in the note, no line counts as the cursor line, so a note that was just
+ * opened shows its title without the `#` (the cursor starts on that line).
+ */
+const focusField = StateField.define<boolean>({
+  create: () => false,
+  update(value, tr) {
+    for (const e of tr.effects) if (e.is(setFocused)) return e.value;
+    return value;
+  },
+});
+
+const focusEffect = EditorView.focusChangeEffect.of((_state, focused) => setFocused.of(focused));
+
 /** Line numbers touched by the selection. Syntax markers on these lines stay visible. */
 export function activeLineNumbers(state: EditorState): Set<number> {
   const lines = new Set<number>();
+  if (state.field(focusField, false) === false) return lines;
   for (const r of state.selection.ranges) {
     const a = state.doc.lineAt(r.from).number;
     const b = state.doc.lineAt(r.to).number;
@@ -371,7 +390,7 @@ const previewField = StateField.define<DecorationSet>({
       tr.docChanged ||
       tr.selection ||
       tr.reconfigured ||
-      tr.effects.some((e) => e.is(refreshPreview)) ||
+      tr.effects.some((e) => e.is(refreshPreview) || e.is(setFocused)) ||
       syntaxTree(tr.state) !== syntaxTree(tr.startState)
     ) {
       return buildDecorations(tr.state);
@@ -422,6 +441,8 @@ const previewClicks = EditorView.domEventHandlers({
 });
 
 /** The complete live-preview extension (decorations, click handling, styling hooks). */
-export function livePreview(): Extension {
-  return [previewField, previewClicks];
+export function livePreview({ untilFocused = false }: { untilFocused?: boolean } = {}): Extension {
+  return untilFocused
+    ? [focusField, focusEffect, previewField, previewClicks]
+    : [previewField, previewClicks];
 }

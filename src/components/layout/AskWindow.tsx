@@ -1,4 +1,3 @@
-import { X } from "lucide-react";
 import { ChatPanel } from "@/features/chat/ChatPanel";
 import { useUiStore } from "@/stores/uiStore";
 
@@ -17,17 +16,11 @@ export function AskWindow() {
         if (e.key === "Escape" && !e.defaultPrevented) useUiStore.getState().setAskOpen(false);
       }}
     >
-      <button
-        type="button"
-        aria-label="Close the chat"
-        className="absolute right-2 top-1.5 z-10 rounded p-1 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
-        onClick={() => {
+      <ChatPanel
+        onClose={() => {
           useUiStore.getState().setAskOpen(false);
         }}
-      >
-        <X className="size-4" />
-      </button>
-      <ChatPanel />
+      />
     </aside>
   );
 }

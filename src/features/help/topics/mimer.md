@@ -7,7 +7,7 @@
 ## AI where you work
 
 - **Selected text:** the bar over the selection has **Fix**, **Rewrite** and **Shorten**, and **AI ▾** for more: rewrite with simpler words, more formal or friendlier (always the same meaning), make it a list, translate to Danish or English, **Explain this** (an answer next to the text, nothing changes) and **Find tasks in it**. You see the change before it is written, with a check that numbers, links and names are still there. **Ctrl/Cmd+K** opens the same menu.
-- **The whole note:** the **AI** button above the note: fix spelling in the whole note, tidy the structure, a short summary at the top, a title and tags, find tasks, split into notes, and an e-mail from the note. **Link related notes** opens the Links panel; it finds notes by the title and tags and needs no AI.
+- **The whole note:** the **AI** button above the note: fix spelling and grammar (in the whole note), improve the structure, a short summary at the top, a title and tags, find tasks, split into notes, and an e-mail from the note. **Link related notes** opens the Links panel; it finds notes by the title and tags and needs no AI.
 - **A folder:** right-click it → **AI**: sort into folders, find duplicates, an index page and more. **Make an index page** right under it makes a list of links without AI.
 - **Search:** a search that reads like a question ("what is the service desk number?") shows **Answer from my notes**. Press **Get an answer**: the AI reads the notes that fit and answers, with the notes it used.
 - **A task:** Break it down, **Write a status line from the log**, and in Focus **Help me start**.

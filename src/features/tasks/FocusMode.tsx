@@ -250,7 +250,11 @@ export function FocusMode() {
             </Button>
           )}
           <Button variant="outline" className="h-10" onClick={running ? pause : start}>
-            {running ? "Pause" : over || left < minutes * 60_000 ? "Continue" : "Start"}
+            {running
+              ? "Pause timer"
+              : over || left < minutes * 60_000
+                ? "Continue timer"
+                : "Start timer"}
           </Button>
           <Button
             variant="outline"

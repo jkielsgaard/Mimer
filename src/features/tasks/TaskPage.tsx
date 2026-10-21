@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, FileText, Layers, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, FileText, Layers, Pencil, Sparkles, Target, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -253,11 +253,12 @@ export function TaskPage() {
       <ViewHeader title="Task" back={{ label: "Tasks", run: back }}>
         <Button
           size="sm"
+          variant="outline"
           onClick={() => {
             useUiStore.getState().setFocusOpen(true);
           }}
         >
-          Focus on this
+          <Target /> Focus
         </Button>
         <Button
           size="sm"

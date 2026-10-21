@@ -22,7 +22,7 @@ import { MentionPicker } from "./MentionPicker";
  * (the AI commands in the app do that). A run started from those commands shows its progress and
  * its review here. A sleeping built-in AI is woken when you send.
  */
-export function ChatPanel() {
+export function ChatPanel({ onClose }: { onClose?: () => void } = {}) {
   const {
     messages,
     streaming,
@@ -128,10 +128,10 @@ export function ChatPanel() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <PrivacyNote />
-      <ChatHeader onNew={newChat}>
+      <ChatHeader onNew={newChat} onClose={onClose}>
         <ChatHistoryMenu />
       </ChatHeader>
+      <PrivacyNote />
       <div className="min-h-0 flex-1 space-y-3 overflow-auto p-3" aria-live="polite">
         {messages.length === 0 && (
           <p className="text-xs text-muted-foreground">

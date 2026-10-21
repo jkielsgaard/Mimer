@@ -75,7 +75,7 @@ describe("TasksView", () => {
     });
     render(<TasksView />);
     const user = userEvent.setup();
-    await user.click((await screen.findAllByRole("button", { name: "Open" }))[0] as HTMLElement);
+    await user.click((await screen.findAllByRole("button", { name: /^Open / }))[0] as HTMLElement);
     expect(useUiStore.getState().centerView).toBe("epic");
     await user.click(screen.getByRole("button", { name: /New epic task/ }));
     await user.type(screen.getByLabelText("Name"), "New one{Enter}");

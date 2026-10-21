@@ -104,7 +104,7 @@ describe("TaskPage", () => {
   it("goes back to the list, and starts focus", async () => {
     render(<TaskPage />);
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Focus on this" }));
+    await user.click(screen.getByRole("button", { name: "Focus" }));
     expect(useUiStore.getState().focusOpen).toBe(true);
     await user.click(screen.getByRole("button", { name: /Tasks/ }));
     expect(useUiStore.getState().centerView).toBe("tasks");
@@ -149,7 +149,7 @@ describe("TaskPage", () => {
     expect(screen.getByRole("button", { name: /Break it down/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: /Write a status line/ })).toBeDisabled();
     // Everything else works.
-    expect(screen.getByRole("button", { name: "Focus on this" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Focus" })).toBeEnabled();
     blocked.reason = null;
   });
 

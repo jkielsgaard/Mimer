@@ -1,4 +1,4 @@
-import { FileText, Link2, Plus, Sparkles } from "lucide-react";
+import { FileText, Link2, Plus, Sparkles, Target } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { NoteBox } from "@/components/NoteBox";
@@ -55,6 +55,7 @@ export function EpicPage() {
       <ViewHeader title="Epic task" back={back}>
         <Button
           size="sm"
+          variant="outline"
           disabled={firstOpen === undefined}
           onClick={() => {
             if (!firstOpen) return;
@@ -64,7 +65,7 @@ export function EpicPage() {
             useUiStore.getState().setFocusOpen(true);
           }}
         >
-          Focus
+          <Target /> Focus
         </Button>
         {group.native && (
           <Button

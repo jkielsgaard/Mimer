@@ -156,16 +156,25 @@ export const editorTheme = EditorView.theme({
     margin: "6px 0 0",
     whiteSpace: "pre-wrap",
   },
+  // The toolbar floats above the table instead of taking room, so a table has the same space
+  // around it as any other block. The padding (not a margin) keeps the pointer on the widget
+  // while it moves from the table up to the buttons.
   ".cm-table-toolbar": {
+    position: "absolute",
+    left: "0",
+    bottom: "100%",
+    zIndex: "2",
     display: "flex",
     flexWrap: "wrap",
     gap: "4px",
-    marginBottom: "4px",
+    paddingBottom: "4px",
     opacity: "0",
+    pointerEvents: "none",
     transition: "opacity 120ms",
   },
   ".cm-table-widget:hover .cm-table-toolbar, .cm-table-widget:focus-within .cm-table-toolbar": {
     opacity: "1",
+    pointerEvents: "auto",
   },
   ".cm-table-toolbar button": {
     fontSize: "11px",

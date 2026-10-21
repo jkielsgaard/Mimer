@@ -51,7 +51,7 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
     <td><img src="docs/screenshots/field-ai-fix-review.png" alt="Fix spelling in a text box: the change is shown before it is accepted"></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/ai-menu-note.png" alt="The AI menu above a note: fix spelling, tidy the structure, a summary, a title and tags and more"></td>
+    <td><img src="docs/screenshots/ai-menu-note.png" alt="The AI menu above a note: fix spelling, improve the structure, a summary, a title and tags and more"></td>
     <td><img src="docs/screenshots/daily-note-trace.png" alt="Today's daily note with Worked on lines that link to the notes and epic tasks"></td>
   </tr>
   <tr>

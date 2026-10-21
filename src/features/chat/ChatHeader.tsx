@@ -1,9 +1,18 @@
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 
-/** The top of the chat: its own buttons (the chat history, then New chat). */
-export function ChatHeader({ onNew, children }: { onNew: () => void; children?: ReactNode }) {
+/** The top of the chat: its own buttons (the chat history, then New chat), and × in the window. */
+export function ChatHeader({
+  onNew,
+  onClose,
+  children,
+}: {
+  onNew: () => void;
+  /** Shows a × at the end of the row (the chat as a window). */
+  onClose?: () => void;
+  children?: ReactNode;
+}) {
   return (
     <div className="flex h-9 shrink-0 items-center gap-1 border-b px-3">
       <span className="flex-1 text-xs font-semibold">Ask about my notes</span>
@@ -11,6 +20,16 @@ export function ChatHeader({ onNew, children }: { onNew: () => void; children?: 
       <Button size="sm" variant="ghost" onClick={onNew} aria-label="New chat">
         <Plus /> New chat
       </Button>
+      {onClose && (
+        <button
+          type="button"
+          aria-label="Close the chat"
+          className="rounded p-1 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={onClose}
+        >
+          <X className="size-4" />
+        </button>
+      )}
     </div>
   );
 }

@@ -31,6 +31,7 @@ import { LinksPanel } from "@/features/notePanels/LinksPanel";
 import { OutlinePanel } from "@/features/notePanels/OutlinePanel";
 import { X } from "lucide-react";
 import { PanelHeader } from "@/components/PanelHeader";
+import { activeTitle, useVaultStore } from "@/stores/vaultStore";
 
 const RIGHT_LABELS: Record<RightTab, string> = {
   outline: "Outline",
@@ -43,6 +44,7 @@ const RIGHT_LABELS: Record<RightTab, string> = {
 export function AppShell() {
   const ui = useUiStore();
   const rightTab = ui.rightTab;
+  const activePath = useVaultStore((s) => s.activePath);
   const left = useRef<ImperativePanelHandle>(null);
   const right = useRef<ImperativePanelHandle>(null);
 
@@ -124,7 +126,10 @@ export function AppShell() {
             className="bg-sidebar"
           >
             <div className="flex h-full min-h-0 flex-col">
-              <PanelHeader title={RIGHT_LABELS[rightTab]}>
+              <PanelHeader
+                title={RIGHT_LABELS[rightTab]}
+                about={rightTab === "images" ? null : activeTitle(activePath)}
+              >
                 <button
                   type="button"
                   aria-label="Close the panel"

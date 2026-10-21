@@ -130,7 +130,7 @@ Check with `git log --oneline` in the vault folder.
 - [ ] **Every text box**: in a task's note box, the log box and a step box, select a word: the same bar appears; a real mouse click on **Fix** shows the review. `Ctrl/Cmd+K` with nothing selected works on the whole text; Accept puts the result in the box. No bar in password, search or name boxes. With no AI the bar says why.
 - [ ] A small model that answers with `<think>…</think>` or "Revised text:": only the text is shown. An empty answer, or one that lost most of the text, is not offered: Mimer tries once more and then says it got no usable answer.
 - [ ] Settings → AI → **Let the AI check its own answer** is off by default; on, a text command takes longer and a wrong answer is tried again.
-- [ ] The **AI** button above a note: fix spelling in the whole note (only the wrong words change), tidy the structure, a short summary at the top, a title and tags, find tasks, split into notes, an e-mail from this note. **Link related notes** opens the Links panel (no AI).
+- [ ] The **AI** button above a note: fix spelling and grammar (only the wrong words change), improve the structure, a short summary at the top, a title and tags, find tasks, split into notes, an e-mail from this note. **Link related notes** opens the Links panel (no AI).
 - [ ] Right-click a folder → **AI**: sort into folders, find duplicates and the other skills that fit a folder. **Make an index page** works without AI. Several ticked notes (up to five) work together.
 - [ ] `Ctrl/Cmd+Shift+P`: a skill name runs it on the open note; a note name opens it; actions work.
 - [ ] Spelling help (status bar): a misspelt word gets a wavy line; click it for the right spelling, Ignore, Add to my words, Fix all. Nothing changes by itself.

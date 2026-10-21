@@ -14,6 +14,7 @@ import {
   FolderInput,
   FolderOpen,
   FolderPlus,
+  FolderSearch,
   History,
   ListTree,
   Pencil,
@@ -386,7 +387,7 @@ export function TreeRow({
                   api.revealInFileManager(node.path).catch(reportError);
                 }}
               >
-                Reveal in file manager
+                <FolderSearch className="size-4" aria-hidden /> Reveal in file manager
               </ContextMenuItem>
             </>
           )}

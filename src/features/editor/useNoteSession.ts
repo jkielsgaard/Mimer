@@ -199,7 +199,9 @@ export function useNoteSession({
         closeBrackets(),
         EditorView.lineWrapping,
         markdown({ base: markdownLanguage }),
-        viewModeCompartment.current.of(sourceModeRef.current ? sourceModeTheme : livePreview()),
+        viewModeCompartment.current.of(
+          sourceModeRef.current ? sourceModeTheme : livePreview({ untilFocused: true }),
+        ),
         editorTheme,
         search({ top: true }),
         autocompletion({
@@ -370,7 +372,7 @@ export function useNoteSession({
     stash.current.clear();
     viewRef.current?.dispatch({
       effects: viewModeCompartment.current.reconfigure(
-        sourceMode ? sourceModeTheme : livePreview(),
+        sourceMode ? sourceModeTheme : livePreview({ untilFocused: true }),
       ),
     });
   }, [sourceMode]);

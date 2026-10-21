@@ -6,6 +6,7 @@ import {
   FilePlus,
   FolderOpen,
   FolderPlus,
+  MoreHorizontal,
   Plus,
   Search,
   Sparkles,
@@ -18,17 +19,28 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { newNoteInCurrentFolder, revealInTree } from "@/lib/actions";
 import { formatShortcut } from "@/lib/shortcuts";
+import { useNarrow } from "@/lib/useNarrow";
 import { nameError } from "@/lib/nameConflict";
 import { useTreeStore } from "@/stores/treeStore";
 import { useUiStore } from "@/stores/uiStore";
 import { currentFolder, useVaultStore } from "@/stores/vaultStore";
 
 const iconButton = "rounded p-1 hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent";
+
+/** Below this width the tree tools go into a "More" menu, so nothing is cut off at the edge. */
+const NARROW = 280;
+
+const SORTS: { id: "name" | "modified" | "manual"; label: string }[] = [
+  { id: "name", label: "Name" },
+  { id: "modified", label: "Last changed" },
+  { id: "manual", label: "My own order" },
+];
 
 type Asking = "meeting" | "folder" | null;
 
@@ -41,6 +53,7 @@ export function TreeToolbar() {
   const sort = useTreeStore((s) => s.sort);
   const setSort = useTreeStore((s) => s.setSort);
   const [asking, setAsking] = useState<Asking>(null);
+  const { ref, narrow } = useNarrow<HTMLDivElement>(NARROW);
 
   const folder = (): string => {
     const v = useVaultStore.getState();
@@ -56,7 +69,10 @@ export function TreeToolbar() {
   };
 
   return (
-    <div className="flex h-9 shrink-0 items-center gap-1 border-b px-3 text-muted-foreground">
+    <div
+      ref={ref}
+      className="flex h-9 shrink-0 items-center gap-1 border-b px-3 text-muted-foreground"
+    >
       <h2 className="flex-1 truncate text-xs font-semibold text-foreground">Files</h2>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -125,83 +141,140 @@ export function TreeToolbar() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <span className="mx-0.5 h-4 w-px bg-border" aria-hidden />
-      <button
-        type="button"
-        className={iconButton}
-        aria-label="Collapse all folders"
-        title="Collapse all folders"
-        onClick={() => {
-          useTreeStore.getState().collapseAll();
-        }}
-      >
-        <ChevronsDownUp className="size-4" />
-      </button>
-      <button
-        type="button"
-        className={iconButton}
-        aria-label="Show the open note in the tree"
-        title="Show the open note in the tree"
-        disabled={activePath === null}
-        onClick={() => {
-          if (activePath !== null) revealInTree(activePath);
-        }}
-      >
-        <Crosshair className="size-4" />
-      </button>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button type="button" className={iconButton} aria-label="Sort" title="Sort the notes">
-            <ArrowDownUp className="size-4" />
+      {narrow ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button type="button" className={iconButton} aria-label="More" title="More">
+              <MoreHorizontal className="size-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onSelect={() => {
+                useTreeStore.getState().collapseAll();
+              }}
+            >
+              <ChevronsDownUp className="size-4" /> Collapse all folders
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={activePath === null}
+              onSelect={() => {
+                if (activePath !== null) revealInTree(activePath);
+              }}
+            >
+              <Crosshair className="size-4" /> Show the open note in the tree
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => {
+                useUiStore.getState().setQuickOpen(true);
+              }}
+            >
+              <FolderOpen className="size-4" /> Quick open
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => {
+                useUiStore.getState().focusSearch();
+              }}
+            >
+              <Search className="size-4" /> Search
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Sort</DropdownMenuLabel>
+            {SORTS.map((o) => (
+              <DropdownMenuItem
+                key={o.id}
+                onSelect={() => {
+                  setSort(o.id);
+                }}
+              >
+                {o.label} {sort === o.id && <Check className="size-4" aria-label="Selected" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <>
+          <span className="mx-0.5 h-4 w-px bg-border" aria-hidden />
+          <button
+            type="button"
+            className={iconButton}
+            aria-label="Collapse all folders"
+            title="Collapse all folders"
+            onClick={() => {
+              useTreeStore.getState().collapseAll();
+            }}
+          >
+            <ChevronsDownUp className="size-4" />
           </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuItem
-            onSelect={() => {
-              setSort("name");
+          <button
+            type="button"
+            className={iconButton}
+            aria-label="Show the open note in the tree"
+            title="Show the open note in the tree"
+            disabled={activePath === null}
+            onClick={() => {
+              if (activePath !== null) revealInTree(activePath);
             }}
           >
-            Name {sort === "name" && <Check className="size-4" aria-label="Selected" />}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={() => {
-              setSort("modified");
+            <Crosshair className="size-4" />
+          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className={iconButton} aria-label="Sort" title="Sort the notes">
+                <ArrowDownUp className="size-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem
+                onSelect={() => {
+                  setSort("name");
+                }}
+              >
+                Name {sort === "name" && <Check className="size-4" aria-label="Selected" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => {
+                  setSort("modified");
+                }}
+              >
+                Last changed{" "}
+                {sort === "modified" && <Check className="size-4" aria-label="Selected" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => {
+                  setSort("manual");
+                }}
+              >
+                My own order{" "}
+                {sort === "manual" && <Check className="size-4" aria-label="Selected" />}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <span className="mx-0.5 h-4 w-px bg-border" aria-hidden />
+          <button
+            type="button"
+            className={iconButton}
+            aria-label="Quick open"
+            title={`Quick open (${formatShortcut("Mod+P")})`}
+            onClick={() => {
+              useUiStore.getState().setQuickOpen(true);
             }}
           >
-            Last changed {sort === "modified" && <Check className="size-4" aria-label="Selected" />}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={() => {
-              setSort("manual");
+            <FolderOpen className="size-4" />
+          </button>
+          <button
+            type="button"
+            className={iconButton}
+            aria-label="Search"
+            title={`Search the vault (${formatShortcut("Mod+Shift+F")})`}
+            onClick={() => {
+              useUiStore.getState().focusSearch();
             }}
           >
-            My own order {sort === "manual" && <Check className="size-4" aria-label="Selected" />}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <span className="mx-0.5 h-4 w-px bg-border" aria-hidden />
-      <button
-        type="button"
-        className={iconButton}
-        aria-label="Quick open"
-        title={`Quick open (${formatShortcut("Mod+P")})`}
-        onClick={() => {
-          useUiStore.getState().setQuickOpen(true);
-        }}
-      >
-        <FolderOpen className="size-4" />
-      </button>
-      <button
-        type="button"
-        className={iconButton}
-        aria-label="Search"
-        title={`Search the vault (${formatShortcut("Mod+Shift+F")})`}
-        onClick={() => {
-          useUiStore.getState().focusSearch();
-        }}
-      >
-        <Search className="size-4" />
-      </button>
+            <Search className="size-4" />
+          </button>
+        </>
+      )}
 
       <PromptDialog
         open={asking === "meeting"}

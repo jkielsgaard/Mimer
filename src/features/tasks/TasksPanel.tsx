@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { PanelHeader } from "@/components/PanelHeader";
+import { Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { epicGroups, todayIso } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
@@ -68,7 +69,7 @@ export function TasksPanel() {
             useUiStore.getState().setFocusOpen(true);
           }}
         >
-          Focus
+          <Target /> Focus
         </Button>
       </PanelHeader>
       <div className="min-h-0 flex-1 overflow-auto px-2 py-2">

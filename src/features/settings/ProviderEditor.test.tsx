@@ -41,9 +41,14 @@ describe("ProviderEditor help", () => {
     expect(help()).toContain("base URL");
     expect(help()).toContain("Ollama");
 
-    await user.selectOptions(kind, "anthropic");
-    expect(help()).toContain("console.anthropic.com");
-    expect(help()).toContain("never uses a cloud provider");
+    // Anthropic, a cloud AI, cannot be chosen any more.
+    expect(screen.queryByRole("option", { name: /Anthropic/ })).toBeNull();
+  });
+
+  it("shows an Anthropic provider from an older version as not used", () => {
+    render(<Harness start={newProvider("anthropic")} />);
+    expect(screen.getByRole("option", { name: "Anthropic (cloud, not used)" })).toBeInTheDocument();
+    expect(screen.getByTestId("provider-help")).toHaveTextContent("it is not used");
   });
 
   it("Foundry Local is not made here: it is set up under Built-in AI", () => {

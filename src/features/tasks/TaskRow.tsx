@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, Target } from "lucide-react";
 import type { Task } from "@/bindings/Task";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -113,12 +113,14 @@ export function TaskRow({
           size="sm"
           variant="outline"
           aria-label={`Focus on ${task.title}`}
+          // Shown on the row under the mouse or with the keyboard focus; its space is kept.
+          className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100"
           onClick={() => {
             useTaskStore.getState().select({ path: task.path, line: task.line, title: task.title });
             useUiStore.getState().setFocusOpen(true);
           }}
         >
-          Focus
+          <Target /> Focus
         </Button>
       )}
     </li>

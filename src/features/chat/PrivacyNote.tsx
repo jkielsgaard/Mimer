@@ -6,7 +6,7 @@ export function PrivacyNote() {
     <div
       role="note"
       data-testid="privacy-note"
-      className="flex items-center gap-1.5 border-b bg-success/10 px-3 py-1.5 text-[11px] font-medium text-success"
+      className="flex items-center gap-1.5 border-b bg-success/10 px-3 py-1 text-[11px] font-medium text-success"
     >
       <ShieldCheck className="size-3.5 shrink-0" aria-hidden />
       Local AI · your notes stay on this computer

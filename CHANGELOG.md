@@ -24,8 +24,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Names Windows cannot keep are refused** when you make or rename a folder, note or project, with a red box that says why: a dot at the end ("PAM div." could not be synced by OneDrive), the names `CON`, `NUL`, `COM1` and the like, and the characters `\ / : * ? " < > |`. The same rules hold in the backend, for the AI's proposals and on Linux, so a vault works on every system.
 - **The status line from the log** uses the written log lines (the latest ten, not Mimer's own "Status:" lines), the steps and the note, with a stricter prompt.
 
+### Changed (UI review)
+
+- **The panels follow what is on screen.** Files and Search on the left bring the note back to the middle; going back to the notes shows Files again instead of the Tasks or Ideas list. Outline, Links and History say which note they are about.
+- **A calmer task list.** The Focus button shows on the task under the mouse (and with the keyboard), and each epic task has a clear **Open ›** button. Focus has one look everywhere.
+- **A narrow window.** The calendar uses one-letter weekdays and a short month when there is little room, and its help moved into a **?**. The tree tools go into a **⋯** menu when they do not fit.
+- **Small fixes:** an icon for every item in the right-click menus (also on a project), the chat's × in its title row, a visible × on the About picture, no extra space above a table, and the title of a note that was just opened shown without its `#` until you click in the note.
+- **One name for each thing:** the AI menu above a note uses the same names as the command palette, "Ask about my notes" everywhere, and **Start timer** in Focus.
+- **Anthropic can no longer be chosen** as a provider (Mimer never used it); one from an older version is shown as not used. A new OpenAI-compatible provider starts at a local address.
+
 ### Removed
 
+- The Anthropic client and its test fixtures (a cloud AI Mimer never used).
 - Code that nothing used any more: saved chat prompts (removed from the chat in 0.11.0), making, removing and trying your own skills (Settings → Skills was removed in 0.11.0; skills made before are still listed), the Wake/Sleep bars of the old Mimer tab, and the browser opener package (links are opened by Mimer itself), with its permission.
 - Old files: the gold icon in `assets-src/`, `docs/screenshot.png`, the feature plans in `docs/plans/` and the review notes in `docs/REVIEW.md` (all in the Git history), and the Foundry Local test program and its workflow. Fetching Foundry Local's libraries now uses a small empty crate in `scripts/foundry-native-fetch`.
 

@@ -1,4 +1,16 @@
-import { ChevronDown, ChevronRight, FilePlus, FolderKanban, Settings2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Download,
+  FilePlus,
+  FolderKanban,
+  FolderPlus,
+  FolderSearch,
+  ListTree,
+  Pencil,
+  Settings2,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
 import type { Project } from "@/bindings/Project";
 import {
@@ -117,7 +129,7 @@ function ProjectTree({ project, onAction }: { project: Project; onAction: (a: Ac
               onAction({ kind: "newNote", folder: project.folder });
             }}
           >
-            New note
+            <FilePlus className="size-4" aria-hidden /> New note
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => {
@@ -125,7 +137,7 @@ function ProjectTree({ project, onAction }: { project: Project; onAction: (a: Ac
               onAction({ kind: "newFolder", folder: project.folder });
             }}
           >
-            New folder
+            <FolderPlus className="size-4" aria-hidden /> New folder
           </ContextMenuItem>
           {folder && (
             <>
@@ -135,14 +147,15 @@ function ProjectTree({ project, onAction }: { project: Project; onAction: (a: Ac
                   onAction({ kind: "rename", node: folder });
                 }}
               >
-                Rename
+                <Pencil className="size-4" aria-hidden /> Rename
               </ContextMenuItem>
               <ContextMenuItem
+                className="text-destructive"
                 onSelect={() => {
                   onAction({ kind: "delete", node: folder });
                 }}
               >
-                Delete
+                <Trash2 className="size-4" aria-hidden /> Delete
               </ContextMenuItem>
             </>
           )}
@@ -152,21 +165,21 @@ function ProjectTree({ project, onAction }: { project: Project; onAction: (a: Ac
               void useVaultStore.getState().createIndexPage(project.folder);
             }}
           >
-            Create index page
+            <ListTree className="size-4" aria-hidden /> Create index page
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => {
               useUiStore.getState().openProjectDialog({ folder: project.folder, project });
             }}
           >
-            Project settings
+            <Settings2 className="size-4" aria-hidden /> Project settings
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => {
               useUiStore.getState().openExportDialog({ path: project.folder, isFolder: true });
             }}
           >
-            Export…
+            <Download className="size-4" aria-hidden /> Export…
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem
@@ -174,7 +187,7 @@ function ProjectTree({ project, onAction }: { project: Project; onAction: (a: Ac
               api.revealInFileManager(project.folder).catch(reportError);
             }}
           >
-            Reveal in file manager
+            <FolderSearch className="size-4" aria-hidden /> Reveal in file manager
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>

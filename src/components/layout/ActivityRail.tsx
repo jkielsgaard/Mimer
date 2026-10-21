@@ -45,7 +45,11 @@ export function ActivityRail() {
                   return;
                 }
                 if (id === "ideas" || id === "tasks") ui.openArea(id);
-                else ui.setLeftTab(id);
+                else {
+                  // Files and Search are about notes, so the note comes back in the middle.
+                  ui.setLeftTab(id);
+                  ui.setCenterView("notes");
+                }
               }}
             >
               <Icon className="size-4" aria-hidden />

@@ -3,12 +3,17 @@ import { useEffect, useMemo, useState } from "react";
 import { SidebarSection } from "@/features/fileTree/SidebarSection";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
-import { monthGrid, monthTitle, sameDayLastMonth } from "@/lib/calendar";
+import { monthGrid, monthTitle, sameDayLastMonth, shortMonthTitle } from "@/lib/calendar";
+import { InfoHint } from "@/components/InfoHint";
+import { useNarrow } from "@/lib/useNarrow";
 import { shortDate, todayIso } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { useVaultStore } from "@/stores/vaultStore";
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** Below this width the weekdays are one letter and the month is short, so nothing runs together. */
+const NARROW = 230;
 
 /** The dates that have a daily note, read again when the files change. */
 export function useDailyDates(): Set<string> {
@@ -50,10 +55,21 @@ export function CalendarSection() {
     void useVaultStore.getState().openDailyNote(iso);
   };
   const lastMonth = sameDayLastMonth(today);
+  const { ref, narrow } = useNarrow<HTMLDivElement>(NARROW);
 
   return (
-    <SidebarSection title="Daily notes" storageKey="daily">
-      <div className="px-2 pb-2">
+    <SidebarSection
+      title="Daily notes"
+      storageKey="daily"
+      hint={
+        <InfoHint
+          label="Daily notes"
+          text="A dot means a note was written that day. Click a day to open it, or to make it."
+          topic="start"
+        />
+      }
+    >
+      <div ref={ref} className="px-2 pb-2">
         <div className="mb-1 flex items-center">
           <Button
             size="icon"
@@ -66,8 +82,10 @@ export function CalendarSection() {
           >
             <ChevronLeft />
           </Button>
-          <span className="flex-1 text-center text-xs font-semibold">
-            {monthTitle(shown.year, shown.month)}
+          <span className="flex-1 truncate text-center text-xs font-semibold">
+            {narrow
+              ? shortMonthTitle(shown.year, shown.month)
+              : monthTitle(shown.year, shown.month)}
           </span>
           <Button
             size="icon"
@@ -103,8 +121,8 @@ export function CalendarSection() {
             className="grid grid-cols-7 text-center text-[10px] text-muted-foreground"
           >
             {WEEKDAYS.map((d) => (
-              <span key={d} role="columnheader">
-                {d}
+              <span key={d} role="columnheader" aria-label={d}>
+                {narrow ? d.slice(0, 1) : d}
               </span>
             ))}
           </div>
@@ -143,9 +161,6 @@ export function CalendarSection() {
             </div>
           ))}
         </div>
-        <p className="mt-1.5 text-[11px] text-muted-foreground">
-          A dot means a note was written that day. Click a day to open it, or to make it.
-        </p>
         {dates.has(lastMonth) && (
           <button
             type="button"

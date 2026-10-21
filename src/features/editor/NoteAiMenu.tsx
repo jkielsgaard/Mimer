@@ -33,12 +33,12 @@ const GROUPS: { label: string; entries: Entry[] }[] = [
     label: "Check",
     entries: [
       {
-        label: "Fix spelling in the whole note",
-        hint: "Only wrong words change",
+        label: "Fix spelling and grammar",
+        hint: "The whole note; only wrong words change",
         skill: "fix-spelling",
       },
       {
-        label: "Tidy the structure",
+        label: "Improve the structure",
         hint: "Headings, lists, short paragraphs",
         skill: "improve-structure",
       },

@@ -94,7 +94,7 @@ export function CommandPalette() {
       ),
       act(
         "chat",
-        "Ask Mimer",
+        "Ask about my notes",
         () => {
           ui().focusChat();
         },

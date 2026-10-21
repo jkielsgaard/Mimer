@@ -72,12 +72,12 @@ describe("FocusMode", () => {
     render(<FocusMode />);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     expect(screen.getByRole("timer")).toHaveTextContent("25:00");
-    await user.click(screen.getByRole("button", { name: "Start" }));
+    await user.click(screen.getByRole("button", { name: "Start timer" }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(61_000);
     });
     expect(screen.getByRole("timer")).toHaveTextContent("23:5");
-    await user.click(screen.getByRole("button", { name: "Pause" }));
+    await user.click(screen.getByRole("button", { name: "Pause timer" }));
     const paused = screen.getByRole("timer").textContent;
     await act(async () => {
       await vi.advanceTimersByTimeAsync(10_000);

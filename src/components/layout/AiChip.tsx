@@ -212,7 +212,7 @@ export function AiChip() {
                 else useUiStore.getState().setSettingsOpen(true);
               }}
             >
-              Open Settings
+              Open settings
             </DropdownMenuItem>
           </div>
         </DropdownMenuContent>
