@@ -72,11 +72,13 @@ const settings = (recentNotes: number): Settings => ({
     spellcheck: true,
     recentNotes,
     aiSpelling: false,
+    traceWork: false,
     ownWords: [],
   },
   git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
   ai: {
     defaultProviderId: "p1",
+    checkAnswers: false,
     builtin: DEFAULT_BUILTIN,
     foundry: { model: "" },
     baseInstruction: "",

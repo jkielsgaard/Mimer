@@ -28,11 +28,11 @@ Click **Insert table** (or press **Ctrl/Cmd+Alt+T**). Click in a cell and type. 
 
 ## Tabs and two notes side by side
 
-Every note you open gets a tab. Close with the **×** or **Ctrl/Cmd+W**. Press *_Ctrl/Cmd+\*_ to show two notes next to each other.
+Every note you open gets a tab. Close with the **×** or **Ctrl/Cmd+W**. Press **Ctrl/Cmd+\\** to show two notes next to each other.
 
 ## See the Markdown
 
-Click the **</>** button at the right end of the toolbar (or **File → Show Markdown source**, or **Ctrl/Cmd+Alt+M**) to see the note exactly as it is stored: every `#`, `**` and `[[...]]` visible, in a monospace font. Click the eye button to go back to the formatted view. Mimer remembers your choice. Nothing in the note changes when you switch.
+Click the **</>** button at the right end of the toolbar (or **Go → Show Markdown source**, or **Ctrl/Cmd+Alt+M**) to see the note exactly as it is stored: every `#`, `**` and `[[...]]` visible, in a monospace font. Click the eye button to go back to the formatted view. Mimer remembers your choice. Nothing in the note changes when you switch.
 
 ## Diagrams
 

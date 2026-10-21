@@ -41,6 +41,9 @@ pub struct EditorSettings {
     pub ai_spelling: bool,
     /// Words the spelling help must never mark (names, terms).
     pub own_words: Vec<String>,
+    /// Write the day's work (notes written in, tasks made, worked on and finished) under
+    /// "Worked on" in today's daily note.
+    pub trace_work: bool,
 }
 
 impl Default for EditorSettings {
@@ -52,6 +55,7 @@ impl Default for EditorSettings {
             recent_notes: DEFAULT_RECENT_NOTES,
             ai_spelling: false,
             own_words: Vec::new(),
+            trace_work: false,
         }
     }
 }
@@ -293,6 +297,9 @@ pub struct AiSettings {
     pub builtin: BuiltInSettings,
     /// Foundry Local, the second built-in AI.
     pub foundry: FoundrySettings,
+    /// Let the AI check its own answer to a text command before it is shown. Off by default: it
+    /// takes about twice as long, which matters most with a large model.
+    pub check_answers: bool,
 }
 
 /// The provider Mimer uses when nothing has been chosen: the built-in AI where it can be
@@ -316,6 +323,7 @@ impl Default for AiSettings {
             embeddings: EmbeddingSettings::default(),
             builtin: BuiltInSettings::default(),
             foundry: FoundrySettings::default(),
+            check_answers: false,
             providers: vec![
                 builtin_provider(BuiltInSettings::default().context_tokens),
                 foundry_provider(),

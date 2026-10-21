@@ -1,6 +1,6 @@
 import { Check, ChevronsUpDown, FolderOpen, FolderPlus } from "lucide-react";
 import { useState } from "react";
-import { PromptDialog } from "@/components/PromptDialog";
+import { NewVaultDialog } from "./NewVaultDialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -34,7 +34,6 @@ export const SWITCH_VAULT_SHORTCUT = "Mod+Shift+O";
 export function VaultSwitcher() {
   const vault = useVaultStore((s) => s.vault);
   const openVault = useVaultStore((s) => s.openVault);
-  const createVault = useVaultStore((s) => s.createVault);
   const recent = useSettingsStore((s) => s.settings?.recentVaults ?? NO_VAULTS);
   const open = useUiStore((s) => s.vaultSwitcherOpen);
   const setOpen = useUiStore((s) => s.setVaultSwitcherOpen);
@@ -110,21 +109,10 @@ export function VaultSwitcher() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <PromptDialog
-        open={parent !== null}
-        title="Create new vault"
-        label={`Vault name (a new folder inside ${parent ?? ""})`}
-        confirmLabel="Create"
-        validate={(v) =>
-          v.trim() === "" || /[\\/:*?"<>|]/.test(v) ? "Enter a valid folder name" : null
-        }
-        onCancel={() => {
+      <NewVaultDialog
+        parent={parent}
+        onClose={() => {
           setParent(null);
-        }}
-        onSubmit={(name) => {
-          const p = parent;
-          setParent(null);
-          if (p) void createVault(p, name.trim());
         }}
       />
     </>

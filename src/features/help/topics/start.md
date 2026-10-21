@@ -30,11 +30,11 @@ The **Sort** button above the file tree has **My own order**. Then nothing is so
 
 ## Recent, Projects and All files
 
-The file panel has three parts. **Recent** lists the notes you opened last (4 by default; change it in **Settings → General → Recent notes shown**, 0 hides it). **Projects** shows every project with its own notes. **All files** holds everything that is not in a project, with **Meetings** and **Quick notes** at the top.
+The file panel has three parts. **Recent** lists the notes you opened last (4 by default; change it in **Settings → General → Recent notes shown**, 0 hides it). **Projects** shows every project with its own notes. **All files** holds everything that is not in a project or in Landing.
 
 ## Found a bug, or have an idea?
 
-Use **File → Report → Report a bug…** or **File → Report → Suggest a feature…**. The same submenu has **Report inappropriate AI content…** for an AI answer that was wrong or harmful. Your browser opens a page on GitHub with the form already started (Mimer version and system filled in). You need a free GitHub account to send it. Do not paste private notes.
+Use **Help → Report a bug…** or **Help → Suggest a feature…**. The same menu has **Report inappropriate AI content…** for an AI answer that was wrong or harmful. Your browser opens a page on GitHub with the form already started (Mimer version and system filled in). You need a free GitHub account to send it. Do not paste private notes.
 
 ## Landing and daily notes
 

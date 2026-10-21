@@ -64,7 +64,7 @@
     "resources": [
       "foundry-native/*"
     ],
-    "shortDescription": "Markdown notes with a local-first AI assistant",
+    "shortDescription": "Markdown notes with a local AI assistant",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

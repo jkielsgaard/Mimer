@@ -1,5 +1,5 @@
 import { AlertCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,6 +18,8 @@ interface Props {
   confirmLabel?: string;
   /** Return an error message to keep the dialog open, or null to accept. It runs while typing. */
   validate?: (value: string) => string | null;
+  /** Extra fields shown under the name, such as a choice that goes with it. */
+  children?: ReactNode;
   onSubmit: (value: string) => void;
   onCancel: () => void;
 }
@@ -30,6 +32,7 @@ export function PromptDialog({
   initialValue = "",
   confirmLabel = "OK",
   validate,
+  children,
   onSubmit,
   onCancel,
 }: Props) {
@@ -73,6 +76,7 @@ export function PromptDialog({
             </label>
           )}
           <Input
+            data-no-ai
             id="prompt-input"
             autoFocus
             value={value}
@@ -94,6 +98,7 @@ export function PromptDialog({
               {shown}
             </p>
           )}
+          {children}
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={onCancel}>
               Cancel

@@ -3,7 +3,7 @@
 OneNote keeps notes in its own format and cannot save them as Markdown. So the move has two steps:
 
 1. **Turn the notebook into a folder of Markdown files** with a free tool (outside Mimer).
-2. **Import that folder** with **File → Import → Notes from a folder…** in Mimer.
+2. **Import that folder** with **File → Import notes from a folder…** in Mimer.
 
 Plan for 30–60 minutes for a normal notebook. You can try it first on one small notebook.
 
@@ -35,7 +35,7 @@ In OneNote, export a page or section as a Word document, then convert the Word f
 ## Step 2 – Import the folder into Mimer
 
 1. Open the vault you want the notes in. A throw-away test vault is a good place to try first.
-2. Choose **File → Import → Notes from a folder…**.
+2. Choose **File → Import notes from a folder…**.
 3. Click **Choose folder…** and pick the folder the tool made.
 4. Mimer looks through the folder and shows what it found:
    - how many notes and attachments (images, PDFs and so on),

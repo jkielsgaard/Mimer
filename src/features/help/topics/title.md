@@ -16,6 +16,6 @@ If you move something to a folder that already has something with that name, Mim
 
 ## Good to know
 
-- Characters a computer does not allow in file names (`: ? " < > | *` and so on) are not accepted.
+- Names Windows and OneDrive cannot keep are not accepted, and a red box says why: the characters `\ / : * ? " < > |`, a dot at the end (`PAM div.`), and names Windows keeps for itself such as `CON`, `NUL` or `COM1`.
 - Notes made from a template (meeting notes, daily notes, quick notes) already have a name.
 - If you later change the first line of a note, the file name is **not** changed. Rename the file in the file tree if you want them to match.

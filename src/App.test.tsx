@@ -15,11 +15,13 @@ const settings: Settings = {
     spellcheck: true,
     recentNotes: 4,
     aiSpelling: false,
+    traceWork: false,
     ownWords: [],
   },
   git: { authorName: "Mimer", authorEmail: "mdvault@localhost", idleCommitMinutes: 5 },
   ai: {
     defaultProviderId: "lmstudio-default",
+    checkAnswers: false,
     builtin: DEFAULT_BUILTIN,
     foundry: { model: "" },
     baseInstruction: "",
@@ -64,7 +66,6 @@ const apiMock = vi.hoisted(() => ({
   fileHistory: vi.fn(),
   hasApiKey: vi.fn(),
   getProposals: vi.fn(),
-  listPrompts: vi.fn().mockResolvedValue([]),
   listTasks: vi.fn().mockResolvedValue([]),
   listEpics: vi.fn().mockResolvedValue([]),
   listIdeas: vi.fn().mockResolvedValue([]),
@@ -100,7 +101,6 @@ vi.mock("@tauri-apps/api/core", () => ({
   Channel: vi.fn(),
 }));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn() }));
-vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn() }));
 
 import { App } from "./App";
 import { useChatStore } from "./stores/chatStore";
@@ -137,6 +137,10 @@ describe("App smoke test", () => {
     apiMock.fileHistory.mockResolvedValue([]);
     apiMock.hasApiKey.mockResolvedValue(false);
     useSettingsStore.setState({ settings: null, error: null });
+    // A test that opened a note saves the tabs of the vault; start without any, so the order and
+    // speed of the tests do not decide which note is open.
+    window.localStorage.clear();
+    useWorkspaceStore.setState({ layout: emptyLayout() });
     useVaultStore.setState({
       vault: null,
       tree: [],

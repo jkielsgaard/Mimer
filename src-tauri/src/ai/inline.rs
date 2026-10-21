@@ -1,9 +1,10 @@
 //! Inline commands on selected text (no tools).
 
+use super::clean;
 use super::providers;
 use super::providers::types::{ChatMessage, LlmRequest};
 use super::{router, ChatEvent, InlineCommand, InlineRequest};
-use crate::error::AppResult;
+use crate::error::{AppError, AppResult};
 use crate::projects;
 use crate::settings::keychain;
 use crate::state::AppState;
@@ -101,21 +102,69 @@ pub async fn run_inline(
         temperature: 0.3,
     };
     let client = providers::http_client()?;
-    providers::chat(
-        &client,
-        &provider,
-        key.as_deref(),
-        &llm,
-        &cancel,
-        &mut |t| {
-            let _ = channel.send(ChatEvent::TextDelta {
-                text: t.to_string(),
-            });
-        },
-    )
-    .await?;
-    let _ = channel.send(ChatEvent::Done);
-    Ok(())
+    let may_shrink = matches!(
+        req.command,
+        InlineCommand::Shorten | InlineCommand::RestructureList | InlineCommand::Custom
+    ) || req.command == InlineCommand::RefineInstructions;
+    let check = settings.ai.check_answers && req.command != InlineCommand::RefineInstructions;
+    // The whole answer is read before anything is shown, so reasoning and lead-ins never reach
+    // the note, and an answer that cannot be used is tried once more instead of being offered.
+    let mut last = String::from("the model did not give a usable answer");
+    for _ in 0..2 {
+        let resp = providers::chat(
+            &client,
+            &provider,
+            key.as_deref(),
+            &llm,
+            &cancel,
+            &mut |_| {},
+        )
+        .await?;
+        let answer = clean::clean_replacement(&resp.text);
+        if let Err(why) = clean::usable_replacement(&req.text, &answer, may_shrink) {
+            last = why;
+            continue;
+        }
+        if check && !self_check(&client, &provider, key.as_deref(), &cancel, &req, &answer).await? {
+            last = "the answer did not pass the AI's own check".into();
+            continue;
+        }
+        let _ = channel.send(ChatEvent::TextDelta { text: answer });
+        let _ = channel.send(ChatEvent::Done);
+        return Ok(());
+    }
+    Err(AppError::Provider(format!(
+        "The AI did not give a usable answer ({last}). Try again, or choose a larger model in Settings."
+    )))
+}
+
+/// Asks the model whether its own answer is only the finished text, with the same meaning.
+/// An unclear reply counts as a pass, so the check can only stop an answer it clearly rejects.
+async fn self_check(
+    client: &reqwest::Client,
+    provider: &impl router::Approved,
+    key: Option<&str>,
+    cancel: &CancellationToken,
+    req: &InlineRequest,
+    answer: &str,
+) -> AppResult<bool> {
+    let llm = LlmRequest {
+        system: "You check the work of a text editor. You get an ORIGINAL text, the task, and a \
+            PROPOSED replacement. Answer YES if the proposed text is only the finished text \
+            (no explanations, no reasoning, nothing left out that the task did not ask to remove) \
+            and does what the task asked. Otherwise answer NO. Answer with YES or NO only."
+            .into(),
+        messages: vec![ChatMessage::user(format!(
+            "Task: {}\n\nORIGINAL:\n{}\n\nPROPOSED:\n{}",
+            task(req),
+            req.text,
+            answer
+        ))],
+        tools: vec![],
+        temperature: 0.0,
+    };
+    let resp = providers::chat(client, provider, key, &llm, cancel, &mut |_| {}).await?;
+    Ok(!resp.text.trim().to_uppercase().starts_with("NO"))
 }
 
 #[cfg(test)]

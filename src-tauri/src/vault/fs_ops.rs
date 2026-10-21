@@ -29,25 +29,53 @@ pub fn mtime_ms(path: &Path) -> i64 {
         .unwrap_or(0)
 }
 
-/// Validates a single file or folder name.
-pub fn validate_name(name: &str) -> AppResult<String> {
+/// Why `name` cannot be a file or folder name, or `None` when it can. The wording is shown to the
+/// user, so it says why: the rules are those of Windows and OneDrive, and apply everywhere so a
+/// vault made on one system can be used on another.
+pub fn name_problem(name: &str) -> Option<String> {
     let name = name.trim();
     if name.is_empty() {
-        return Err(AppError::InvalidPath("Name is empty".into()));
+        return Some("Enter a name.".into());
     }
     if name.starts_with('.') {
-        return Err(AppError::InvalidPath(
-            "Names cannot start with a dot".into(),
-        ));
+        return Some("A name cannot start with a dot, because such names are hidden.".into());
     }
     if name.chars().any(|c| {
         matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') || c.is_control()
     }) {
-        return Err(AppError::InvalidPath(format!(
-            "Name contains invalid characters: {name}"
-        )));
+        return Some(
+            "A name cannot contain \\ / : * ? \" < > | because Windows cannot store them.".into(),
+        );
     }
-    Ok(name.to_string())
+    if name.ends_with('.') {
+        return Some(
+            "A name cannot end with a dot. Windows and OneDrive remove it or refuse the folder, \
+             and then the notes cannot be opened."
+                .into(),
+        );
+    }
+    let stem = name.split('.').next().unwrap_or("").trim_end();
+    let reserved = ["CON", "PRN", "AUX", "NUL"]
+        .iter()
+        .any(|r| stem.eq_ignore_ascii_case(r))
+        || (stem.len() == 4
+            && (stem[..3].eq_ignore_ascii_case("COM") || stem[..3].eq_ignore_ascii_case("LPT"))
+            && stem.as_bytes()[3].is_ascii_digit()
+            && stem.as_bytes()[3] != b'0');
+    if reserved {
+        return Some(format!(
+            "“{stem}” is a name Windows keeps for itself, so it cannot be used."
+        ));
+    }
+    None
+}
+
+/// Validates a single file or folder name.
+pub fn validate_name(name: &str) -> AppResult<String> {
+    match name_problem(name) {
+        Some(why) => Err(AppError::InvalidPath(why)),
+        None => Ok(name.trim().to_string()),
+    }
 }
 
 /// Reads a note.
@@ -206,6 +234,12 @@ pub fn rename(root: &Path, from: &str, to: &str) -> AppResult<()> {
             "Cannot move a folder into itself".into(),
         ));
     }
+    if a.file_name() != b.file_name() {
+        // Only a new name is checked: an old entry with an odd name can still be moved.
+        if let Some(name) = b.file_name() {
+            validate_name(&name.to_string_lossy())?;
+        }
+    }
     if let (Some(dir), Some(name)) = (b.parent(), b.file_name()) {
         // Only the entry being renamed may keep the same name apart from its case.
         let own = (a.parent() == Some(dir)).then(|| a.file_name()).flatten();
@@ -294,6 +328,26 @@ mod tests {
         assert!(validate_name("a/b").is_err());
         assert!(validate_name(".hidden").is_err());
         assert!(validate_name("ok name").is_ok());
+    }
+
+    #[test]
+    fn names_windows_cannot_keep_are_refused_with_a_reason() {
+        let why = name_problem("PAM div.").unwrap();
+        assert!(why.contains("end with a dot"), "{why}");
+        assert!(name_problem("nul").unwrap().contains("Windows keeps"));
+        assert!(name_problem("COM1.txt").is_some());
+        assert!(name_problem("Com0").is_none());
+        assert!(name_problem("Console").is_none());
+        assert!(name_problem("v1.2 notes").is_none());
+        assert!(name_problem("a?b").unwrap().contains("cannot contain"));
+    }
+
+    #[test]
+    fn renaming_to_a_name_windows_cannot_keep_is_refused() {
+        let d = tempfile::tempdir().unwrap();
+        create_folder(d.path(), "", "PAM").unwrap();
+        assert!(rename(d.path(), "PAM", "PAM div.").is_err());
+        assert!(rename(d.path(), "PAM", "PAM div").is_ok());
     }
 
     fn message(r: AppResult<impl std::fmt::Debug>) -> String {

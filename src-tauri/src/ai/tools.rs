@@ -127,6 +127,13 @@ fn err(summary: String, msg: impl std::fmt::Display) -> ToolOutcome {
 /// Added to "does not exist" errors: small models shorten paths or invent them.
 const PATH_HINT: &str = ". Use the full vault-relative path exactly as list_folder shows it";
 
+/// Why a folder or file name in a new path cannot be used (Windows and OneDrive rules), if any.
+fn path_name_problem(path: &str) -> Option<String> {
+    path.split('/')
+        .filter(|part| !part.is_empty())
+        .find_map(crate::vault::fs_ops::name_problem)
+}
+
 /// A note moved to a path without `.md` would become a file with that name ("vendors").
 fn extension_problem(from: &str, to: &str) -> Option<String> {
     let note = from.to_lowercase().ends_with(".md");
@@ -381,6 +388,9 @@ pub fn execute(
             if !path.to_lowercase().ends_with(".md") {
                 return err(summary, "new notes must have a .md extension");
             }
+            if let Some(problem) = path_name_problem(path) {
+                return err(summary, problem);
+            }
             match paths::resolve(&v.root, path, scope) {
                 Ok(a) if a.exists() => {
                     err(summary, format!("{path} already exists; use propose_edit"))
@@ -404,6 +414,9 @@ pub fn execute(
             };
             let summary = format!("Proposed move {from} → {to}");
             if let Some(problem) = extension_problem(from, to) {
+                return err(summary, problem);
+            }
+            if let Some(problem) = path_name_problem(to) {
                 return err(summary, problem);
             }
             let (a, b) = match (

@@ -96,6 +96,7 @@ export function SemanticSearchSettings({ draft, onChange, persist }: Props) {
         <Label htmlFor="emb-model">Embedding model</Label>
         <div className="flex gap-2">
           <Input
+            data-no-ai
             id="emb-model"
             list="emb-models"
             value={emb.model}

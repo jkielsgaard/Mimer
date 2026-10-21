@@ -118,6 +118,7 @@ export function SearchPanel() {
       <div className="relative p-2">
         <Search className="pointer-events-none absolute left-4 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
+          data-no-ai
           ref={input}
           aria-label="Search notes"
           className="pl-7"

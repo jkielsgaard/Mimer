@@ -1,0 +1,10 @@
+[package]
+name = "foundry-native-fetch"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Builds the Foundry Local SDK once so that its build step downloads the native libraries. Used by scripts/fetch-foundry-native.*; it is not part of Mimer."
+
+[dependencies]
+# The same vendored copy of foundry-local-sdk 2.1.0 that Mimer uses (see src-tauri/vendor/README.md).
+foundry-local-sdk = { path = "../../src-tauri/vendor/foundry-local-sdk" }

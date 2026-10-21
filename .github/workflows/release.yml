@@ -63,9 +63,10 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Mimer ${{ github.ref_name }}"
-          releaseBody: "Beta version. See CHANGELOG.md for what changed. The Windows installer (`*-setup.exe`) installs per user without administrator rights. Builds are unsigned."
+          releaseBody: "See CHANGELOG.md for what changed. The Windows installer (`*-setup.exe`) installs per user without administrator rights. Builds are unsigned."
           releaseDraft: true
-          prerelease: true
+          # 0.x versions (the beta) and tags such as v1.1.0-rc1 are marked as pre-releases.
+          prerelease: ${{ startsWith(github.ref_name, 'v0.') || contains(github.ref_name, '-') }}
           args: ${{ matrix.args }}
 
       # The Microsoft Store package (see docs/MSIX.md). It must never fail the release, so any

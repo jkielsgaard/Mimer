@@ -4,7 +4,7 @@ Every vault keeps a **version history** (a Git repository inside the folder). Mi
 
 ## Look at an older version
 
-Open the **History** tab on the right (or press **Ctrl/Cmd+Shift+H**). Pick a version to see what changed, and click **Restore this version** to bring it back. Restoring never throws anything away: the version you replaced stays in the history.
+Press the **History** icon at the right edge (or **Ctrl/Cmd+Shift+H**). Pick a version to see what changed, and click **Restore this version** to bring it back. Restoring never throws anything away: the version you replaced stays in the history.
 
 ## Bring back a deleted note
 

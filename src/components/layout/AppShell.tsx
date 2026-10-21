@@ -24,6 +24,7 @@ import { Header } from "./Header";
 import { StatusBar } from "./StatusBar";
 import { usePanelCollapse } from "./usePanelCollapse";
 import { ActivityRail } from "./ActivityRail";
+import { FieldAi } from "@/features/fieldAi/FieldAi";
 import { AskWindow } from "./AskWindow";
 import { RightRail } from "./RightRail";
 import { LinksPanel } from "@/features/notePanels/LinksPanel";
@@ -145,6 +146,7 @@ export function AppShell() {
         <RightRail />
       </div>
       <AskWindow />
+      <FieldAi />
       <StatusBar />
     </div>
   );

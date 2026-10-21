@@ -1,6 +1,7 @@
 import { FileText, Link2, Plus, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { NoteBox } from "@/components/NoteBox";
 import { ViewHeader } from "@/components/ViewHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ export function EpicPage() {
   const [deleting, setDeleting] = useState(false);
   const today = todayIso();
 
+  const epic = epics.find((e) => e.path === epicPath);
   const group = useMemo(
     () => epicGroups(tasks, epics, today).find((g) => g.path === epicPath) ?? null,
     [tasks, epics, today, epicPath],
@@ -87,6 +89,18 @@ export function EpicPage() {
               <b className="text-foreground">{group.path.replace(/\.md$/i, "")}</b>
             </p>
           </div>
+
+          {group.native && (
+            <NoteBox
+              label="Note"
+              value={epic?.description ?? ""}
+              placeholder="What is this epic task about?"
+              hint="Kept as text under the heading of the epic's note."
+              onSave={(text) => {
+                void useTaskStore.getState().setDescription(group.path, text);
+              }}
+            />
+          )}
 
           <div className="flex flex-wrap items-center gap-2">
             <Button

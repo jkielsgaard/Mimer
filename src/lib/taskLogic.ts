@@ -124,11 +124,6 @@ export function epicGroups(
   );
 }
 
-/** Minutes the tasks are estimated to take (tasks without an estimate count as nothing). */
-export function totalMinutes(tasks: readonly Task[]): number {
-  return tasks.reduce((sum, t) => sum + (t.estMinutes ?? 0), 0);
-}
-
 /** `1 h 15 min`, `50 min`. */
 export function durationLabel(minutes: number): string {
   const h = Math.floor(minutes / 60);

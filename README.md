@@ -2,18 +2,17 @@
 
 > **Beta.** Mimer is under active development. It works, but expect rough edges, and keep a backup of important notes.
 
-Mimer is a desktop app for Markdown notes with a built-in AI assistant that helps you write, restructure, correct and find information in your notes. Like other Markdown note apps, your notes are plain Markdown files in a folder. What Mimer adds is that every change is kept in a Git history and that the AI runs on your own computer by default.
+Mimer is a desktop app for Markdown notes with a built-in AI assistant that helps you write, restructure, correct and find information in your notes. Like other Markdown note apps, your notes are plain Markdown files in a folder. What Mimer adds is that every change is kept in a Git history and that the AI only ever runs on your own computer.
 
-![Mimer showing a note with the AI menu over selected text](docs/screenshots/notes-ai.png)
-
-| Tasks                                        | Ideas                                                |
-| -------------------------------------------- | ---------------------------------------------------- |
-| ![The task list](docs/screenshots/tasks.png) | ![An idea with its note](docs/screenshots/ideas.png) |
+<p align="center">
+  <img src="docs/screenshots/welcome.png" alt="The Mimer start screen: open a folder as a vault or create a new one" width="100%">
+</p>
 
 - **Plain files.** Your notes are normal `.md` files in normal folders. A vault works without Mimer.
 - **Never lose data.** Every vault is a local Git repository, so any change can be restored from the history.
 - **You are in control.** The AI only _proposes_ changes. Nothing is written until you approve it.
-- **Local first.** Mimer, the notes AI, runs on your own machine, with the built-in AI (llama.cpp or Microsoft's [Foundry Local](https://learn.microsoft.com/azure/foundry-local/), which can use a neural processor) or [LM Studio](https://lmstudio.ai), and nothing else: your notes are never sent to a cloud service.
+- **Local only.** The AI runs on your own machine, with the built-in AI (llama.cpp or Microsoft's [Foundry Local](https://learn.microsoft.com/azure/foundry-local/), which can use a neural processor) or [LM Studio](https://lmstudio.ai). Your notes are never sent to a cloud service.
+- **Works without AI.** Everything that is not AI (notes, tasks, ideas, search, history) works the same when no AI is running.
 
 ## Why Mimer?
 
@@ -27,14 +26,43 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
 
 ## Features
 
-- Live-preview Markdown editor with a formatting toolbar, tabs, split view and a table editor
-- `[[Wiki-links]]`, tags, images, templates and daily notes
-- Full-text search, plus search by meaning with an embedding model
+- Live-preview Markdown editor with a formatting toolbar, tabs, split view, a table editor and Mermaid diagrams
+- `[[Wiki-links]]`, tags (typing `#` suggests the ones you use), images, templates and index pages
+- Daily notes in a calendar at the top of the file panel, and **Trace my work**: one line a day under "Worked on" for each note and task you worked on (off by default)
+- Tasks as checklist lines in your notes, with steps, a note, a log of what happened and due dates; **epic tasks** group them, and **Focus** shows one task at a time
+- Ideas: write something down from anywhere (`Ctrl/Cmd+Shift+N`) and turn it into a task or a note later
+- Full-text search, plus search by meaning with a local embedding model
 - Version history per note: compare, restore, recover deleted notes
-- AI chat that can search and read your notes and propose edits you review file by file, with a built-in local AI (download, **Wake Mimer**, **Sleep Mimer**) or LM Studio
-- Inline AI commands on selected text (fix spelling, shorten, rewrite …)
+- AI on selected text in a note **and in every text box** (fix spelling, rewrite, shorten, translate …), AI commands for a whole note or folder, and a chat that searches and reads your notes to answer
 - Projects: a folder with its own AI instructions and its own tree
 - Import from a folder (for example a OneNote export) and export to HTML, Word and PDF
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/notes-editor.png" alt="A note with headings, a table, tags and a link, next to the file panel with the calendar"></td>
+    <td width="50%"><img src="docs/screenshots/tasks-list.png" alt="The task list, grouped by epic task, with due dates, tags and progress"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/task-page.png" alt="A task with its epic task, the note, the steps and the log of what happened"></td>
+    <td><img src="docs/screenshots/epic-task-page.png" alt="An epic task with its note and its tasks"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/field-ai-bar.png" alt="The AI bar over selected text in a text box"></td>
+    <td><img src="docs/screenshots/field-ai-fix-review.png" alt="Fix spelling in a text box: the change is shown before it is accepted"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/ai-menu-note.png" alt="The AI menu above a note: fix spelling, tidy the structure, a summary, a title and tags and more"></td>
+    <td><img src="docs/screenshots/daily-note-trace.png" alt="Today's daily note with Worked on lines that link to the notes and epic tasks"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/ideas.png" alt="Ideas, with one idea and its note open"></td>
+    <td><img src="docs/screenshots/task-log-edit-delete.png" alt="A log line of a task with buttons to edit or delete it"></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/settings-trace-work.png" alt="Settings, General, with Trace my work"></td>
+    <td><img src="docs/screenshots/settings-ai-self-check.png" alt="Settings, AI, with the choice to let the AI check its own answer"></td>
+  </tr>
+</table>
 
 ## Language
 
@@ -44,8 +72,8 @@ The app itself (menus, buttons, help and documentation) is in **English**. The A
 
 Download the build for your system from the **Releases** page. There are builds for Windows and Linux. A macOS build is not made for now, because it cannot be tested.
 
-- **Windows 10/11:** run `Mimer_<version>_x64-setup.exe` (a Microsoft Store version is being prepared; see [docs/MSIX.md](docs/MSIX.md)). It installs for the current user and does not need administrator rights. The installer is not signed, so Windows SmartScreen may warn you: choose **More info → Run anyway**.
-- **Linux:** run the `.AppImage` (`chmod +x Mimer_*.AppImage && ./Mimer_*.AppImage`), or install the `.rpm` / `.deb`.
+- **Windows 10/11:** run `Mimer_<version>_x64-setup.exe` (there is also a Microsoft Store package; see [docs/MSIX.md](docs/MSIX.md)). It installs for the current user and does not need administrator rights. The installer is not signed, so Windows SmartScreen may warn you: choose **More info → Run anyway**.
+- **Linux:** run the `.AppImage` (`chmod +x Mimer_*.AppImage && ./Mimer_*.AppImage`), or install the `.rpm` or `.deb`.
 
 ## Set up the AI
 
@@ -72,18 +100,21 @@ pnpm tauri build      # build an installer for the current system
 pnpm check            # everything CI runs: format, lint, types, tests, clippy
 ```
 
-Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v0.12.0` makes GitHub Actions build the installers (`.github/workflows/release.yml`).
+Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](docs/START-GUIDE.md). Pushing a tag such as `v1.0.0` makes GitHub Actions build the installers and the Store package into a draft release (`.github/workflows/release.yml`).
 
 ## More
 
 - [docs/START-GUIDE.md](docs/START-GUIDE.md): getting started
 - [docs/MANUAL_TESTS.md](docs/MANUAL_TESTS.md): the manual test checklist
 - [docs/DECISIONS.md](docs/DECISIONS.md): design decisions
+- [docs/IMPORT-ONENOTE.md](docs/IMPORT-ONENOTE.md): moving notes from OneNote
+- [docs/MSIX.md](docs/MSIX.md) and [docs/STORE-LISTING.md](docs/STORE-LISTING.md): the Microsoft Store package
+- [PRIVACY.md](PRIVACY.md): what Mimer does with your data (nothing leaves your computer unless you choose it)
 - [CHANGELOG.md](CHANGELOG.md): what changed in each version
-- [CLAUDE.md](CLAUDE.md): the full specification
+- [CLAUDE.md](CLAUDE.md): the original v1 specification; later changes are recorded in DECISIONS.md
 
 ## Licence and your own version
 
-Mimer is open source under the [Apache License 2.0](LICENSE). You may use it, change it and make your own version, also a commercial one. If you share your version, keep the [NOTICE](NOTICE) file and the licence with it, say which changes you made, and point back to this project: https://github.com/jkielsgaard/Mimer.
+Mimer is free software under the [GNU Affero General Public License 3.0](LICENSE). It is free for everyone to use, privately and in a company. If you take the code and share your own version, you must keep the [NOTICE](NOTICE) file and the copyright with it, say which changes you made, point back to this project (https://github.com/jkielsgaard/Mimer) and share your version, with its source, under the same licence. Versions up to 0.12.0 were released under the Apache License 2.0 and stay under it.
 
 Built with Tauri 2, React and Rust.

@@ -448,20 +448,6 @@ pub fn proofread_pieces(text: &str, limit: usize) -> Vec<(String, bool)> {
     pieces
 }
 
-/// What a skill would do with one note, for the "Try it" box. Nothing is proposed.
-#[derive(Debug, Clone, serde::Serialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct PreviewResult {
-    /// The note as it is (for a sort: its path).
-    pub before: String,
-    /// What it would become (for a sort: the new path).
-    pub after: String,
-    pub checks: Vec<super::checks::CheckResult>,
-    /// Why nothing would change, when nothing would.
-    pub note: Option<String>,
-}
-
 /// Everything one run needs.
 struct Run<'a> {
     /// Progress goes here; `None` for a preview.
@@ -986,95 +972,6 @@ pub async fn run_skill<R: Runtime>(
     }
 }
 
-/// Tries a skill on ONE note and shows what it would do, proposing nothing.
-/// Used by the "Try it on a note" step in Settings, before the skill is saved or run on a folder.
-pub async fn preview_skill<R: Runtime>(
-    app: &AppHandle<R>,
-    skill: &Skill,
-    path: &str,
-) -> AppResult<PreviewResult> {
-    let state = app.state::<AppState>();
-    let vault = state.current_vault()?;
-    let settings = state.settings_snapshot();
-    let all_projects = vault.project_list();
-    let project = projects::for_path(&all_projects, path).cloned();
-    let provider = router::select_for_project(&settings, project.as_ref())?;
-    let cfg = provider.config().clone();
-    crate::engine::service::require_awake(&state, &cfg)?;
-    crate::foundry::service::require_awake(&state, &cfg)?;
-    crate::engine::service::touch(&state);
-    crate::foundry::service::touch(&state);
-    let scope = project.as_ref().map(|p| p.folder.clone());
-    paths::resolve(&vault.root, path, scope.as_deref())?;
-    let note = fs_ops::read_note(&vault.root, path)?;
-    let note_limit = ((cfg.context_tokens as usize).saturating_mul(4) * 2 / 5).min(NOTE_CHAR_LIMIT);
-    let cancel = CancellationToken::new();
-    let run = Run {
-        channel: None,
-        cancel: &cancel,
-        key: keychain::get_key(&cfg.id),
-        provider,
-        client: http_client()?,
-        vault: vault.clone(),
-        scope,
-        global: settings.ai.global_instructions.clone(),
-        project,
-        extra: String::new(),
-        note_limit: note_limit.max(1_000),
-        skill: skill.clone(),
-    };
-    let changed = |result: Result<String, String>| match result {
-        Ok(text) => PreviewResult {
-            checks: super::checks::check_change(&note.content, &text),
-            before: note.content.clone(),
-            after: text,
-            note: None,
-        },
-        Err(why) => PreviewResult {
-            before: note.content.clone(),
-            after: note.content.clone(),
-            checks: Vec::new(),
-            note: Some(format!("No change would be proposed: {why}.")),
-        },
-    };
-    match skill.kind {
-        SkillKind::Rewrite => Ok(changed(run.rewrite_text(&note.content).await?)),
-        SkillKind::Fix => Ok(changed(run.fix_text(&note.content).await?)),
-        SkillKind::Sort => {
-            let folder = run.choose_folder(path, &note.content, &[]).await?;
-            let base = parent(path);
-            let dest = if base.is_empty() {
-                format!("{folder}/{}", file_name(path))
-            } else {
-                format!("{base}/{folder}/{}", file_name(path))
-            };
-            Ok(PreviewResult {
-                before: path.to_string(),
-                after: dest,
-                checks: Vec::new(),
-                note: None,
-            })
-        }
-        SkillKind::Create => {
-            let mut notes = Vec::new();
-            let target = Target {
-                path: path.to_string(),
-                base: parent(path),
-            };
-            let text = run.create_text(&[target], &mut notes).await?;
-            Ok(PreviewResult {
-                before: String::new(),
-                after: text,
-                checks: Vec::new(),
-                note: notes.first().cloned(),
-            })
-        }
-        SkillKind::Answer => Err(AppError::InvalidPath(
-            "A chat skill answers in the chat, so there is nothing to try here".into(),
-        )),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1466,50 +1363,6 @@ mod tests {
             .as_deref()
             .unwrap()
             .starts_with("# Overview"));
-    }
-
-    fn draft(kind: SkillKind) -> Skill {
-        Skill {
-            id: String::new(),
-            name: "Draft".into(),
-            description: String::new(),
-            kind,
-            applies_to: crate::skills::SkillTarget::Both,
-            instruction: "Do it.".into(),
-            builtin: false,
-        }
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn a_skill_can_be_tried_on_one_note_without_proposing_anything() {
-        let h = harness(&[("Work/Key.md", "# Key\n\nkey vendor")]);
-        let rewrite = preview_skill(h.app.handle(), &draft(SkillKind::Rewrite), "Work/Key.md")
-            .await
-            .unwrap();
-        assert!(rewrite.after.ends_with("REWRITTEN"), "{rewrite:?}");
-        assert_eq!(rewrite.before, "# Key\n\nkey vendor");
-        assert!(!rewrite.checks.is_empty());
-        let sort = preview_skill(h.app.handle(), &draft(SkillKind::Sort), "Work/Key.md")
-            .await
-            .unwrap();
-        assert_eq!(sort.after, "Work/Vendors/Key.md");
-        let create = preview_skill(h.app.handle(), &draft(SkillKind::Create), "Work/Key.md")
-            .await
-            .unwrap();
-        assert!(create.after.starts_with("# Overview"), "{create:?}");
-        let fix = preview_skill(h.app.handle(), &draft(SkillKind::Fix), "Work/Key.md")
-            .await
-            .unwrap();
-        assert!(
-            fix.note.as_deref().unwrap().contains("nothing to fix"),
-            "{fix:?}"
-        );
-        assert!(
-            preview_skill(h.app.handle(), &draft(SkillKind::Answer), "Work/Key.md")
-                .await
-                .is_err()
-        );
-        assert!(h.proposals().is_empty());
     }
 
     #[tokio::test(flavor = "multi_thread")]

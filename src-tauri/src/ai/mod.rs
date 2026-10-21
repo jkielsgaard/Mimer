@@ -2,6 +2,7 @@
 
 pub mod agent;
 pub mod checks;
+pub mod clean;
 pub mod inline;
 pub mod mentions;
 pub mod prompt;

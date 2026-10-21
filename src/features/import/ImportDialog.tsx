@@ -162,6 +162,7 @@ export function ImportDialog() {
                 />
               </div>
               <Input
+                data-no-ai
                 id="import-dest"
                 value={dest}
                 onChange={(e) => {

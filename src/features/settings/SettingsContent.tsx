@@ -61,7 +61,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
     }
   };
   const provider = draft.ai.providers.find((p) => p.id === providerId) ?? null;
-  // Notes only go to local providers; cloud providers can only be used by Raven.
+  // Notes only go to local providers; a cloud provider is never used.
   const localProviders = usableProviders(draft).filter((p) => effectiveLocation(p) === "local");
 
   return (
@@ -109,6 +109,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
               <div className="flex flex-col gap-1">
                 <Label htmlFor="set-font">Editor font size (px)</Label>
                 <Input
+                  data-no-ai
                   id="set-font"
                   type="number"
                   min={10}
@@ -124,6 +125,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
               <div className="flex flex-col gap-1">
                 <Label htmlFor="set-width">Editor line width (px)</Label>
                 <Input
+                  data-no-ai
                   id="set-width"
                   type="number"
                   min={400}
@@ -147,6 +149,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                   />
                 </div>
                 <Input
+                  data-no-ai
                   id="set-recent"
                   type="number"
                   min={0}
@@ -188,6 +191,24 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                     A moment after you stop typing, the paragraph is checked and misspelt words get
                     a wavy line. Nothing changes until you click a word and choose. Made for
                     dyslexia. Needs a local AI; without one, the system spellcheck still works.
+                  </span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={draft.editor.traceWork}
+                  onChange={(e) => {
+                    update({ editor: { ...draft.editor, traceWork: e.target.checked } });
+                  }}
+                />
+                <span>
+                  Trace my work in today's daily note
+                  <span className="block text-xs text-muted-foreground">
+                    Mimer writes one short line under “Worked on” for each note you write in and
+                    each task you make, work on or finish, once a day. You can edit or remove the
+                    lines, and write there yourself. No AI is used.
                   </span>
                 </span>
               </label>
@@ -349,6 +370,26 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                   ))}
                 </Select>
               </div>
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={draft.ai.checkAnswers}
+                  onChange={(e) => {
+                    update({ ai: { ...draft.ai, checkAnswers: e.target.checked } });
+                  }}
+                />
+                <span>
+                  Let the AI check its own answer before showing it
+                  <span className="block text-xs text-muted-foreground">
+                    For fix spelling, rewrite, translate and the other text commands. The AI is
+                    asked once more whether the answer is only the finished text with the same
+                    meaning, and tries again if it is not. Mimer always throws away empty answers
+                    and thinking out loud. Turning this on makes each answer take longer, so it is
+                    best with a fast model.
+                  </span>
+                </span>
+              </label>
               <MimerInstructionSettings draft={draft} onChange={setDraft} />
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1.5">
@@ -379,6 +420,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
               <div className="flex flex-col gap-1">
                 <Label htmlFor="set-author">Author name</Label>
                 <Input
+                  data-no-ai
                   id="set-author"
                   value={draft.git.authorName}
                   onChange={(e) => {
@@ -389,6 +431,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
               <div className="flex flex-col gap-1">
                 <Label htmlFor="set-email">Author email</Label>
                 <Input
+                  data-no-ai
                   id="set-email"
                   value={draft.git.authorEmail}
                   onChange={(e) => {
@@ -406,6 +449,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                   />
                 </div>
                 <Input
+                  data-no-ai
                   id="set-idle"
                   type="number"
                   min={1}

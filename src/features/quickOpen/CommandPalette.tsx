@@ -174,6 +174,7 @@ export function CommandPalette() {
         </DialogDescription>
         <div className="border-b p-2">
           <Input
+            data-no-ai
             autoFocus
             aria-label="Search notes, AI commands and actions"
             placeholder="Type a note, an AI command or an action…"

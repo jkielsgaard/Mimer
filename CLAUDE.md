@@ -2,6 +2,15 @@
 
 This file is the complete specification for version 1 of Mimer. It is written so that Claude Code or a junior developer can build v1 without asking technical questions. All technical decisions are made here. If something is genuinely not covered, choose the simplest option consistent with the **Core principles** and document the decision in `docs/DECISIONS.md`.
 
+> **Read this first: where the app is now (0.12).** This specification is the plan v1 was built from. The app has grown since, and every change is recorded in `docs/DECISIONS.md` (newest at the bottom). The big differences:
+>
+> - **The AI only ever runs on the user's own computer.** Cloud AI (the per-project lock in §8.10–8.11, the cloud providers of M11 and the later "Raven" tab) is gone: `ai::router::select_local` is the only way to a provider, and a cloud provider is never used.
+> - **A built-in AI**: llama.cpp (`engine`) and Microsoft's Foundry Local (`foundry`), downloaded at the user's request; LM Studio still works.
+> - **The AI is fixed commands where the user works** (selected text, any text box, the note's AI button, folders, search, tasks, ideas) and **skills** that Mimer carries out note by note. The chat only answers; changes always come as proposals to review (§8.15).
+> - Several things listed as out of scope in §13 now exist: tabs and split view, a command palette, templates and daily notes, export, semantic search, persisted chat history. New areas: tasks and epic tasks, ideas, Focus, Landing, the daily-notes calendar and Trace my work.
+> - Releases are built for Windows (installer and Microsoft Store package) and Linux; there is no macOS build for now.
+> - The licence is **AGPL-3.0** from the version after 0.12.0 (it was Apache-2.0).
+
 ---
 
 ## 1. Project overview
@@ -109,7 +118,7 @@ Do not add other dependencies without recording the reason in `docs/DECISIONS.md
 - Versioning: **Semantic Versioning**. v1 releases start at `0.1.0`; `1.0.0` when all milestones in §14 pass.
 - Changelog: `CHANGELOG.md` in **Keep a Changelog** format.
 - Branches: `main` is always buildable. Work in `feat/<short-name>` branches.
-- Licence: Apache-2.0 (`LICENSE` and `NOTICE`; changed from MIT before the first release, see `docs/DECISIONS.md`).
+- Licence: AGPL-3.0 (`LICENSE` and `NOTICE`; MIT before the first release, Apache-2.0 up to 0.12.0, see `docs/DECISIONS.md`).
 
 ---
 

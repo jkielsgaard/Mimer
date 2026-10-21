@@ -34,6 +34,7 @@ export function HelpDialog() {
             <div className="p-3 pb-2 text-sm font-semibold">How to use Mimer</div>
             <div className="px-2 pb-2">
               <Input
+                data-no-ai
                 aria-label="Search the guide"
                 placeholder="Search the guide…"
                 value={query}

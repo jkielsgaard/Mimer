@@ -6,6 +6,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Edit and delete a line in "What has happened".** Hold the mouse over a log line: a pencil changes its text and date, a bin deletes it (it asks first; History of the note has it).
+- **A note on a task and on an epic task.** The task page and the epic page have a **Note** box, kept in the note as plain text (indented quote lines under the task, and text under the heading of an epic). The note in the "write it down" box becomes the task's note.
+- **Easier to see on a task:** *Epic task: …* and *Open the note* are now two clear buttons under the title.
+- **AI in every text box.** Select text in any box (a log line, a step, a task title, an idea) and a small bar offers Fix, Rewrite, Shorten and more; **Ctrl+K** works on the selection or on all the text. The same commands and the same review as in a note, including Translate. Passwords, search and name boxes are left out.
+- **Trace my work can be chosen when you make a vault.** The "Create new vault" box has a checkbox for it (off by default). It is the same setting as in Settings → General, so it can be changed there.
+- **Trace my work** (Settings → General, off by default). Mimer writes one line a day for each note you write in and each task you make, work on or finish, under "Worked on" in today's daily note. A task line ends with a link to the note (epic task) the task is in. You can edit the lines and write there yourself.
+- **Let the AI check its own answer** (Settings → AI, off by default). A second question to the AI before a text command's answer is shown; it takes longer.
+
+### Changed
+
+- **New licence: AGPL-3.0** (was Apache-2.0). Mimer stays free for everyone, also companies. If you share your own version of the code you must keep the notice, say where it is from and share it with its source under the same licence. Versions up to 0.12.0 stay under Apache-2.0.
+- **Help, About and the documentation are up to date**: menu names (Help → Report…, Go → Show Markdown source), the chat window instead of the old tabs, task notes and log editing, AI in text boxes, and the README with new pictures. The manual test checklist is rewritten for 1.0.
+- **Releases**: a 0.x tag (or one with `-`, such as `v1.1.0-rc1`) is a pre-release; `v1.0.0` and later are normal releases. CI only reads the code and cancels a run that a newer push replaced.
+- **Names Windows cannot keep are refused** when you make or rename a folder, note or project, with a red box that says why: a dot at the end ("PAM div." could not be synced by OneDrive), the names `CON`, `NUL`, `COM1` and the like, and the characters `\ / : * ? " < > |`. The same rules hold in the backend, for the AI's proposals and on Linux, so a vault works on every system.
+- **The status line from the log** uses the written log lines (the latest ten, not Mimer's own "Status:" lines), the steps and the note, with a stricter prompt.
+
+### Removed
+
+- Code that nothing used any more: saved chat prompts (removed from the chat in 0.11.0), making, removing and trying your own skills (Settings → Skills was removed in 0.11.0; skills made before are still listed), the Wake/Sleep bars of the old Mimer tab, and the browser opener package (links are opened by Mimer itself), with its permission.
+- Old files: the gold icon in `assets-src/`, `docs/screenshot.png`, the feature plans in `docs/plans/` and the review notes in `docs/REVIEW.md` (all in the Git history), and the Foundry Local test program and its workflow. Fetching Foundry Local's libraries now uses a small empty crate in `scripts/foundry-native-fetch`.
+
+### Fixed
+
+- **Thinking out loud is never shown.** `<think>…</think>` and lead-ins like "Revised text:" are removed from the AI's answers, in text commands, the chat and skills.
+- **An answer that would delete the text.** An empty answer, or one that lost most of the text, is not offered as a replacement: Mimer tries once more and then says it got no usable answer.
+- A sleeping built-in AI is woken by the text commands too.
+- **The Outline panel showed the previous note.** After switching notes it could keep the headings and tags of the note before; it now reads the new note.
+
 ## [0.12.0] - 2026-10-20
 
 ### Added

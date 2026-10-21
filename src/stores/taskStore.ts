@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { MetaPatch } from "@/bindings/MetaPatch";
 import type { Epic } from "@/bindings/Epic";
 import type { Task } from "@/bindings/Task";
+import type { TaskLog } from "@/bindings/TaskLog";
 import { api, toApiError } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
 import { quickTaskText, todayIso } from "@/lib/taskLogic";
@@ -68,6 +69,14 @@ interface TaskState {
   setStatus: (t: Task, status: string | null) => Promise<void>;
   addStep: (t: Task, text: string) => Promise<void>;
   addLog: (t: Task, text: string) => Promise<void>;
+  /** Changes the date and text of one line of the log. */
+  editLog: (t: Task, l: TaskLog, date: string, text: string) => Promise<void>;
+  /** Deletes one line of the log. The note is committed first, so History has it. */
+  deleteLog: (t: Task, l: TaskLog) => Promise<void>;
+  /** Sets the note of a task (empty text removes it). */
+  setNote: (t: Task, text: string) => Promise<void>;
+  /** Sets the description of an epic task (the text under its heading). */
+  setDescription: (epicPath: string, text: string) => Promise<void>;
   /** Adds tasks to a note (for example the ones the AI found in it). */
   addToNote: (path: string, texts: string[]) => Promise<void>;
   /** Drops a task: it is kept in the note but no longer shown as open. */
@@ -189,7 +198,7 @@ export const useTaskStore = create<TaskState>((set, get) => {
       const fresh = await mutate(target, () =>
         extra === "" && list.length === 0 && path === undefined
           ? api.taskAdd(line)
-          : api.taskAdd(line, extra === "" ? undefined : extra, todayIso(), list, target),
+          : api.taskAdd(line, extra === "" ? undefined : extra, list, target),
       );
       // A first task makes its note, so the epic list may have a new entry.
       if (fresh !== null && !get().epics.some((e) => e.path === target)) {
@@ -228,6 +237,27 @@ export const useTaskStore = create<TaskState>((set, get) => {
     },
     addLog: async (t, text) => {
       await mutate(t.path, () => api.taskAddLog(t.path, t.line, t.key, todayIso(), text));
+    },
+    editLog: async (t, l, date, text) => {
+      await mutate(t.path, () => api.taskEditLog(t.path, l.line, l.key, date, text));
+    },
+    deleteLog: async (t, l) => {
+      await mutate(t.path, () => api.taskDeleteLog(t.path, l.line, l.key));
+    },
+    setNote: async (t, text) => {
+      await mutate(t.path, () => api.taskSetNote(t.path, t.line, t.key, text));
+    },
+    setDescription: async (epicPath, text) => {
+      try {
+        await flushPendingWrites();
+        const e = await api.epicSetDescription(epicPath, text);
+        set((s) => ({ epics: s.epics.map((x) => (x.path === e.path ? e : x)) }));
+        if (useVaultStore.getState().activePath === epicPath) {
+          useVaultStore.setState((s) => ({ reloadNonce: s.reloadNonce + 1 }));
+        }
+      } catch (e) {
+        reportError(e);
+      }
     },
     addToNote: async (path, texts) => {
       await mutate(path, () => api.taskAddToNote(path, texts));

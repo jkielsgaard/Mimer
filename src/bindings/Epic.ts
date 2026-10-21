@@ -15,4 +15,8 @@ title: string,
 /**
  * The note the epic was made from (a link target such as `IT/VPN client guide`), if any.
  */
-source: string | null, };
+source: string | null, 
+/**
+ * The text between the heading and the first task: what the epic is about.
+ */
+description: string, };

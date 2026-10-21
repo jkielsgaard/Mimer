@@ -29,11 +29,13 @@ function settings(recent: string[]): Settings {
       spellcheck: true,
       recentNotes: 4,
       aiSpelling: false,
+      traceWork: false,
       ownWords: [],
     },
     git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
     ai: {
       defaultProviderId: "p",
+      checkAnswers: false,
       builtin: DEFAULT_BUILTIN,
       foundry: { model: "" },
       baseInstruction: "",
@@ -75,5 +77,54 @@ describe("Welcome recent vaults", () => {
       expect(openVault).toHaveBeenCalledWith("/new/Notes");
       expect(api.forgetVault).toHaveBeenCalledWith("/gone/Notes");
     });
+  });
+});
+
+describe("Welcome new vault", () => {
+  const createVault = vi.fn().mockResolvedValue(true);
+  const save = vi.fn().mockResolvedValue(undefined);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    createVault.mockResolvedValue(true);
+    save.mockResolvedValue(undefined);
+    api.missingVaults.mockResolvedValue([]);
+    dialogs.pickFolder.mockResolvedValue("/here");
+    useVaultStore.setState({ createVault });
+    useSettingsStore.setState({ settings: settings([]), save });
+  });
+
+  it("asks whether to trace the work, which is off unless chosen", async () => {
+    render(<Welcome />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /Create new vault/ }));
+    const box = await screen.findByRole("checkbox", { name: /Trace my work/ });
+    expect(box).not.toBeChecked();
+    await user.type(screen.getByRole("textbox"), "Work");
+    await user.click(screen.getByRole("button", { name: "Create" }));
+    expect(createVault).toHaveBeenCalledWith("/here", "Work");
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it("saves the setting when it is ticked", async () => {
+    render(<Welcome />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /Create new vault/ }));
+    await user.click(await screen.findByRole("checkbox", { name: /Trace my work/ }));
+    await user.type(screen.getByRole("textbox"), "Work");
+    await user.click(screen.getByRole("button", { name: "Create" }));
+    expect(save).toHaveBeenCalledWith(
+      expect.objectContaining({ editor: expect.objectContaining({ traceWork: true }) }),
+    );
+    expect(createVault).toHaveBeenCalledWith("/here", "Work");
+  });
+
+  it("refuses a name Windows cannot keep, with the reason", async () => {
+    render(<Welcome />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /Create new vault/ }));
+    await user.type(await screen.findByRole("textbox"), "PAM div.");
+    expect(await screen.findByRole("alert")).toHaveTextContent(/end with a dot/i);
+    expect(screen.getByRole("button", { name: "Create" })).toBeDisabled();
   });
 });

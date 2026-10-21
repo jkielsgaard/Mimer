@@ -1,9 +1,16 @@
 Mimer
 Copyright 2026 Jesper Ahasverusen Kielsgaard
 
-This product includes software developed by Jesper Ahasverusen Kielsgaard.
 Original project: https://github.com/jkielsgaard/Mimer
-It is licensed under the Apache License, Version 2.0 (see the LICENSE file).
 
-If you make and share your own version of Mimer, keep this notice with it and
-say which changes you made.
+Mimer is free software under the GNU Affero General Public License, version 3
+(see the LICENSE file). Anyone may use it, also in a company, at no cost.
+
+Additional terms under section 7(b) of the licence: if you make and share your
+own version of Mimer, keep this notice and the copyright line above with it,
+say which changes you made, and say where the original comes from (the link
+above). Your version must be shared under the same licence, with its source.
+
+Versions of Mimer up to and including 0.12.0 were released under the Apache
+License 2.0. Those copies stay under that licence for the people who have them.
+Later versions are under the GNU Affero General Public License, version 3.

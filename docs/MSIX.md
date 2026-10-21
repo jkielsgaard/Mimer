@@ -26,10 +26,10 @@ On a Windows computer with the Windows SDK, Node, Rust and pnpm:
 ```powershell
 pnpm install
 pnpm tauri build
-./scripts/msix/Build-Msix.ps1 -Version 0.9.2 -TestSign -DisplayName "Mimer: Markdown Notes"
+./scripts/msix/Build-Msix.ps1 -Version 0.12.0 -TestSign -DisplayName "Mimer: Markdown Notes"
 ```
 
-This makes the folder `msix-out` with, among other files, `Mimer_0.9.2.0_x64.msix` (unsigned, for the Store), `Mimer_0.9.2.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
+This makes the folder `msix-out` with, among other files, `Mimer_0.12.0.0_x64.msix` (unsigned, for the Store), `Mimer_0.12.0.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
 
 **Windows Sandbox** (Windows 11 Pro, feature "Windows Sandbox" turned on): edit `scripts/msix/mimer-sandbox.wsb` so that `HostFolder` is the full path of `msix-out`, and double-click it. The sandbox installs Mimer; start it from the Start menu. Everything is gone when you close the sandbox.
 
@@ -40,15 +40,15 @@ If a Build-Msix step fails, `makeappx` says what is wrong with the manifest.
 ## 3. What to check in the Store version
 
 - Mimer starts, opens a folder as a vault and saves a note (`Ctrl+S`), and the version history works.
-- LM Studio works as the AI (the Mimer tab). The **Built-in AI** tab says that the built-in AI is not available in the Store version.
+- Foundry Local works as the built-in AI (Settings → Built-in AI), and LM Studio works if it is installed. Settings → Built-in AI says that the llama.cpp engine is not available in the Store version.
 - Settings are kept after closing and starting again. Uninstalling (Settings → Apps) removes the app's own data but not your notes.
 
 ## 4. Send it in
 
 1. In Partner Center open the app's **Submission**. Upload the **unsigned** `Mimer_<version>_x64.msix` from the workflow artifact or from step 2 (not the `_test` file).
-2. Fill in the **Store listing**: description, at least one screenshot (`docs/screenshot.png` can be used), the icon, and the category (Productivity).
+2. Fill in the **Store listing**: description, at least one screenshot (the pictures in `docs/screenshots/` can be used; the Store text is in `docs/STORE-LISTING.md`), the icon, and the category (Productivity).
 3. **Privacy policy URL**: `https://github.com/jkielsgaard/Mimer/blob/main/PRIVACY.md`.
-4. **Properties → Age rating** questionnaire, and the **notes for certification**: say that the app is open source, that it needs no account, that "Raven" sends only what the user types to a cloud AI the user chooses, and how to try it (open any folder as a vault).
+4. **Properties → Age rating** questionnaire, and the **notes for certification**: say that the app is open source, that it needs no account, that the AI runs on the user's own computer and nothing is sent to a cloud service, and how to try it (open any folder as a vault).
 5. Under **Pricing and availability** choose **Free**. To keep it out of the public search, choose **Hide this product … available by direct link only** (Markets and visibility).
 6. Submit. Certification usually takes some days. Microsoft may ask questions or reject the app: read the message, fix, and send a new package.
 
@@ -63,6 +63,6 @@ Versions 0.8.7 to 0.8.9 also built a second package, `mimer-msix-with-ai`, that 
 ## Known risks
 
 - **Foundry Local in the Store package** is new and untested in a real Store install: Windows 11 version 24H2 or later is needed for it, and the hardware parts and models are downloaded from Microsoft's servers. Policy 10.2.2 (no extending the app with dynamically included code) is the question to watch: only data is downloaded, not programs. LM Studio works if it is installed.
-- **The Store's rules about AI apps** have not been checked either. Mimer lets the user chat with a model of their own choice and, with Raven, with a cloud AI.
+- **The Store's rules about AI apps** have not been checked either. Mimer lets the user chat with a local model of their own choice; **Help → Report inappropriate AI content…** is the means to report AI content (policy 11.16).
 - **WebView2**: Windows 11 has it. On Windows 10 the user may need to install the Edge WebView2 runtime.
 - An organisation can still block the Store, or block Store apps that are not approved. Check that the Microsoft Store opens on the computer where you want to use Mimer.

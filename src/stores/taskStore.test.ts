@@ -54,7 +54,7 @@ describe("taskStore", () => {
     apiMock.listTasks.mockResolvedValue([]);
     apiMock.listEpics.mockResolvedValue([]);
     await useTaskStore.getState().add("Write it", undefined, undefined, "Tasks/VPN.md");
-    expect(apiMock.taskAdd.mock.calls[0]?.[4]).toBe("Tasks/VPN.md");
+    expect(apiMock.taskAdd.mock.calls[0]?.[3]).toBe("Tasks/VPN.md");
   });
 
   it("replaces only the tasks of the changed note and reloads the note when it is open", async () => {

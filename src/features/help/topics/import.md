@@ -3,7 +3,7 @@
 OneNote cannot save notes as Markdown, so it takes two steps:
 
 1. **Turn the notebook into a folder of Markdown files** with a free tool, for example OneNoteMdExporter (search for `onenote-md-exporter` on GitHub).
-2. In Mimer choose **File → Import → Notes from a folder…**, pick that folder, check the preview, choose where in your vault the notes go, and click **Import**.
+2. In Mimer choose **File → Import notes from a folder…**, pick that folder, check the preview, choose where in your vault the notes go, and click **Import**.
 
 ## What Mimer does for you
 

@@ -28,11 +28,9 @@ import type { TreeNode } from "@/bindings/TreeNode";
 import type { VaultInfo } from "@/bindings/VaultInfo";
 import type { ChatSummary } from "@/bindings/ChatSummary";
 import type { StoredChat } from "@/bindings/StoredChat";
-import type { SavedPrompt } from "@/bindings/SavedPrompt";
 import type { Epic } from "@/bindings/Epic";
 import type { Idea } from "@/bindings/Idea";
 import type { MetaPatch } from "@/bindings/MetaPatch";
-import type { PreviewResult } from "@/bindings/PreviewResult";
 import type { Task } from "@/bindings/Task";
 import type { Skill } from "@/bindings/Skill";
 import type { TemplateInfo } from "@/bindings/TemplateInfo";
@@ -194,9 +192,6 @@ export const api = {
   saveChat: (chat: StoredChat) => call<StoredChat>("save_chat", { chat }),
   deleteChat: (id: string) => call<undefined>("delete_chat", { id }),
   deleteAllChats: () => call<number>("delete_all_chats"),
-  listPrompts: () => call<SavedPrompt[]>("list_prompts"),
-  addPrompt: (title: string, text: string) => call<SavedPrompt>("add_prompt", { title, text }),
-  removePrompt: (id: string) => call<undefined>("remove_prompt", { id }),
 
   // Templates and daily notes
   listTemplates: () => call<TemplateInfo[]>("list_templates"),
@@ -226,8 +221,6 @@ export const api = {
   foundryInstall: (alias: string, useForMimer: boolean) =>
     call<undefined>("foundry_install", { alias, useForMimer }),
   listSkills: () => call<Skill[]>("list_skills"),
-  saveSkill: (skill: Skill) => call<Skill>("save_skill", { skill }),
-  removeSkill: (id: string) => call<undefined>("remove_skill", { id }),
   // Tasks
   listTasks: () => call<Task[]>("list_tasks"),
   taskSetDone: (path: string, line: number, key: string, done: boolean) =>
@@ -238,14 +231,21 @@ export const api = {
     call<Task[]>("task_add_step", { path, line, key, text }),
   taskAddLog: (path: string, line: number, key: string, date: string, text: string) =>
     call<Task[]>("task_add_log", { path, line, key, date, text }),
-  taskAdd: (text: string, note?: string, date?: string, steps?: string[], path?: string) =>
+  taskAdd: (text: string, note?: string, steps?: string[], path?: string) =>
     call<Task[]>("task_add", {
       text,
       note: note ?? null,
-      date: date ?? null,
       steps: steps ?? null,
       path: path ?? null,
     }),
+  taskEditLog: (path: string, line: number, key: string, date: string, text: string) =>
+    call<Task[]>("task_edit_log", { path, line, key, date, text }),
+  taskDeleteLog: (path: string, line: number, key: string) =>
+    call<Task[]>("task_delete_log", { path, line, key }),
+  taskSetNote: (path: string, line: number, key: string, text: string) =>
+    call<Task[]>("task_set_note", { path, line, key, text }),
+  epicSetDescription: (path: string, text: string) =>
+    call<Epic>("epic_set_description", { path, text }),
   listEpics: () => call<Epic[]>("list_epics"),
   epicCreate: (title: string) => call<Epic>("epic_create", { title }),
   epicForNote: (note: string) => call<Epic>("epic_for_note_cmd", { note }),
@@ -264,8 +264,6 @@ export const api = {
     call<Idea[]>("idea_set_status", { line, key, status }),
   taskAddToNote: (path: string, texts: string[]) =>
     call<Task[]>("task_add_to_note", { path, texts }),
-  previewSkill: (skill: Skill, path: string) =>
-    call<PreviewResult>("preview_skill", { skill, path }),
   foundrySetupHardware: () => call<undefined>("foundry_setup_hardware"),
   foundryCancelInstall: () => call<undefined>("foundry_cancel_install"),
   foundryWake: () => call<undefined>("foundry_wake"),

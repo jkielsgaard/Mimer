@@ -7,11 +7,12 @@
 ## AI where you work
 
 - **Selected text:** the bar over the selection has **Fix**, **Rewrite** and **Shorten**, and **AI ▾** for more: rewrite with simpler words, more formal or friendlier (always the same meaning), make it a list, translate to Danish or English, **Explain this** (an answer next to the text, nothing changes) and **Find tasks in it**. You see the change before it is written, with a check that numbers, links and names are still there. **Ctrl/Cmd+K** opens the same menu.
-- **The whole note:** the **AI** button above the note: fix spelling in the whole note, tidy the structure, a short summary at the top, a title and tags, find tasks, split into notes, an e-mail from the note, and your own skills. **Link related notes** opens the Links panel; it finds notes by the title and tags and needs no AI.
+- **The whole note:** the **AI** button above the note: fix spelling in the whole note, tidy the structure, a short summary at the top, a title and tags, find tasks, split into notes, and an e-mail from the note. **Link related notes** opens the Links panel; it finds notes by the title and tags and needs no AI.
 - **A folder:** right-click it → **AI**: sort into folders, find duplicates, an index page and more. **Make an index page** right under it makes a list of links without AI.
 - **Search:** a search that reads like a question ("what is the service desk number?") shows **Answer from my notes**. Press **Get an answer**: the AI reads the notes that fit and answers, with the notes it used.
 - **A task:** Break it down, **Write a status line from the log**, and in Focus **Help me start**.
 - **An idea:** **Think it through** (three questions) and **Suggest first steps** (they become one task with those steps).
+- **Any text box:** select text in a box (a task's note, the log, an idea, a project's instructions) and the same small bar appears, or press **Ctrl/Cmd+K** in the box. Name, search and password boxes have no AI.
 - **Spelling help** (made for dyslexia): turn it on in the status bar or in Settings. A moment after you stop typing, misspelt words get a wavy line. Click a word to fix it, ignore it or add it to your words. Nothing changes by itself.
 
 ## When there is no AI
@@ -38,11 +39,12 @@ Mimer has no internet access and only knows what it learned in training, so it c
 
 ## Choose which AI Mimer uses
 
-Mimer uses an AI that runs on your own computer: the **built-in AI**, **LM Studio**, **Foundry Local** (Windows and macOS; it can use a neural processor, an NPU) or another OpenAI-compatible server on this computer. Add and choose them under **Settings → AI providers**: when you pick the kind of provider, the settings list what you have to do to get it working. Mimer never uses a cloud AI: your notes only go to an AI on this computer.
+Mimer uses an AI that runs on your own computer: the **built-in AI** (llama.cpp or Foundry Local, which can use a neural processor, an NPU), **LM Studio** or another OpenAI-compatible server on this computer. Add and choose them under **Settings → AI providers**: when you pick the kind of provider, the settings list what you have to do to get it working. Mimer never uses a cloud AI: your notes only go to an AI on this computer.
 
 **Add provider** asks which kind you want (LM Studio or another server on this computer). The model is chosen in the settings. A built-in AI that is asleep is woken by itself when you ask it something.
 
 ## More
 
-- **Settings → AI** has Mimer's base instruction (who Mimer is), your own instructions, and the AI providers.
+- **Settings → AI** has Mimer's base instruction (who Mimer is), your own instructions, and **Let the AI check its own answer** (off by default): the AI is asked once more whether its answer to a text command is right, which is slower but helps with small models.
+- A small model sometimes answers with nothing useful (an empty text, or most of the text gone). Mimer then tries once more and says so instead of offering it.
 - Mimer only ever uses an AI **on your own computer**: LM Studio, or his own **built-in AI** (see the Built-in AI topic). Your notes are never sent to a cloud AI.

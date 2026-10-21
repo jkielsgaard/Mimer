@@ -21,4 +21,9 @@ builtin: BuiltInSettings,
 /**
  * Foundry Local, the second built-in AI.
  */
-foundry: FoundrySettings, };
+foundry: FoundrySettings, 
+/**
+ * Let the AI check its own answer to a text command before it is shown. Off by default: it
+ * takes about twice as long, which matters most with a large model.
+ */
+checkAnswers: boolean, };

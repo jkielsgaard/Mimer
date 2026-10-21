@@ -14,6 +14,27 @@ export interface Sibling {
 /** Characters a file or folder name cannot contain. */
 const BAD_CHARS = /[\\/:*?"<>|]/;
 
+const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
+
+/**
+ * Why a single name cannot be used on Windows and OneDrive (the same rules as the backend), or
+ * null when it can. The text says why, because it is shown in a red box next to the field.
+ */
+export function nameProblem(name: string): string | null {
+  const trimmed = name.trim();
+  if (trimmed === "") return "Enter a name.";
+  if (BAD_CHARS.test(trimmed))
+    return 'A name cannot contain \\ / : * ? " < > | because Windows cannot store them.';
+  if (trimmed.startsWith("."))
+    return "A name cannot start with a dot, because such names are hidden.";
+  if (trimmed.endsWith("."))
+    return "A name cannot end with a dot. Windows and OneDrive remove it or refuse the folder, and then the notes cannot be opened.";
+  const stem = (trimmed.split(".")[0] ?? "").trimEnd();
+  if (RESERVED.test(stem))
+    return `“${stem}” is a name Windows keeps for itself, so it cannot be used.`;
+  return null;
+}
+
 /** The name an entry is shown with in the tree, lower-cased for comparing (as the backend does). */
 function key(name: string, isDir: boolean): string {
   const lower = name.toLowerCase();
@@ -83,9 +104,8 @@ export function nameError(
   exceptPath?: string,
 ): string | null {
   const trimmed = name.trim();
-  if (trimmed === "") return "Enter a name.";
-  if (BAD_CHARS.test(trimmed)) return 'A name cannot contain \\ / : * ? " < > |';
-  if (trimmed.startsWith(".")) return "A name cannot start with a dot.";
+  const problem = nameProblem(trimmed);
+  if (problem !== null) return problem;
   const taken = findLookalike(tree, projects, folder, trimmed, isDir, exceptPath);
   return taken ? `${takenMessage(taken, folder)} Choose another name.` : null;
 }

@@ -25,4 +25,8 @@ plan: string | null,
 /**
  * `doing`, `waiting`, `dropped` or another word the user wrote.
  */
-status: string | null, estMinutes: number | null, steps: Array<TaskStep>, log: Array<TaskLog>, };
+status: string | null, estMinutes: number | null, steps: Array<TaskStep>, log: Array<TaskLog>, 
+/**
+ * The task's own note: the indented quote lines without a date, joined by newlines.
+ */
+note: string, };

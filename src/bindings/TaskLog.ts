@@ -7,4 +7,8 @@ export type TaskLog = { line: number,
 /**
  * `YYYY-MM-DD`.
  */
-date: string, text: string, };
+date: string, text: string, 
+/**
+ * A fingerprint of the line; an edit is refused when the line changed since it was read.
+ */
+key: string, };

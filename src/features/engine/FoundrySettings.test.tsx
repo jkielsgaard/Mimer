@@ -23,11 +23,13 @@ function settings(model = ""): Settings {
       spellcheck: true,
       recentNotes: 4,
       aiSpelling: false,
+      traceWork: false,
       ownWords: [],
     },
     git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
     ai: {
       defaultProviderId: "lm",
+      checkAnswers: false,
       builtin: { ...DEFAULT_BUILTIN },
       foundry: { model },
       baseInstruction: "",

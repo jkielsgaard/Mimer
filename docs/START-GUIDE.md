@@ -174,11 +174,11 @@ Mimer turns a vault into a Git repository and commits changes. Use a dedicated n
 ## Check that everything works
 
 ```bash
-pnpm test                 # frontend tests (about 110 tests)
+pnpm test                 # frontend tests (about 660 tests)
 pnpm lint                 # ESLint, must be clean
 pnpm typecheck            # TypeScript, must be clean
 pnpm format:check         # Prettier
-cargo test --manifest-path src-tauri/Cargo.toml       # Rust tests (about 200 tests)
+cargo test --manifest-path src-tauri/Cargo.toml       # Rust tests (about 530 tests)
 ```
 
 On Windows replace the `cargo` line with the same command; it works in PowerShell too. `pnpm check` runs everything at once (it needs Rust and Node on the same machine).
@@ -191,8 +191,8 @@ On Windows replace the `cargo` line with the same command; it works in PowerShel
 pnpm tauri build
 ```
 
-- **Windows:** the installer is `src-tauri\target\release\bundle\nsis\Mimer_0.9.2_x64-setup.exe`. It installs for the current user only and needs no administrator rights.
-- **Linux:** `src-tauri/target/release/bundle/` contains an `.AppImage` and an `.rpm`.
+- **Windows:** the installer is `src-tauri\target\release\bundle\nsis\Mimer_<version>_x64-setup.exe`. It installs for the current user only and needs no administrator rights.
+- **Linux:** `src-tauri/target/release/bundle/` contains an `.AppImage`, an `.rpm` and a `.deb`.
 
 ---
 
@@ -200,7 +200,7 @@ pnpm tauri build
 
 1. Install [LM Studio](https://lmstudio.ai) and download a model that supports tool calling (for example a Qwen or Llama _instruct_ model).
 2. In LM Studio open the **Developer** tab and **start the server**. Address: `http://localhost:1234/v1`.
-3. In Mimer: **File → Settings → AI providers → LM Studio → Load models**, choose the model, **Test connection**, **Save**.
+3. In Mimer: **File → Settings… → AI providers → LM Studio → Load models**, choose the model, **Test connection**, **Save**.
 
 ### Semantic search (optional)
 
@@ -216,33 +216,35 @@ Semantic search only uses a provider on your own computer, so no note is sent to
 
 ## Try the new features (quick tour)
 
-| What                    | How                                                                                                                                                  |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Several notes at once   | Click notes in the tree; each opens as a tab. Close with `×`, middle-click or `Ctrl/Cmd+W`. Switch with `Ctrl/Cmd+PageUp/PageDown`.                  |
-| Split view              | Open two notes, press `Ctrl/Cmd+\`. Press it again to close the split.                                                                               |
-| Daily note              | `Ctrl/Cmd+Shift+D` (creates `Daily/<date>.md`).                                                                                                      |
-| Templates               | Right-click or **File → Save current note as template…**, then **File → New note from template…**. Variables such as `{{date}}` are filled in.       |
-| Vault settings          | **Settings → Vault**: daily notes folder, date format, daily template.                                                                               |
-| Tables                  | Type a Markdown table; when the cursor leaves it, it shows as a table. `Ctrl/Cmd+Alt+T` inserts one.                                                 |
-| Export                  | **File → Export…**, or right-click a note or folder → **Export…**. Choose HTML, Word or PDF (PDF opens a print preview: choose _Save as PDF_).       |
-| Chat history            | In the **Mimer** tab: **History** lists earlier chats; **Prompts** inserts or saves reusable prompts.                                                |
-| Attach notes to chat    | In the **Mimer** tab type `/` and pick a note (or press the paperclip). Mimer works on the notes you attach.                                         |
-| Formatting toolbar      | Above every note: bold, italic, headings, lists, links, table, code block and more. You do not need to type the Markdown.                            |
-| Import from OneNote     | See [IMPORT-ONENOTE.md](IMPORT-ONENOTE.md), then **File → Import → Notes from a folder…**.                                                           |
-| Meeting and quick notes | The two buttons at the top of the file tree. They use the templates `Meeting` and `Quick note`.                                                      |
-| Task list               | `Ctrl/Cmd+Shift+T`, or the Tasks icon at the left edge. Tasks are checklist lines in your notes.                                                     |
-| Command palette         | `Ctrl/Cmd+Shift+P`: notes, AI commands and actions in one search.                                                                                    |
-| Switch vault            | Click the vault name in the header, or `Ctrl/Cmd+Shift+O`.                                                                                           |
-| Index page              | Right-click a folder → **Make an index page** (no AI), or **AI** → **Create an index page**.                                                         |
-| Link to a note          | The link button in the toolbar, or `Ctrl/Cmd+Shift+K`.                                                                                               |
-| How-to guide            | **Help → How to use Mimer**, or press `F1`. Small **?** buttons explain settings and tools.                                                          |
-| Name a note             | `Ctrl/Cmd+N`, then type the name in the window that opens; it becomes the first line.                                                                |
-| Pictures                | Paste, drag, or the **Insert image** button. **Images** at the right edge lists them.                                                                |
-| AI on a folder          | Right-click a folder → **AI**: sort into folders, find duplicates, fix spelling in every note and more.                                              |
-| AI on a note            | The **AI** button above the note, and **AI ▾** in the bar over selected text. Each command does one fixed thing; you review it before it is written. |
-| Projects                | Under **Projects** in the file panel, with their own notes. Drag a note onto a project to move it in.                                                |
-| About                   | **Help → About Mimer…** shows the version and who made the app.                                                                                      |
-| Meaning search          | Needs semantic search enabled (see above).                                                                                                           |
+| What                    | How                                                                                                                                                   |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Several notes at once   | Click notes in the tree; each opens as a tab. Close with `×`, middle-click or `Ctrl/Cmd+W`. Switch with `Ctrl/Cmd+PageUp/PageDown`.                   |
+| Split view              | Open two notes, press `Ctrl/Cmd+\`. Press it again to close the split.                                                                                |
+| Daily note              | `Ctrl/Cmd+Shift+D` (creates `Daily/<date>.md`), or a day in the calendar at the top of the file panel.                                                |
+| Templates               | Right-click or **File → Save the note as a template…**, then **File → New note from a template…**. Variables such as `{{date}}` are filled in.        |
+| Vault settings          | **Settings → Vault**: daily notes folder, date format, daily template.                                                                                |
+| Tables                  | Type a Markdown table; when the cursor leaves it, it shows as a table. `Ctrl/Cmd+Alt+T` inserts one.                                                  |
+| Export                  | **File → Export…**, or right-click a note or folder → **Export…**. Choose HTML, Word or PDF (PDF opens a print preview: choose _Save as PDF_).        |
+| Chat                    | The speech bubble at the right edge, or `Ctrl/Cmd+L`, opens **Ask about my notes**. **History** lists earlier chats; **New chat** starts over.        |
+| Attach notes to chat    | In the chat type `/` and pick a note (or press the paperclip). Mimer works on the notes you attach.                                                   |
+| Formatting toolbar      | Above every note: bold, italic, headings, lists, links, table, code block and more. You do not need to type the Markdown.                             |
+| Import from OneNote     | See [IMPORT-ONENOTE.md](IMPORT-ONENOTE.md), then **File → Import notes from a folder…**.                                                              |
+| Meeting and quick notes | **New** at the top of the file tree: **Meeting note…** and **Quick note**. They use the templates `Meeting` and `Quick note`.                         |
+| Tasks and epic tasks    | `Ctrl/Cmd+Shift+T`, or the Tasks icon at the left edge. Tasks are checklist lines in your notes; an epic task is a note in `Tasks/` that holds tasks. |
+| Ideas                   | `Ctrl/Cmd+Shift+N` writes an idea down from anywhere; the light bulb at the left edge lists them.                                                     |
+| Trace my work           | **Settings → General** (or when you create a vault): one line a day under "Worked on" in the daily note for each note and task you work on.           |
+| Command palette         | `Ctrl/Cmd+Shift+P`: notes, AI commands and actions in one search.                                                                                     |
+| Switch vault            | Click the vault name in the header, or `Ctrl/Cmd+Shift+O`.                                                                                            |
+| Index page              | Right-click a folder → **Make an index page** (no AI), or **AI** → **Create an index page**.                                                          |
+| Link to a note          | The link button in the toolbar, or `Ctrl/Cmd+Shift+K`.                                                                                                |
+| How-to guide            | **Help → How to use Mimer**, or press `F1`. Small **?** buttons explain settings and tools.                                                           |
+| Name a note             | `Ctrl/Cmd+N` asks for the name in a small window; the note starts with that name as its heading.                                                      |
+| Pictures                | Paste, drag, or the **Insert image** button. **Images** at the right edge lists them.                                                                 |
+| AI on a folder          | Right-click a folder → **AI**: sort into folders, find duplicates, fix spelling in every note and more.                                               |
+| AI on a note            | The **AI** button above the note, and **AI ▾** in the bar over selected text. Each command does one fixed thing; you review it before it is written.  |
+| Projects                | Under **Projects** in the file panel, with their own notes. Drag a note onto a project to move it in.                                                 |
+| About                   | **Help → About Mimer…** shows the version and who made the app.                                                                                       |
+| Meaning search          | Needs semantic search enabled (see above).                                                                                                            |
 
 ---
 
@@ -265,9 +267,8 @@ Logs are written to the application log folder: Linux `~/.local/share/dk.mdvault
 
 ## Where to find more
 
-- [`README.md`](../README.md): features, shortcuts, full manual test checklist.
-- [`docs/MANUAL_TESTS.md`](MANUAL_TESTS.md): the same checklist as a separate file.
-- [`docs/plans/`](plans/README.md): plans for the features after v1.
+- [`README.md`](../README.md): features and how to install.
+- [`docs/MANUAL_TESTS.md`](MANUAL_TESTS.md): the manual test checklist.
 - [`docs/DECISIONS.md`](DECISIONS.md): every technical decision and deviation from the specification.
 
 ## Foundry Local in a development build

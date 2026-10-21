@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Project } from "@/bindings/Project";
 import type { TreeNode } from "@/bindings/TreeNode";
-import { findLookalike, nameError, projectNameError } from "./nameConflict";
+import { findLookalike, nameError, nameProblem, projectNameError } from "./nameConflict";
 
 const node = (path: string, isDir: boolean, children: TreeNode[] = []): TreeNode => ({
   name: path.split("/").pop() ?? path,
@@ -66,6 +66,24 @@ describe("nameError", () => {
 
   it("accepts a free name", () => {
     expect(nameError(tree, [], "Work", "Ideas", false)).toBeNull();
+  });
+});
+
+describe("nameProblem", () => {
+  it("explains why Windows and OneDrive cannot use a name", () => {
+    expect(nameProblem("PAM div.")).toMatch(/end with a dot/);
+    expect(nameProblem(".hidden")).toMatch(/start with a dot/);
+    expect(nameProblem("a:b")).toMatch(/cannot contain/);
+    expect(nameProblem("nul")).toMatch(/Windows keeps/);
+    expect(nameProblem("COM3.txt")).toMatch(/Windows keeps/);
+    expect(nameProblem("")).toMatch(/Enter a name/);
+  });
+
+  it("accepts ordinary names, also with a dot inside", () => {
+    expect(nameProblem("PAM div")).toBeNull();
+    expect(nameProblem("v1.2 notes")).toBeNull();
+    expect(nameProblem("Console")).toBeNull();
+    expect(nameProblem("COM0")).toBeNull();
   });
 });
 

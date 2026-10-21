@@ -53,6 +53,7 @@ export function VaultSettingsTab() {
           />
         </div>
         <Input
+          data-no-ai
           id="v-daily"
           value={draft.dailyNotesFolder}
           onChange={(e) => {
@@ -82,6 +83,7 @@ export function VaultSettingsTab() {
         </Select>
         {customFormat && (
           <Input
+            data-no-ai
             aria-label="Custom date format"
             value={draft.dailyNoteFormat}
             onChange={(e) => {
@@ -124,6 +126,7 @@ export function VaultSettingsTab() {
           />
         </div>
         <Input
+          data-no-ai
           id="v-meet"
           value={draft.meetingsFolder}
           onChange={(e) => {
@@ -141,6 +144,7 @@ export function VaultSettingsTab() {
           />
         </div>
         <Input
+          data-no-ai
           id="v-quick"
           value={draft.quickNotesFolder}
           onChange={(e) => {
@@ -203,6 +207,7 @@ export function VaultSettingsTab() {
           />
         </div>
         <Input
+          data-no-ai
           id="v-attach"
           value={draft.attachmentsFolder}
           onChange={(e) => {
@@ -213,6 +218,7 @@ export function VaultSettingsTab() {
       <div className="flex flex-col gap-1">
         <Label htmlFor="v-new">Folder for new notes (empty = vault root)</Label>
         <Input
+          data-no-ai
           id="v-new"
           value={draft.newNoteFolder}
           onChange={(e) => {

@@ -58,8 +58,8 @@ export function FoundrySettings({ draft, onChange }: Props) {
       <p className="text-sm text-muted-foreground">
         Foundry Local is Microsoft's runtime for AI models on this computer. It chooses the best
         hardware by itself: a neural processor (NPU) if there is one, otherwise the graphics card or
-        the processor. Download once, then press <strong>Wake Mimer</strong> in the Mimer tab. Your
-        notes never leave this computer.
+        the processor. Download once; Mimer wakes the model by itself when you use the AI, or press{" "}
+        <strong>Wake</strong> in the status bar. Your notes never leave this computer.
       </p>
 
       {!available && (

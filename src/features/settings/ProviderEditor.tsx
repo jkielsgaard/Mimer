@@ -141,6 +141,7 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
         "prov-name",
         "Name",
         <Input
+          data-no-ai
           id="prov-name"
           value={provider.name}
           onChange={(e) => {
@@ -175,6 +176,7 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
         "prov-url",
         "Base URL",
         <Input
+          data-no-ai
           id="prov-url"
           value={provider.baseUrl}
           onChange={(e) => {
@@ -187,6 +189,7 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
         "Model",
         <div className="flex gap-2">
           <Input
+            data-no-ai
             id="prov-model"
             list="prov-models"
             value={provider.model}
@@ -246,6 +249,7 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
         <div className="flex flex-1 items-center gap-2">
           <Label htmlFor="prov-ctx">Context tokens</Label>
           <Input
+            data-no-ai
             id="prov-ctx"
             type="number"
             min={1000}
@@ -271,6 +275,7 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
           ) : (
             <>
               <Input
+                data-no-ai
                 id="prov-key"
                 type="password"
                 autoComplete="off"

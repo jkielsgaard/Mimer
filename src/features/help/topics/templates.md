@@ -12,7 +12,7 @@ Press **Ctrl/Cmd+Shift+D** for today's note. It is created from your daily templ
 
 ## Your own templates
 
-Templates are ordinary notes in `.vault/templates/`. Edit **Meeting** or **Quick note** there, or open a note you like and choose **File → Save current note as template…**. Make a note from a template with **File → New note from template…**.
+Templates are ordinary notes in `.vault/templates/`. Edit **Meeting** or **Quick note** there, or open a note you like and choose **File → Save the note as a template…**. Make a note from a template with **File → New note from template…**.
 
 | Write this in a template | Mimer fills in              |
 | ------------------------ | --------------------------- |

@@ -98,6 +98,7 @@ export function TemplatePicker() {
             Note name
           </label>
           <Input
+            data-no-ai
             id="tpl-name"
             value={name}
             onChange={(e) => {

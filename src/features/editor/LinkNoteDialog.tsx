@@ -63,6 +63,7 @@ export function LinkNoteDialog({ open, initialQuery, onPick, onClose }: Props) {
           Search for a note and press Enter to insert a link to it.
         </DialogDescription>
         <Input
+          data-no-ai
           autoFocus
           aria-label="Find a note to link to"
           placeholder="Link to a note…"

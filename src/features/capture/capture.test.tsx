@@ -264,7 +264,7 @@ describe("Ideas", () => {
       expect(apiMock.taskAdd).toHaveBeenCalledTimes(1);
     });
     expect(apiMock.taskAdd.mock.calls[0]?.[0]).toBe("Newest idea plan:later");
-    expect(apiMock.taskAdd.mock.calls[0]?.[3]).toEqual([
+    expect(apiMock.taskAdd.mock.calls[0]?.[2]).toEqual([
       "Ask Lene",
       "Draft the template",
       "Try it",

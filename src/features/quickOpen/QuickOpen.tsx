@@ -40,6 +40,7 @@ export function QuickOpen() {
       <DialogContent className="top-[20%] max-w-lg translate-y-0 gap-2 p-2">
         <DialogTitle className="sr-only">Quick open</DialogTitle>
         <Input
+          data-no-ai
           autoFocus
           aria-label="Find a note"
           placeholder="Find a note by name…"

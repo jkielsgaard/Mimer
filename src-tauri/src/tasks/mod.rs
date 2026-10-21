@@ -34,6 +34,8 @@ pub struct TaskLog {
     /// `YYYY-MM-DD`.
     pub date: String,
     pub text: String,
+    /// A fingerprint of the line; an edit is refused when the line changed since it was read.
+    pub key: String,
 }
 
 /// A task found in a note.
@@ -59,6 +61,8 @@ pub struct Task {
     pub est_minutes: Option<u32>,
     pub steps: Vec<TaskStep>,
     pub log: Vec<TaskLog>,
+    /// The task's own note: the indented quote lines without a date, joined by newlines.
+    pub note: String,
 }
 
 /// What to change in a task's words. `None` leaves a word alone, `Some(None)` removes it.
@@ -98,6 +102,8 @@ static TASK_RE: LazyLock<Regex> =
 static LOG_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"^(\s*)>\s*(\d{4}-\d{2}-\d{2})\s+(.*)$").expect("valid log regex")
 });
+static NOTE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^(\s*)>\s?(.*)$").expect("valid note regex"));
 static TAG_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(^|\s)#([\p{L}\p{N}_/-]*\p{L}[\p{L}\p{N}_/-]*)").expect("valid tag regex")
 });
@@ -269,6 +275,7 @@ pub fn parse(path: &str, content: &str) -> Vec<Task> {
                 est_minutes: w.est,
                 steps: Vec::new(),
                 log: Vec::new(),
+                note: String::new(),
             });
             current = Some((tasks.len() - 1, indent));
             continue;
@@ -280,7 +287,19 @@ pub fn parse(path: &str, content: &str) -> Vec<Task> {
                     line: n as u32,
                     date: c[2].to_string(),
                     text: c[3].trim().to_string(),
+                    key: line_key(line),
                 });
+                t.end = n as u32;
+                continue;
+            }
+        }
+        if let (Some((idx, task_indent)), Some(c)) = (current, NOTE_RE.captures(line)) {
+            if indent_of(&c[1]) > task_indent {
+                let t = &mut tasks[idx];
+                if !t.note.is_empty() {
+                    t.note.push('\n');
+                }
+                t.note.push_str(c[2].trim_end());
                 t.end = n as u32;
                 continue;
             }
@@ -463,6 +482,84 @@ pub fn add_log(content: &str, line: u32, key: &str, date: &str, text: &str) -> A
     ))
 }
 
+/// Changes the date and text of one log line. Its place and indent stay.
+pub fn edit_log(content: &str, line: u32, key: &str, date: &str, text: &str) -> AppResult<String> {
+    if !is_date(date) {
+        return Err(AppError::InvalidPath(format!("{date} is not a date")));
+    }
+    let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+    if text.is_empty() {
+        return Err(AppError::InvalidPath("The text is empty".into()));
+    }
+    edit_line(content, line, key, |l| {
+        let indent: String = l.chars().take_while(|c| c.is_whitespace()).collect();
+        format!("{indent}> {date} {text}")
+    })
+}
+
+/// Removes one log line.
+pub fn delete_log(content: &str, line: u32, key: &str) -> AppResult<String> {
+    let mut lines: Vec<&str> = content.split('\n').collect();
+    let i = line as usize;
+    let Some(current) = lines.get(i) else {
+        return Err(conflict());
+    };
+    let bare = current.trim_end_matches('\r');
+    if line_key(bare) != key || !LOG_RE.is_match(bare) {
+        return Err(conflict());
+    }
+    lines.remove(i);
+    Ok(lines.join("\n"))
+}
+
+/// Sets the note of a task: indented quote lines right under the task line. An empty text removes
+/// the note.
+pub fn set_note(content: &str, line: u32, key: &str, text: &str) -> AppResult<String> {
+    let (start, end, indent) = block_end(content, line, key)?;
+    let mut lines: Vec<String> = content.split('\n').map(str::to_string).collect();
+    let cr = lines[start].ends_with('\r');
+    let mut i = end;
+    while i > start {
+        let l = lines[i].trim_end_matches('\r');
+        let is_note = !LOG_RE.is_match(l)
+            && NOTE_RE
+                .captures(l)
+                .is_some_and(|c| indent_of(&c[1]) > indent);
+        if is_note {
+            lines.remove(i);
+        }
+        i -= 1;
+    }
+    let pad = " ".repeat(indent + 2);
+    let new: Vec<String> = text
+        .lines()
+        .map(|l| l.trim_end())
+        .skip_while(|l| l.is_empty())
+        .map(|l| {
+            let mut s = if l.is_empty() {
+                format!("{pad}>")
+            } else {
+                format!("{pad}> {l}")
+            };
+            if cr {
+                s.push('\r');
+            }
+            s
+        })
+        .collect();
+    let mut new = new;
+    while new
+        .last()
+        .is_some_and(|l| l.trim_end_matches('\r').trim_end() == format!("{pad}>"))
+    {
+        new.pop();
+    }
+    for (k, l) in new.into_iter().enumerate() {
+        lines.insert(start + 1 + k, l);
+    }
+    Ok(lines.join("\n"))
+}
+
 /// Removes a task, with its steps and log, from the note.
 pub fn delete(content: &str, line: u32, key: &str) -> AppResult<String> {
     let (start, end, _) = block_end(content, line, key)?;
@@ -583,6 +680,41 @@ mod tests {
             }
         )
         .is_err());
+    }
+
+    #[test]
+    fn a_log_line_can_be_changed_and_removed() {
+        let n = "- [ ] A\n  > 2026-10-14 One\n  > 2026-10-15 Two\n- [ ] B\n";
+        let t = &parse("n.md", n)[0];
+        let l = &t.log[0];
+        let out = edit_log(n, l.line, &l.key, "2026-10-13", "Fixed  text").unwrap();
+        assert!(out.contains("  > 2026-10-13 Fixed text\n"));
+        assert_eq!(parse("n.md", &out)[0].log.len(), 2);
+        let out = delete_log(n, l.line, &l.key).unwrap();
+        assert_eq!(out, "- [ ] A\n  > 2026-10-15 Two\n- [ ] B\n");
+        // A line that changed since it was read is not touched.
+        assert!(delete_log(&out, l.line, &l.key).is_err());
+        assert!(edit_log(n, l.line, &l.key, "tomorrow", "x").is_err());
+    }
+
+    #[test]
+    fn a_task_note_is_read_written_and_kept_apart_from_the_log() {
+        let n = "- [ ] A\n  > 2026-10-14 Log\n- [ ] B\n";
+        let t = &parse("n.md", n)[0];
+        let out = set_note(n, t.line, &t.key, "First line\n\nSecond").unwrap();
+        let t = &parse("n.md", &out)[0];
+        assert_eq!(t.note, "First line\n\nSecond");
+        assert_eq!(t.log.len(), 1);
+        assert!(out.starts_with("- [ ] A\n  > First line\n  >\n  > Second\n"));
+        // Changing it replaces the old note and leaves steps and log alone.
+        let out = set_note(&out, t.line, &t.key, "New").unwrap();
+        let t = &parse("n.md", &out)[0];
+        assert_eq!(t.note, "New");
+        assert_eq!(t.log.len(), 1);
+        // An empty text removes it.
+        let out = set_note(&out, t.line, &t.key, "  ").unwrap();
+        assert_eq!(out, n);
+        assert_eq!(parse("n.md", &out)[1].title, "B");
     }
 
     #[test]

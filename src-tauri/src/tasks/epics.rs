@@ -23,6 +23,8 @@ pub struct Epic {
     pub title: String,
     /// The note the epic was made from (a link target such as `IT/VPN client guide`), if any.
     pub source: Option<String>,
+    /// The text between the heading and the first task: what the epic is about.
+    pub description: String,
 }
 
 /// Whether a path is a note in the epic folder.
@@ -76,7 +78,59 @@ pub fn read_epic(path: &str, content: &str) -> Epic {
         path: path.to_string(),
         title,
         source: source_of(content),
+        description: description_of(content),
     }
+}
+
+fn is_task_line(line: &str) -> bool {
+    let t = line.trim_start();
+    ["- [", "* [", "+ ["].iter().any(|p| {
+        t.strip_prefix(p).is_some_and(|r| {
+            let mut c = r.chars();
+            matches!(c.next(), Some(' ' | 'x' | 'X')) && c.next() == Some(']')
+        })
+    })
+}
+
+/// The lines of the description: after the front matter and the first heading, up to the first
+/// task. Returns `(start, end)` as line indexes.
+fn description_span(lines: &[&str]) -> (usize, usize) {
+    let mut start = 0;
+    if lines.first().is_some_and(|l| l.trim_end() == "---") {
+        if let Some(close) = lines[1..].iter().position(|l| l.trim_end() == "---") {
+            start = close + 2;
+        }
+    }
+    if let Some(h) = lines[start..].iter().position(|l| l.starts_with("# ")) {
+        start += h + 1;
+    }
+    let end = lines[start..]
+        .iter()
+        .position(|l| is_task_line(l))
+        .map_or(lines.len(), |i| start + i);
+    (start, end)
+}
+
+/// The description of an epic note.
+pub fn description_of(content: &str) -> String {
+    let lines: Vec<&str> = content.split('\n').collect();
+    let (start, end) = description_span(&lines);
+    lines[start..end].join("\n").trim().to_string()
+}
+
+/// Replaces the description of an epic note. An empty text removes it.
+pub fn set_description(content: &str, text: &str) -> String {
+    let lines: Vec<&str> = content.split('\n').collect();
+    let (start, end) = description_span(&lines);
+    let mut out: Vec<String> = lines[..start].iter().map(|l| (*l).to_string()).collect();
+    out.push(String::new());
+    let text = text.trim();
+    if !text.is_empty() {
+        out.extend(text.lines().map(|l| l.trim_end().to_string()));
+        out.push(String::new());
+    }
+    out.extend(lines[end..].iter().map(|l| (*l).to_string()));
+    out.join("\n")
 }
 
 /// The text of a new epic note.
@@ -123,6 +177,25 @@ pub fn file_name_for(title: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_description_sits_between_the_heading_and_the_first_task() {
+        let n = "---\nsource: \"[[A]]\"\n---\n# VPN\n\nAbout it.\nMore.\n\n- [ ] One\n- [x] Two\n";
+        assert_eq!(description_of(n), "About it.\nMore.");
+        let out = set_description(n, "New text");
+        assert_eq!(
+            out,
+            "---\nsource: \"[[A]]\"\n---\n# VPN\n\nNew text\n\n- [ ] One\n- [x] Two\n"
+        );
+        assert_eq!(description_of(&out), "New text");
+        let none = set_description(&out, "");
+        assert_eq!(
+            none,
+            "---\nsource: \"[[A]]\"\n---\n# VPN\n\n- [ ] One\n- [x] Two\n"
+        );
+        assert_eq!(description_of("# Empty\n\n"), "");
+        assert_eq!(set_description("# Empty\n", "Hi"), "# Empty\n\nHi\n");
+    }
 
     #[test]
     fn only_notes_directly_in_the_epic_folder_are_epics() {

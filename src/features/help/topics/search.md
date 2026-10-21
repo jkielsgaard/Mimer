@@ -17,4 +17,4 @@
 
 If you have turned on **Semantic search** in **Settings → AI**, the search panel shows **Keyword**, **Meaning** and **Both**. _Meaning_ finds notes that talk about the same thing even with different words. _Both_ combines them.
 
-Notes in a project marked **Local AI only** are never sent to a cloud service for this.
+It only uses an embedding model on your own computer, so no note is sent to a cloud service.

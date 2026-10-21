@@ -1,6 +1,5 @@
 import { FolderOpen, FolderPlus, FolderSearch, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { PromptDialog } from "@/components/PromptDialog";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { pickFolder } from "@/lib/dialogs";
@@ -8,6 +7,7 @@ import { basename } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { NewVaultDialog } from "@/features/vaults/NewVaultDialog";
 import backdrop from "@/assets/Image_wo_logo.png";
 import { appVersion, releaseStage } from "@/lib/version";
 
@@ -18,7 +18,6 @@ const NO_VAULTS: string[] = [];
 export function Welcome() {
   const recent = useSettingsStore((s) => s.settings?.recentVaults ?? NO_VAULTS);
   const openVault = useVaultStore((s) => s.openVault);
-  const createVault = useVaultStore((s) => s.createVault);
   const [parent, setParent] = useState<string | null>(null);
   const setAboutOpen = useUiStore((s) => s.setAboutOpen);
   const forgetVault = useSettingsStore((s) => s.forgetVault);
@@ -67,8 +66,8 @@ export function Welcome() {
         <header className="text-center">
           <h1 className="text-3xl font-semibold tracking-tight">Mimer</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Markdown notes with a local-first AI assistant. Your notes stay plain files, with every
-            change in Git.
+            Markdown notes with an AI assistant that runs on your own computer. Your notes stay
+            plain files, with every change in Git.
           </p>
         </header>
         <div className="flex flex-col gap-2">
@@ -174,21 +173,10 @@ export function Welcome() {
           </button>
         </p>
       </div>
-      <PromptDialog
-        open={parent !== null}
-        title="Create new vault"
-        label={`Vault name (a new folder inside ${parent ?? ""})`}
-        confirmLabel="Create"
-        validate={(v) =>
-          v.trim() === "" || /[\\/:*?"<>|]/.test(v) ? "Enter a valid folder name" : null
-        }
-        onCancel={() => {
+      <NewVaultDialog
+        parent={parent}
+        onClose={() => {
           setParent(null);
-        }}
-        onSubmit={(name) => {
-          const p = parent;
-          setParent(null);
-          if (p) void createVault(p, name.trim());
         }}
       />
     </main>

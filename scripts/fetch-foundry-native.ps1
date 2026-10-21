@@ -5,7 +5,7 @@
 
 .DESCRIPTION
   Uses the Foundry Local SDK's own build step (it fetches the "Runtime" package from NuGet), run
-  through the small test program in spikes\foundry-local-test. Needs Rust and internet.
+  through the empty crate in scripts\foundry-native-fetch. Needs Rust and internet.
 
     ./scripts/fetch-foundry-native.ps1
     ./scripts/fetch-foundry-native.ps1 -Version 2.2.0
@@ -18,14 +18,14 @@ param(
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $dest = Join-Path $root "src-tauri\foundry-native"
-$manifest = Join-Path $root "spikes\foundry-local-test\Cargo.toml"
+$manifest = Join-Path $root "scripts\foundry-native-fetch\Cargo.toml"
 
 Write-Host "Fetching Foundry Local runtime $Version ..."
 $env:FOUNDRY_LOCAL_RUNTIME_VERSION = $Version
 cargo build --release --manifest-path $manifest
 if ($LASTEXITCODE -ne 0) { throw "cargo build failed ($LASTEXITCODE)" }
 
-$target = Join-Path $root "spikes\foundry-local-test\target\release\build"
+$target = Join-Path $root "scripts\foundry-native-fetch\target\release\build"
 $out = Get-ChildItem -Path $target -Directory -Filter "foundry-local-sdk-*" |
   ForEach-Object { Join-Path $_.FullName "out" } |
   Where-Object { Test-Path (Join-Path $_ "foundry_local.dll") } |

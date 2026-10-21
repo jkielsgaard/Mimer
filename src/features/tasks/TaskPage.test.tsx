@@ -8,6 +8,9 @@ const apiMock = vi.hoisted(() => ({
   taskSetMeta: vi.fn(),
   taskAddStep: vi.fn(),
   taskAddLog: vi.fn(),
+  taskEditLog: vi.fn(),
+  taskDeleteLog: vi.fn(),
+  taskSetNote: vi.fn(),
   taskDelete: vi.fn(),
   taskSetTitle: vi.fn(),
   readNote: vi.fn(),
@@ -23,9 +26,10 @@ vi.mock("@/lib/askAi", () => askMock);
 const blocked = vi.hoisted(() => ({ reason: null as string | null }));
 vi.mock("@/lib/useAiBlocked", () => ({ useAiBlocked: () => blocked.reason }));
 
-import { TaskPage } from "./TaskPage";
+import { statusFacts, statusLogLines, TaskPage } from "./TaskPage";
 import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
+import { useVaultStore } from "@/stores/vaultStore";
 
 const task = makeTask({
   title: "Renew the Acme licence",
@@ -37,8 +41,8 @@ const task = makeTask({
     { line: 7, text: "Ask Peter about a discount", done: false, key: "s2" },
   ],
   log: [
-    { line: 8, date: "2026-10-14", text: "Mette wants 40 users." },
-    { line: 9, date: "2026-10-16", text: "Waiting for Peter." },
+    { line: 8, date: "2026-10-14", text: "Mette wants 40 users.", key: "l1" },
+    { line: 9, date: "2026-10-16", text: "Waiting for Peter.", key: "l2" },
   ],
 });
 
@@ -176,5 +180,91 @@ describe("TaskPage", () => {
     useTaskStore.setState({ tasks: [], selected: { path: "x.md", line: 1, title: "Gone" } });
     render(<TaskPage />);
     expect(screen.getByText(/no longer there/)).toBeInTheDocument();
+  });
+  it("changes a log line and keeps the others", async () => {
+    apiMock.taskEditLog.mockResolvedValue([task]);
+    render(<TaskPage />);
+    const user = userEvent.setup();
+    await user.click(screen.getAllByRole("button", { name: "Change this line" })[0] as HTMLElement);
+    const box = screen.getByRole("textbox", { name: "Text of the log line" });
+    await user.clear(box);
+    await user.type(box, "Peter said yes.");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => {
+      expect(apiMock.taskEditLog).toHaveBeenCalledWith(
+        task.path,
+        9,
+        "l2",
+        "2026-10-16",
+        "Peter said yes.",
+      );
+    });
+  });
+
+  it("deletes a log line only after asking once more", async () => {
+    apiMock.taskDeleteLog.mockResolvedValue([task]);
+    render(<TaskPage />);
+    const user = userEvent.setup();
+    await user.click(screen.getAllByRole("button", { name: "Delete this line" })[1] as HTMLElement);
+    expect(apiMock.taskDeleteLog).not.toHaveBeenCalled();
+    await user.click(
+      within(await screen.findByRole("dialog")).getByRole("button", { name: "Delete" }),
+    );
+    await waitFor(() => {
+      expect(apiMock.taskDeleteLog).toHaveBeenCalledWith(task.path, 8, "l1");
+    });
+  });
+
+  it("saves the note of the task when the box is left, and only if it changed", async () => {
+    apiMock.taskSetNote.mockResolvedValue([task]);
+    render(<TaskPage />);
+    const user = userEvent.setup();
+    const box = screen.getByRole("textbox", { name: "Note" });
+    await user.click(box);
+    await user.tab();
+    expect(apiMock.taskSetNote).not.toHaveBeenCalled();
+    await user.type(box, "Ask about the price");
+    await user.tab();
+    expect(apiMock.taskSetNote).toHaveBeenCalledWith(task.path, 5, "key-1", "Ask about the price");
+  });
+
+  it("opens the note", async () => {
+    const openNote = vi.fn().mockResolvedValue(undefined);
+    useVaultStore.setState({ openNote });
+    render(<TaskPage />);
+    await userEvent.setup().click(screen.getByRole("button", { name: /Open the note/ }));
+    expect(openNote).toHaveBeenCalledWith(task.path);
+  });
+});
+
+describe("the status line", () => {
+  it("is built from the written log lines, not from Mimer's own status lines", () => {
+    const t = makeTask({
+      title: "Renew",
+      due: "2026-11-01",
+      log: [
+        { line: 1, date: "2026-10-14", text: "Status: waiting", key: "a" },
+        { line: 2, date: "2026-10-15", text: "Mette wants 40 users.", key: "b" },
+      ],
+      note: "The grey ones",
+    });
+    expect(statusLogLines(t).map((l) => l.text)).toEqual(["Mette wants 40 users."]);
+    const facts = statusFacts(t, 0);
+    expect(facts).toContain("Task: Renew");
+    expect(facts).toContain("Note: The grey ones");
+    expect(facts).toContain("2026-10-15 Mette wants 40 users.");
+    expect(facts).not.toContain("2026-10-14");
+  });
+
+  it("only uses the latest lines of a long log", () => {
+    const log = Array.from({ length: 25 }, (_, i) => ({
+      line: i,
+      date: "2026-10-01",
+      text: `Line ${String(i)}`,
+      key: String(i),
+    }));
+    const lines = statusLogLines(makeTask({ log }));
+    expect(lines).toHaveLength(10);
+    expect(lines[9]?.text).toBe("Line 24");
   });
 });

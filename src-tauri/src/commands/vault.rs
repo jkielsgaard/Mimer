@@ -120,7 +120,13 @@ pub async fn write_note(
     content: String,
 ) -> Result<(), AppError> {
     let v = state.current_vault()?;
-    ops::write_note(&v, &path, &content)
+    ops::write_note(&v, &path, &content)?;
+    crate::trace::record(
+        &state,
+        &v,
+        &crate::trace::Event::NoteWritten { path: &path },
+    );
+    Ok(())
 }
 
 #[tauri::command]

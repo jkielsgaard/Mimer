@@ -122,6 +122,7 @@ export function BuiltInAiSettings({ draft, onChange }: Props) {
     <div className="flex flex-col gap-1">
       <Label htmlFor={id}>{label}</Label>
       <Input
+        data-no-ai
         id={id}
         type="number"
         min={min}
@@ -140,8 +141,9 @@ export function BuiltInAiSettings({ draft, onChange }: Props) {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-sm text-muted-foreground">
-        Run Mimer's AI on this computer without LM Studio. Download once, then press{" "}
-        <strong>Wake Mimer</strong> in the Mimer tab. Your notes never leave this computer.
+        Run Mimer's AI on this computer without LM Studio. Download once; Mimer wakes the model by
+        itself when you use the AI, or press <strong>Wake</strong> in the status bar. Your notes
+        never leave this computer.
       </p>
 
       <section className="flex flex-col gap-3" aria-label="Your computer">

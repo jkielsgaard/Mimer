@@ -3,4 +3,4 @@
 /**
  * Why a commit is being made; decides the message.
  */
-export type CommitKind = "save" | "autosave" | "autosaveOnClose" | "idle" | "snapshotBeforeAi" | "ai" | "snapshotBeforeReload" | "snapshotBeforeDelete" | "snapshotBeforeRename" | "snapshotBeforeRestore" | "snapshotBeforeImport" | "rename" | "delete" | "restore" | "project" | "recovered" | "initial" | "prompts" | "template" | "vaultSettings" | "import" | "index";
+export type CommitKind = "save" | "autosave" | "autosaveOnClose" | "idle" | "snapshotBeforeAi" | "ai" | "snapshotBeforeReload" | "snapshotBeforeDelete" | "snapshotBeforeRename" | "snapshotBeforeRestore" | "snapshotBeforeImport" | "rename" | "delete" | "restore" | "project" | "recovered" | "initial" | "template" | "vaultSettings" | "import" | "index";

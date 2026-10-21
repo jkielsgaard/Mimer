@@ -4,6 +4,7 @@ use crate::state::AppState;
 use crate::tasks::epics::{self, Epic};
 use crate::tasks::ideas::{self, Idea};
 use crate::tasks::{self, MetaPatch, Task};
+use crate::trace;
 use crate::vault::{fs_ops, ops, tree, OpenVault};
 use tauri::State;
 
@@ -42,6 +43,25 @@ fn edit_note(
     Ok(tasks::parse(path, &new))
 }
 
+/// The task whose block holds `line` (the task itself or one of its steps and log lines).
+fn task_containing(tasks: &[Task], line: u32) -> Option<&Task> {
+    tasks.iter().find(|t| t.line <= line && line <= t.end)
+}
+
+/// Traces work on the task at `line` in today's daily note (when the trace is on).
+fn trace_worked(state: &AppState, v: &OpenVault, tasks: &[Task], line: u32) {
+    if let Some(t) = task_containing(tasks, line) {
+        trace::record(
+            state,
+            v,
+            &trace::Event::TaskWorked {
+                title: &t.title,
+                path: &t.path,
+            },
+        );
+    }
+}
+
 /// Every task in the vault, from every note.
 pub(crate) fn all_tasks(v: &OpenVault) -> Vec<Task> {
     let mut out = Vec::new();
@@ -72,14 +92,13 @@ pub async fn list_tasks(state: State<'_, AppState>) -> Result<Vec<Task>, AppErro
 }
 
 /// Adds a task to the epic note `path` (made when it is missing and is in `Tasks/`).
-/// A note given with it goes into the log of the task, one dated line for each line of the note,
-/// and `steps` go under it as indented checklist lines.
+/// A note given with it becomes the note of the task, and `steps` go under it as indented
+/// checklist lines.
 pub(crate) fn add_task_to(
     v: &OpenVault,
     path: &str,
     text: &str,
     note: &str,
-    date: &str,
     steps: &[String],
 ) -> Result<Vec<Task>, AppError> {
     if text.trim().is_empty() {
@@ -112,9 +131,7 @@ pub(crate) fn add_task_to(
     if !note.trim().is_empty() {
         let added = tasks::parse(path, &new).into_iter().next_back();
         if let Some(t) = added {
-            for l in note.lines().filter(|l| !l.trim().is_empty()) {
-                new = tasks::add_log(&new, t.line, &t.key, date, l)?;
-            }
+            new = tasks::set_note(&new, t.line, &t.key, note)?;
         }
     }
     ops::write_note(v, path, &new)?;
@@ -209,7 +226,23 @@ pub async fn task_set_done(
     done: bool,
 ) -> Result<Vec<Task>, AppError> {
     let v = state.current_vault()?;
-    edit_note(&v, &path, |c| tasks::set_done(c, line, &key, done))
+    let list = edit_note(&v, &path, |c| tasks::set_done(c, line, &key, done))?;
+    if done {
+        match task_containing(&list, line) {
+            Some(t) if t.line == line => {
+                trace::record(
+                    &state,
+                    &v,
+                    &trace::Event::TaskDone {
+                        title: &t.title,
+                        path: &t.path,
+                    },
+                );
+            }
+            _ => trace_worked(&state, &v, &list, line),
+        }
+    }
+    Ok(list)
 }
 
 /// Changes the date, plan, status or estimate of a task.
@@ -222,7 +255,11 @@ pub async fn task_set_meta(
     patch: MetaPatch,
 ) -> Result<Vec<Task>, AppError> {
     let v = state.current_vault()?;
-    edit_note(&v, &path, |c| tasks::set_meta(c, line, &key, &patch))
+    let list = edit_note(&v, &path, |c| tasks::set_meta(c, line, &key, &patch))?;
+    if patch.status.is_some() {
+        trace_worked(&state, &v, &list, line);
+    }
+    Ok(list)
 }
 
 /// Changes the title of a task or a step.
@@ -248,7 +285,9 @@ pub async fn task_add_step(
     text: String,
 ) -> Result<Vec<Task>, AppError> {
     let v = state.current_vault()?;
-    edit_note(&v, &path, |c| tasks::add_step(c, line, &key, &text))
+    let list = edit_note(&v, &path, |c| tasks::add_step(c, line, &key, &text))?;
+    trace_worked(&state, &v, &list, line);
+    Ok(list)
 }
 
 /// Adds a dated line to the log of a task.
@@ -262,7 +301,78 @@ pub async fn task_add_log(
     text: String,
 ) -> Result<Vec<Task>, AppError> {
     let v = state.current_vault()?;
-    edit_note(&v, &path, |c| tasks::add_log(c, line, &key, &date, &text))
+    let list = edit_note(&v, &path, |c| tasks::add_log(c, line, &key, &date, &text))?;
+    trace_worked(&state, &v, &list, line);
+    Ok(list)
+}
+
+/// Changes the date and text of one log line of a task.
+#[tauri::command]
+pub async fn task_edit_log(
+    state: State<'_, AppState>,
+    path: String,
+    line: u32,
+    key: String,
+    date: String,
+    text: String,
+) -> Result<Vec<Task>, AppError> {
+    let v = state.current_vault()?;
+    edit_note(&v, &path, |c| tasks::edit_log(c, line, &key, &date, &text))
+}
+
+/// Deletes one log line of a task. The note is committed first, so it can be brought back.
+#[tauri::command]
+pub async fn task_delete_log(
+    state: State<'_, AppState>,
+    path: String,
+    line: u32,
+    key: String,
+) -> Result<Vec<Task>, AppError> {
+    let v = state.current_vault()?;
+    check_path(&path)?;
+    v.commit(
+        CommitReason::new(
+            CommitKind::SnapshotBeforeDelete,
+            Some(format!("log line in {path}")),
+        ),
+        Some(std::slice::from_ref(&path)),
+    )?;
+    edit_note(&v, &path, |c| tasks::delete_log(c, line, &key))
+}
+
+/// Sets the note of a task (empty text removes it).
+#[tauri::command]
+pub async fn task_set_note(
+    state: State<'_, AppState>,
+    path: String,
+    line: u32,
+    key: String,
+    text: String,
+) -> Result<Vec<Task>, AppError> {
+    let v = state.current_vault()?;
+    let list = edit_note(&v, &path, |c| tasks::set_note(c, line, &key, &text))?;
+    trace_worked(&state, &v, &list, line);
+    Ok(list)
+}
+
+/// Sets the description of an epic task: the text under its heading.
+#[tauri::command]
+pub async fn epic_set_description(
+    state: State<'_, AppState>,
+    path: String,
+    text: String,
+) -> Result<Epic, AppError> {
+    let v = state.current_vault()?;
+    check_path(&path)?;
+    if !epics::is_epic_path(&path) {
+        return Err(AppError::InvalidPath(format!("{path} is not an epic task")));
+    }
+    let note = fs_ops::read_note(&v.root, &path)?;
+    let new = epics::set_description(&note.content, &text);
+    if new != note.content {
+        ops::write_note(&v, &path, &new)?;
+    }
+    Ok(epics::read_epic(&path, &new))
 }
 
 /// Deletes a task with its steps and log. The note is committed first, so the task can be brought
@@ -346,20 +456,29 @@ pub async fn task_add(
     state: State<'_, AppState>,
     text: String,
     note: Option<String>,
-    date: Option<String>,
     steps: Option<Vec<String>>,
     path: Option<String>,
 ) -> Result<Vec<Task>, AppError> {
     let v = state.current_vault()?;
-    add_task_to(
+    let target = path.as_deref().unwrap_or(epics::INBOX);
+    let list = add_task_to(
         &v,
-        path.as_deref().unwrap_or(epics::INBOX),
+        target,
         &text,
         note.as_deref().unwrap_or(""),
-        date.as_deref()
-            .unwrap_or(&chrono::Local::now().format("%Y-%m-%d").to_string()),
         steps.as_deref().unwrap_or(&[]),
-    )
+    )?;
+    if let Some(t) = tasks::parse("", &format!("- [ ] {text}\n")).first() {
+        trace::record(
+            &state,
+            &v,
+            &trace::Event::TaskNew {
+                title: &t.title,
+                path: target,
+            },
+        );
+    }
+    Ok(list)
 }
 
 /// The ideas of the vault, newest first.
@@ -567,15 +686,7 @@ mod tests {
     fn a_quick_task_goes_into_the_inbox_epic() {
         let d = tempfile::tempdir().unwrap();
         let v = open_for_test(d.path());
-        let list = add_task_to(
-            &v,
-            epics::INBOX,
-            "Call Mette due:2026-10-20",
-            "",
-            "2026-10-19",
-            &[],
-        )
-        .unwrap();
+        let list = add_task_to(&v, epics::INBOX, "Call Mette due:2026-10-20", "", &[]).unwrap();
         assert_eq!(list.len(), 1);
         assert_eq!(list[0].title, "Call Mette");
         let list = add_task_to(
@@ -583,18 +694,17 @@ mod tests {
             epics::INBOX,
             "Order headsets",
             "Ask Mette\n\nThe grey ones",
-            "2026-10-19",
             &["Find the model".into(), "Order".into()],
         )
         .unwrap();
         assert_eq!(list.len(), 2);
-        let log: Vec<&str> = list[1].log.iter().map(|l| l.text.as_str()).collect();
-        assert_eq!(log, ["Ask Mette", "The grey ones"]);
+        assert_eq!(list[1].note, "Ask Mette\n\nThe grey ones");
+        assert!(list[1].log.is_empty());
         let steps: Vec<&str> = list[1].steps.iter().map(|s| s.text.as_str()).collect();
         assert_eq!(steps, ["Find the model", "Order"]);
         let text = std::fs::read_to_string(d.path().join("Tasks/Inbox.md")).unwrap();
         assert!(text.starts_with("# Inbox\n\n- [ ] Call Mette"), "{text}");
-        assert!(add_task_to(&v, epics::INBOX, "  ", "", "2026-10-19", &[]).is_err());
+        assert!(add_task_to(&v, epics::INBOX, "  ", "", &[]).is_err());
         let after = delete_task(&v, epics::INBOX, list[1].line, &list[1].key).unwrap();
         assert_eq!(after.len(), 1);
         assert!(!std::fs::read_to_string(d.path().join("Tasks/Inbox.md"))
@@ -613,7 +723,7 @@ mod tests {
         let e = epic_for_note(&v, "IT/VPN guide.md").unwrap();
         assert_eq!(e.path, "Tasks/VPN guide.md");
         assert_eq!(e.source.as_deref(), Some("IT/VPN guide"));
-        add_task_to(&v, &e.path, "Write the steps", "", "2026-10-20", &[]).unwrap();
+        add_task_to(&v, &e.path, "Write the steps", "", &[]).unwrap();
         // The note itself is not changed.
         assert_eq!(
             std::fs::read_to_string(d.path().join("IT/VPN guide.md")).unwrap(),

@@ -14,15 +14,12 @@ import { todayIso } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { fileNameFromTitle } from "@/lib/noteTitle";
 import { STARTERS, type Starter } from "./starters";
 
-/** A file name from a title: no characters a file cannot have. */
+/** A file name from a title: no characters or endings a file cannot have. */
 export function fileNameFrom(title: string): string {
-  const clean = title
-    .replace(/[\\/:*?"<>|#]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return clean === "" ? "Untitled" : clean.slice(0, 80);
+  return fileNameFromTitle(title.replace(/#/g, " ")) ?? "Untitled";
 }
 
 /**
@@ -129,6 +126,7 @@ export function StarterDialog() {
                 Name of the note
               </label>
               <Input
+                data-no-ai
                 id="starter-title"
                 value={title}
                 onChange={(e) => {
@@ -154,6 +152,7 @@ export function StarterDialog() {
                   />
                 ) : (
                   <Input
+                    data-no-ai
                     id={`starter-${f.id}`}
                     placeholder={f.placeholder}
                     value={values[f.id] ?? ""}

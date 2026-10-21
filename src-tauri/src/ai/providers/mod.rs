@@ -5,6 +5,7 @@ pub mod lmstudio;
 pub mod openai_compat;
 pub mod types;
 
+use super::clean::{self, ThinkFilter};
 use super::router::Approved;
 use crate::error::{AppError, AppResult};
 use crate::settings::{ProviderConfig, ProviderKind};
@@ -34,17 +35,31 @@ pub async fn chat(
     on_text: &mut (dyn FnMut(&str) + Send),
 ) -> AppResult<LlmResponse> {
     let p = provider.config();
-    match p.kind {
+    // Models that think out loud write it as <think>…</think>. It is never shown or kept.
+    let mut filter = ThinkFilter::new();
+    let mut shown = |t: &str| {
+        let text = filter.push(t);
+        if !text.is_empty() {
+            on_text(&text);
+        }
+    };
+    let mut resp = match p.kind {
         ProviderKind::Anthropic => {
-            anthropic::chat_stream(client, p, key, req, cancel, on_text).await
+            anthropic::chat_stream(client, p, key, req, cancel, &mut shown).await?
         }
         ProviderKind::LmStudio
         | ProviderKind::OpenAiCompatible
         | ProviderKind::BuiltIn
         | ProviderKind::FoundryLocal => {
-            openai_compat::chat_stream(client, p, key, req, cancel, on_text).await
+            openai_compat::chat_stream(client, p, key, req, cancel, &mut shown).await?
         }
+    };
+    let rest = filter.finish();
+    if !rest.is_empty() {
+        on_text(&rest);
     }
+    resp.text = clean::strip_think(&resp.text);
+    Ok(resp)
 }
 
 /// Lists the models a provider offers.

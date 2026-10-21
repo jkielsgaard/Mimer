@@ -12,4 +12,9 @@ aiSpelling: boolean,
 /**
  * Words the spelling help must never mark (names, terms).
  */
-ownWords: Array<string>, };
+ownWords: Array<string>, 
+/**
+ * Write the day's work (notes written in, tasks made, worked on and finished) under
+ * "Worked on" in today's daily note.
+ */
+traceWork: boolean, };

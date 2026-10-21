@@ -11,7 +11,7 @@ Mimer can run its own AI **on this computer**, so you do not need LM Studio. You
 
 ## Wake and sleep
 
-**Wake** in the status bar loads the model into memory. It takes some seconds to a minute. Until Mimer is awake the message box is locked. **Sleep Mimer** unloads the model and gives the memory back, so use it when you need the memory for something else. Closing Mimer, or a crash, also stops it. In Settings you can choose that Mimer sleeps by itself after some idle minutes.
+**Wake** in the status bar loads the model into memory. It takes some seconds to a minute. You do not have to press it first: when you use an AI command or send a question while Mimer is asleep, he is woken by himself. **Sleep Mimer** unloads the model and gives the memory back, so use it when you need the memory for something else. Closing Mimer, or a crash, also stops it. In Settings you can choose that Mimer sleeps by itself after some idle minutes.
 
 ## When something goes wrong
 

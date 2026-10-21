@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, FileText, Layers, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,13 @@ import { findTask, useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { BreakDownDialog } from "./BreakDownDialog";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { DeleteButton } from "@/components/DeleteButton";
 import { ViewHeader } from "@/components/ViewHeader";
 import { AiAsk } from "@/components/AiAsk";
+import { NoteBox } from "@/components/NoteBox";
+import type { Task } from "@/bindings/Task";
+import type { TaskLog } from "@/bindings/TaskLog";
 import { useAiBlocked } from "@/lib/useAiBlocked";
 
 const STATUSES: { id: string; label: string }[] = [
@@ -62,7 +66,152 @@ function MarkdownOfTask({ path, from, to }: { path: string; from: number; to: nu
 }
 
 const STATUS_INSTRUCTION =
-  "Write one or two short sentences that tell where this task stands, for a status update to a colleague: what is done, what it waits for, and when it is due. Only use what is given. Write in the language of the task. Answer with the sentences only.";
+  "You write a status update for a colleague about one task. Use ONLY the facts below: the title, the due date, the steps and the dated log lines. Write one or two short sentences, in the language of the log: what has been done, what it waits for, and when it is due. Do not invent anything and do not repeat the log line by line. Answer with the sentences only.";
+
+/** How many of the latest log lines the status line is built from. */
+const STATUS_LOG_LINES = 10;
+
+/** The log lines a status line is built from: the written ones, not Mimer's own "Status:" lines. */
+export function statusLogLines(task: Task): TaskLog[] {
+  return task.log.filter((l) => !/^Status:\s/.test(l.text)).slice(-STATUS_LOG_LINES);
+}
+
+/** The facts the status line is written from. */
+export function statusFacts(task: Task, stepsDone: number): string {
+  return [
+    `Task: ${task.title}`,
+    task.due !== null ? `Due: ${task.due}` : "",
+    task.status !== null ? `Status: ${task.status}` : "",
+    task.steps.length > 0 ? `Steps: ${String(stepsDone)} of ${String(task.steps.length)} done` : "",
+    task.note !== "" ? `Note: ${task.note}` : "",
+    "Log (oldest first):",
+    ...statusLogLines(task).map((l) => `${l.date} ${l.text}`),
+  ]
+    .filter((x) => x !== "")
+    .join("\n");
+}
+
+/** One line of the log: its date and text, with buttons to change or remove it. */
+function LogItem({ task, entry, today }: { task: Task; entry: TaskLog; today: string }) {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(entry.text);
+  const [date, setDate] = useState(entry.date);
+  const [deleting, setDeleting] = useState(false);
+  const store = useTaskStore.getState();
+  const save = (): void => {
+    const t = text.trim();
+    if (t === "" || date === "") return;
+    setEditing(false);
+    if (t !== entry.text || date !== entry.date) void store.editLog(task, entry, date, t);
+  };
+  return (
+    <li className="group relative pb-4">
+      <span
+        aria-hidden
+        className="absolute -left-[27px] top-1 size-2.5 rounded-full border-2 border-primary bg-card"
+      />
+      {editing ? (
+        <div className="flex flex-col gap-2">
+          <Input
+            type="date"
+            aria-label="Date of the log line"
+            className="h-8 w-40"
+            value={date}
+            onChange={(e) => {
+              setDate(e.target.value);
+            }}
+          />
+          <Textarea
+            aria-label="Text of the log line"
+            rows={2}
+            className="min-h-0 resize-y"
+            value={text}
+            autoFocus
+            onChange={(e) => {
+              setText(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                save();
+              }
+              if (e.key === "Escape") {
+                setText(entry.text);
+                setDate(entry.date);
+                setEditing(false);
+              }
+            }}
+          />
+          <div className="flex gap-2">
+            <Button size="sm" disabled={text.trim() === "" || date === ""} onClick={save}>
+              Save
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setText(entry.text);
+                setDate(entry.date);
+                setEditing(false);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            {entry.date === today ? "Today" : shortDate(entry.date)}
+            <span className="ml-auto flex gap-0.5 opacity-0 focus-within:opacity-100 group-hover:opacity-100">
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="size-6"
+                aria-label="Change this line"
+                title="Change this line"
+                onClick={() => {
+                  setEditing(true);
+                }}
+              >
+                <Pencil className="size-3.5" />
+              </Button>
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                className="size-6"
+                aria-label="Delete this line"
+                title="Delete this line"
+                onClick={() => {
+                  setDeleting(true);
+                }}
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+            </span>
+          </span>
+          <p className="text-sm">{entry.text}</p>
+        </>
+      )}
+      <ConfirmDialog
+        open={deleting}
+        title="Delete this line from the log?"
+        description="It stays in the version history of the note, so it can be brought back."
+        confirmLabel="Delete"
+        destructive
+        onCancel={() => {
+          setDeleting(false);
+        }}
+        onConfirm={() => {
+          setDeleting(false);
+          void store.deleteLog(task, entry);
+        }}
+      />
+    </li>
+  );
+}
 
 /** One task: its status and date, its steps, and what has happened so far. */
 export function TaskPage() {
@@ -172,29 +321,35 @@ export function TaskPage() {
                   }
                 }}
               />
-              <p className="mt-1 px-1 text-xs text-muted-foreground">
-                in epic task{" "}
-                <button
+              <div className="mt-1.5 flex flex-wrap items-center gap-2 px-1">
+                <Button
                   type="button"
-                  className="text-primary underline"
+                  variant="outline"
+                  size="sm"
+                  title="Go to the epic task this task belongs to"
                   onClick={() => {
                     useTaskStore.getState().openEpic(task.path);
                   }}
                 >
-                  {epic?.title ?? noteName(task.path)}
-                </button>
-                {" · "}
-                <button
+                  <Layers /> Epic task: {epic?.title ?? noteName(task.path)}
+                </Button>
+                <Button
                   type="button"
-                  className="text-primary underline"
+                  variant="outline"
+                  size="sm"
+                  title="Open the note this task is written in"
                   onClick={() => {
                     void useVaultStore.getState().openNote(task.path);
                   }}
                 >
-                  open the note
-                </button>
-                {task.tags.length > 0 && ` · ${task.tags.map((t) => `#${t}`).join(" ")}`}
-              </p>
+                  <FileText /> Open the note
+                </Button>
+                {task.tags.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    {task.tags.map((t) => `#${t}`).join(" ")}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -267,6 +422,16 @@ export function TaskPage() {
               {task.plan === today ? "On today's list" : "Put on today's list"}
             </Button>
           </div>
+
+          <NoteBox
+            label="Note"
+            value={task.note}
+            placeholder="Anything to remember about this task"
+            hint="Kept in the note under the task, apart from the log."
+            onSave={(text) => {
+              void store.setNote(task, text);
+            }}
+          />
 
           <section aria-label="Steps" className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
@@ -399,18 +564,7 @@ export function TaskPage() {
                 title="Status line"
                 notePath={task.path}
                 instruction={STATUS_INSTRUCTION}
-                text={() =>
-                  [
-                    `Task: ${task.title}`,
-                    task.due !== null ? `Due: ${task.due}` : "",
-                    task.status !== null ? `Status: ${task.status}` : "",
-                    `Steps: ${String(stepsDone)} of ${String(task.steps.length)} done`,
-                    "Log:",
-                    ...task.log.map((l) => `${l.date} ${l.text}`),
-                  ]
-                    .filter((x) => x !== "")
-                    .join("\n")
-                }
+                text={() => statusFacts(task, stepsDone)}
                 actions={(answer, close) => (
                   <>
                     <Button
@@ -440,16 +594,7 @@ export function TaskPage() {
             ) : (
               <ol className="ml-1.5 border-l-2 pl-5">
                 {[...task.log].reverse().map((l) => (
-                  <li key={l.line} className="relative pb-4">
-                    <span
-                      aria-hidden
-                      className="absolute -left-[27px] top-1 size-2.5 rounded-full border-2 border-primary bg-card"
-                    />
-                    <span className="block text-[11px] text-muted-foreground">
-                      {l.date === today ? "Today" : shortDate(l.date)}
-                    </span>
-                    <p className="text-sm">{l.text}</p>
-                  </li>
+                  <LogItem key={l.line} task={task} entry={l} today={today} />
                 ))}
               </ol>
             )}

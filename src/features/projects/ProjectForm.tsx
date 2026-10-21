@@ -149,6 +149,7 @@ export function ProjectForm({
             <div className="flex flex-col gap-1">
               <Label htmlFor="proj-name">Name</Label>
               <Input
+                data-no-ai
                 id="proj-name"
                 value={name}
                 aria-invalid={nameProblem !== null}
@@ -188,6 +189,7 @@ export function ProjectForm({
               <Label htmlFor="proj-ask">Ask AI to change the instructions</Label>
               <div className="flex gap-2">
                 <Input
+                  data-no-ai
                   id="proj-ask"
                   value={askText}
                   placeholder="Make these instructions stricter about formatting"

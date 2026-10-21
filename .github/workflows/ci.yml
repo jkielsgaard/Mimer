@@ -4,6 +4,15 @@ on:
   push:
   pull_request:
 
+# CI only reads the code.
+permissions:
+  contents: read
+
+# A newer push to the same branch cancels the run that is no longer needed.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-22.04

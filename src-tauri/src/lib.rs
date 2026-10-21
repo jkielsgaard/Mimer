@@ -15,13 +15,13 @@ pub mod links;
 pub mod markdown;
 pub mod order;
 pub mod projects;
-pub mod prompts;
 pub mod search;
 pub mod settings;
 pub mod skills;
 pub mod state;
 pub mod tasks;
 pub mod templates;
+pub mod trace;
 pub mod vault;
 
 use state::AppState;
@@ -174,14 +174,15 @@ pub fn run() {
             commands::chats::delete_chat,
             commands::chats::delete_all_chats,
             commands::skills::list_skills,
-            commands::skills::save_skill,
-            commands::skills::remove_skill,
-            commands::skills::preview_skill,
             commands::tasks::list_tasks,
             commands::tasks::task_set_done,
             commands::tasks::task_set_meta,
             commands::tasks::task_add_step,
             commands::tasks::task_add_log,
+            commands::tasks::task_edit_log,
+            commands::tasks::task_delete_log,
+            commands::tasks::task_set_note,
+            commands::tasks::epic_set_description,
             commands::tasks::task_add,
             commands::tasks::task_add_to_note,
             commands::tasks::list_ideas,
@@ -194,9 +195,6 @@ pub fn run() {
             commands::tasks::list_epics,
             commands::tasks::epic_create,
             commands::tasks::epic_for_note_cmd,
-            commands::chats::list_prompts,
-            commands::chats::add_prompt,
-            commands::chats::remove_prompt,
             commands::index_page::create_index_page,
             commands::devtools::open_devtools,
             commands::order::get_tree_order,

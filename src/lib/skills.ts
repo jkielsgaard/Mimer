@@ -41,7 +41,10 @@ export async function localAiProblem(): Promise<string | null> {
 export async function runSkillOn(skill: Skill, paths: string[]): Promise<void> {
   const ui = useUiStore.getState();
   if (useChatStore.getState().streaming) {
-    ui.toast("The assistant is busy. Wait for it, or press Stop, then try again.", "error");
+    ui.toast(
+      "Mimer is busy with another job. Wait for it, or press Stop, then try again.",
+      "error",
+    );
     return;
   }
   if (paths.length > MAX_MENTIONS) {

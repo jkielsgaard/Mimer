@@ -32,6 +32,8 @@ pub struct AppState {
     pub engine: crate::engine::EngineRuntime,
     /// Foundry Local, the second built-in AI (download, wake, sleep).
     pub foundry: crate::foundry::FoundryRuntime,
+    /// What the daily-note trace has written today.
+    pub trace: crate::trace::SeenCell,
 }
 
 impl AppState {
@@ -51,6 +53,7 @@ impl AppState {
             embedding_status: Mutex::new(crate::embeddings::EmbeddingStatus::default()),
             engine: crate::engine::EngineRuntime::new(),
             foundry: crate::foundry::FoundryRuntime::new(),
+            trace: Default::default(),
         }
     }
 

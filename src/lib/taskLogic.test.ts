@@ -26,6 +26,7 @@ function task(patch: Partial<Task>): Task {
     estMinutes: null,
     steps: [],
     log: [],
+    note: "",
     ...patch,
   };
 }

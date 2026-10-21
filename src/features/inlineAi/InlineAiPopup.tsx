@@ -5,6 +5,7 @@ import { AiOffNote } from "@/components/AiOffNote";
 import { api, toApiError } from "@/lib/api";
 import { missingFacts, factsOf } from "@/lib/facts";
 import { stripCodeFence } from "@/lib/fence";
+import { wakeIfNeeded } from "@/lib/wake";
 import { cn } from "@/lib/utils";
 import { useNow } from "@/features/chat/useNow";
 import { DiffView } from "@/components/DiffView";
@@ -32,7 +33,10 @@ export interface InlineStart {
 interface Props {
   selection: InlineSelection;
   start?: InlineStart;
-  notePath: string;
+  /** The note the text is from, or null for a text field outside a note. */
+  notePath: string | null;
+  /** Offer "Find tasks in it" (not for a text field). */
+  allowFindTasks?: boolean;
   /** Why the AI cannot be used now; the menu then says so instead of running. */
   aiOff?: string | null;
   /** Called with the replacement text when the user accepts. */
@@ -60,6 +64,7 @@ export function InlineAiPopup({
   selection,
   start,
   notePath,
+  allowFindTasks = true,
   aiOff = null,
   onAccept,
   onFindTasks,
@@ -87,6 +92,13 @@ export function InlineAiPopup({
       setResult("");
       raw.current = "";
       try {
+        // A sleeping built-in AI is woken first, so nobody has to press Wake.
+        const waking = await wakeIfNeeded();
+        if (waking !== null) {
+          setError(waking);
+          setPhase("choose");
+          return;
+        }
         taskId.current = await api.aiInline(
           {
             command: a.command,
@@ -169,7 +181,7 @@ export function InlineAiPopup({
       ref={box}
       role="dialog"
       aria-label="AI command"
-      className="fixed z-40 w-[460px] max-w-[94vw] rounded-lg border bg-card p-2 shadow-xl"
+      className="fixed z-[70] w-[460px] max-w-[94vw] rounded-lg border bg-card p-2 shadow-xl"
       style={{ left, top: Math.max(8, top) }}
     >
       {phase === "choose" && (
@@ -193,6 +205,7 @@ export function InlineAiPopup({
               {g.ids
                 .map((id) => INLINE_ACTIONS.find((a) => a.id === id))
                 .filter((a): a is InlineAction => a !== undefined)
+                .filter((a) => allowFindTasks || a.id !== "findTasks")
                 .map((a) => (
                   <button
                     key={a.id}

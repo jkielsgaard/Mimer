@@ -12,6 +12,7 @@ export function TreeFilter() {
         aria-hidden
       />
       <input
+        data-no-ai
         type="text"
         aria-label="Filter the file tree"
         placeholder="Filter notes and folders…"

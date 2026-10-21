@@ -6,20 +6,13 @@
 //! model only writes the text for one step. Mimer builds the proposals, which the user still
 //! reviews before anything is written.
 //!
-//! Built-in skills live in the code. The user's own skills are stored in `skills.json` next to
-//! `settings.json` (they belong to the user, not to a vault).
+//! Built-in skills live in the code. Skills the user made in an older version (before 0.11.0,
+//! when Settings had a Skills tab) are read from `skills.json` next to `settings.json`; they can
+//! no longer be made or changed in the app.
 
-use crate::error::{AppError, AppResult};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use ts_rs::TS;
-use uuid::Uuid;
-
-const MAX_NAME: usize = 40;
-const MAX_DESCRIPTION: usize = 120;
-const MAX_INSTRUCTION: usize = 4000;
-/// Most skills the user can keep.
-const MAX_SKILLS: usize = 100;
 
 /// What Mimer does when a skill runs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -224,16 +217,6 @@ fn read_file(path: &Path) -> SkillFile {
         .unwrap_or_default()
 }
 
-fn write_file(path: &Path, file: &SkillFile) -> AppResult<()> {
-    if let Some(dir) = path.parent() {
-        std::fs::create_dir_all(dir)?;
-    }
-    let tmp = path.with_extension("json.tmp");
-    std::fs::write(&tmp, serde_json::to_vec_pretty(file)?)?;
-    std::fs::rename(&tmp, path)?;
-    Ok(())
-}
-
 /// The built-in skills followed by the user's own, in the order they were made.
 pub fn list(path: &Path) -> Vec<Skill> {
     let mut all = builtins();
@@ -249,103 +232,9 @@ pub fn find(path: &Path, id: &str) -> Option<Skill> {
     list(path).into_iter().find(|s| s.id == id)
 }
 
-/// Checks the fields of a skill the user wrote.
-fn validate(s: &Skill) -> AppResult<()> {
-    if s.name.trim().is_empty() {
-        return Err(AppError::Settings("The skill needs a name".into()));
-    }
-    if s.name.trim().chars().count() > MAX_NAME {
-        return Err(AppError::Settings(format!(
-            "The name can be at most {MAX_NAME} characters"
-        )));
-    }
-    if s.description.chars().count() > MAX_DESCRIPTION {
-        return Err(AppError::Settings(format!(
-            "The description can be at most {MAX_DESCRIPTION} characters"
-        )));
-    }
-    if s.instruction.trim().is_empty() {
-        return Err(AppError::Settings("The skill needs an instruction".into()));
-    }
-    if s.instruction.chars().count() > MAX_INSTRUCTION {
-        return Err(AppError::Settings(format!(
-            "The instruction can be at most {MAX_INSTRUCTION} characters"
-        )));
-    }
-    Ok(())
-}
-
-/// Adds a new skill (empty id) or changes one of the user's own. Built-in skills are refused.
-pub fn save(path: &Path, mut skill: Skill) -> AppResult<Skill> {
-    if skill.id.starts_with("builtin:") {
-        return Err(AppError::Settings(
-            "A built-in skill cannot be changed. Copy it and change the copy.".into(),
-        ));
-    }
-    validate(&skill)?;
-    skill.name = skill.name.trim().to_string();
-    skill.description = skill.description.trim().to_string();
-    skill.instruction = skill.instruction.trim().to_string();
-    skill.builtin = false;
-    let mut file = read_file(path);
-    file.schema_version = 1;
-    let name_taken = |other: &Skill| {
-        other.id != skill.id && other.name.to_lowercase() == skill.name.to_lowercase()
-    };
-    if builtins().iter().any(name_taken) || file.skills.iter().any(name_taken) {
-        return Err(AppError::AlreadyExists(format!(
-            "A skill called \"{}\" already exists",
-            skill.name
-        )));
-    }
-    match file.skills.iter_mut().find(|s| s.id == skill.id) {
-        Some(existing) => *existing = skill.clone(),
-        None => {
-            if file.skills.len() >= MAX_SKILLS {
-                return Err(AppError::Settings(format!(
-                    "You can keep at most {MAX_SKILLS} skills"
-                )));
-            }
-            skill.id = Uuid::new_v4().to_string();
-            file.skills.push(skill.clone());
-        }
-    }
-    write_file(path, &file)?;
-    Ok(skill)
-}
-
-/// Removes one of the user's own skills. Returns false when there was none with that id.
-pub fn remove(path: &Path, id: &str) -> AppResult<bool> {
-    if id.starts_with("builtin:") {
-        return Err(AppError::Settings(
-            "A built-in skill cannot be removed".into(),
-        ));
-    }
-    let mut file = read_file(path);
-    let before = file.skills.len();
-    file.skills.retain(|s| s.id != id);
-    if file.skills.len() == before {
-        return Ok(false);
-    }
-    write_file(path, &file)?;
-    Ok(true)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn mine(name: &str) -> Skill {
-        Skill {
-            id: String::new(),
-            name: name.into(),
-            description: "d".into(),
-            kind: SkillKind::Rewrite,
-            applies_to: SkillTarget::Both,
-            instruction: "Do it.".into(),
-            builtin: false,
-        }
-    }
 
     #[test]
     fn builtins_are_unique_and_written_in_english() {
@@ -362,47 +251,6 @@ mod tests {
         assert!(all.iter().any(|s| s.kind == SkillKind::Sort));
         assert!(all.iter().any(|s| s.kind == SkillKind::Create));
         assert!(all.iter().any(|s| s.kind == SkillKind::Answer));
-    }
-
-    #[test]
-    fn add_change_and_remove_a_skill() {
-        let d = tempfile::tempdir().unwrap();
-        let file = d.path().join("skills.json");
-        let a = save(&file, mine("Shorten")).unwrap();
-        assert!(!a.id.is_empty() && !a.builtin);
-        assert_eq!(list(&file).len(), builtins().len() + 1);
-        let mut changed = a.clone();
-        changed.instruction = "Cut it in half.".into();
-        save(&file, changed).unwrap();
-        let again = find(&file, &a.id).unwrap();
-        assert_eq!(again.instruction, "Cut it in half.");
-        assert_eq!(list(&file).len(), builtins().len() + 1);
-        assert!(remove(&file, &a.id).unwrap());
-        assert!(!remove(&file, &a.id).unwrap());
-        assert_eq!(list(&file).len(), builtins().len());
-    }
-
-    #[test]
-    fn built_in_skills_cannot_be_changed_or_removed() {
-        let d = tempfile::tempdir().unwrap();
-        let file = d.path().join("skills.json");
-        let mut b = builtins().remove(0);
-        b.instruction = "changed".into();
-        assert!(save(&file, b).is_err());
-        assert!(remove(&file, "builtin:fix-spelling").is_err());
-    }
-
-    #[test]
-    fn bad_input_and_duplicate_names_are_refused() {
-        let d = tempfile::tempdir().unwrap();
-        let file = d.path().join("skills.json");
-        assert!(save(&file, mine("  ")).is_err());
-        let mut empty = mine("Empty");
-        empty.instruction = "  ".into();
-        assert!(save(&file, empty).is_err());
-        save(&file, mine("Mine")).unwrap();
-        assert!(save(&file, mine("mine")).is_err());
-        assert!(save(&file, mine("Fix spelling and grammar")).is_err());
     }
 
     #[test]

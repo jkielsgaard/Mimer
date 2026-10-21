@@ -1,546 +1,201 @@
 # Manual test checklist
 
-This is the checklist for everything automated tests cannot cover. It is also included in the README.
-Keep it up to date: every milestone's acceptance criteria (see `CLAUDE.md` §14) must be covered here.
+This is the checklist for everything automated tests cannot cover. Run the whole list on Linux before each release and again on Windows 11 for release candidates. Use a throw-away vault (an empty folder you create for testing) so nothing real is at risk. Items marked **(AI)** need a local AI: the built-in AI, or LM Studio with a model loaded (`http://localhost:1234/v1`).
 
-Tick each box as you go. **Run the whole list on Linux before each release and again on Windows 11 for release candidates.** Use a throw-away vault (an empty folder you create for testing) so nothing real is at risk. LM Studio items need a running LM Studio server (see [Set up LM Studio](#set-up-lm-studio)).
+Keep it up to date: when a feature changes, change its lines here in the same commit.
 
 ### 0. Automated checks (do these first)
 
 - [ ] `pnpm check` finishes with no errors (format, lint, typecheck, frontend tests, `cargo fmt`, `cargo clippy`, Rust tests). On Bazzite/Silverblue, run it inside the development container: the host has no GTK/WebKit libraries for the Rust part.
 - [ ] `pnpm tauri dev` opens the app window without errors in the terminal.
-- [ ] The status bar (bottom right) shows `v0.7.0+<commit> beta`, for example `v0.7.0+63947f4` (`.dirty` at the end means the build has uncommitted changes). The same version is on the welcome screen and in **Settings → General**. Hover over the status bar version to see the build date and time; it must match when you started or built the app.
-
-### 1. Vault and file tree (M1–M2)
-
-- [ ] First start shows the Welcome screen with **Open folder as vault**, **Create new vault** and an empty recent list.
-- [ ] **Create new vault** → pick a parent folder and a name → the vault opens. A `.git` folder, `.gitignore` (contains `.vault/index.db`) and `.vault/config.json` now exist in the new folder.
-- [ ] The three columns (file tree · editor · right panel) can be resized by dragging, and collapsed/expanded with the two buttons in the top bar. After restarting the app the sizes are remembered.
-- [ ] Create a note and a nested folder with a note in it (right-click in the tree → **New note** / **New folder**). They appear in the tree, folders first, sorted A–Z ignoring case; `.md` is hidden in names.
-- [ ] Rename a note and a folder (right-click → **Rename**, or F2). Drag a note onto a folder to move it.
-- [ ] Delete a note: the dialog says it can be restored from history. After deleting it is gone from the tree.
-- [ ] In another program (file manager or text editor) create, edit and delete a `.md` file inside the vault. The tree updates by itself within a second or two.
-- [ ] Close the app and start it again: it opens the last vault straight away. Start a second copy: the first window is brought to the front instead.
-- [ ] Window size and position are remembered between runs.
-- [ ] Files and folders starting with `.` (for example `.git`) never show up in the tree.
-
-### 2. Editor and live preview (M3)
-
-- [ ] A **Formatting** toolbar is shown above the note. With no note open its buttons are greyed out.
-- [ ] Select a word and click **Bold**, **Italic**, **Strikethrough**, **Inline code**: the text is wrapped, the selection stays, and clicking again removes the marker.
-- [ ] Put the cursor in a line and click **Heading 1/2/3**: the line becomes that heading; clicking the same heading again turns it back into normal text.
-- [ ] Select three lines and click **Bullet list**, then **Numbered list**, then **Task list**: the lines switch type without stacking markers; clicking the active type removes it. **Quote** adds and removes `>`.
-- [ ] **Link** with selected text makes `[text](url)` with `url` selected for typing; **Link to a note** opens the note list.
-- [ ] **Insert table** adds an editable table; **Code block** wraps the selection in a fence; **Horizontal line** adds `---` (not a heading underline).
-- [ ] Hover a button: the tooltip shows its name and, for bold, italic and table, the shortcut.
-- [ ] After using a button you can keep typing immediately (the focus stays in the editor). With two panes open each pane has its own toolbar.
-
-- [ ] Type `**bold**`, then move the cursor to another line: it renders **bold** and the `**` markers disappear. Put the cursor back on the line: the markers return.
-- [ ] Headings (`#`…`######`), _italic_, ~~strikethrough~~, `inline code`, and `[links](https://example.com)` render styled with markers hidden off-line.
-- [ ] A list with `- [ ] task` and `- [x] done` shows clickable checkboxes; clicking one toggles it in the text.
-- [ ] Block quotes and fenced code blocks (` ` ```) get a styled background; code keeps its raw text.
-- [ ] A `---` line becomes a horizontal rule when the cursor is elsewhere. Tables stay as raw text in monospace.
-- [ ] A note starting with `---`, a few `key: value` lines and `---` shows a collapsed **Properties** bar; clicking it expands the raw YAML.
-- [ ] Ctrl/Cmd+B and Ctrl/Cmd+I wrap the selection in bold / italic (press again to remove).
-- [ ] Ctrl/Cmd+F opens in-note search.
-- [ ] The status bar shows **Unsaved changes** while typing, **Saving…** briefly, then **Saved** about a second after you stop typing.
-- [ ] Type some text, wait for **Saved**, quit and restart: the text is still there.
-- [ ] Edit the open note in another program and save it (while the note has no unsaved changes in Mimer): Mimer silently shows the new text.
-- [ ] Type in Mimer (do not wait for it to save) and quickly change the same file in another program: a banner "This note changed on disk" appears with **Keep my version** and **Load disk version**. Try both; in both cases `File → Version history` shows commits named `Snapshot before reload: …` so neither version is lost.
-
-### 3. Git version history (M4)
-
-Check with `git log --oneline` inside the vault folder (any Git client works).
-
-- [ ] Ctrl/Cmd+S on a changed note creates a commit `Save: <path>`. Pressing it again without changes creates **no** commit (no empty commits ever).
-- [ ] Open note A, edit it, click note B: a commit `Autosave: <A path>` appears.
-- [ ] Edit a note and leave it alone for the idle time (default 5 min; set 1 minute in Settings → Version history to test): a commit `Autosave` appears.
-- [ ] Edit a note, then close the app window: a commit `Autosave on close` appears and the window closes within 5 seconds.
-- [ ] Open the vault after changing a file while Mimer was closed: a commit `Recovered uncommitted changes` appears.
-- [ ] Right panel → **History** (or Ctrl/Cmd+Shift+H) lists the commits for the current note with relative dates, messages and short SHAs. Click one: a diff (old version → current) appears.
-- [ ] **Restore this version** brings back the old text. History now has a `Snapshot before restore…` commit and a `Restore <path> to <sha>` commit; the version you replaced is still in history.
-- [ ] Rename a note that already has history: its older commits are still listed in History (renames are followed).
-- [ ] Delete a note, then **File → Recover deleted notes…**: the note is listed; **Restore** brings it back with its last content. `git log` shows `Snapshot before delete…` and `Delete <path>` before it.
-
-### 4. Links, tags and attachments (M5)
-
-- [ ] Typing `[[` opens a list of notes (fuzzy match on name and path). Picking one inserts `[[Note]]`.
-- [ ] `[[Note]]`, `[[Note|alias]]`, `[[Note#Heading]]` and `[[Note#Heading|alias]]` all work; the brackets are hidden off-line and aliases show only the alias.
-- [ ] Ctrl/Cmd+click on a link opens the note. A link to a note that does not exist is shown muted; clicking it creates the note and opens it.
-- [ ] Wiki-links inside code blocks and inline code are **not** treated as links.
-- [ ] Two notes with the same name in different folders: a plain `[[Name]]` goes to the one with the shortest path.
-- [ ] `#tag` renders as a pill; clicking it opens a search for that tag. `tags: [a, b]` in the YAML also counts. `#123` and tags inside code do not.
-- [ ] Rename a linked note: a dialog says "Update N links in M notes?". Choose **Update links**: the links in the other notes are rewritten (aliases and headings kept), and `git log` shows **one** commit `Rename <old> → <new>` containing everything.
-- [ ] Move a note into another folder by drag and drop: same dialog, same single commit.
-- [ ] Copy a screenshot to the clipboard and paste it into a note: a file `attachments/pasted-YYYYMMDD-HHMMSS.png` is created and the image shows inline. Paste a second one: a different file name.
-- [ ] Drag an image file from your file manager into the editor: it is copied into `attachments/` and shown. Drag a PDF: a `[file.pdf](…)` link appears; Ctrl/Cmd+click opens it in the default PDF app.
-
-### 5. Search (M6)
-
-- [ ] Ctrl/Cmd+Shift+F opens the search tab and focuses the box. Typing part of a word (`firew` finds "firewall") shows results while you type, with matches highlighted.
-- [ ] `tag:name` and `path:Folder` in the query narrow the results; combining them with words works.
-- [ ] Search for odd input (`"`, `(`, `AND`, `*`): no error, no crash.
-- [ ] Ctrl/Cmd+P opens quick open; typing a few letters of a file name finds it (fuzzy); Enter opens it.
-- [ ] Generate a big test vault (`node scripts/gen-vault.mjs ~/mimer-test-1000 1000`), open it: the first indexing is quick, search results appear instantly (well under a tenth of a second), and typing in the editor stays smooth while indexing runs.
-- [ ] Delete `.vault/index.db` while the app is closed and start again: the index is rebuilt automatically.
-
-### 6. Settings and chat with LM Studio (M7)
-
-- [ ] **File → Settings** (Ctrl/Cmd+,) shows five tabs: General, AI providers, AI, Version history, Vault.
-- [ ] General: theme System/Light/Dark switches immediately after saving; font size, line width and spellcheck take effect.
-- [ ] AI providers → **LM Studio** → **Test connection** says "Connected" and lists models. **Load models** fills the model suggestions; pick one and save.
-- [ ] LM Studio's location cannot be changed (always local). Add an OpenAI-compatible provider with a non-localhost URL: it cannot be marked as Local.
-- [ ] Saving an API key shows "Key stored"; the key is **not** written into `settings.json` (open it and check) — it is in the OS keychain.
-- [ ] Open a note, open the **Assistant** tab (Ctrl/Cmd+L), ask "Summarize this note": the answer streams in word by word and uses the note's content. Untick **Include current note** and ask again: it no longer knows the note.
-- [ ] While an answer is streaming, press **Stop**: it stops straight away.
-- [ ] **New chat** clears the conversation. The header shows the provider and model; the status bar does too.
-- [ ] Stop LM Studio's server and send a message: a clear error appears in the chat (not a crash).
-- [ ] Set **Supports tools** off for the provider: the chat shows "This model does not support tools. Vault search and file changes are unavailable." and plain chat still works.
-
-### 7. Inline AI commands (M8)
-
-- [ ] Select a paragraph with spelling mistakes, press Ctrl/Cmd+K (or right-click): a menu with Fix spelling and grammar, Rewrite clearer, Shorten, Expand, Restructure as list, Custom… appears.
-- [ ] **Fix spelling and grammar** shows a diff (old vs new). **Retry** asks again; **Reject** (or Esc) changes nothing.
-- [ ] **Accept** (or Enter) replaces the selected text. `git log` shows `Snapshot before AI: …` and then `AI: Fix spelling and grammar in <path>`.
-- [ ] **Custom…** with an instruction (for example "translate to Danish") works.
-- [ ] If the model wraps its answer in a code block, the fence is removed before it is shown.
-
-### 8. Projects (M9)
-
-- [ ] **New → Project…**: a window asks for Name, Instructions and AI provider (local providers only). Save: a new folder with that name appears in the vault root, listed under Projects with a project icon; `.vault/projects/<id>.json` exists and was committed (`Project: <name> updated`).
-- [ ] There is no **Make project** on any folder, and a project cannot be made inside a folder (see section 38).
-- [ ] With a note from the project open, the chat header and status bar show the project name.
-- [ ] Put an instruction such as "Always answer in French" in the project: the assistant's answers visibly change for notes in that folder, and not for notes outside it.
-- [ ] In the project dialog, type "Make these instructions stricter about formatting" and press **Ask AI**: a diff of the proposed instructions appears. **Reject** leaves the field alone; **Accept** replaces the text; nothing is saved until you press **Save**.
-- [ ] Rename or move a project folder in the tree: the project keeps working (its folder path is updated in the same commit).
-- [ ] A cloud provider cannot be chosen for Mimer: in Settings → AI the Mimer provider list has local providers only, and an old project that pointed at a cloud provider uses the default.
-- [ ] Set a cloud provider as the global default, then make a new project: a prompt offers **Lock to local AI** / **Use global default**.
-
-### 9. Agent and proposals (M10)
-
-- [ ] In a note with several headings, ask: "Split this note into one note per heading and link them from an index note." A card **Review N proposed changes** appears when the answer is done. Nothing has been written to disk yet (check the folder).
-- [ ] The review window lists every file with an Edit / Create / Move / Delete badge, the path, the reason, and an expandable diff. Each file has **Accept / Reject** (default Accept).
-- [ ] Reject one of the new notes, press **Apply selected**: only the accepted files are written. `git log` shows `Snapshot before AI: …` then one `AI: <summary>` commit.
-- [ ] Undo the whole thing from History (restore the old versions / recover deleted notes): everything is recoverable.
-- [ ] **Reject all** closes the review and writes nothing.
-- [ ] Open a proposal, then edit one of the affected files in another program before applying: the file is marked **Changed since proposal** and **Apply selected** stays disabled until you tick "I have checked it".
-- [ ] If the open note is changed by an applied proposal, the editor shows the new content right away.
-- [ ] Ask the assistant to read a file outside the project folder (for a project chat): it reports that it cannot access it; nothing outside the project is read or changed.
-- [ ] Tool activity lines appear in the chat ("Searched notes for 'firewall'", "Read Work/Policy.md").
-
-### 10. Cloud providers (M11) — only if you have an API key
-
-- [ ] Add an Anthropic provider, store the key, test the connection (models are listed), choose a model.
-- [ ] Add an OpenAI-compatible cloud provider the same way.
-- [ ] Add a cloud provider and choose it as Raven's provider: the Raven tab appears and chat works there (see section 35). Mimer itself keeps using the local provider.
-
-### 11. Safety and robustness
-
-- [ ] In a note, try a link like `[x](../../outside.txt)`: Ctrl/Cmd+click does not open anything outside the vault.
-- [ ] Kill the app (`kill -9` / End task) while the status bar shows **Unsaved changes**: at most the last second of typing is lost; on the next start the vault opens normally.
-- [ ] Put a vault on a folder with a symbolic link that points outside it: files behind the link are not shown and cannot be reached.
-- [ ] Edit `settings.json` and set `"schemaVersion": 99`: the app shows "Settings could not be loaded" and does **not** overwrite the file. (Restore it afterwards.)
-- [ ] Open a vault that already is a Git repository with its own history: Mimer keeps working in it and only ever adds commits (check `git log`: old commits unchanged).
-
-### 12. Packaging (M12) — Windows 11
-
-- [ ] The `…-setup.exe` installer from the release installs **without** an administrator prompt, for the current user only.
-- [ ] The app starts from the Start menu and works with LM Studio running on the same machine (Settings → AI providers → Test connection).
-- [ ] Windows: images pasted into notes display; opening a note's folder with **Reveal in file manager** opens Explorer.
-- [ ] Uninstall via Windows Settings → Apps removes the app; your vault folders are untouched.
-- [ ] Linux: the `.AppImage` starts.
-
-### 13. Tabs and split view
-
-- [ ] Click two notes in the tree: two tabs appear; clicking a tab switches to it.
-- [ ] Switching from a changed note creates `Autosave: <path>` in `git log`; switching from an unchanged note creates nothing.
-- [ ] Open a note that is already open: no duplicate tab is created.
-- [ ] Close a tab with `×`, with middle-click and with `Ctrl/Cmd+W`; the neighbouring tab becomes active.
-- [ ] `Ctrl/Cmd+PageDown` / `Ctrl/Cmd+PageUp` cycle through the tabs of the focused pane.
-- [ ] `Ctrl/Cmd+\` with two tabs open splits the view; the active note moves to the right pane. Pressing it again merges the panes. With one tab it shows "Open another note first".
-- [ ] Right-click a note in the tree → **Open in split view** opens it in the second pane.
-- [ ] Click in each pane: the status bar and the right panel follow the focused pane.
-- [ ] Rename an open note: its tab shows the new name. Delete an open note: its tab closes.
-- [ ] Undo (`Ctrl/Cmd+Z`) still works in a note after switching away and back.
-- [ ] Quit with two tabs and a split, restart: the same tabs and split are restored.
-- [ ] Close the window with unsaved text in both panes: both are saved.
-
-### 14. Templates and daily notes
-
-- [ ] Open a note → **File → Save current note as template…** → name it "Meeting". `git log` shows `Template: added Meeting`. The template is not visible in the file tree.
-- [ ] A template containing `# {{title}}` and `{{date:%d %B %Y}}`: **File → New note from template…** → pick it, name the note "Kickoff": the note contains `# Kickoff` and today's date written out.
-- [ ] Creating a note with a name that already exists shows an error and keeps the dialog open.
-- [ ] `Ctrl/Cmd+Shift+D` creates `Daily/<today>.md` and opens it. Pressing it again opens the same note without changing your text.
-- [ ] **Settings → Vault**: set a daily template, delete today's daily note, press `Ctrl/Cmd+Shift+D`: the new note uses the template. Delete the template file in `.vault/templates/` by hand: the shortcut still creates an empty note.
-- [ ] Settings → Vault: a folder such as `../outside` is rejected.
-
-### 15. Table editor
-
-- [ ] Type a Markdown table (header row, `---` row, body rows), then move the cursor below it: it shows as a table with a bold header.
-- [ ] Click a cell, change the text, click elsewhere: the Markdown is updated and aligned.
-- [ ] `Tab` moves right, `Shift+Tab` moves left, `Enter` moves down. `Tab` in the last cell adds a row.
-- [ ] Toolbar buttons (Row ↑, Row ↓, −Row, Col ←, Col →, −Col, Left/Center/Right) change the table as described.
-- [ ] `Ctrl/Cmd+Alt+T` inserts a 3×2 table on its own line.
-- [ ] A half-typed table (no `---` row yet) stays as plain text until it is valid.
-- [ ] A table inside a fenced code block is not turned into a widget.
-
-### 16. Chat history and saved prompts
-
-- [ ] Send two messages, restart the app, open **History** in the Assistant tab: the chat is listed; opening it restores both messages.
-- [ ] `git status` does not list `.vault/chats/`, and chatting creates no commit.
-- [ ] **New chat** starts an empty conversation; the old one stays in History.
-- [ ] Delete one chat from History. **Delete all history…** asks for confirmation and removes everything.
-- [ ] Open a different vault: its chat list is empty or shows only its own chats.
-- [ ] **Prompts → Save current text as prompt…** saves the text (`git log` shows `Prompts: added "…"`). Clicking the prompt inserts it into the message box. Removing it creates `Prompts: removed "…"`.
-
-### 17. Export
-
-Prepare a note with a heading, bold text, a table, a task list, a code block, an image (`![[pic.png]]`), a `[[link]]`, an `https://` link and raw HTML such as `<b>x</b><script>alert(1)</script>`.
-
-- [ ] **Export → HTML**: open the file in a browser. Images show, the `[[link]]` is plain text, the raw HTML is visible as text and **no dialog appears**.
-- [ ] **Export → Word**: open it in Word or LibreOffice. Headings, bold, table, list, code and images are present; the https link is clickable.
-- [ ] **Export → PDF**: the preview appears; **Print / Save as PDF** opens the system print dialog; the PDF contains only the note.
-- [ ] Right-click a folder → Export → HTML with table of contents: one document; the contents links jump to each note.
-- [ ] Cancel the save dialog: nothing is written and no error appears.
-- [ ] Exporting creates no commit and leaves `git status` clean.
-
-### 18. Semantic search (needs LM Studio with an embedding model loaded)
-
-- [ ] Settings → AI → Semantic search: enable it, choose LM Studio, load the models, pick the embedding model, Save. The status shows indexing progress, then the note and chunk counts.
-- [ ] In the search panel the **Keyword / Meaning / Both** buttons appear. A phrase that appears in no note but describes one (for example "stolen computer" for a note about lost laptops) is found by **Meaning** and **Both**, not by **Keyword**.
-- [ ] `tag:` or `path:` in the search box still uses keyword search.
-- [ ] Edit a note, wait a few seconds, search for the new text by meaning: it is found. Typing stays smooth during indexing.
-- [ ] Stop LM Studio's server and search by meaning: a message says semantic search is unavailable and keyword results are still shown.
-- [ ] Assistant: "What do our notes say about losing a laptop?" shows the line "Searched by meaning for …" and answers from the notes.
-- [ ] Privacy: only local providers are listed as embedding providers, so no note is sent to a cloud service.
-- [ ] `.vault/embeddings.db` is ignored by Git (`git status` clean).
-
-### 19. Mimer, the assistant's identity
-
-- [ ] The right panel tab, the message box and the answer bubbles say **Mimer**.
-- [ ] Ask "who are you?": the answer says Mimer, mentions the well of wisdom under Yggdrasil in a short playful way, and offers to help with the notes. Ask in Danish: the answer is in Danish.
-- [ ] Ask a normal task ("summarise this note"): Mimer does not repeat the introduction.
-- [ ] Settings → AI shows the default base instruction. Edit it ("You are Mimer, a strict editor…"), save, ask again: the new behaviour shows. **Reset to default** restores the original.
-- [ ] Delete the "Who you are" section, save, ask "who are you?": Mimer answers plainly as a notes AI, without the myth.
-- [ ] Empty the field and save: Mimer still refuses to write files directly and still proposes changes for review.
-
-### 20. Attach notes with /
-
-- [ ] Type `/` in the Mimer message box: a list of notes opens. Type a few letters: it narrows. Enter or Tab adds a chip and removes the typed text. Esc closes the list.
-- [ ] The paperclip button opens the same list.
-- [ ] Attach two notes and ask "merge these into one summary": Mimer uses both; a proposal appears and nothing is written until you apply it.
-- [ ] Remove a chip with ×: it is no longer used. Attaching a sixth note shows a message.
-- [ ] In a project, only notes inside the project folder are offered.
-- [ ] Typing a date (`1/2`) or a URL does not open the list.
-- [ ] Reopen the chat from History: the chips are shown on the earlier message.
-
-### 21. Progress while Mimer works
-
-- [ ] Send a message with LM Studio stopped: an error appears quickly, not an endless spinner.
-- [ ] With a slow or just-started model the line shows "waiting for the model…" with a counting timer, and after 15 s a hint that a local model may be loading. **Stop** works.
-- [ ] Ask "split this note into one note per heading": the line shows "Step 2 of 15", "Reading …" and so on, and ends with a review card.
-- [ ] Switch to the Files tab during an answer: the status bar says "Mimer is working…" and the Mimer tab has a dot.
-- [ ] When the answer is done the progress line disappears; a reopened chat shows no progress text.
-- [ ] Inline AI (Ctrl/Cmd+K) shows a timer next to its spinner.
-
-### 22. Import notes from a folder
-
-- [ ] Make a small test folder (or export a small OneNote notebook following [docs/IMPORT-ONENOTE.md](docs/IMPORT-ONENOTE.md)) and use **File → Import → Notes from a folder…** in a throw-away vault: the preview counts match the folder, and hidden files and unsupported files appear under "Left out".
-- [ ] Import: a progress bar runs, then the report. The notes open, images show, and `[[links]]` that point inside the import work.
-- [ ] Import the same folder again: the copies get a number (` 1`) and nothing is overwritten.
-- [ ] History shows `Import: … notes from "…"`, and `Snapshot before import…` if you had unsaved work. Restoring from History works.
-- [ ] Choose a folder inside the vault: a message says to pick a folder outside it.
-- [ ] Cancel during a larger import: the vault is clean and the commit says "(cancelled)".
-- [ ] The folder you imported from is unchanged.
-
-### 23. Start screen, About and icon
-
-- [ ] When the app starts, the Mimer picture is shown for about two seconds with the version, then fades. A click or any key skips the wait.
-- [ ] **Help → About Mimer…** shows the picture, the version and build date, a text about the app and the idea behind it, and "Developed by Jesper Ahasverusen Kielsgaard". Esc closes it.
-- [ ] The welcome screen (no vault open) has the Mimer picture as background and an **About** link.
-- [ ] The window, taskbar and installer use the new "M" icon (check on Windows after installing).
-
-### 24. Formatting toolbar
-
-- [ ] See section 2: the toolbar checks are listed there.
-
-### 25. Merging notes with Mimer
-
-- [ ] Make three small notes. Ask Mimer: "merge these three notes into one note called Summary and remove the old ones" (attach them with `/`). The review card shows **one new note and three deletions**.
-- [ ] Reject one deletion and apply: the new note and the other two deletions happen, the rejected note stays. History shows one `AI:` commit and a snapshot before it.
-- [ ] Mimer does not ask in the chat whether it may delete; it proposes the deletions.
-- [ ] Merging into one of the source notes edits it and deletes the others.
-- [ ] After the answer, ask "now delete the old ones" in a new message: Mimer knows which notes it meant.
-
-### 26. Meeting notes, quick notes and standard templates
-
-- [ ] Create a new vault: it has the folders `Meetings` and `Quick notes`, and `.vault/templates/` has `Meeting.md` and `Quick note.md`. History shows `Template: standard templates`.
-- [ ] The tree toolbar has a meeting button and a quick-note button. Meeting asks for a title and makes `Meetings/<date> <title>.md` from the template. Quick note makes `Quick notes/<date> <hh-mm>.md` at once and opens it.
-- [ ] Making the same meeting title twice gives `… 2`. Two quick notes in the same minute do not clash.
-- [ ] Edit the Meeting template, press **Settings → Vault → Add standard folders and templates**: your edit is not overwritten.
-- [ ] Change the folders in Settings → Vault: new notes go there.
-
-### 27. Switching vaults
-
-- [ ] The vault name in the header opens a list of recent vaults; the open one has a check mark. Pick another: it opens, the tabs of that vault come back, and the chat history is that vault's.
-- [ ] `Ctrl/Cmd+Shift+O` opens the list. **Open another folder as vault…** and **Create new vault…** work.
-- [ ] Type in a note and switch at once: the text is saved and the old vault gets an autosave commit.
-
-### 28. Index pages and links
-
-- [ ] Right-click a folder → **Create index page**: `<Folder> index.md` opens with a link to every note and sub-folder. Clicking a link opens the note.
-- [ ] Add your own text above the list, add a note to the folder, create the index again: the list is updated and your text is still there. A second run without changes makes no new commit.
-- [ ] Right-click an empty area of the tree → **Create index page for the whole vault**.
-- [ ] In a note, select a word and press the **Link to a note** button (or `Ctrl/Cmd+Shift+K`): a search opens with the word filled in. Pick a note: `[[Note|word]]` is inserted. A note name that exists in two folders is linked by path.
-- [ ] Type a name that does not exist: the last row offers a link to a new note; clicking the link later creates it.
-
-### 29. How-to guide and hints
-
-- [ ] The **?** button in the top bar, **Help → How to use Mimer** and **F1** open the guide (F1 and the link at the bottom of the welcome screen also work there). The list has fourteen topics; the search box narrows it ("paperclip" finds _Mimer, the assistant_).
-- [ ] Choosing a topic shows its text with tables and lists. Esc closes the guide.
-- [ ] Point at a **?** (settings, chat "Include current note", search modes, Images tab, import dialog, toolbar, file tree): a bubble explains it. It also opens with the keyboard (Tab to it) and by clicking, and Esc closes it.
-- [ ] **Read more in the guide** in a bubble opens the guide at the right topic.
-
-### 30. A new note is named by its title (replaced in 0.7.1, see section 36)
-
-- [ ] Press `Ctrl/Cmd+N`: a new note opens with the cursor after `# `. Type a title and pause: within about three seconds the file in the tree has that name. The cursor stays where it was.
-- [ ] **Name follows title** shows above the note. Click it: the name stays when you change the heading.
-- [ ] Make two notes with the same title: the second is called `… 2`.
-- [ ] Rename a new note yourself in the tree: it never changes name again.
-- [ ] A meeting note, a daily note or a note made with a name keep their names.
-- [ ] History does not fill with `Rename` entries while you type a title.
-
-### 31. Pictures
-
-- [ ] **Insert image** in the toolbar: choose two pictures; both appear and are copied into `attachments/`. Choosing the same file again gives `-1`.
-- [ ] Paste a screenshot and drag a picture file into a note: both work. Drag a picture and a note from the file tree into a note: a picture and a `[[link]]` appear.
-- [ ] Point at a picture: a **Small / Medium / Large / Original** bar appears. Choosing a size changes the picture and the text (`|400`).
-- [ ] Settings → Vault → **Insert images as** → short name: new pictures are written as `![[name.png]]` and show the same.
-- [ ] **Images** tab: every picture is listed with the notes that use it; **Unused only** shows the rest; **Move to trash** asks first, and History can bring the picture back.
-
-### 32. The file panel
-
-- [ ] **New** menu: Note, Meeting note…, Quick note, Folder…, Project… all work. A project cannot be made inside a project.
-- [ ] The filter box narrows the tree while you type; Esc clears it. **Collapse all** closes every folder. **Show the open note** finds the open note in the tree. **Sort** by Last changed puts the newest note first.
-- [ ] Folders show how many notes they hold; there are no lock icons on projects.
-- [ ] **Recent** lists the notes you opened last; **Projects** lists projects, and clicking one finds its folder. Both can be folded and remember it.
-- [ ] A breadcrumb above the note shows `Project › Folder › Note`; clicking a folder shows it in the tree.
-
-### 33. Folders, tasks and projects
-
-- [ ] Type `/` in the message to Mimer: folders are in the list with a folder icon and a note count. Pick one: a chip with a folder icon appears. Ask "List the notes you were given": they are the notes in that folder.
-- [ ] Pick a folder with more than 12 notes: Mimer says only their names were attached.
-- [ ] Attach that folder and ask Mimer to "structure and sort it into folders": it lists the notes once, then proposes the moves (Review shows Move proposals into new folders). It does not ask which note to start with, and it does not say it has already moved anything. Apply: the folders exist and links still work.
-- [ ] In a project, `/` offers only the project folder and what is inside it.
-- [ ] **Tasks** over the message box lists ten tasks. Choosing one fills the box; you can edit the text before sending. "Merge notes" with three notes attached gives one review with a new note and three deletions.
-- [ ] A project is not in **All files**. It is under **Projects** with its notes, a **+** button and a gear. Click it to fold and open it; the choice is remembered after a restart.
-- [ ] **+** next to a project makes a new note inside the project folder. Right-click in the project's tree: New note, New folder, Create index page.
-- [ ] Drag a note from All files onto the project: it moves into the project folder (one commit `Rename … → …`, links updated). Drag it back to All files.
-- [ ] Drag a project onto another project: refused with "A project cannot be inside another project."
-- [ ] A note outside the project links to a note in the project (`[[Name]]`) and back: both links open the note, in the editor.
-- [ ] The filter box finds notes inside a project and hides projects with no match.
-- [ ] **Recent** lists 4 notes. Settings → General → **Recent notes shown**: 2 shows two, 0 hides the section, 20 is the most.
-- [ ] **Meetings** and **Quick notes** are the first two folders in All files, even when other folders sort before them.
-
-- [ ] The attachments folder is not in All files. In the **Images** tab, clicking a picture or its name opens it. Right-click a project: the menu has the same choices as a folder in All files.
-- [ ] Right-click in the empty file panel or the status bar: only **Inspect element** appears (no Reload). In the note and in text boxes the normal menu stays. The Backlinks tab is gone.
-
-- [ ] Images tab: click a picture: it opens large in Mimer (Esc closes). Click a picture inside a note: same. **Open in another app** opens it outside Mimer.
-- [ ] Click in a note, switch to the Images tab, press **Insert in note** under a picture from another note's folder: the link has the right relative path and the picture shows. Dragging the thumbnail into the note does the same. With no note clicked in, a hint appears.
-
-- [ ] Ctrl/Cmd+click three items in the file tree (one in a project): all are highlighted and nothing opens. Shift+click ticks a range. Esc or a plain click clears it.
-- [ ] Right-click a ticked item: **Move 3 items to…** moves them to the chosen folder in one go (links updated, no question per item). **Delete 3 items** asks once; the notes come back with File → Recover deleted notes.
-- [ ] Drag one ticked item onto a folder or a project: all ticked items move. A project dragged into another project is refused.
-
-- [ ] Sort button → **My own order**. Drag a note to the top edge of another note: a line shows where it lands, and it goes there. Drag a folder between two notes (top or bottom edge): it goes there. The middle of a folder still moves the item into it.
-- [ ] Right-click → **Move up / Move down**, and Alt+Up / Alt+Down, move an item one place. This works inside a project too.
-- [ ] Restart the app: the order is still there. `.vault/order.json` exists. Rename a note in the middle: it keeps its place. Create a new note: it is last. Switch to Name: the list is sorted again; switch back: your order returns.
-- [ ] With **My own order**, Meetings and Quick notes are not forced to the top.
-
-### 34. Research prompts
-
-- [ ] **File → Import → Write a research prompt for a cloud AI…**: enter a topic only, choose "Write the prompt". The prompt names the topic and today's date, and ends with an exact output format (front matter, Summary, Sources, Open questions). **Copy prompt** puts it on the clipboard.
-- [ ] Ask Mimer "Write documentation about the Linux firewalld basics" with **Let Mimer write new content from its own knowledge** off: Mimer does not write the document; a prompt card appears with **Copy prompt** and **Import the answer**.
-- [ ] Turn the setting on and ask again: Mimer may write the text, and says it comes from memory.
-- [ ] Paste the prompt in a cloud AI with internet access. Copy its answer. **Tasks → Import an answer from a cloud AI…**: paste. The title is filled in; with no sources a warning is shown. **Save as note**: a new note opens with `status: needs review`. Importing the same title again gives `… 2`; nothing is overwritten.
-- [ ] An answer wrapped in a code fence, or with a sentence before it, is imported without the fence and the sentence.
-- [ ] With Raven on, the prompt card has **Send to Raven**: it fills Raven's message box and does not send.
-
-### 35. Raven and local-only notes
-
-- [ ] Settings → AI: the **Mimer's provider** list has no cloud provider (also not an LM Studio provider with a non-local address). **Raven's provider** lists the cloud providers and **Off**.
-- [ ] An existing settings file whose default provider was a cloud provider: after the update, Mimer uses a local provider and the old cloud provider is Raven's.
-- [ ] Raven **Off**: there is no Raven tab. Choose a cloud provider and Save: the tab appears next to Mimer.
-- [ ] Both tabs show a line at the top: "Local AI · your notes stay on this computer" (Mimer) and "Cloud AI · no access to your notes" with "What you type here is sent to <provider>." (Raven).
-- [ ] The first time in Raven a notice appears; the message box is locked until **I understand**; it does not come back.
-- [ ] Ask Raven about your own notes: it says it cannot see them. There is no attach button, no `/` picker and no "include current note" in Raven.
-- [ ] **Save as note** under an answer makes a note with `source: raven` and `status: needs review`. Attach it to Mimer with `/` and ask about it.
-- [ ] Stop and **New chat** work in Raven. A cloud answer streams word by word.
-- [ ] Project settings have no "Local AI only"; an old project file with `"localOnly": true` still opens.
-- [ ] Inline AI (`Ctrl/Cmd+K`) and the project dialog's **Ask AI** use the local provider.
-- [ ] Network check: while you chat with Mimer, nothing goes to a cloud host; Raven only talks to its own provider.
-
-### 36. Names and name clashes (0.7.1)
-
-- [ ] `Ctrl/Cmd+N`, **New → Note**, and right-click a folder → **New note** all open the same "New note" window, asking for a name. It starts as `Untitled` (or `Untitled 1` when that exists).
-- [ ] **Create** opens the note with `# <name>` as its first line, and the file has that name. Nothing is renamed while you type.
-- [ ] Type the name of an existing note in the same folder (also in other upper/lower case, for example `plan` for `Plan`): a red box says "A note called “Plan” already exists in “Work”. Choose another name." while you type, and **Create** is greyed out. Enter does nothing.
-- [ ] The same in the vault root, and for **New folder**, **New → Project…** and **Rename**. A folder `Docs` and a note `Docs` also clash. Renaming `plan` to `Plan` (only the case) works.
-- [ ] **New → Project…** with a name that another project already has: the project window says so and **Save** is greyed out.
-- [ ] Drag a note onto a folder that already has a note with that name: a window opens that you have to close (OK), saying what exists where. Nothing moved.
-- [ ] Tick three items, **Move to…** a folder where two of them clash: the third is moved, and one window lists the two clashes.
-- [ ] A vault that already has `Docs` and `docs` still opens; the clash is only checked when you create, rename or move.
-
-### 37. The built-in AI (0.8.0)
-
-Run on each combination you can. Only Linux with an AMD graphics card (Vulkan) has been run by the developer; **the rest are untested and need a real machine**: Windows (all of it), Nvidia (CUDA), Intel (Vulkan, SYCL), AMD on Windows, AMD ROCm, and an Intel processor.
-
-- [ ] **Settings → Built-in AI** shows what was found (processor, memory, graphics card) and pre-selects the processor, the graphics card and the engine. Choosing another graphics card picks its default engine (Nvidia → CUDA 12, AMD/Intel → Vulkan, none → CPU only); advanced engines are under "Advanced".
-- [ ] Pick a model: the size and the memory it needs are shown; a computer with too little memory gets a yellow warning.
-- [ ] **Download**: progress with percentage and sizes for the engine, then the model. **Cancel**, then Download again continues where it stopped. After it finishes, the built-in AI is Mimer's provider (when the box was ticked) and the status says "Mimer is asleep".
-- [ ] Disconnect the network during a download: a red box explains it and says to press Download again; reconnect and it continues.
-- [ ] The Mimer tab shows a bar: asleep → **Wake Mimer**. The message box says "Wake Mimer to start chatting" and is locked. **Wake Mimer** shows "Loading the model into memory… N s", then "Mimer is awake" and the box opens. Ask a question: it streams an answer. Ask for an edit: a proposal appears (tool calls work).
-- [ ] **Sleep Mimer**: the memory is freed (check Task Manager or `top`: no `llama-server`), the box locks again.
-- [ ] Close Mimer while awake: `llama-server` is gone. Wake, then kill Mimer (`kill -9` or End task): `llama-server` is gone within a moment. Windows: also check after a crash.
-- [ ] Change the context size while awake: the bar says to sleep and wake. Wake again: the new size is used.
-- [ ] Set **Sleep after** to 1 minute, wake, do nothing: Mimer goes to sleep by itself.
-- [ ] Problems: set the context size to 131072 with the 26B model on a small computer, wake: a red box says there is not enough memory, with steps and the engine's last lines under **Show details**; **Copy details** works. Choose a graphics engine on a computer without the driver: the box says to update the driver or choose CPU only.
-- [ ] Break the model file (cut it shorter): the settings show it as not downloaded and Download fetches it again with a checksum check.
-- [ ] **Add my own model file…** copies a `.gguf` into the folder and selects it; it is listed as "your own file".
-- [ ] **Remove** a model, the engine, and all files (with a confirmation): the folder shown in the settings is cleaned. The built-in AI sleeps first.
-- [ ] Windows: after installing, the files are in `%LOCALAPPDATA%\Mimer\mimer-ai`. **Uninstall Mimer** while awake: the folder is gone, `llama-server.exe` is not running. Linux: the files are in `~/.local/share/dk.mdvault.app/mimer-ai`.
-- [ ] Nothing from the built-in AI is reachable from outside: `curl http://127.0.0.1:<port>/v1/models` without a key is refused, and the port is not open on the network address.
-- [ ] LM Studio still works as before when it is the chosen provider, and no Wake bar is shown then.
-
-### 38. Projects in the vault root (0.8.0)
-
-- [ ] **New → Project…** with a folder selected (for example `Work`): the new project's folder is made in the **vault root**, not inside `Work`.
-- [ ] Make a folder `Test`, then try **New → Project…** with the name `test`: a red message says a folder called “Test” already exists in the vault root, and **Save** is greyed out. The same with a note called `Test`.
-- [ ] Right-click a folder: there is no **Make project**. A project cannot be made from an existing folder.
-- [ ] Drag a project onto a folder: a dialog says a project stays in the vault root. Nothing moved.
-- [ ] Rename a project's folder: the project follows (also its name when it matched). Drag notes and folders onto the project: they move into it.
-- [ ] A vault with a project made in an older version inside a folder still opens, and the project still works. It can be moved to the root.
-
-### 39. The Microsoft Store package (0.8.1)
-
-Needs Windows (a virtual machine or Windows Sandbox). See docs/MSIX.md.
-
-- [ ] `Build-Msix.ps1 -Version 0.8.1 -TestSign` runs without errors and makes `Mimer_0.8.1.0_x64.msix`, the `_test.msix`, `mimer-test.cer` and `Install-TestMsix.ps1` in `msix-out`.
-- [ ] Windows Sandbox: edit `HostFolder` in `mimer-sandbox.wsb`, double-click it. Mimer is installed and starts from the Start menu, with the new icon.
-- [ ] In the Store build: open a folder as a vault, write and save a note (`Ctrl+S`), check **History**, and restart Mimer: the settings and the recent vaults are kept.
-- [ ] **Settings → Built-in AI** says that the built-in AI is not available in the Store version, and the Mimer tab bar says so too. LM Studio (if installed in the sandbox or reachable) works as the AI.
-- [ ] Uninstall from Windows Settings → Apps: Mimer is gone, and the notes folder you opened is untouched.
-- [ ] The workflow's `mimer-msix` artifact contains the unsigned `Mimer_<version>_x64.msix` after a tag is built.
-- [ ] The Microsoft Store app opens on the computer where you want to use Mimer (an organisation may block it).
-
-## 40. Source view, pictures in the tree, reporting (0.8.5)
-
-- [ ] Click the **</>** button in the editor toolbar: the note shows `#`, `**`, `[[...]]` as typed, in a monospace font. Click the eye: formatted again. **Ctrl+Alt+M** and **File → Show Markdown source** do the same. Restart Mimer: the choice is remembered. Edit in source view and switch back: nothing is lost.
-- [ ] With several tabs open, switch the mode and then to another tab: it shows in the same mode and has its text.
-- [ ] Import a folder that has notes and pictures (for example a `images` folder): the notes are in the file tree, the pictures are **not**, and a folder with only pictures is not shown. The **Images** tab lists the pictures, and they are still shown inside the notes. Do the same inside a project.
-- [ ] **File → Report** has three items. **Report a bug…** opens GitHub with the bug form, version and system filled in; **Suggest a feature…** opens the feature form; **Report inappropriate AI content…** opens a filled-in issue. There is no flag button in the Mimer or Raven tabs any more.
-- [ ] On Linux, run these from the **AppImage** (not `pnpm tauri dev`): the browser opens. If it cannot, a dialog says so and shows the address.
-
-## 41. Foundry Local and the provider help (needs a computer with Foundry Local, ideally with an NPU)
-
-- [ ] Settings → AI providers → add a provider and choose each Kind in turn (LM Studio, Foundry Local, OpenAI-compatible, Anthropic): a box under Kind says what the provider is and what to do, in numbered steps.
-- [ ] On Windows without Foundry Local: choose **Foundry Local** and press **Detect Foundry Local**: it says it was not found and shows `winget install Microsoft.FoundryLocal`. On Linux it says Foundry Local is not available there.
-- [ ] Install Foundry Local (`winget install Microsoft.FoundryLocal`), run `foundry model run phi-4-mini` (or another model from `foundry model list`), then Detect: the Base URL becomes `http://127.0.0.1:<port>/v1` and the message says it is running.
-- [ ] Without the model running, Detect starts the service and still finds the address (or says what to do).
-- [ ] Load models lists the model, Test connection is green, and chat in the Mimer tab answers. Note whether the Task Manager shows the NPU working (Performance → NPU) for an NPU model.
-- [ ] Ask Mimer to search and propose a change. If tools fail with this model, unticking Supports tools makes plain chat work.
-- [ ] Restart the computer: Detect finds the new port.
-- [ ] The provider shows as Local (notes may be sent to it). Change the Base URL to a non-local address: it turns into Cloud and Mimer will not use it for notes.
-
-## 42. Adding providers and switching AI in the tabs
-
-- [ ] Settings → AI providers: opens with no provider chosen, and says to choose one or press Add provider.
-- [ ] **Add provider** opens a window with five kinds. Local ones say "Local · for Mimer", cloud ones "Cloud · for Raven only". The note says a local AI cannot be used by Raven and that Raven works only with a cloud AI. **Add** is disabled until a kind is chosen; Cancel adds nothing.
-- [ ] After Add, the new provider is chosen on the left and its editor shows the help box with the steps for that kind.
-- [ ] Removing a provider leaves none chosen.
-- [ ] Mimer tab: click the AI name under the title. The menu lists only local providers and the models of the current one (loaded when it opens). Choose another model: the title changes and Settings → AI providers shows the same model. Choose another provider: it becomes Mimer's provider under Settings → AI.
-- [ ] With the built-in AI: the menu lists the downloaded models. Choose another: it says it is used the next time Mimer is woken; Sleep and Wake, and the new model answers.
-- [ ] In a project that has its own AI the menu says the project chooses it and the provider choices are disabled.
-- [ ] Raven tab: the menu lists only cloud providers; choosing one changes Raven's provider. With no cloud AI it says Raven works only with a cloud AI and offers Add or edit providers….
-- [ ] The menu cannot be opened while an answer is being written. Stop LM Studio and open the menu: it says the models could not be listed.
-
-## 43. Foundry Local as a built-in AI (Windows 11 24H2 or later; Linux is experimental)
-
-- [ ] Settings → Built-in AI shows two engine cards, **Foundry Local** and **llama.cpp**, and none is chosen for a new user. Choosing one shows its own settings.
-- [ ] Foundry Local: the model list appears (it can take a minute), shows only models that can call tools, with size and "runs on" (CPU, GPU or NPU), smallest first. The download box says what is fetched and that nothing is fetched before Download.
-- [ ] **Find my hardware** downloads the hardware parts only (no model), then the list is read again: on a computer with a graphics card or NPU, models marked GPU or NPU appear.
-- [ ] Choose a small model (for example qwen3-0.6b) and press Download: first "Setting up the hardware parts…", then "Downloading the model…" with a percentage and a working Cancel. When it is done the model shows under Downloaded and is Mimer's provider.
-- [ ] Mimer tab: the bar says Mimer is asleep. **Wake Mimer** loads it ("Loading the model…"), then Awake; the message box unlocks. Ask a question: it answers. Ask Mimer to search the notes: it uses the tool. **Sleep Mimer** frees the memory (check in Task Manager that the second `mimer.exe` process is gone).
-- [ ] Close Mimer while it is awake: no `mimer.exe` helper stays behind.
-- [ ] Click the AI name under the Mimer tab title: Foundry Local's downloaded models are listed; choosing another says it is used the next time Mimer is woken.
-- [ ] Put a computer without a neural processor (Windows Sandbox) next to one with an NPU (a Copilot+ PC): on the NPU computer a model marked NPU runs, and Task Manager → Performance → NPU shows activity while it answers.
-- [ ] Settings → Built-in AI → Remove: a model is removed; **Remove all Foundry Local files** empties the folder.
-- [ ] The Microsoft Store package (test copy in Windows Sandbox): the llama.cpp card says it is not available, Foundry Local works, and the helper starts (it is the same signed `mimer.exe`).
-- [ ] On Linux: if the download crashes the engine, Mimer stays up and shows "the Foundry Local engine crashed" with what to do.
-
-## 44. Skills
-
-- [ ] Settings → Skills: two panels. The left lists **Your skills** and **Built in** (eleven); choosing a built-in one shows it read-only with a note, and **Copy to a new skill** makes an editable copy.
-- [ ] **Add a skill**: choose each kind in turn; the text under the menu explains what Mimer does; **Insert an example** fills the instruction. Save is disabled without a name and an instruction. After Save the skill is in the list and in the Skills menu; **Remove** asks first.
-- [ ] Close and open Mimer, and open another vault: your skills are still there (they are in `skills.json` next to `settings.json`).
-- [ ] Attach a folder with `/`, press **Skills → Fix spelling and grammar**, press Enter with no text: Mimer shows "Step n of N" and the note names, then a review card with one edit per note. Nothing is written before you accept. The text is in the language of the note.
-- [ ] **Sort into folders** on a folder of imported notes (for example the 52 test notes): every note gets a proposed move into a folder; folders are reused; nothing is written before you accept.
-- [ ] **Summarise** on a folder: one new note is proposed next to the notes, and it links to its sources.
-- [ ] Type extra instructions next to a skill ("keep British spelling"): they are followed in that run only.
-- [ ] Press **Stop** in the middle of a long run: it stops; what was done so far can still be reviewed.
-- [ ] With no note attached or open, a skill says what to attach and changes nothing.
-- [ ] A project that is local-only still works; a cloud provider is refused (notes only go to local AI).
-- [ ] Right-click a note: **AI** lists only skills set to _A note_ or _Notes and folders_; right-click a folder: only _A folder_ or _Notes and folders_. Choosing one opens the assistant and starts the run at once. Tick several notes with Ctrl-click and right-click: **AI** works on all of them (more than five is refused with a message).
-- [ ] In Settings → Skills the **Works on** menu is saved with the skill and shown in the list; change it and see the right-click menu change.
-- [ ] Stop LM Studio (or leave the built-in AI asleep) and start a skill from the right-click menu and from the Skills button: a message says what to start and nothing is sent.
-- [ ] Status bar: the AI chip shows a green dot when the AI is ready, grey when asleep (with **Wake**), blue while working (with **Stop**) and red with **Fix** on a problem. Clicking it shows model, device (Foundry Local), connection (LM Studio) and the privacy line. Foundry Local: "Runs on" shows the device Foundry reports after Wake; check it against the Task Manager (NPU/GPU load).
-- [ ] Review changes: filter chips work, **Accept group / Reject group** change every file of a group, a moved note shows the start of its text, a note changed on disk is marked and needs the checkbox.
-- [ ] After **Apply**, press **Undo** in the message: the notes are back as before, new notes are gone, deleted notes are back, and History shows a "Restore AI changes of …" commit. Edit one of the notes by hand after an apply and try Undo: it refuses and says why.
-- [ ] Empty chat: the four skill cards choose a skill; **Recent** chips appear after a skill was used; a long run shows a progress bar and "about N min left"; after a run with skipped notes **Why were N notes left out?** lists them.
-- [ ] **Ctrl/Cmd+Shift+P**: type a skill name and press Enter to run it on the open note; type a note name to open it; actions work; with nothing open, only actions are listed.
-- [ ] Settings → Skills: search; groups; the kind cards; **Try it on a note** with a rewrite skill shows the new text and a sort skill shows the folder; nothing is proposed or changed on disk.
-- [ ] Left icon bar: Files and Search switch the panel, pressing the open one hides it, Settings opens the settings. Select text: the bar with Fix, Rewrite, Shorten and Ask Mimer appears; **Fix** opens the result with a diff and Accept. The breadcrumb shows words and backlinks.
-- [ ] First run (delete `mimer.firstRunDone` in the browser storage, or use a fresh profile, with no model downloaded): the welcome appears once; **Skip setup** does not bring it back; choosing LM Studio selects it and opens the settings.
-- [ ] Settings → Skills → **Add a skill**: describe a job in your own words, choose a goal, **Next**, **Try it** on a note: before/after and the checks are shown; nothing changes on disk. The name is filled in from the description; a sort skill is offered for folders. Save it and find it in the right-click menu and the Skills button.
-- [ ] **Fix spelling and grammar** on a note with spelling mistakes: only the wrong words change (look at the diff); links, tags, numbers and code blocks stay as they were.
-- [ ] A skill whose change drops a tag or changes a date: the review shows the change unselected with "Not selected, because the AI may have made a mistake" and the reason.
-- [ ] Run a skill on a folder with more than five notes: only three are done, then **Looks good, do the other N** finishes the rest and **Not right, change the skill** opens the skill in Settings.
-- [ ] Paste a picture into a note in the vault root, then drag the note into a folder two levels down (and back): the picture is still shown after opening the note again, and the Markdown shows `../../attachments/...` and then `attachments/...`. Rename the folder that contains the note: the picture is still shown.
-- [ ] Open two notes with the same name from different folders: both tabs show the folder; with only one of them open the tab shows the name alone.
-- [ ] Tasks: in a note write `- [ ] Test task due:tomorrow`, a nested `  - [ ] a step` and `  > 2026-10-19 a log line`. Press the Tasks icon (or Ctrl+Shift+T): the task is listed under This week with "0 of 1 steps". Tick it in the list: the note shows `[x]`. Edit the note by hand, come back to the list: the list follows.
-- [ ] Add a task in the box with `Call Mette fri ~15m`: it is added to `Tasks.md` in the vault root with `due:` and `est:15m`. Today / Later buttons write `plan:`. A task that was due earlier is under "Moved from earlier" with a calm text.
-- [ ] Open a task: change status (a log line "Status: …" appears), the due date and the time; add a step and a log line; the Markdown in the note is correct and the editor shows it without losing text you were typing.
-- [ ] **Break it down** with a local AI: steps are suggested, you untick one, press Add: only the kept ones are written. With no AI running a message says what to start. **Make the steps smaller** asks again.
-- [ ] **Focus**: one step is shown, **Done, next step** ticks it in the note, the timer counts down and can be paused, **Help me start** shows a suggestion that is only added when you press Add, a parked thought appears as a task with `#inbox`, Esc leaves focus.
-- [ ] File → **New note from a starter…**: each of the four starters shows a live preview with `[blanks]`, and Create makes the note in the right folder and opens it.
-- [ ] Ideas: press the light bulb. The left panel shows the ideas; write one there and it opens in the middle. Change its title and its note, click away: `Ideas.md` has the note indented under the line. Make a task: it is in the task list under Later with the note in its log, and the idea is under Used. Make a note: a note with the idea's note opens in Quick notes. Archive and Bring back work.
-- [ ] Tasks: press the check-list icon. The left panel has a box to add a task, All open/Today/Moved/This week/Later/Done with counts, the tags, and today's tasks with a box to tick. Choosing one filters the list in the middle; "Show everything" clears it.
-- [ ] Write it down (Ctrl+Shift+N or Focus): for Task and Idea, "Add a note" opens a note box; the note is saved with it. In Focus, **Help me start** gives one tiny first step. `Ideas.md` is not shown in the file tree and its lines are not listed as tasks.
-- [ ] Ctrl+Shift+N from inside a note: choose Task, Idea and Note in turn and save each; the note you were writing is unchanged and the box closes. In Focus, the same box saves without leaving Focus, and a task goes under Later.
-- [ ] Select text in a note: the bar offers "As a task" and "As an idea"; each shows a message and the item appears in its list.
-- [ ] Try it with a small Foundry Local or llama.cpp model, and with LM Studio: the notes are changed (as proposals), not only described in the chat.
-
-## AI where you work, and without an AI
-
-- [ ] Select text: the bar has Fix, Rewrite, Shorten, **AI ▾**, As a task, As an idea. AI ▾ (and Ctrl+K) lists the fixed commands; none asks you to type. Rewrite: simpler words shows a diff and "Same numbers, links and names"; delete a number in a test and see "Check: … is gone". Explain this shows an answer with Copy and changes nothing. Find tasks in it opens the task finder for the selection.
-- [ ] The **AI** button above a note: Short summary at the top, Suggest a title and tags and An e-mail from this note open the chat window with a review. Link related notes opens the Links panel.
-- [ ] Right-click a folder: **AI** has the skills; **Make an index page** makes a note with a link to every note in the folder (also with the AI off).
-- [ ] Search for "what is …?": **Answer from my notes** → Get an answer gives an answer and the notes it used; a normal search shows no card.
-- [ ] A task with a log: **Write a status line from the log** → Add it to the log. An idea: Think it through → Add to the idea's note; Suggest first steps → Make a task with the steps (under Later).
-- [ ] Spelling help on (status bar): type a paragraph with a misspelt word and wait: it gets a wavy line. Click it: the right spelling, Ignore, Add to my words (Settings → General lists it), Fix all. The note text only changes when you choose.
-- [ ] The right edge: Outline, Links, History, Images open and close a narrow panel (closed at start). The speech bubble and Ctrl+L open the chat window over the note; Esc closes it and the chat is still there when it opens again. With Raven set up, the globe opens Raven.
-- [ ] **No AI**: choose no provider (or let the built-in AI sleep). Every AI button is greyed out with the reason and Set up AI; As a task/As an idea, notes, search, tasks, ideas, Focus, outline, links, history and images all work; the system spellcheck still underlines.
-- [ ] Delete a task (task page) and an idea: it asks once more; afterwards History of the note has "Snapshot before delete".
-
-## Epic tasks, Landing, daily calendar, Mermaid and tags
-
-- [ ] Tasks → **New epic task** "Office move": a note `Tasks/Office move.md` is made and the epic page opens. Add three tasks; tick two: "2 of 3". Tick the third: the epic moves to **Done** and is folded. Untick one: it comes back.
-- [ ] Open an ordinary note, select a line and choose **As a task**: `Tasks/<note name>.md` has a `source:` line and the task; the note itself is unchanged. Do it again in the same note: the same epic is used. The epic page shows **Came from** and goes there.
-- [ ] Write `- [ ] something` by hand in another note: that note shows as an epic ("in a note") and cannot be deleted from the epic page.
-- [ ] On the epic page: **Go to the epic's note** opens the note; **Suggest steps from the note** (with an AI) shows suggestions and adds only the ones you tick. Without an AI the button is off and everything else works. Delete the epic note: the epic is gone from the list.
-- [ ] The left Tasks panel lists the epics with counts and Done last; it has no filters and no add box. The Ideas panel has **New idea** and no box.
-- [ ] Files: Meetings, Quick notes and Tasks are in **Landing**, not in All files. A new quick note shows NEW and a Move button; open it and NEW goes away. Right-click a note → **Move to…**.
-- [ ] The app starts on the notes, as before (there is no dashboard).
-- [ ] The Files panel has **Daily notes** at the top: a calendar with a dot on days that have a note. A click opens or makes that day's note, Today works, and the Daily folder is not in All files.
-- [ ] Mermaid: write a ```mermaid block with `flowchart LR` and two nodes; leave it: a diagram. Click it: the code. Break the code: a message and the code.
-- [ ] Type `#d` in a note: your tags are suggested; pick one. Outline panel → **+ tag** types a # and opens the list; a tag there searches for it.
+- [ ] The status bar (bottom right) shows `v<version>+<commit> beta` (`.dirty` at the end means the build has uncommitted changes). The same version is on the welcome screen and in **Settings → General**. Hover over it: the build date and time match the build.
+
+### 1. Start, vaults and the window
+
+- [ ] At start the Mimer picture is shown for about two seconds with the version; a click or any key skips it.
+- [ ] First start (no vault): the Welcome screen has **Open folder as vault**, **Create new vault**, the recent list, **How to use Mimer** and **About**, on the Mimer picture.
+- [ ] **Create new vault** → pick a parent folder → the window asks for a name and has **Trace my work in today's daily note** (off). A name like `PAM div.` is refused with a red box that says why. Create: the vault opens with `.git`, `.gitignore` (with `.vault/index.db`), `.vault/config.json`, the folders `Meetings` and `Quick notes`, and the templates `Meeting` and `Quick note` in `.vault/templates/`.
+- [ ] Tick **Trace my work** when creating a vault: Settings → General shows it on.
+- [ ] A recent vault whose folder is gone shows **Folder not found** with **Locate** and remove.
+- [ ] Close and start again: the last vault opens straight away with its tabs. Start a second copy: the first window comes to the front.
+- [ ] Window size and position are remembered.
+- [ ] The vault name in the header (or `Ctrl/Cmd+Shift+O`) lists the recent vaults with a check mark on the open one. Switch: the open note is saved and committed first; the other vault's tabs and chats come back. **Open another folder as vault…** and **Create new vault…** work there too.
+- [ ] Left edge: Files, Search, Ideas, Tasks and Settings. Pressing the open one hides the panel. Right edge: Outline, Links, History and Images open and close a narrow panel (closed at start); the speech bubble opens the chat.
+- [ ] Right-click in an empty area or the status bar: only **Inspect element** (no Reload). In a note and in text boxes the normal menu stays.
+
+### 2. The file panel
+
+- [ ] **New** above the tree: Note, From a starter…, Meeting note…, Quick note, Folder…, Project… all work.
+- [ ] Folders first, then notes, A–Z ignoring case; `.md` is hidden. Files and folders starting with `.` never show. Folders show how many notes they hold.
+- [ ] Rename (right-click → **Rename**, or F2), drag a note onto a folder, delete (the dialog says it can be restored from history).
+- [ ] Create, change and delete a `.md` file in another program: the tree follows within a second or two.
+- [ ] **Daily notes** at the top: a calendar with a dot on days with a note; a day opens or makes its note; **Today** works; the Daily folder is not listed in All files.
+- [ ] **Recent** lists the notes you opened last (4; Settings → General → **Recent notes shown**: 0 hides it, 20 is the most).
+- [ ] **Landing** holds Meetings, Quick notes and Tasks. A new note shows **NEW** and a move button until you open it; right-click → **Move to…** moves it.
+- [ ] **Projects** are not in All files; each has its own tree, a **+** and a gear. The attachments folder is not in All files.
+- [ ] The filter box narrows the tree (also inside projects); Esc clears it. **Collapse all**, **Show the open note** and **Sort** (Name, Last changed, My own order) work.
+- [ ] **My own order**: drag to the top or bottom edge of an item places it there; the middle of a folder moves into it. **Move up / Move down** and Alt+Up / Alt+Down work. After a restart the order is kept (`.vault/order.json`).
+- [ ] Ctrl/Cmd+click ticks items, Shift+click ticks a range, Esc clears. Right-click: **Move N items to…** (links updated, one question) and **Delete N items** (asks once).
+- [ ] Names: a folder or note called `PAM div.`, `nul` or `a:b` is refused with a red box that says why, also when renaming. `v1.2 notes` is fine. A name that already exists in the folder (also with other upper/lower case) is refused while you type. Renaming `plan` to `Plan` works.
+- [ ] Drag a note onto a folder that already has a note with that name: a window says what exists where and nothing moves.
+
+### 3. The editor
+
+- [ ] The toolbar: bold, italic, strikethrough, inline code (clicking again removes the marker), headings 1–3, bullet/numbered/task list and quote (switch without stacking), link, link to a note, table, image, code block, horizontal line. Hover shows the name and shortcut. With no note open the buttons are greyed out and the editor is read-only.
+- [ ] Live preview: `**bold**`, headings, _italic_, ~~strike~~, `code` and links render with the markers hidden off the cursor line and shown on it. Checkboxes can be clicked. Quotes and code blocks have a background. `---` becomes a line. Front matter shows as a collapsed **Properties** bar.
+- [ ] Tables show as a table off the cursor; a cell can be edited, Tab/Shift+Tab/Enter move, Tab in the last cell adds a row, the table toolbar adds and removes rows and columns. `Ctrl/Cmd+Alt+T` inserts one.
+- [ ] **</>** (or **Go → Show Markdown source**, `Ctrl/Cmd+Alt+M`) shows the raw text; the choice is remembered.
+- [ ] Ctrl/Cmd+B, Ctrl/Cmd+I, Ctrl/Cmd+F work.
+- [ ] Save status: **Unsaved changes** → **Saving…** → **Saved** about a second after you stop typing. Restart: the text is still there.
+- [ ] A changed file on disk (no unsaved edits): Mimer shows the new text. With unsaved edits: the banner **Keep my version / Load disk version**; History has `Snapshot before reload: …` either way.
+- [ ] `Ctrl/Cmd+N`, **New → Note** and right-click a folder → **New note** open the same window that asks for a name (`Untitled`, or `Untitled 1` when that exists). **Create** opens the note with `# <name>` as its first line and the file has that name.
+- [ ] Tabs: no duplicate tab; close with ×, middle-click or `Ctrl/Cmd+W`; `Ctrl/Cmd+PageUp/PageDown` switch; `Ctrl/Cmd+\` splits and merges; right-click → **Open in split view**. Two notes with the same name show their folder in the tab. Quit with a split: it comes back.
+
+### 4. Links, tags, pictures and diagrams
+
+- [ ] `[[` opens a list of notes (fuzzy). `[[Note]]`, `[[Note|alias]]`, `[[Note#Heading]]` work; Ctrl/Cmd+click opens; a missing note is muted and a click creates it. Links in code are not links.
+- [ ] **Link to a note** (`Ctrl/Cmd+Shift+K`) with a selected word inserts `[[Note|word]]`.
+- [ ] Rename a linked note: "Update N links in M notes?"; **Update links** rewrites them in **one** commit `Rename <old> → <new>`.
+- [ ] `#tag` is a pill that searches; typing `#` suggests your tags. `tags: [a, b]` counts; `#123` does not.
+- [ ] Paste a screenshot, drag a picture, and **Insert image**: the picture is copied into `attachments/` and shown. The size bar (Small / Medium / Large / Original) changes it. A PDF becomes a link that opens in the default app.
+- [ ] Move a note with a picture two folders down and back: the picture is still shown.
+- [ ] **Images** at the right edge lists every picture, which notes use it and the unused ones; **Insert in note**, the large view and **Move to trash** work.
+- [ ] A ```mermaid block with `flowchart LR` becomes a diagram off the cursor; broken code shows a message and the code.
+
+### 5. Version history
+
+Check with `git log --oneline` in the vault folder.
+
+- [ ] `Ctrl/Cmd+S` on a changed note: `Save: <path>`; again without changes: **no** commit.
+- [ ] Switching from a changed note: `Autosave: <path>`. Idle time (Settings → Version history, 1 minute to test): `Autosave`. Closing the window: `Autosave on close`, and it closes within 5 seconds.
+- [ ] A file changed while Mimer was closed: `Recovered uncommitted changes` on open.
+- [ ] **History** (right edge, `Ctrl/Cmd+Shift+H`): commits for the note with a diff; **Restore this version** adds a snapshot and a `Restore … to …` commit. Renames are followed.
+- [ ] Delete a note, **File → Recover deleted notes…**, Restore: it is back.
+- [ ] A vault that already is a Git repository keeps its old commits; Mimer only adds.
+
+### 6. Search
+
+- [ ] `Ctrl/Cmd+Shift+F`: results while you type, with word prefixes (`firew` finds firewall) and highlights. `tag:` and `path:` narrow it. Odd input (`"`, `(`, `AND`, `*`) gives no error.
+- [ ] `Ctrl/Cmd+P` quick open finds a note by part of its name.
+- [ ] `node scripts/gen-vault.mjs ~/mimer-test-1000 1000`, open it: indexing is quick and search answers instantly; typing stays smooth.
+- [ ] Delete `.vault/index.db` while Mimer is closed: it is rebuilt.
+- [ ] **(AI)** Semantic search (Settings → AI, a local embedding model): **Keyword / Meaning / Both** appear; **Meaning** finds a note by a phrase that is not in it. `.vault/embeddings.db` is ignored by Git.
+- [ ] **(AI)** A search like "what is the service desk number?" shows **Answer from my notes**; **Get an answer** answers with the notes it used.
+
+### 7. Tasks and epic tasks
+
+- [ ] `Ctrl/Cmd+Shift+T` or the Tasks icon: the list is grouped by epic task with "N of M" bars; an epic can be folded; the left panel lists the epics.
+- [ ] Write `- [ ] Test task due:tomorrow`, an indented `  - [ ] a step` and `  > 2026-10-19 a log line` in a note: the task is listed with "0 of 1 steps". Tick it in the list: the note shows `[x]`.
+- [ ] **New epic task** "Office move": `Tasks/Office move.md` is made and opens. Add three tasks, tick all: the epic moves to **Done**; untick one: it comes back.
+- [ ] Select a line in a note → **As a task**: `Tasks/<note>.md` has a `source:` line and the task; the note is unchanged. The epic page shows **Came from**.
+- [ ] Task page: **Epic task: …** and **Open the note** are clear buttons under the title and go there. Status (a "Status: …" log line appears), due date, time, **Put on today's list**, steps.
+- [ ] Task page **Note**: write and click away: the note has `  > text` lines right under the task. An epic made with **New epic task** has a **Note** too (text under its heading); an epic that is only a note with tasks has none.
+- [ ] "What has happened": hold the mouse over a line; the pencil changes its text and date, the bin deletes it (it asks; History of the note still has it). A new line gets today's date.
+- [ ] **(AI)** **Break it down** suggests steps; only the ticked ones are added. **Write a status line from the log** uses the written lines, the steps and the note, not the "Status:" lines. **Suggest steps from the note** on an epic adds only the ticked ones.
+- [ ] Delete a task: it asks; History has "Snapshot before delete".
+
+### 8. Ideas, write it down, Focus and starters
+
+- [ ] The light bulb: ideas Open / Used / Archived; **New idea**; change the title and note, click away: `Ideas.md` has the note indented under the line (hidden from the tree and not a task).
+- [ ] **Make a task**: under Later, with the idea's note as the task's note; the idea is Used. **Make a note**: a note in Quick notes opens. Archive and Bring back work.
+- [ ] `Ctrl/Cmd+Shift+N` from inside a note: Task, Idea and Note each save and close; the note you were writing is unchanged.
+- [ ] **Focus** on a task: one step, a timer that can be paused, **Done, next step**, the write-it-down box keeps you in Focus; Esc leaves.
+- [ ] **(AI)** **Help me start** in Focus, **Think it through** and **Suggest first steps** on an idea: nothing is added until you press the button.
+- [ ] **New → From a starter…**: each starter shows a live preview with `[blanks]`; Create makes the note in the right folder.
+
+### 9. Daily notes and Trace my work
+
+- [ ] `Ctrl/Cmd+Shift+D` makes `Daily/<today>.md`; again opens the same note. Settings → Vault: daily folder, date format and template are used.
+- [ ] Settings → General → **Trace my work** on: write in a note, make a task, add a log line, tick it. Today's daily note has "## Worked on" with one line for each; task lines end with `in [[Tasks/…]]`, a link to the epic task's note. Write in the same note again: no second line. Remove a line: it stays removed while Mimer runs. Off: nothing is written.
+
+### 10. Setting up the AI
+
+- [ ] **Settings → Built-in AI**: two engine cards, **Foundry Local** and **llama.cpp**; none is chosen for a new user.
+- [ ] llama.cpp: the hardware found is shown and pre-selected; a model shows its size and memory; **Download** shows progress, Cancel and continue work; the built-in AI becomes Mimer's provider. **Add my own model file…** copies a `.gguf`.
+- [ ] Foundry Local (Windows 11 24H2 or later; Linux is experimental): the model list loads (only models with tools), **Find my hardware** fetches the hardware parts, a small model downloads.
+- [ ] **Wake** in the status bar loads the model; **Sleep** frees the memory (no `llama-server` or helper `mimer` process left). An AI command while asleep wakes it by itself. Closing or killing Mimer stops the engine. **Sleep after** 1 minute works.
+- [ ] A problem (too large a context, missing driver) shows a red box with steps, **Show details** and **Copy details**.
+- [ ] **Remove** a model and all files (with a confirmation) cleans the folder shown in the settings.
+- [ ] Nothing from the built-in AI is reachable from outside: `curl http://127.0.0.1:<port>/v1/models` without a key is refused.
+- [ ] **Settings → AI providers** → LM Studio: **Load models**, pick one, **Test connection** says connected. An OpenAI-compatible provider with a non-local address shows that it is not used.
+- [ ] An API key shows "Key stored" and is **not** in `settings.json` (it is in the system keychain).
+- [ ] The status bar AI chip: green when ready, grey when asleep (with **Wake**), blue while working (with **Stop**), red with **Fix** on a problem. Clicking it shows the model and where it runs.
+- [ ] First run with no model: the welcome appears once; **Skip setup** does not bring it back.
+
+### 11. AI where you work (AI)
+
+- [ ] Select text in a note: the bar has **Fix**, **Rewrite**, **Shorten**, **AI ▾**, **As a task**, **As an idea**. **AI ▾** (and `Ctrl/Cmd+K`) lists the fixed commands; none asks you to type.
+- [ ] **Fix** shows a diff with "Same numbers, links and names"; remove a number by hand in a test and see "Check: … is gone". **Accept** (Enter) replaces the text, with `Snapshot before AI: …` and `AI: …` commits; **Try again** and **Reject** (Esc) work.
+- [ ] **Explain this** shows an answer with Copy and changes nothing. **Find tasks in it** opens the task finder. Translate to Danish and to English work.
+- [ ] **Every text box**: in a task's note box, the log box and a step box, select a word: the same bar appears; a real mouse click on **Fix** shows the review. `Ctrl/Cmd+K` with nothing selected works on the whole text; Accept puts the result in the box. No bar in password, search or name boxes. With no AI the bar says why.
+- [ ] A small model that answers with `<think>…</think>` or "Revised text:": only the text is shown. An empty answer, or one that lost most of the text, is not offered: Mimer tries once more and then says it got no usable answer.
+- [ ] Settings → AI → **Let the AI check its own answer** is off by default; on, a text command takes longer and a wrong answer is tried again.
+- [ ] The **AI** button above a note: fix spelling in the whole note (only the wrong words change), tidy the structure, a short summary at the top, a title and tags, find tasks, split into notes, an e-mail from this note. **Link related notes** opens the Links panel (no AI).
+- [ ] Right-click a folder → **AI**: sort into folders, find duplicates and the other skills that fit a folder. **Make an index page** works without AI. Several ticked notes (up to five) work together.
+- [ ] `Ctrl/Cmd+Shift+P`: a skill name runs it on the open note; a note name opens it; actions work.
+- [ ] Spelling help (status bar): a misspelt word gets a wavy line; click it for the right spelling, Ignore, Add to my words, Fix all. Nothing changes by itself.
+
+### 12. The chat (AI)
+
+- [ ] `Ctrl/Cmd+L` or the speech bubble opens **Ask about my notes** over the note; Esc closes it and the chat is kept.
+- [ ] Ask "Summarize this note": the answer streams and uses the note; untick **Include the open note** and it no longer knows it. **Stop** stops at once.
+- [ ] Type `/` or press the paperclip: notes and folders can be attached as chips (× removes one; a sixth is refused). In a project only its notes are offered.
+- [ ] The chat answers but never changes a note.
+- [ ] Ask "who are you?": Mimer, briefly; in Danish when asked in Danish. Settings → AI base instruction: a change shows in the answers; **Reset to default** restores it.
+- [ ] **History** reopens earlier chats after a restart; **New chat** starts over; delete one and **Delete all history…** work. `.vault/chats/` is not committed.
+- [ ] Stop the AI server and send a message: a clear error, not an endless spinner. A slow model shows a counting timer.
+
+### 13. Reviewing changes (AI)
+
+- [ ] **AI → Split into notes** on a note with several headings: the chat window shows the steps, then **Review changes**. Nothing is on disk yet.
+- [ ] The review lists every file (Edit / Create / Move / Delete, path, reason, diff), with Accept / Reject per file and per group. A change that fails a check is shown unselected with the reason.
+- [ ] Reject one file and **Apply selected**: only the accepted files are written; `Snapshot before AI: …` then one `AI: …` commit. **Reject all** writes nothing.
+- [ ] Change an affected file on disk before applying: it is marked **Changed since proposal** and must be confirmed.
+- [ ] After Apply, **Undo** (or **File → Undo the last AI change**): everything is back, with a "Restore AI changes of …" commit. After a hand edit Undo refuses and says why.
+- [ ] A command on more than five notes does three first, then **Looks good, do the other N**.
+
+### 14. Without an AI
+
+- [ ] No provider chosen (or the built-in AI asleep and not set up): every AI button is greyed out with the reason and **Set up AI**. Notes, search, tasks, ideas, Focus, the calendar, outline, links, history, images, import and export all work; the system spellcheck still underlines.
+
+### 15. Projects
+
+- [ ] **New → Project…**: Name, Instructions and AI provider (local only). Save: a new folder in the **vault root** (also with another folder selected), under Projects, with `.vault/projects/<id>.json` committed.
+- [ ] A name already used in the root (folder or note, any case) is refused while you type. There is no **Make project** on a folder; a project cannot go inside a folder or another project.
+- [ ] Drag notes onto the project: they move in (one `Rename` commit, links updated). Drag one back to All files.
+- [ ] **(AI)** An instruction like "Always answer in French" changes the answers for notes in the project only. **Ask AI to change the instructions** shows a diff; nothing is saved until **Save**.
+- [ ] Rename the project folder: the project follows.
+
+### 16. Templates, import, export and index pages
+
+- [ ] **File → Save the note as a template…**: `Template: added …`; **File → New note from a template…** fills `{{title}}` and `{{date:…}}`.
+- [ ] **File → Import notes from a folder…** (see [docs/IMPORT-ONENOTE.md](IMPORT-ONENOTE.md)): the preview counts match, "Left out" lists hidden and unsupported files; import shows progress and a report; pictures are in **Images**, not in the tree; importing again numbers the copies; a folder inside the vault is refused; the source folder is unchanged.
+- [ ] **File → Export…** of a note with a heading, a table, a picture, a `[[link]]` and `<script>alert(1)</script>`: HTML shows the picture and the script as text (no dialog); Word has the formatting; PDF opens a preview and prints only the note. A folder exports as one document with a table of contents. Exporting makes no commit.
+- [ ] Right-click a folder → **Make an index page**: a list of links; your own text above it is kept when you make it again.
+
+### 17. Settings
+
+- [ ] **File → Settings…** (`Ctrl/Cmd+,`): General, AI providers, AI, Built-in AI, Version history, Vault.
+- [ ] General: theme switches after Save; font size, line width, spellcheck, recent notes, spelling help, Trace my work and your own words take effect.
+- [ ] Vault: daily notes folder and template, meetings and quick notes folders, image style; a folder like `../outside` is refused. **Add standard folders and templates** does not overwrite your edits.
+- [ ] Edit `settings.json` and set `"schemaVersion": 99`: "Settings could not be loaded" and the file is not overwritten (restore it afterwards).
+
+### 18. Safety
+
+- [ ] A link like `[x](../../outside.txt)` does not open anything outside the vault.
+- [ ] Kill the app while it says **Unsaved changes**: at most the last second of typing is lost; the vault opens normally.
+- [ ] A symbolic link in the vault that points outside it: the files behind it are not shown or reachable.
+- [ ] Network check: while using every AI feature, nothing goes to a host other than the local AI (and, only when you press Download, the download sites).
+
+### 19. Packaging
+
+- [ ] Windows 11: the `…-setup.exe` installs **without** an administrator prompt; Mimer starts from the Start menu with the purple "M" icon; pictures show; **Reveal in file manager** opens Explorer; uninstalling (which also removes `mimer-ai` next to the program) leaves the vaults untouched.
+- [ ] Linux: the `.AppImage` starts and Help → Report a bug… opens the browser (or a dialog shows the address). The `.rpm` and `.deb` install.
+- [ ] Microsoft Store package ([docs/MSIX.md](MSIX.md)), in Windows Sandbox or a virtual machine: it installs and starts; a vault opens and saves; Settings and recent vaults are kept after a restart; the llama.cpp card says it is not available in the Store version and Foundry Local works; uninstalling leaves the notes.
+- [ ] The release run has the artifacts `mimer-msix` (unsigned) and `mimer-msix-test`.
+
+### 20. Help, About and reporting
+
+- [ ] The **?** in the top bar, **Help → How to use Mimer** and **F1** open the guide; the search narrows the topics; Esc closes it. A **?** next to a setting explains it and **Read more in the guide** opens the right topic.
+- [ ] **Help → About Mimer…** shows the picture, version, build date, the licence (AGPL-3.0) and who made it.
+- [ ] **Help → Report a bug…**, **Suggest a feature…** and **Report inappropriate AI content…** open GitHub with the form filled in (version and system).

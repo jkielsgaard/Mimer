@@ -82,6 +82,7 @@ interface UiState {
   /** What fills the middle of the window: the notes, the task list or one task. */
   centerView: CenterView;
   setCenterView: (v: CenterView) => void;
+  /** Where "open the note" came from, so the note can offer a way back to the task or epic. */
   /** Shows the tasks or the ideas: their own panel on the left and their page in the middle. */
   openArea: (area: "tasks" | "ideas") => void;
   /** The write-it-down box (Ctrl+Shift+N), opened with this kind chosen. */

@@ -8,6 +8,7 @@ const apiMock = vi.hoisted(() => ({
   listTasks: vi.fn(),
   listEpics: vi.fn(),
   deletePath: vi.fn(),
+  epicSetDescription: vi.fn(),
 }));
 vi.mock("@/lib/api", () => ({
   api: apiMock,
@@ -36,7 +37,9 @@ describe("EpicPage", () => {
         makeTask({ path: epicNote, line: 3, title: "Write the steps" }),
         makeTask({ path: epicNote, line: 4, title: "Test on a Mac", done: true }),
       ],
-      epics: [{ path: epicNote, title: "VPN guide", source: "IT/VPN client guide" }],
+      epics: [
+        { path: epicNote, title: "VPN guide", source: "IT/VPN client guide", description: "" },
+      ],
       epicPath: epicNote,
       selected: null,
     });
@@ -59,6 +62,24 @@ describe("EpicPage", () => {
     expect(useVaultStore.getState().openNote).toHaveBeenCalledWith("IT/VPN client guide.md");
   });
 
+  it("saves the note of the epic when the box is left, and offers a way back from the note", async () => {
+    apiMock.epicSetDescription.mockResolvedValue({
+      path: epicNote,
+      title: "VPN guide",
+      source: "IT/VPN client guide",
+      description: "About the guide",
+    });
+    render(<EpicPage />);
+    const user = userEvent.setup();
+    await user.type(screen.getByRole("textbox", { name: "Note" }), "About the guide");
+    await user.tab();
+    await waitFor(() => {
+      expect(apiMock.epicSetDescription).toHaveBeenCalledWith(epicNote, "About the guide");
+    });
+    await user.click(screen.getByRole("button", { name: /Go to the epic's note/ }));
+    expect(useVaultStore.getState().openNote).toHaveBeenCalledWith(epicNote);
+  });
+
   it("adds a task to this epic", async () => {
     apiMock.taskAdd.mockResolvedValue([makeTask({ path: epicNote })]);
     render(<EpicPage />);
@@ -68,7 +89,7 @@ describe("EpicPage", () => {
     await waitFor(() => {
       expect(apiMock.taskAdd).toHaveBeenCalled();
     });
-    expect(apiMock.taskAdd.mock.calls[0]?.[4]).toBe(epicNote);
+    expect(apiMock.taskAdd.mock.calls[0]?.[3]).toBe(epicNote);
   });
 
   it("asks the AI for steps from the note, only when pressed, and is off without an AI", async () => {
