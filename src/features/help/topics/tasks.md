@@ -6,6 +6,8 @@ A task in Mimer is an ordinary line in an ordinary note: `- [ ] Renew the licenc
 
 An **epic task** is a note with tasks in it. The list is one outline: each epic is a box with a bar and "2 of 4" that you can **fold** to one line, and **Fold all** / **Unfold all** do every epic at once (Mimer remembers what is folded). A task with steps has a small arrow: unfold it to tick its steps, or add one, right in the list. **+ Add a task to …** at the bottom of an open epic adds a task to it. When every task in an epic is done, it moves to **Done** at the bottom. The left panel lists the epic tasks so they are one click away.
 
+**Put things in your own order.** Hold the mouse over an epic, a task or a step: the small arrows move it one place up or down (or press **Alt+↑** / **Alt+↓** on it). A task moves with its steps, note and log, and keeps its place in the note, so the file has the same order. The **Inbox** stays at the top; the order of the epics is kept in the vault.
+
 There are no due dates, no Today and no Later: a task is there to keep track of the work and its steps. Each task shows the day it was made.
 
 - **New epic task** asks for a name and makes a note in the folder **Tasks** (shown in Landing). The tasks are written in that note, so it also works in any other editor.
@@ -19,7 +21,7 @@ There are no due dates, no Today and no Later: a task is there to keep track of 
 Press a task to open it. On the left is what you write (the note, the steps and what has happened); the card on the right has the **status** (To do, Doing, Waiting), the day it was **made**, and buttons to its epic task and its note. The way back at the top goes to its epic task.
 
 - **Note** is a few lines about the task that are not part of the log: what it is about, who to ask. It is saved when you leave the box. An epic task has a note too.
-- **Steps** are small tasks under the task. The next step is marked. Press **Break it down** and the AI suggests steps; you choose which ones stay, and nothing is written until you press Add. It needs a local AI that is running.
+- **Steps** are small tasks under the task. The next step is marked. Click a step's text to change it (Enter saves, Esc puts it back), and use the arrows to move it. Press **Break it down** and the AI suggests steps; you choose which ones stay, and nothing is written until you press Add. It needs a local AI that is running.
 - **What has happened** is a log. Write a line and it gets today's date. A change of status is written there too. It reads as a timeline. Hold the mouse over a line: the **pencil** changes its text and date, the **bin** deletes it (History of the note still has it). **Write a status line from the log** asks the AI for one line about where the task stands, from the log, the steps and the note.
 - Click the **title** to rename the task. **Show Markdown** shows its lines as written. In the card, **Epic task: …** opens its epic task and **Open the note** opens the note the task is written in.
 
@@ -54,12 +56,14 @@ Open a note and press **Find tasks in a note** in the task list (or use the comm
 
 ### Focus
 
-Press **Focus** on a task. Everything else is hidden. You see one step, a timer (15, 25 or 45 minutes) and what to do now.
+Press **Focus** on a task, or on an epic task. Everything else is hidden. You see the whole epic task as one outline: the task you work on is open and marked **Working on it** (its status becomes Doing), with its note, its steps (the next one marked **Now**) and what has happened. The other tasks are folded; unfold one to read it, tick a step or write a line, and press **Work on this** to move the mark to it. **Fold the rest** folds them all again.
 
-- **Done, next step** ticks the step and shows the next one.
+- **What has happened** under the marked task: write a line and press Enter. It is added to the log with today's date, and you stay in Focus.
+- **Done, next step** on the right ticks the Now step. After the last step it asks if the task is done too; then the next open task in the epic is marked. When every task is done, Focus says so and takes you back to the task list.
+- The timer (15, 25 or 45 minutes) is for you; nothing happens when it ends except a message.
 - **Help me start** is for when you sit and cannot begin. The AI suggests one tiny first step, something under five minutes, for example "open the file and write the heading". It is only added to the task if you press Add it as a step.
 - **Something popped into your head?** Use the same box as above: choose Task, Idea or Note and write it. A task goes into the Inbox. You stay in Focus.
-- **Esc** or **Back to the task** leaves focus. The timer is for you; nothing happens when it ends except a message.
+- **Esc** or **Leave focus** leaves focus.
 
 ## New note from a starter
 

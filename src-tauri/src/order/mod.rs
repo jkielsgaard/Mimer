@@ -1,4 +1,5 @@
-//! A hand-made order for the files and folders in the file tree, in `.vault/order.json`.
+//! A hand-made order for the files and folders in the file tree, and for the epic tasks in the
+//! task list, in `.vault/order.json`.
 //!
 //! The file lists, per folder, the names (not paths) in the order the user chose. Names that are
 //! not in the list (new files) come after the listed ones; listed names that no longer exist are
@@ -28,18 +29,56 @@ pub struct TreeOrder {
 struct OrderFile {
     schema_version: u32,
     folders: BTreeMap<String, Vec<String>>,
+    /// The epic tasks (note paths) in the order the user chose.
+    epics: Vec<String>,
+}
+
+fn read_file(root: &Path) -> OrderFile {
+    paths::resolve_internal(root, FILE)
+        .ok()
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default()
+}
+
+fn write_file(root: &Path, mut file: OrderFile) -> AppResult<()> {
+    file.schema_version = 1;
+    let abs = paths::resolve_internal(root, FILE)?;
+    fs_ops::write_atomic(&abs, serde_json::to_string_pretty(&file)?.as_bytes())
 }
 
 /// Reads the saved order. A missing or unreadable file means "no order chosen yet".
 pub fn load(root: &Path) -> TreeOrder {
-    let file: OrderFile = paths::resolve_internal(root, FILE)
-        .ok()
-        .and_then(|p| std::fs::read_to_string(p).ok())
-        .and_then(|s| serde_json::from_str(&s).ok())
-        .unwrap_or_default();
     TreeOrder {
-        folders: file.folders,
+        folders: read_file(root).folders,
     }
+}
+
+/// The epic tasks in the order the user chose (note paths). Epics not in it come after them.
+pub fn load_epics(root: &Path) -> Vec<String> {
+    read_file(root).epics
+}
+
+/// Saves the order of the epic tasks: vault-relative note paths.
+pub fn set_epics(root: &Path, epics: &[String]) -> AppResult<()> {
+    if epics.len() > MAX_NAMES {
+        return Err(AppError::InvalidPath("Too many epic tasks".into()));
+    }
+    for p in epics {
+        let bad = p.is_empty()
+            || p.starts_with('/')
+            || p.contains('\\')
+            || p.split('/')
+                .any(|seg| seg.is_empty() || seg == ".." || seg == ".")
+            || p.chars().any(char::is_control)
+            || !p.to_lowercase().ends_with(".md");
+        if bad {
+            return Err(AppError::InvalidPath(format!("Not a note path: {p}")));
+        }
+    }
+    let mut file = read_file(root);
+    file.epics = epics.to_vec();
+    write_file(root, file)
 }
 
 /// Saves the order of one folder. An empty list removes the folder's entry.
@@ -59,17 +98,13 @@ pub fn set_folder(root: &Path, folder: &str, names: &[String]) -> AppResult<()> 
             return Err(AppError::InvalidPath(format!("Not a file name: {n}")));
         }
     }
-    let mut file = OrderFile {
-        schema_version: 1,
-        folders: load(root).folders,
-    };
+    let mut file = read_file(root);
     if names.is_empty() {
         file.folders.remove(folder);
     } else {
         file.folders.insert(folder.to_string(), names.to_vec());
     }
-    let abs = paths::resolve_internal(root, FILE)?;
-    fs_ops::write_atomic(&abs, serde_json::to_string_pretty(&file)?.as_bytes())
+    write_file(root, file)
 }
 
 #[cfg(test)]
@@ -127,5 +162,22 @@ mod tests {
         let d = vault();
         std::fs::write(d.path().join(FILE), "{ not json").unwrap();
         assert!(load(d.path()).folders.is_empty());
+    }
+
+    #[test]
+    fn the_epic_order_is_kept_next_to_the_folder_order() {
+        let d = vault();
+        let order = vec!["Tasks/B.md".to_string(), "Work/Plan.md".to_string()];
+        set_epics(d.path(), &order).unwrap();
+        set_folder(d.path(), "", &["a.md".into()]).unwrap();
+        assert_eq!(
+            load_epics(d.path()),
+            order,
+            "saving a folder keeps the epics"
+        );
+        assert_eq!(load(d.path()).folders.get("").map(Vec::len), Some(1));
+        for bad in ["../x.md", "/x.md", "Tasks\\x.md", "Tasks/x.txt", ""] {
+            assert!(set_epics(d.path(), &[bad.to_string()]).is_err(), "{bad}");
+        }
     }
 }

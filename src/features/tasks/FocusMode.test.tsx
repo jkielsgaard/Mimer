@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeTask } from "@/test/taskFixtures";
@@ -7,6 +7,8 @@ const apiMock = vi.hoisted(() => ({
   taskSetDone: vi.fn(),
   taskAdd: vi.fn(),
   taskAddStep: vi.fn(),
+  taskAddLog: vi.fn(),
+  taskSetMeta: vi.fn(),
   ideaAdd: vi.fn(),
 }));
 const askMock = vi.hoisted(() => vi.fn());
@@ -38,6 +40,9 @@ describe("FocusMode", () => {
     apiMock.taskAdd.mockResolvedValue([task]);
     apiMock.taskAddStep.mockResolvedValue([task]);
     apiMock.ideaAdd.mockResolvedValue([]);
+    apiMock.taskAddLog.mockImplementation(() => Promise.resolve(useTaskStore.getState().tasks));
+    // Setting the status leaves the tasks as they are in the test.
+    apiMock.taskSetMeta.mockImplementation(() => Promise.resolve(useTaskStore.getState().tasks));
     localStorage.clear();
     askMock.mockReset();
     useTaskStore.setState({
@@ -57,14 +62,64 @@ describe("FocusMode", () => {
     expect(clock(-5)).toBe("00:00");
   });
 
-  it("shows only the next step and finishes it", async () => {
+  it("shows the task worked on with its next step as Now, and finishes that step", async () => {
     render(<FocusMode />);
     const user = userEvent.setup();
-    expect(screen.getByText("Step 2 of 3")).toBeInTheDocument();
-    expect(screen.getByText("Write the steps for version 5")).toBeInTheDocument();
-    expect(screen.queryByText("Send it to Peter")).toBeNull();
+    const marked = screen.getByRole("region", { name: task.title });
+    expect(within(marked).getByText("Working on it")).toBeInTheDocument();
+    expect(within(marked).getByText("Now")).toBeInTheDocument();
+    // It becomes Doing when Focus opens on it.
+    await waitFor(() => {
+      expect(apiMock.taskSetMeta).toHaveBeenCalledWith(task.path, 5, "key-1", { status: "doing" });
+    });
     await user.click(screen.getByRole("button", { name: "Done, next step" }));
     expect(apiMock.taskSetDone).toHaveBeenCalledWith(task.path, 7, "s2", true);
+  });
+
+  it("shows the whole epic: other tasks folded, unfolded on demand, and the mark can move", async () => {
+    const other = makeTask({
+      line: 12,
+      key: "k2",
+      title: "Order the tokens",
+      steps: [{ line: 13, text: "Ask for a price", done: false, key: "s9" }],
+    });
+    useTaskStore.setState({ tasks: [task, other] });
+    render(<FocusMode />);
+    const user = userEvent.setup();
+    expect(screen.queryByText("Ask for a price")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Unfold Order the tokens" }));
+    expect(screen.getByText("Ask for a price")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Fold the rest" }));
+    expect(screen.queryByText("Ask for a price")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Work on this" }));
+    expect(useTaskStore.getState().selected?.title).toBe("Order the tokens");
+  });
+
+  it("writes what has happened without leaving focus", async () => {
+    render(<FocusMode />);
+    const user = userEvent.setup();
+    const marked = screen.getByRole("region", { name: task.title });
+    await user.type(within(marked).getByLabelText("What has happened"), "Peter has it{Enter}");
+    expect(apiMock.taskAddLog.mock.calls.at(-1)?.[4]).toBe("Peter has it");
+    expect(useUiStore.getState().focusOpen).toBe(true);
+  });
+
+  it("asks before ticking the task when its last step is done", async () => {
+    useTaskStore.setState({
+      tasks: [
+        {
+          ...task,
+          steps: task.steps.map((s) => (s.key === "s3" ? s : { ...s, done: true })),
+        },
+      ],
+    });
+    render(<FocusMode />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Done, next step" }));
+    expect(apiMock.taskSetDone).toHaveBeenCalledWith(task.path, 8, "s3", true);
+    expect(screen.getByRole("alert")).toHaveTextContent("Tick the task too?");
+    await user.click(screen.getByRole("button", { name: "Not yet" }));
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("runs a timer that can be paused and counts down", async () => {
@@ -134,17 +189,29 @@ describe("FocusMode", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Help me start" }));
     expect(await screen.findByText("The built-in AI is not running.")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Back to the task/ }));
+    await user.click(screen.getByRole("button", { name: /Leave focus/ }));
     expect(useUiStore.getState().focusOpen).toBe(false);
   });
 
-  it("marks the whole task done when every step is done", async () => {
-    useTaskStore.setState({
-      tasks: [{ ...task, steps: task.steps.map((s) => ({ ...s, done: true })) }],
-    });
+  it("ticks the task and says the epic is done when it was the last open one", async () => {
+    const all = { ...task, steps: task.steps.map((s) => ({ ...s, done: true })) };
+    useTaskStore.setState({ tasks: [all] });
+    apiMock.taskSetDone.mockResolvedValue([{ ...all, done: true }]);
     render(<FocusMode />);
     await userEvent.setup().click(screen.getByRole("button", { name: "Mark the task as done" }));
     expect(apiMock.taskSetDone).toHaveBeenCalledWith(task.path, 5, "key-1", true);
-    expect(useUiStore.getState().focusOpen).toBe(false);
+    expect(await screen.findByText("Epic task done")).toBeInTheDocument();
+  });
+
+  it("moves the mark to the next open task when a task is ticked", async () => {
+    const all = { ...task, steps: task.steps.map((s) => ({ ...s, done: true })) };
+    const next = makeTask({ line: 12, key: "k2", title: "Order the tokens" });
+    useTaskStore.setState({ tasks: [all, next] });
+    apiMock.taskSetDone.mockResolvedValue([{ ...all, done: true }, next]);
+    render(<FocusMode />);
+    await userEvent.setup().click(screen.getByRole("button", { name: "Mark the task as done" }));
+    await waitFor(() => {
+      expect(useTaskStore.getState().selected?.title).toBe("Order the tokens");
+    });
   });
 });

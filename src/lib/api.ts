@@ -100,6 +100,8 @@ async function stream(
 
 export const api = {
   getTreeOrder: () => call<TreeOrder>("get_tree_order"),
+  getEpicOrder: () => call<string[]>("get_epic_order"),
+  setEpicOrder: (epics: string[]) => call<undefined>("set_epic_order", { epics }),
   setFolderOrder: (folder: string, names: string[]) =>
     call<undefined>("set_folder_order", { folder, names }),
   openDevtools: () => call<undefined>("open_devtools"),
@@ -250,6 +252,8 @@ export const api = {
   epicCreate: (title: string) => call<Epic>("epic_create", { title }),
   epicForNote: (note: string) => call<Epic>("epic_for_note_cmd", { note }),
   listDailyDates: () => call<string[]>("list_daily_dates"),
+  taskMove: (path: string, line: number, key: string, up: boolean) =>
+    call<Task[]>("task_move", { path, line, key, up }),
   taskSetTitle: (path: string, line: number, key: string, title: string) =>
     call<Task[]>("task_set_title", { path, line, key, title }),
   taskDelete: (path: string, line: number, key: string) =>

@@ -10,6 +10,9 @@ const apiMock = vi.hoisted(() => ({
   taskSetDone: vi.fn(),
   taskAdd: vi.fn(),
   taskAddStep: vi.fn(),
+  taskMove: vi.fn(),
+  getEpicOrder: vi.fn(),
+  setEpicOrder: vi.fn(),
 }));
 vi.mock("@/lib/api", () => ({
   api: apiMock,
@@ -39,12 +42,21 @@ describe("TasksView", () => {
       makeTask({ path: "Tasks/Done one.md", line: 2, title: "Order headsets", done: true }),
       makeTask({ path: "Møder/Acme.md", line: 5, title: "Renew the licence" }),
     ]);
+    apiMock.getEpicOrder.mockResolvedValue([]);
+    apiMock.setEpicOrder.mockResolvedValue(undefined);
     apiMock.listEpics.mockResolvedValue([
       { path: "Tasks/VPN guide.md", title: "VPN guide", source: "IT/VPN client guide" },
       { path: "Tasks/Done one.md", title: "Office move", source: null },
       { path: "Tasks/Empty.md", title: "Empty one", source: null },
     ]);
-    useTaskStore.setState({ tasks: [], epics: [], loaded: false, folded: {}, epicPath: null });
+    useTaskStore.setState({
+      tasks: [],
+      epics: [],
+      epicOrder: [],
+      loaded: false,
+      folded: {},
+      epicPath: null,
+    });
     useUiStore.setState({ centerView: "tasks", focusOpen: false });
     useVaultStore.setState({ activePath: null });
   });
@@ -142,5 +154,40 @@ describe("TasksView", () => {
       .setup()
       .click(await screen.findByRole("checkbox", { name: /Mark as done: Renew the licence/ }));
     expect(apiMock.taskSetDone).toHaveBeenCalledWith("Møder/Acme.md", 5, "key-1", true);
+  });
+  it("moves epics and tasks up and down, and keeps the Inbox at the top", async () => {
+    apiMock.listTasks.mockResolvedValue([
+      makeTask({ path: "Tasks/Inbox.md", line: 2, title: "Call the bank", key: "i1" }),
+      makeTask({ path: "Tasks/VPN guide.md", line: 3, title: "Write the steps", key: "a" }),
+      makeTask({ path: "Tasks/VPN guide.md", line: 4, title: "Test on a Mac", key: "b" }),
+      makeTask({ path: "Tasks/Office.md", line: 2, title: "Order desks" }),
+    ]);
+    apiMock.listEpics.mockResolvedValue([
+      { path: "Tasks/Inbox.md", title: "Inbox", source: null },
+      { path: "Tasks/VPN guide.md", title: "VPN guide", source: null },
+      { path: "Tasks/Office.md", title: "Office move", source: null },
+    ]);
+    apiMock.taskMove.mockImplementation(() => Promise.resolve(useTaskStore.getState().tasks));
+    render(<TasksView />);
+    const user = userEvent.setup();
+    await screen.findByRole("region", { name: "VPN guide" });
+    const names = () =>
+      screen
+        .getAllByRole("region")
+        .map((r) => r.getAttribute("aria-label"))
+        .filter((n) => n !== "Tasks");
+    // Office move comes first by name, after the Inbox.
+    expect(names()).toEqual(["Inbox", "Office move", "VPN guide"]);
+    expect(screen.queryByRole("button", { name: "Move Inbox up" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Move Office move up" })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Move VPN guide up" }));
+    expect(apiMock.setEpicOrder).toHaveBeenCalledWith(["Tasks/VPN guide.md", "Tasks/Office.md"]);
+    expect(names()).toEqual(["Inbox", "VPN guide", "Office move"]);
+
+    await user.click(screen.getByRole("button", { name: "Move Write the steps down" }));
+    expect(apiMock.taskMove).toHaveBeenCalledWith("Tasks/VPN guide.md", 3, "a", false);
+    screen.getByRole("button", { name: "Test on a Mac" }).focus();
+    await user.keyboard("{Alt>}{ArrowUp}{/Alt}");
+    expect(apiMock.taskMove).toHaveBeenCalledWith("Tasks/VPN guide.md", 4, "b", true);
   });
 });

@@ -1,6 +1,7 @@
 import { Check, ChevronDown, ChevronRight, Target } from "lucide-react";
 import { useState } from "react";
 import type { Task } from "@/bindings/Task";
+import { MoveButtons, moveKey } from "@/components/MoveButtons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { noteName, shortDate } from "@/lib/taskLogic";
@@ -39,10 +40,13 @@ function madeLabel(iso: string): string {
 export function TaskRow({
   task,
   showNote = true,
+  canMove,
 }: {
   task: Task;
   /** Show the name of the note under the title. */
   showNote?: boolean;
+  /** Whether the task can move up or down in its note; leave out where it cannot be moved. */
+  canMove?: { up: boolean; down: boolean };
 }) {
   const { setDone, open, addStep } = useTaskStore.getState();
   const id = `${task.path}:${String(task.line)}`;
@@ -50,6 +54,8 @@ export function TaskRow({
   const [step, setStep] = useState("");
   const stepsDone = task.steps.filter((s) => s.done).length;
   const dim = task.done || task.status === "dropped";
+  const moveUp = () => useTaskStore.getState().move(task.path, task.line, task.key, true);
+  const moveDown = () => useTaskStore.getState().move(task.path, task.line, task.key, false);
   const facts = [
     showNote ? noteName(task.path) : null,
     task.steps.length > 0 ? `${String(stepsDone)} of ${String(task.steps.length)}` : null,
@@ -57,7 +63,12 @@ export function TaskRow({
   ].filter((x) => x !== null);
   return (
     <li className="flex flex-col">
-      <div className="group flex items-center gap-2 rounded-lg px-1 py-1.5 hover:bg-muted">
+      <div
+        className="group flex items-center gap-2 rounded-lg px-1 py-1.5 hover:bg-muted"
+        onKeyDown={(e) => {
+          if (canMove) moveKey(e, task.title, canMove, moveUp, moveDown);
+        }}
+      >
         {task.steps.length > 0 ? (
           <button
             type="button"
@@ -124,6 +135,15 @@ export function TaskRow({
           >
             <Target /> Focus
           </Button>
+        )}
+        {canMove && (
+          <MoveButtons
+            label={task.title}
+            canUp={canMove.up}
+            canDown={canMove.down}
+            onUp={moveUp}
+            onDown={moveDown}
+          />
         )}
       </div>
       {stepsOpen && (

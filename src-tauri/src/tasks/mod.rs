@@ -404,7 +404,7 @@ pub fn set_title(content: &str, line: u32, key: &str, title: &str) -> AppResult<
             .split_whitespace()
             .filter(|t| {
                 (t.starts_with('#') && t.len() > 1)
-                    || ["due:", "plan:", "status:", "est:"]
+                    || ["due:", "plan:", "status:", "est:", "made:"]
                         .iter()
                         .any(|w| t.starts_with(w) && t.len() > w.len())
             })
@@ -639,6 +639,62 @@ pub fn set_note(content: &str, line: u32, key: &str, text: &str) -> AppResult<St
         lines.insert(start + 1 + k, l);
     }
     Ok(modernize(&lines.join("\n"), line))
+}
+
+/// Moves a task (with its note, steps and log) or a step one place up or down, past the task or
+/// step next to it. The lines between two tasks (blank lines) stay where they are. Nothing
+/// changes at the top or bottom.
+pub fn move_item(content: &str, line: u32, key: &str, up: bool) -> AppResult<String> {
+    let lines: Vec<&str> = content.split('\n').collect();
+    let current = lines.get(line as usize).ok_or_else(conflict)?;
+    if line_key(current.trim_end_matches('\r')) != key {
+        return Err(conflict());
+    }
+    let tasks = parse("", content);
+    // Blocks as (first, last) line, in order: the tasks of the note, or the steps of one task.
+    let blocks: Vec<(usize, usize)> = if let Some(_t) = tasks.iter().find(|t| t.line == line) {
+        let indent = indent_of(current);
+        tasks
+            .iter()
+            .filter(|t| indent_of(lines[t.line as usize]) == indent)
+            .map(|t| (t.line as usize, t.end as usize))
+            .collect()
+    } else if let Some(t) = tasks
+        .iter()
+        .find(|t| t.steps.iter().any(|s| s.line == line))
+    {
+        t.steps
+            .iter()
+            .map(|s| (s.line as usize, s.line as usize))
+            .collect()
+    } else {
+        return Err(conflict());
+    };
+    let Some(at) = blocks.iter().position(|b| b.0 == line as usize) else {
+        return Err(conflict());
+    };
+    let other = if up {
+        match at.checked_sub(1) {
+            Some(o) => o,
+            None => return Ok(content.to_string()),
+        }
+    } else if at + 1 < blocks.len() {
+        at + 1
+    } else {
+        return Ok(content.to_string());
+    };
+    let (first, second) = if up {
+        (blocks[other], blocks[at])
+    } else {
+        (blocks[at], blocks[other])
+    };
+    let mut out: Vec<&str> = Vec::with_capacity(lines.len());
+    out.extend(&lines[..first.0]);
+    out.extend(&lines[second.0..=second.1]);
+    out.extend(&lines[first.1 + 1..second.0]);
+    out.extend(&lines[first.0..=first.1]);
+    out.extend(&lines[second.1 + 1..]);
+    Ok(out.join("\n"))
 }
 
 /// Removes a task, with its steps and log, from the note.
@@ -877,6 +933,39 @@ mod tests {
     }
 
     #[test]
+    fn tasks_and_steps_move_up_and_down() {
+        let n = "# E\n\n- [ ] A\n  note a\n  - [ ] a1\n  - [ ] a2\n- [ ] B\n  - 2026-10-20 log b\n\n- [ ] C\n";
+        let ts = parse("n.md", n);
+        let b = &ts[1];
+        let out = move_item(n, b.line, &b.key, true).unwrap();
+        assert_eq!(
+            out,
+            "# E\n\n- [ ] B\n  - 2026-10-20 log b\n- [ ] A\n  note a\n  - [ ] a1\n  - [ ] a2\n\n- [ ] C\n"
+        );
+        // Down past the blank line: the blank line stays between them.
+        let out = move_item(n, b.line, &b.key, false).unwrap();
+        assert_eq!(
+            out,
+            "# E\n\n- [ ] A\n  note a\n  - [ ] a1\n  - [ ] a2\n- [ ] C\n\n- [ ] B\n  - 2026-10-20 log b\n"
+        );
+        // A step moves among the steps of its task only.
+        let a2 = &ts[0].steps[1];
+        let out = move_item(n, a2.line, &a2.key, true).unwrap();
+        assert!(out.contains("  - [ ] a2\n  - [ ] a1\n"), "{out}");
+        assert_eq!(
+            move_item(n, a2.line, &a2.key, false).unwrap(),
+            n,
+            "the last step stays"
+        );
+        assert_eq!(
+            move_item(n, ts[0].line, &ts[0].key, true).unwrap(),
+            n,
+            "the first task stays"
+        );
+        assert!(move_item(n, b.line, "wrong", true).is_err());
+    }
+
+    #[test]
     fn windows_line_endings_are_kept() {
         let n = "- [ ] One\r\n  - [ ] Step\r\n";
         let t = &parse("a.md", n)[0];
@@ -912,6 +1001,13 @@ mod tests {
         assert_eq!(n.steps.len(), 2);
         assert!(set_title(NOTE, t.line, &t.key, "  ").is_err());
         assert!(set_title(NOTE, t.line, "000000000000", "x").is_err());
+        let made = "- [ ] Call made:2026-10-21\n  - [ ] Find the number\n";
+        let c = &parse("x.md", made)[0];
+        let after = set_title(made, c.line, &c.key, "Call Mette").unwrap();
+        assert_eq!(parse("x.md", &after)[0].made.as_deref(), Some("2026-10-21"));
+        let s = &c.steps[0];
+        let after = set_title(made, s.line, &s.key, "Look up the number").unwrap();
+        assert_eq!(parse("x.md", &after)[0].steps[0].text, "Look up the number");
     }
 
     #[test]

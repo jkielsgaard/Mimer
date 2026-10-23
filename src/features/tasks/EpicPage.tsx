@@ -17,6 +17,7 @@ import { TaskRow } from "./TaskRow";
 export function EpicPage() {
   const tasks = useTaskStore((s) => s.tasks);
   const epics = useTaskStore((s) => s.epics);
+  const epicOrder = useTaskStore((s) => s.epicOrder);
   const epicPath = useTaskStore((s) => s.epicPath);
   const resolver = useVaultStore((s) => s.resolver);
   const aiOff = useAiBlocked();
@@ -24,8 +25,8 @@ export function EpicPage() {
   const [deleting, setDeleting] = useState(false);
   const epic = epics.find((e) => e.path === epicPath);
   const group = useMemo(
-    () => epicGroups(tasks, epics).find((g) => g.path === epicPath) ?? null,
-    [tasks, epics, epicPath],
+    () => epicGroups(tasks, epics, epicOrder).find((g) => g.path === epicPath) ?? null,
+    [tasks, epics, epicOrder, epicPath],
   );
   const back = {
     label: "Tasks",
@@ -130,8 +131,13 @@ export function EpicPage() {
           <section aria-label="Tasks" className="rounded-lg border bg-card p-2">
             <h3 className="section-label px-2 pb-1 pt-1">Tasks</h3>
             <ul>
-              {group.tasks.map((t) => (
-                <TaskRow key={`${t.path}:${String(t.line)}`} task={t} showNote={false} />
+              {group.tasks.map((t, i, all) => (
+                <TaskRow
+                  key={`${t.path}:${String(t.line)}`}
+                  task={t}
+                  showNote={false}
+                  canMove={{ up: i > 0, down: i < all.length - 1 }}
+                />
               ))}
             </ul>
             {group.tasks.length === 0 && (

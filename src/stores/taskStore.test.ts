@@ -4,11 +4,13 @@ import { makeTask } from "@/test/taskFixtures";
 const apiMock = vi.hoisted(() => ({
   listTasks: vi.fn(),
   listEpics: vi.fn(),
+  getEpicOrder: vi.fn(() => Promise.resolve([])),
   taskAdd: vi.fn(),
   taskSetDone: vi.fn(),
   taskSetMeta: vi.fn(),
   taskAddStep: vi.fn(),
   taskAddLog: vi.fn(),
+  setEpicOrder: vi.fn(),
 }));
 vi.mock("@/lib/api", () => ({
   api: apiMock,
@@ -99,5 +101,21 @@ describe("taskStore", () => {
     ).toBe(9);
     expect(findTask(tasks, { path: "Møder/Acme.md", line: 5, title: "Gone" })).toBeNull();
     expect(findTask(tasks, null)).toBeNull();
+  });
+  it("moves an epic among the shown ones and keeps the others in the saved order", async () => {
+    apiMock.setEpicOrder.mockResolvedValue(undefined);
+    useTaskStore.setState({ epicOrder: ["Tasks/B.md", "Tasks/Done.md", "Tasks/A.md"] });
+    const shown = [INBOX_PATH, "Tasks/B.md", "Tasks/A.md"];
+    await useTaskStore.getState().moveEpic("Tasks/A.md", true, shown);
+    expect(apiMock.setEpicOrder).toHaveBeenCalledWith([
+      "Tasks/A.md",
+      "Tasks/B.md",
+      "Tasks/Done.md",
+    ]);
+    // At the top nothing moves, and the Inbox is never in the order.
+    apiMock.setEpicOrder.mockClear();
+    await useTaskStore.getState().moveEpic("Tasks/A.md", true, ["Tasks/A.md", "Tasks/B.md"]);
+    await useTaskStore.getState().moveEpic(INBOX_PATH, false, shown);
+    expect(apiMock.setEpicOrder).not.toHaveBeenCalled();
   });
 });

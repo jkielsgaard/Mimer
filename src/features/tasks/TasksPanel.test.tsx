@@ -3,7 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { makeTask } from "@/test/taskFixtures";
 
-const apiMock = vi.hoisted(() => ({ listTasks: vi.fn(), listEpics: vi.fn() }));
+const apiMock = vi.hoisted(() => ({
+  listTasks: vi.fn(),
+  listEpics: vi.fn(),
+  getEpicOrder: vi.fn(() => Promise.resolve([])),
+}));
 vi.mock("@/lib/api", () => ({
   api: apiMock,
   toApiError: (e: unknown) => ({ code: "Unknown", message: String(e) }),
