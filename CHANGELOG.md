@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-10-23
+
 ### Added
 
 - **Focus on a whole epic task.** Focus shows every task of the epic as one outline. The task you work on is open and marked (its status becomes Doing), with its note, its steps (the next one marked **Now**) and a box to write what has happened, which goes into the log with today's date. Unfold any other task to read it or tick a step, **Work on this** moves the mark, and **Fold the rest** folds them again. After the last step Focus asks if the task is done, then moves on to the next open task; when the epic is done it says so.
