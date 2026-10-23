@@ -45,6 +45,7 @@ pub async fn chat(
     let mut resp = match p.kind {
         // A cloud AI: kept in old settings files, but Mimer never talks to it.
         ProviderKind::Anthropic => return Err(not_used()),
+        ProviderKind::PhiSilica => crate::phisilica::chat(req, cancel, &mut shown).await?,
         ProviderKind::LmStudio
         | ProviderKind::OpenAiCompatible
         | ProviderKind::BuiltIn
@@ -68,6 +69,7 @@ pub async fn list_models(
 ) -> AppResult<Vec<String>> {
     match p.kind {
         ProviderKind::Anthropic => Err(not_used()),
+        ProviderKind::PhiSilica => Ok(vec!["Phi Silica".into()]),
         _ => openai_compat::list_models(client, &p.base_url, key).await,
     }
 }

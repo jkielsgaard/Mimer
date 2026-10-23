@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Focus on a whole epic task.** Focus shows every task of the epic as one outline. The task you work on is open and marked (its status becomes Doing), with its note, its steps (the next one marked **Now**) and a box to write what has happened, which goes into the log with today's date. Unfold any other task to read it or tick a step, **Work on this** moves the mark, and **Fold the rest** folds them again. After the last step Focus asks if the task is done, then moves on to the next open task; when the epic is done it says so.
+- **Your own order for epics, tasks and steps.** Hold the mouse over one and use the arrows, or press **Alt+↑** / **Alt+↓**. A task moves with its steps, note and log, in the note itself. The Inbox stays at the top; the order of the epics is kept in `.vault/order.json`.
+- **Change a step's text** right on the task page (Enter saves, Esc puts it back).
+
+- **Phi Silica on Copilot+ PCs** (Microsoft Store version only). Settings → Built-in AI has a third choice, **Windows AI · Phi Silica**: the small model built into Windows, running on the neural processor, with nothing to download in Mimer. **Phi Silica on this PC** shows what Windows says about the access, the PC and the model, in plain words with Windows' own answer for a bug report; **Ask Windows to get it** fetches the model, **Test Phi Silica** sends a test sentence, and **Use Phi Silica for my notes** makes Mimer use it. It cannot call tools, so skills and vault search in the chat are not available with it. Outside the Store version nothing changes.
+
+### Fixed
+
+- Renaming a task no longer removes its `made:` date.
+
 ## [0.13.0] - 2026-10-21
 
 ### Added

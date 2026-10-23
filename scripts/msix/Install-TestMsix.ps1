@@ -29,6 +29,13 @@ if (-not $cer -or -not $msix) { throw "Put this script next to the *_test.msix a
 
 # Windows only installs a package whose signer it trusts.
 Import-Certificate -FilePath $cer.FullName -CertStoreLocation Cert:\LocalMachine\TrustedPeople | Out-Null
-Add-AppxPackage -Path $msix.FullName
+# Mimer needs the Windows App SDK runtime (for Phi Silica). The Store installs it by itself; here it
+# comes from the file next to this script when Windows does not have it yet.
+$runtime = Get-ChildItem -Path $Folder -Filter "Microsoft.WindowsAppRuntime.*.msix" | Select-Object -First 1
+if ($runtime) {
+  Add-AppxPackage -Path $msix.FullName -DependencyPath $runtime.FullName
+} else {
+  Add-AppxPackage -Path $msix.FullName
+}
 $pkg = Get-AppxPackage -Name $IdentityName
 Write-Host "Installed $($pkg.PackageFullName). Start Mimer from the Start menu."

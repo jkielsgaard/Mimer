@@ -28,6 +28,8 @@ const KIND_DEFAULTS: Record<
     name: "Built-in AI · Foundry Local",
     contextTokens: 16000,
   },
+  // Phi Silica is chosen under Settings → Built-in AI; it is never made here.
+  phi_silica: { baseUrl: "", name: "Built-in AI · Phi Silica", contextTokens: 4000 },
   // The built-in AI is set up under Settings → Built-in AI; it is never made here.
   builtin: {
     baseUrl: "http://127.0.0.1:8080/v1",

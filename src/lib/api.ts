@@ -18,6 +18,8 @@ import type { RenameResult } from "@/bindings/RenameResult";
 import type { SearchHit } from "@/bindings/SearchHit";
 import type { SearchQuery } from "@/bindings/SearchQuery";
 import type { Catalog } from "@/bindings/Catalog";
+import type { PhiStatus } from "@/bindings/PhiStatus";
+import type { PhiTest } from "@/bindings/PhiTest";
 import type { EngineStatus } from "@/bindings/EngineStatus";
 import type { HardwareInfo } from "@/bindings/HardwareInfo";
 import type { InstallRequest } from "@/bindings/InstallRequest";
@@ -218,6 +220,10 @@ export const api = {
   // Images
   addImages: (notePath: string, files: string[]) =>
     call<string[]>("add_images", { notePath, files }),
+  // Phi Silica (only in the Microsoft Store version)
+  phiStatus: () => call<PhiStatus>("phi_status"),
+  phiEnsureReady: () => call<PhiStatus>("phi_ensure_ready"),
+  phiTest: () => call<PhiTest>("phi_test"),
   foundryCatalog: (refresh: boolean) => call<FoundryModel[]>("foundry_catalog", { refresh }),
   foundryStatus: () => call<FoundryStatus>("foundry_status"),
   foundryInstall: (alias: string, useForMimer: boolean) =>

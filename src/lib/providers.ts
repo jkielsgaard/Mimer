@@ -12,11 +12,13 @@ export function isLoopbackUrl(url: string): boolean {
 }
 
 /**
- * Where a provider really is, as the backend decides it: Anthropic is always cloud, and the
- * others are local only at a loopback address. Notes are only sent to local providers.
+ * Where a provider really is, as the backend decides it: Anthropic is always cloud, Phi Silica
+ * always local, and the others are local only at a loopback address. Notes are only sent to local providers.
  */
 export function effectiveLocation(p: ProviderConfig): "local" | "cloud" {
   if (p.kind === "anthropic") return "cloud";
+  // Windows runs Phi Silica on this PC; it has no address.
+  if (p.kind === "phi_silica") return "local";
   if (!isLoopbackUrl(p.baseUrl)) return "cloud";
   return p.kind === "openai_compatible" ? p.location : "local";
 }

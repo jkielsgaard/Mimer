@@ -82,6 +82,22 @@ jobs:
             -Publisher "${{ vars.MSIX_PUBLISHER || 'CN=00000000-0000-0000-0000-000000000000' }}" `
             -PublisherDisplayName "${{ vars.MSIX_PUBLISHER_DISPLAY_NAME || 'Jesper Ahasverusen Kielsgaard' }}" `
             -TestSign
+        env:
+          # Microsoft's key for Phi Silica; written into the package only (see docs/MSIX.md).
+          PHI_SILICA_TOKEN: ${{ secrets.PHI_SILICA_TOKEN }}
+          PHI_SILICA_ATTESTATION: ${{ secrets.PHI_SILICA_ATTESTATION }}
+
+      # The test copy is installed by hand, so it carries the Windows App SDK runtime the Store
+      # would otherwise install (taken from Microsoft's NuGet package of the same version).
+      - name: Add the Windows App SDK runtime to the test copy
+        if: matrix.platform == 'windows-latest'
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $nupkg = "winappsdk-runtime.zip"
+          Invoke-WebRequest -Uri "https://api.nuget.org/v3-flatcontainer/microsoft.windowsappsdk.runtime/2.5.1/microsoft.windowsappsdk.runtime.2.5.1.nupkg" -OutFile $nupkg
+          Expand-Archive $nupkg -DestinationPath winappsdk-runtime -Force
+          Copy-Item "winappsdk-runtime/tools/MSIX/win10-x64/Microsoft.WindowsAppRuntime.2.msix" msix-out/
 
       - name: Keep the Microsoft Store package
         if: matrix.platform == 'windows-latest'
@@ -104,5 +120,6 @@ jobs:
           path: |
             msix-out/*_test.msix
             msix-out/mimer-test.cer
+            msix-out/Microsoft.WindowsAppRuntime.2.msix
             msix-out/Install-TestMsix.ps1
           if-no-files-found: warn

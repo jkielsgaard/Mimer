@@ -253,7 +253,10 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                   <span className="block text-[11px] text-muted-foreground">local · Mimer</span>
                 </button>
                 {draft.ai.providers
-                  .filter((p) => p.kind !== "builtin" && p.kind !== "foundry_local")
+                  .filter(
+                    (p) =>
+                      p.kind !== "builtin" && p.kind !== "foundry_local" && p.kind !== "phi_silica",
+                  )
                   .map((p) => (
                     <button
                       key={p.id}
@@ -288,8 +291,9 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                     <p className="font-medium">Built-in AI</p>
                     <p className="text-muted-foreground">
                       This is Mimer's own AI. It runs on this computer, so your notes never leave
-                      it. Choose the engine (Foundry Local or llama.cpp) and the model, and download
-                      it, under Built-in AI. Mimer only uses an AI on this computer.
+                      it. Choose the engine (Foundry Local, llama.cpp or, in the Store version, Phi
+                      Silica) and the model, and download it, under Built-in AI. Mimer only uses an
+                      AI on this computer.
                     </p>
                     <div>
                       <Button

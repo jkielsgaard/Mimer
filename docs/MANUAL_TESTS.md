@@ -97,6 +97,7 @@ Check with `git log --oneline` in the vault folder.
 - [ ] Open the epic's note in another Markdown editor (or GitHub): every log line is on its own line, and the note reads as text under the task.
 - [ ] **Focus** in the Tasks panel starts with the first open task of the epic that is open (or of the first epic).
 - [ ] **(AI)** **Break it down** suggests steps; only the ticked ones are added. **Write a status line from the log** uses the written lines, the steps and the note, not the "Status:" lines. **Suggest steps from the note** on an epic adds only the ticked ones.
+- [ ] Order: hover an epic, a task and a step and use the arrows; then the same with **Alt+↑/↓** (the focus stays on the item, so it can be pressed again). The note has the new order (a task moves with its steps, note and log). The Inbox has no arrows and stays first. Restart Mimer: the epic order is kept. Change a step's text on the task page: Enter saves, Esc puts it back. Rename a task: `made:` stays.
 - [ ] Delete a task: it asks; History has "Snapshot before delete".
 
 ### 8. Ideas, write it down, Focus and starters
@@ -104,7 +105,8 @@ Check with `git log --oneline` in the vault folder.
 - [ ] The light bulb: ideas Open / Used / Archived; **New idea**; change the title and note, click away: `Ideas.md` has the note indented under the line (hidden from the tree and not a task).
 - [ ] **Make a task**: in the epic task Inbox, with the idea's note as the task's note; the idea is Used. **Make a note**: a note in Quick notes opens. Archive and Bring back work.
 - [ ] `Ctrl/Cmd+Shift+N` from inside a note: Task, Idea and Note each save and close; the note you were writing is unchanged.
-- [ ] **Focus** on a task: one step, a timer that can be paused, **Done, next step**, the write-it-down box keeps you in Focus; Esc leaves.
+- [ ] **Focus** on an epic (epic page) or on a task: the whole epic as an outline, the task marked **Working on it** (its status is Doing), its next step marked **Now**; other tasks folded. Unfold one, tick a step, **Work on this** moves the mark; **Fold the rest** folds them again.
+- [ ] In Focus, write in **What has happened** and press Enter: the line is in the task's log with today's date and you stay in Focus. **Done, next step** on the last step asks "Tick the task too?"; yes marks the next open task. When the epic is done: "Epic task done" and **Back to the task list**. The timer can be paused; the write-it-down box keeps you in Focus; Esc leaves.
 - [ ] **(AI)** **Help me start** in Focus, **Think it through** and **Suggest first steps** on an idea: nothing is added until you press the button.
 - [ ] **New → From a starter…**: each starter shows a live preview with `[blanks]`; Create makes the note in the right folder.
 
@@ -117,6 +119,7 @@ Check with `git log --oneline` in the vault folder.
 
 - [ ] **Settings → Built-in AI**: two engine cards, **Foundry Local** and **llama.cpp**; none is chosen for a new user.
 - [ ] llama.cpp: the hardware found is shown and pre-selected; a model shows its size and memory; **Download** shows progress, Cancel and continue work; the built-in AI becomes Mimer's provider. **Add my own model file…** copies a `.gguf`.
+- [ ] Outside the Store version there is no Phi Silica card. In the **Store version on a Copilot+ PC**: a third card **Windows AI · Phi Silica**, llama.cpp greyed out. "Phi Silica on this PC" shows Access, This PC and The model (green, or the reason in plain words with Windows' answer in grey). **Test Phi Silica** answers the test sentence; **Use Phi Silica for my notes** makes it the AI; Fix on a selected paragraph and a chat question about the open note work; the chat says tools are not available. **Copy for a bug report** copies the lines. On a PC that is not Copilot+: the card is greyed out with the reason, and Foundry Local still works.
 - [ ] Foundry Local (Windows 11 24H2 or later; Linux is experimental): the model list loads (only models with tools), **Find my hardware** fetches the hardware parts, a small model downloads.
 - [ ] **Wake** in the status bar loads the model; **Sleep** frees the memory (no `llama-server` or helper `mimer` process left). An AI command while asleep wakes it by itself. Closing or killing Mimer stops the engine. **Sleep after** 1 minute works.
 - [ ] A problem (too large a context, missing driver) shows a red box with steps, **Show details** and **Copy details**.
@@ -196,7 +199,7 @@ Check with `git log --oneline` in the vault folder.
 
 - [ ] Windows 11: the `…-setup.exe` installs **without** an administrator prompt; Mimer starts from the Start menu with the purple "M" icon; pictures show; **Reveal in file manager** opens Explorer; uninstalling (which also removes `mimer-ai` next to the program) leaves the vaults untouched.
 - [ ] Linux: the `.AppImage` starts and Help → Report a bug… opens the browser (or a dialog shows the address). The `.rpm` installs.
-- [ ] Microsoft Store package ([docs/MSIX.md](MSIX.md)), in Windows Sandbox or a virtual machine: it installs and starts; a vault opens and saves; Settings and recent vaults are kept after a restart; the llama.cpp card says it is not available in the Store version and Foundry Local works; uninstalling leaves the notes.
+- [ ] Microsoft Store package ([docs/MSIX.md](MSIX.md)), in Windows Sandbox or a virtual machine: it installs and starts; a vault opens and saves; Settings and recent vaults are kept after a restart; the llama.cpp card says it is not available in the Store version and Foundry Local works; the Windows App SDK runtime was installed with it (the test copy: `Install-TestMsix.ps1` installs it); uninstalling leaves the notes.
 - [ ] The release run has the artifacts `mimer-msix` (unsigned) and `mimer-msix-test`.
 
 ### 20. Help, About and reporting

@@ -14,6 +14,7 @@ pub mod import;
 pub mod links;
 pub mod markdown;
 pub mod order;
+pub mod phisilica;
 pub mod projects;
 pub mod search;
 pub mod settings;
@@ -204,6 +205,9 @@ pub fn run() {
             commands::order::set_epic_order,
             commands::external::open_external,
             commands::foundry::foundry_catalog,
+            commands::phisilica::phi_status,
+            commands::phisilica::phi_ensure_ready,
+            commands::phisilica::phi_test,
             commands::foundry::foundry_status,
             commands::foundry::foundry_install,
             commands::foundry::foundry_setup_hardware,

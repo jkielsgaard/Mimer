@@ -100,6 +100,12 @@ pub enum ProviderKind {
     #[serde(rename = "foundry_local")]
     #[ts(rename = "foundry_local")]
     FoundryLocal,
+    /// Phi Silica, the model built into Windows on Copilot+ PCs (`phisilica` module). Runs on
+    /// this PC; only in the Microsoft Store package. There is at most one, with the id
+    /// `phi-silica`, and it cannot call tools.
+    #[serde(rename = "phi_silica")]
+    #[ts(rename = "phi_silica")]
+    PhiSilica,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, TS)]
@@ -131,6 +137,8 @@ impl ProviderConfig {
     pub fn effective_location(&self) -> Location {
         match self.kind {
             ProviderKind::Anthropic => Location::Cloud,
+            // Windows runs it on this PC; there is no address to send anything to.
+            ProviderKind::PhiSilica => Location::Local,
             ProviderKind::LmStudio | ProviderKind::BuiltIn | ProviderKind::FoundryLocal => {
                 if is_loopback_url(&self.base_url) {
                     Location::Local
@@ -243,6 +251,21 @@ fn foundry_provider() -> ProviderConfig {
         location: Location::Local,
         supports_tools: true,
         context_tokens: 16_000,
+    }
+}
+
+/// The provider that stands for Phi Silica.
+pub fn phi_silica_provider() -> ProviderConfig {
+    ProviderConfig {
+        id: crate::phisilica::PHI_ID.into(),
+        kind: ProviderKind::PhiSilica,
+        name: "Built-in AI · Phi Silica".into(),
+        base_url: String::new(),
+        model: "Phi Silica".into(),
+        location: Location::Local,
+        supports_tools: false,
+        // A small model: Mimer keeps what it sends short. Windows says when it is still too long.
+        context_tokens: 4000,
     }
 }
 
@@ -390,6 +413,7 @@ impl Settings {
         self.editor.own_words = words;
         self.normalize_builtin();
         self.normalize_foundry();
+        self.normalize_phi_silica();
         for p in &mut self.ai.providers {
             p.location = p.effective_location();
             if p.context_tokens < 1000 {
@@ -410,6 +434,7 @@ impl Settings {
         let usable = self.provider(&emb.provider_id).is_some_and(|p| {
             p.kind != ProviderKind::Anthropic
                 && p.kind != ProviderKind::BuiltIn
+                && p.kind != ProviderKind::PhiSilica
                 && p.effective_location() == Location::Local
         });
         if !usable {
@@ -453,6 +478,18 @@ impl Settings {
             if !is_loopback_url(&p.base_url) {
                 p.base_url = foundry_provider().base_url;
             }
+        }
+    }
+
+    /// At most one Phi Silica provider, with the fixed id, name and limits. It is only added when
+    /// the user chooses Phi Silica, so other computers never see it.
+    fn normalize_phi_silica(&mut self) {
+        let id = crate::phisilica::PHI_ID;
+        self.ai
+            .providers
+            .retain(|p| (p.kind == ProviderKind::PhiSilica) == (p.id == id));
+        if let Some(p) = self.ai.providers.iter_mut().find(|p| p.id == id) {
+            *p = phi_silica_provider();
         }
     }
 
@@ -747,6 +784,31 @@ mod tests {
             s.provider("foundry").unwrap().name,
             "Built-in AI · Foundry Local"
         );
+    }
+
+    #[test]
+    fn phi_silica_is_local_without_tools_and_only_there_when_chosen() {
+        let mut s = Settings::default();
+        s.normalize();
+        assert!(s.provider(crate::phisilica::PHI_ID).is_none());
+        let mut stray = provider("stray", ProviderKind::PhiSilica, "https://example.com/v1");
+        stray.supports_tools = true;
+        s.ai.providers.push(stray);
+        let mut chosen = phi_silica_provider();
+        chosen.supports_tools = true;
+        chosen.name = "Renamed".into();
+        s.ai.providers.push(chosen);
+        s.ai.default_provider_id = crate::phisilica::PHI_ID.into();
+        s.ai.embeddings.provider_id = crate::phisilica::PHI_ID.into();
+        s.ai.embeddings.enabled = true;
+        s.normalize();
+        assert!(s.provider("stray").is_none());
+        let p = s.provider(crate::phisilica::PHI_ID).unwrap();
+        assert_eq!(p.effective_location(), Location::Local);
+        assert!(!p.supports_tools);
+        assert_eq!(p.name, "Built-in AI · Phi Silica");
+        assert_eq!(s.ai.default_provider_id, crate::phisilica::PHI_ID);
+        assert!(!s.ai.embeddings.enabled, "Phi Silica makes no embeddings");
     }
 
     #[test]
