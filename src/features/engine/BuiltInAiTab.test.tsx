@@ -1,11 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Settings } from "@/bindings/Settings";
 import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 import { CATALOG, engineStatus, HARDWARE } from "@/test/engineFixtures";
 
-vi.mock("@/lib/api", () => ({ api: {}, toApiError: (e: unknown) => ({ message: String(e) }) }));
+const apiMock = vi.hoisted(() => ({ phiStatus: vi.fn() }));
+vi.mock("@/lib/api", () => ({
+  api: apiMock,
+  toApiError: (e: unknown) => ({ message: String(e) }),
+}));
 vi.mock("@/lib/dialogs", () => ({ pickModelFile: vi.fn() }));
 
 import { BuiltInAiTab } from "./BuiltInAiTab";
@@ -44,6 +48,8 @@ function settings(defaultProviderId = "lm", foundryModel = ""): Settings {
 describe("Settings → Built-in AI: the engine choice", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Not the Store version: Phi Silica is not offered.
+    apiMock.phiStatus.mockResolvedValue({ shown: false });
     useEngineStore.setState({
       status: engineStatus({ state: "notInstalled", engine: null, models: [] }),
       catalog: CATALOG,
@@ -104,5 +110,29 @@ describe("Settings → Built-in AI: the engine choice", () => {
       "true",
     );
     expect(screen.getByTestId("foundry-download-explained")).toBeInTheDocument();
+  });
+  it("offers Phi Silica only in the Store version, where llama.cpp is not there", async () => {
+    const ok = { state: "ok", text: "Fine", code: null };
+    apiMock.phiStatus.mockResolvedValue({
+      shown: true,
+      access: ok,
+      device: ok,
+      model: ok,
+      canGetModel: false,
+    });
+    render(<BuiltInAiTab draft={settings("phi-silica")} onChange={vi.fn()} />);
+    const phi = await screen.findByRole("radio", { name: /Windows AI · Phi Silica/ });
+    expect(phi).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("region", { name: "Phi Silica on this PC" })).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: /llama\.cpp/ })).toBeDisabled();
+  });
+
+  it("shows no Phi Silica outside the Store version", async () => {
+    render(<BuiltInAiTab draft={settings()} onChange={vi.fn()} />);
+    await waitFor(() => {
+      expect(apiMock.phiStatus).toHaveBeenCalled();
+    });
+    expect(screen.queryByRole("radio", { name: /Phi Silica/ })).toBeNull();
+    expect(screen.getByRole("radio", { name: /llama\.cpp/ })).toBeEnabled();
   });
 });

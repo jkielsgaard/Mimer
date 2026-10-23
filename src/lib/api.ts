@@ -18,6 +18,8 @@ import type { RenameResult } from "@/bindings/RenameResult";
 import type { SearchHit } from "@/bindings/SearchHit";
 import type { SearchQuery } from "@/bindings/SearchQuery";
 import type { Catalog } from "@/bindings/Catalog";
+import type { PhiStatus } from "@/bindings/PhiStatus";
+import type { PhiTest } from "@/bindings/PhiTest";
 import type { EngineStatus } from "@/bindings/EngineStatus";
 import type { HardwareInfo } from "@/bindings/HardwareInfo";
 import type { InstallRequest } from "@/bindings/InstallRequest";
@@ -100,6 +102,8 @@ async function stream(
 
 export const api = {
   getTreeOrder: () => call<TreeOrder>("get_tree_order"),
+  getEpicOrder: () => call<string[]>("get_epic_order"),
+  setEpicOrder: (epics: string[]) => call<undefined>("set_epic_order", { epics }),
   setFolderOrder: (folder: string, names: string[]) =>
     call<undefined>("set_folder_order", { folder, names }),
   openDevtools: () => call<undefined>("open_devtools"),
@@ -216,6 +220,10 @@ export const api = {
   // Images
   addImages: (notePath: string, files: string[]) =>
     call<string[]>("add_images", { notePath, files }),
+  // Phi Silica (only in the Microsoft Store version)
+  phiStatus: () => call<PhiStatus>("phi_status"),
+  phiEnsureReady: () => call<PhiStatus>("phi_ensure_ready"),
+  phiTest: () => call<PhiTest>("phi_test"),
   foundryCatalog: (refresh: boolean) => call<FoundryModel[]>("foundry_catalog", { refresh }),
   foundryStatus: () => call<FoundryStatus>("foundry_status"),
   foundryInstall: (alias: string, useForMimer: boolean) =>
@@ -250,6 +258,8 @@ export const api = {
   epicCreate: (title: string) => call<Epic>("epic_create", { title }),
   epicForNote: (note: string) => call<Epic>("epic_for_note_cmd", { note }),
   listDailyDates: () => call<string[]>("list_daily_dates"),
+  taskMove: (path: string, line: number, key: string, up: boolean) =>
+    call<Task[]>("task_move", { path, line, key, up }),
   taskSetTitle: (path: string, line: number, key: string, title: string) =>
     call<Task[]>("task_set_title", { path, line, key, title }),
   taskDelete: (path: string, line: number, key: string) =>

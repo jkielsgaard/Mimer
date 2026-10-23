@@ -50,6 +50,12 @@ interface TaskState {
   toggleTaskOpen: (id: string) => void;
   /** Reads every task from every note, and the epics. */
   load: () => Promise<void>;
+  /** The epic tasks in the order the user chose (note paths), from the vault. */
+  epicOrder: string[];
+  /** Moves an epic task one place up or down among `shown` (the epics in the order on screen). */
+  moveEpic: (path: string, up: boolean, shown: readonly string[]) => Promise<void>;
+  /** Moves a task (with its steps) or a step one place up or down in its note. */
+  move: (path: string, line: number, key: string, up: boolean) => Promise<void>;
   /** Opens an epic on its page. */
   openEpic: (path: string) => void;
   /** Makes a new epic task (a note in `Tasks/`) and opens it. Resolves to its note. */
@@ -182,13 +188,37 @@ export const useTaskStore = create<TaskState>((set, get) => {
       set({ loading: true });
       try {
         await flushPendingWrites();
-        const [tasks, epics] = await Promise.all([api.listTasks(), api.listEpics()]);
-        set({ tasks, epics, loaded: true });
+        const [tasks, epics, epicOrder] = await Promise.all([
+          api.listTasks(),
+          api.listEpics(),
+          api.getEpicOrder().catch(() => [] as string[]),
+        ]);
+        set({ tasks, epics, epicOrder, loaded: true });
       } catch (e) {
         reportError(e);
       } finally {
         set({ loading: false });
       }
+    },
+    epicOrder: [],
+    moveEpic: async (path, up, shown) => {
+      const list = shown.filter((p) => p !== INBOX_PATH);
+      const i = list.indexOf(path);
+      const j = up ? i - 1 : i + 1;
+      if (i === -1 || j < 0 || j >= list.length) return;
+      const swapped = [...list];
+      [swapped[i], swapped[j]] = [swapped[j] ?? path, swapped[i] ?? path];
+      // Epics not shown (the done ones) keep their place after the shown ones.
+      const next = [...swapped, ...get().epicOrder.filter((p) => !swapped.includes(p))];
+      set({ epicOrder: next });
+      try {
+        await api.setEpicOrder(next);
+      } catch (e) {
+        reportError(e);
+      }
+    },
+    move: async (path, line, key, up) => {
+      await mutate(path, () => api.taskMove(path, line, key, up));
     },
     select: (selected) => {
       set({ selected });

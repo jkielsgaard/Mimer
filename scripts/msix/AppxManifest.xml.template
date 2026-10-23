@@ -8,7 +8,8 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap rescap">
+  xmlns:systemai="http://schemas.microsoft.com/appx/manifest/systemai/windows10"
+  IgnorableNamespaces="uap rescap systemai">
 
   <Identity Name="{{NAME}}" Publisher="{{PUBLISHER}}" Version="{{VERSION}}" ProcessorArchitecture="x64" />
 
@@ -20,6 +21,8 @@
 
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+    <!-- The Windows App SDK runtime, for Phi Silica (Microsoft.Windows.AI.Text). The Store installs it with Mimer. -->
+    <PackageDependency Name="Microsoft.WindowsAppRuntime.2" MinVersion="{{WINAPPSDK_VERSION}}" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
   </Dependencies>
 
   <Resources>
@@ -43,7 +46,9 @@
   <Capabilities>
     <!-- Mimer is a normal desktop program (Tauri); it needs to open the user's note folders. -->
     <rescap:Capability Name="runFullTrust" />
-    <!-- For the cloud AI chosen in Raven, and for downloads. -->
+    <!-- For downloads (the built-in AI's models). -->
     <Capability Name="internetClient" />
+    <!-- Phi Silica, the model built into Windows on Copilot+ PCs. -->
+    <systemai:Capability Name="systemAIModels" />
   </Capabilities>
 </Package>

@@ -12,6 +12,7 @@ import { useVaultStore } from "@/stores/vaultStore";
 import { BreakDownDialog } from "./BreakDownDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { DeleteButton } from "@/components/DeleteButton";
+import { MoveButtons, moveKey } from "@/components/MoveButtons";
 import { ViewHeader } from "@/components/ViewHeader";
 import { AiAsk } from "@/components/AiAsk";
 import { NoteBox } from "@/components/NoteBox";
@@ -363,7 +364,19 @@ export function TaskPage() {
               </div>
               <ul>
                 {task.steps.map((s, i) => (
-                  <li key={s.line} className="flex items-center gap-3 py-1">
+                  <li
+                    key={s.line}
+                    className="group flex items-center gap-3 py-1"
+                    onKeyDown={(e) => {
+                      moveKey(
+                        e,
+                        s.text,
+                        { up: i > 0, down: i < task.steps.length - 1 },
+                        () => store.move(task.path, s.line, s.key, true),
+                        () => store.move(task.path, s.line, s.key, false),
+                      );
+                    }}
+                  >
                     <button
                       type="button"
                       role="checkbox"
@@ -379,20 +392,43 @@ export function TaskPage() {
                     >
                       {s.done && <Check className="size-3" aria-hidden />}
                     </button>
-                    <span
+                    <input
+                      key={`${String(s.line)}:${s.text}`}
+                      aria-label={`Text of the step ${s.text}`}
+                      defaultValue={s.text}
                       className={cn(
-                        "flex-1 text-sm",
+                        "min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1 py-0.5 text-sm hover:border-input focus-visible:border-input focus-visible:outline-none",
                         s.done && "text-muted-foreground line-through",
                         i === firstOpen && "font-semibold",
                       )}
-                    >
-                      {s.text}
-                    </span>
+                      onBlur={(e) => {
+                        const v = e.target.value.trim();
+                        if (v !== "" && v !== s.text) {
+                          void store.rename(task.path, s.line, s.key, v);
+                        } else {
+                          e.target.value = s.text;
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") e.currentTarget.blur();
+                        if (e.key === "Escape") {
+                          e.currentTarget.value = s.text;
+                          e.currentTarget.blur();
+                        }
+                      }}
+                    />
                     {i === firstOpen && (
                       <span className="rounded-full bg-accent px-2 text-xs text-accent-foreground">
                         Next
                       </span>
                     )}
+                    <MoveButtons
+                      label={s.text}
+                      canUp={i > 0}
+                      canDown={i < task.steps.length - 1}
+                      onUp={() => store.move(task.path, s.line, s.key, true)}
+                      onDown={() => store.move(task.path, s.line, s.key, false)}
+                    />
                   </li>
                 ))}
               </ul>

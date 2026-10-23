@@ -14,6 +14,7 @@ import { useUiStore } from "@/stores/uiStore";
 export function TasksPanel() {
   const tasks = useTaskStore((s) => s.tasks);
   const epics = useTaskStore((s) => s.epics);
+  const epicOrder = useTaskStore((s) => s.epicOrder);
   const epicPath = useTaskStore((s) => s.epicPath);
   const loaded = useTaskStore((s) => s.loaded);
   const centerView = useUiStore((s) => s.centerView);
@@ -22,7 +23,7 @@ export function TasksPanel() {
     void useTaskStore.getState().load();
   }, []);
 
-  const groups = useMemo(() => epicGroups(tasks, epics), [tasks, epics]);
+  const groups = useMemo(() => epicGroups(tasks, epics, epicOrder), [tasks, epics, epicOrder]);
   const open = groups.filter((g) => !g.allDone);
   const done = groups.filter((g) => g.allDone);
   // Focus starts with the first open task of the epic that is open, else of the first epic.

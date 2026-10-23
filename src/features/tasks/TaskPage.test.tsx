@@ -13,6 +13,7 @@ const apiMock = vi.hoisted(() => ({
   taskSetNote: vi.fn(),
   taskDelete: vi.fn(),
   taskSetTitle: vi.fn(),
+  taskMove: vi.fn(),
   readNote: vi.fn(),
   listTasks: vi.fn(),
 }));
@@ -158,6 +159,37 @@ describe("TaskPage", () => {
     // Everything else works.
     expect(screen.getByRole("button", { name: "Focus" })).toBeEnabled();
     blocked.reason = null;
+  });
+
+  it("edits a step in place and moves it with the buttons or Alt+arrow", async () => {
+    apiMock.taskSetTitle.mockResolvedValue([task]);
+    apiMock.taskMove.mockResolvedValue([task]);
+    render(<TaskPage />);
+    const user = userEvent.setup();
+    const step = screen.getByRole("textbox", {
+      name: "Text of the step Ask Peter about a discount",
+    });
+    await user.clear(step);
+    await user.type(step, "Ask Peter for 10%{Enter}");
+    await waitFor(() => {
+      expect(apiMock.taskSetTitle).toHaveBeenCalledWith(task.path, 7, "s2", "Ask Peter for 10%");
+    });
+    // Escape puts the text back and saves nothing.
+    const first = screen.getByRole("textbox", { name: "Text of the step Send the price list" });
+    await user.type(first, " later{Escape}");
+    expect(first).toHaveValue("Send the price list");
+    expect(apiMock.taskSetTitle).toHaveBeenCalledTimes(1);
+
+    // The first step cannot go further up, the last not further down.
+    expect(screen.getByRole("button", { name: "Move Send the price list up" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Move Ask Peter about a discount down" }),
+    ).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Move Ask Peter about a discount up" }));
+    expect(apiMock.taskMove).toHaveBeenCalledWith(task.path, 7, "s2", true);
+    first.focus();
+    await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+    expect(apiMock.taskMove).toHaveBeenCalledWith(task.path, 6, "s1", false);
   });
 
   it("renames the task from its title, and shows its Markdown inside the page", async () => {

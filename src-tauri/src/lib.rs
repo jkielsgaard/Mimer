@@ -14,6 +14,7 @@ pub mod import;
 pub mod links;
 pub mod markdown;
 pub mod order;
+pub mod phisilica;
 pub mod projects;
 pub mod search;
 pub mod settings;
@@ -192,6 +193,7 @@ pub fn run() {
             commands::tasks::idea_delete,
             commands::tasks::task_delete,
             commands::tasks::task_set_title,
+            commands::tasks::task_move,
             commands::tasks::list_epics,
             commands::tasks::epic_create,
             commands::tasks::epic_for_note_cmd,
@@ -199,8 +201,13 @@ pub fn run() {
             commands::devtools::open_devtools,
             commands::order::get_tree_order,
             commands::order::set_folder_order,
+            commands::order::get_epic_order,
+            commands::order::set_epic_order,
             commands::external::open_external,
             commands::foundry::foundry_catalog,
+            commands::phisilica::phi_status,
+            commands::phisilica::phi_ensure_ready,
+            commands::phisilica::phi_test,
             commands::foundry::foundry_status,
             commands::foundry::foundry_install,
             commands::foundry::foundry_setup_hardware,

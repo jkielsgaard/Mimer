@@ -280,6 +280,19 @@ pub async fn task_set_title(
     edit_note(&v, &path, |c| tasks::set_title(c, line, &key, &title))
 }
 
+/// Moves a task or a step one place up or down in its note.
+#[tauri::command]
+pub async fn task_move(
+    state: State<'_, AppState>,
+    path: String,
+    line: u32,
+    key: String,
+    up: bool,
+) -> Result<Vec<Task>, AppError> {
+    let v = state.current_vault()?;
+    edit_note(&v, &path, |c| tasks::move_item(c, line, &key, up))
+}
+
 /// Adds a step under a task.
 #[tauri::command]
 pub async fn task_add_step(

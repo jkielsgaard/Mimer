@@ -49,6 +49,13 @@ export const PROVIDER_HELP: Record<ProviderKind, ProviderHelp> = {
     steps: ["Open Settings → Built-in AI, choose Foundry Local and press Download."],
     notes: [],
   },
+  phi_silica: {
+    summary: "Phi Silica, built into Windows on Copilot+ PCs, chosen under Settings → Built-in AI.",
+    steps: [
+      "Open Settings → Built-in AI, choose Windows AI · Phi Silica and press Test Phi Silica.",
+    ],
+    notes: ["Only in the Microsoft Store version. It cannot call tools."],
+  },
   builtin: {
     summary: "Mimer's own AI, set up under Settings → Built-in AI.",
     steps: ["Open Settings → Built-in AI and press Download."],

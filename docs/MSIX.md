@@ -15,6 +15,10 @@ The package is built by `scripts/msix/Build-Msix.ps1` on Windows. The release wo
    - the **name you reserved** (`Mimer: Markdown Notes`): it is the name the package shows in the Start menu and the Store, and Microsoft checks it against the reserved name
 4. In the GitHub repository, **Settings → Secrets and variables → Actions → Variables**, add `MSIX_IDENTITY_NAME`, `MSIX_PUBLISHER`, `MSIX_PUBLISHER_DISPLAY_NAME` and `MSIX_DISPLAY_NAME` (the reserved name) with those values. (They are not secrets.) Without them the workflow uses placeholders, which is fine for test packages only.
 
+5. **Phi Silica (once):** Microsoft unlocks Phi Silica for one package identity with a Limited Access Feature token (requested with the "LAF Access Token Request Form"; feature `com.microsoft.windows.ai.languagemodel`). Under **Settings → Secrets and variables → Actions → Secrets** add `PHI_SILICA_TOKEN` (the token value) and `PHI_SILICA_ATTESTATION` (the whole attestation sentence, ending "…agrees to the terms of use."). `Build-Msix.ps1` writes them to `phi-silica.json` inside the package only; they are not in the program, the repository or the Windows installer. Without them the package works, and Phi Silica shows "no access key". The token stays valid for new versions, because it is tied to the package identity, not the version.
+
+The package depends on the **Windows App SDK runtime** (`Microsoft.WindowsAppRuntime.2`, the version in `Build-Msix.ps1`) and declares the `systemAIModels` capability, both for Phi Silica. The Store installs the runtime with Mimer; the test copy (`mimer-msix-test`) carries it, and `Install-TestMsix.ps1` installs it when Windows does not have it.
+
 ## 2. Try the package on a test Windows
 
 **The easy way:** every release has an artifact called **`mimer-msix-test`** (GitHub → Actions → the release run → Artifacts). It holds the test-signed package, the test certificate and `Install-TestMsix.ps1`. Unpack it into a folder, then follow "Windows Sandbox" or "A virtual machine" below with that folder as `msix-out`.
@@ -26,10 +30,10 @@ On a Windows computer with the Windows SDK, Node, Rust and pnpm:
 ```powershell
 pnpm install
 pnpm tauri build
-./scripts/msix/Build-Msix.ps1 -Version 0.13.0 -TestSign -DisplayName "Mimer: Markdown Notes"
+./scripts/msix/Build-Msix.ps1 -Version 0.14.0 -TestSign -DisplayName "Mimer: Markdown Notes"
 ```
 
-This makes the folder `msix-out` with, among other files, `Mimer_0.13.0.0_x64.msix` (unsigned, for the Store), `Mimer_0.13.0.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
+This makes the folder `msix-out` with, among other files, `Mimer_0.14.0.0_x64.msix` (unsigned, for the Store), `Mimer_0.14.0.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
 
 **Windows Sandbox** (Windows 11 Pro, feature "Windows Sandbox" turned on): edit `scripts/msix/mimer-sandbox.wsb` so that `HostFolder` is the full path of `msix-out`, and double-click it. The sandbox installs Mimer; start it from the Start menu. Everything is gone when you close the sandbox.
 

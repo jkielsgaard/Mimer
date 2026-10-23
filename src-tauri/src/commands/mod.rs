@@ -14,6 +14,7 @@ pub mod images;
 pub mod import;
 pub mod index_page;
 pub mod order;
+pub mod phisilica;
 pub mod projects;
 pub mod search;
 pub mod settings;

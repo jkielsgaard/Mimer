@@ -61,11 +61,13 @@ export const INBOX = "Tasks/Inbox.md";
 
 /**
  * The epic tasks of the vault: every epic note in `Tasks/` (also when empty) and every other note
- * that has tasks. The Inbox first, then by name; the tasks in the order they are in the note.
+ * that has tasks. The Inbox first, then the user's own order (`order`, note paths), then the rest
+ * by name; the tasks in the order they are in the note.
  */
 export function epicGroups(
   tasks: readonly Task[],
   epics: readonly { path: string; title: string; source: string | null }[],
+  order: readonly string[] = [],
 ): EpicGroup[] {
   const byPath = new Map<string, Task[]>();
   for (const t of tasks) byPath.set(t.path, [...(byPath.get(t.path) ?? []), t]);
@@ -90,9 +92,14 @@ export function epicGroups(
   for (const path of byPath.keys()) {
     if (!known.has(path)) groups.push(make(path, noteName(path), null, false));
   }
+  const place = (g: EpicGroup): number => {
+    const i = order.indexOf(g.path);
+    return i === -1 ? order.length : i;
+  };
   return groups.sort(
     (a, b) =>
       Number(b.path === INBOX) - Number(a.path === INBOX) ||
+      place(a) - place(b) ||
       a.title.localeCompare(b.title, undefined, { sensitivity: "base" }),
   );
 }
