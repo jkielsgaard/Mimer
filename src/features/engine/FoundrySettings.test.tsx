@@ -30,8 +30,9 @@ function settings(model = ""): Settings {
     ai: {
       defaultProviderId: "lm",
       checkAnswers: false,
+      cloudConsent: null,
       builtin: { ...DEFAULT_BUILTIN },
-      foundry: { model },
+      foundry: { model, tools: true },
       baseInstruction: "",
       globalInstructions: "",
       embeddings: { enabled: false, providerId: "lm", model: "" },
@@ -60,15 +61,18 @@ function status(over: Partial<FoundryStatus> = {}): FoundryStatus {
   };
 }
 
-const model = (alias: string, sizeMb: number, device = "GPU"): FoundryModel => ({
+const model = (alias: string, sizeMb: number, device = "GPU", tools = true): FoundryModel => ({
   alias,
   id: `${alias}-generic-gpu:1`,
   name: alias,
   sizeMb,
-  tools: true,
+  tools,
   device,
   license: "apache-2.0",
   cached: false,
+  publisher: "Alibaba",
+  task: "chat-completion",
+  contextTokens: 32768,
 });
 
 describe("Settings → Built-in AI → Foundry Local", () => {
@@ -113,9 +117,10 @@ describe("Settings → Built-in AI → Foundry Local", () => {
   it("does not take over Mimer's provider when that box is unticked", async () => {
     render(<FoundrySettings draft={settings()} onChange={onChange} />);
     const user = userEvent.setup();
-    await user.click(screen.getByRole("checkbox"));
+    await user.click(screen.getByRole("checkbox", { name: /Use Foundry Local for Mimer/ }));
     await user.click(screen.getByRole("button", { name: "Download" }));
-    expect(install).toHaveBeenCalledWith("qwen3-0.6b", false);
+    // The first model in the recommended order (on the NPU) is chosen until another is.
+    expect(install).toHaveBeenCalledWith("qwen3-4b", false);
     expect((onChange.mock.calls[0]?.[0] as Settings).ai.defaultProviderId).toBe("lm");
   });
 
@@ -169,5 +174,39 @@ describe("Settings → Built-in AI → Foundry Local", () => {
     });
     render(<FoundrySettings draft={settings()} onChange={onChange} />);
     expect(screen.getByTestId("engine-problem")).toHaveTextContent("The download did not work");
+  });
+  it("shows every chat model with what it is for, and filters by text, kind and tools", async () => {
+    useFoundryStore.setState({
+      catalog: [
+        model("qwen3-4b", 2763, "NPU"),
+        model("deepseek-r1-7b", 4700, "GPU", false),
+        model("qwen2.5-coder-7b", 4400),
+      ],
+    });
+    render(<FoundrySettings draft={settings()} onChange={onChange} />);
+    const r1 = screen.getByRole("radio", { name: /deepseek-r1-7b/ });
+    expect(r1).toHaveTextContent("No tools");
+    expect(r1).toHaveTextContent(/Reasons step by step/);
+    expect(screen.getByRole("radio", { name: /qwen3-4b/ })).toHaveTextContent(
+      "reads about 25k words",
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Code" }));
+    expect(screen.getAllByRole("radio").map((r) => r.textContent)).toEqual([
+      expect.stringContaining("qwen2.5-coder-7b"),
+    ]);
+    await user.click(screen.getByRole("button", { name: "All" }));
+    await user.click(screen.getByRole("checkbox", { name: "Can use tools" }));
+    expect(screen.queryByRole("radio", { name: /deepseek/ })).toBeNull();
+    await user.type(screen.getByLabelText("Find a model"), "nothing like this");
+    expect(screen.getByTestId("foundry-no-match")).toBeInTheDocument();
+  });
+
+  it("downloads a model without tools and says so to Mimer", async () => {
+    useFoundryStore.setState({ catalog: [model("mistral-7b", 4100, "GPU", false)] });
+    render(<FoundrySettings draft={settings()} onChange={onChange} />);
+    await userEvent.setup().click(screen.getByRole("button", { name: "Download" }));
+    const next = onChange.mock.calls[0]?.[0] as Settings;
+    expect(next.ai.foundry).toEqual({ model: "mistral-7b", tools: false });
   });
 });

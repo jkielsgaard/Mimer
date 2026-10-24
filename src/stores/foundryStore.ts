@@ -7,7 +7,7 @@ import { reportError } from "@/stores/uiStore";
 
 interface FoundryStoreState {
   status: FoundryStatus | null;
-  /** The models Foundry Local offers that can call tools; null until read. */
+  /** The chat models Foundry Local offers on this computer; null until read. */
   catalog: FoundryModel[] | null;
   catalogError: string | null;
   catalogLoading: boolean;

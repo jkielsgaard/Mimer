@@ -30,8 +30,9 @@ function settings(baseInstruction: string): Settings {
     ai: {
       defaultProviderId: "p1",
       checkAnswers: false,
+      cloudConsent: null,
       builtin: DEFAULT_BUILTIN,
-      foundry: { model: "" },
+      foundry: { model: "", tools: true },
       baseInstruction,
       globalInstructions: "",
       embeddings: { enabled: false, providerId: "p1", model: "" },

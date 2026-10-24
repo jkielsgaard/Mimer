@@ -169,6 +169,7 @@ pub fn run() {
             commands::ai::discard_proposals,
             commands::app::finish_close,
             commands::app::splash_done,
+            commands::app::app_platform,
             commands::chats::list_chats,
             commands::chats::load_chat,
             commands::chats::save_chat,

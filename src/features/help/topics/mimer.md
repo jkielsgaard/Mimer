@@ -39,7 +39,9 @@ Mimer has no internet access and only knows what it learned in training, so it c
 
 ## Choose which AI Mimer uses
 
-Mimer uses an AI that runs on your own computer: the **built-in AI** (llama.cpp or Foundry Local, which can use a neural processor, an NPU), **LM Studio** or another OpenAI-compatible server on this computer. Add and choose them under **Settings → AI providers**: when you pick the kind of provider, the settings list what you have to do to get it working. Mimer never uses a cloud AI: your notes only go to an AI on this computer.
+Mimer uses an AI that runs on your own computer: the **built-in AI** (Phi Silica on a Copilot+ PC in the Store version, Foundry Local, or llama.cpp), **LM Studio** or another OpenAI-compatible server on this computer. **Settings → AI** lists them in the order that suits where Mimer runs, with the state of each; choose one there, and set it up under **Built-in AI** or **AI providers** (when you pick the kind of provider, the settings list what you have to do to get it working).
+
+**Cloud AI, as a last resort.** If no AI on your computer is good enough, an OpenAI-compatible cloud service (added under AI providers with its address and key) can be Mimer's AI. Mimer asks first: your notes, the text you select and your questions are then sent to that company, under its terms, and it is your responsibility. You must tick "I understand" before it is used. While it is on, the status bar says **Cloud AI** and the chat shows it in orange. A project marked **Local AI only** never uses it, and choosing another AI turns it off again.
 
 **Add provider** asks which kind you want (LM Studio or another server on this computer). The model is chosen in the settings. A built-in AI that is asleep is woken by itself when you ask it something.
 
@@ -47,4 +49,4 @@ Mimer uses an AI that runs on your own computer: the **built-in AI** (llama.cpp 
 
 - **Settings → AI** has Mimer's base instruction (who Mimer is), your own instructions, and **Let the AI check its own answer** (off by default): the AI is asked once more whether its answer to a text command is right, which is slower but helps with small models.
 - A small model sometimes answers with nothing useful (an empty text, or most of the text gone). Mimer then tries once more and says so instead of offering it.
-- Mimer only ever uses an AI **on your own computer**: LM Studio, or his own **built-in AI** (see the Built-in AI topic). Your notes are never sent to a cloud AI.
+- Mimer uses an AI **on your own computer**: LM Studio, or his own **built-in AI** (see the Built-in AI topic). Your notes are only sent to a cloud AI if you turn one on yourself under Settings → AI, after a warning.

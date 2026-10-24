@@ -13,11 +13,22 @@ alias: string,
  */
 id: string, name: string, sizeMb: number, 
 /**
- * True when the model can call tools. Mimer shows only these: searching and changing notes
- * needs them.
+ * True when the model can call tools. Without them, vault search and skills are off.
  */
 tools: boolean, 
 /**
  * `CPU`, `GPU` or `NPU`: where Foundry Local runs it on this computer.
  */
-device: string, license: string | null, cached: boolean, };
+device: string, license: string | null, cached: boolean, 
+/**
+ * Who made it (for example `Microsoft`).
+ */
+publisher: string | null, 
+/**
+ * What it does (for example `chat-completion`).
+ */
+task: string | null, 
+/**
+ * How much text it can read at once, in tokens.
+ */
+contextTokens: number | null, };

@@ -18,6 +18,7 @@ import type { RenameResult } from "@/bindings/RenameResult";
 import type { SearchHit } from "@/bindings/SearchHit";
 import type { SearchQuery } from "@/bindings/SearchQuery";
 import type { Catalog } from "@/bindings/Catalog";
+import type { AppPlatform } from "@/bindings/AppPlatform";
 import type { PhiStatus } from "@/bindings/PhiStatus";
 import type { PhiTest } from "@/bindings/PhiTest";
 import type { EngineStatus } from "@/bindings/EngineStatus";
@@ -220,6 +221,7 @@ export const api = {
   // Images
   addImages: (notePath: string, files: string[]) =>
     call<string[]>("add_images", { notePath, files }),
+  appPlatform: () => call<AppPlatform>("app_platform"),
   // Phi Silica (only in the Microsoft Store version)
   phiStatus: () => call<PhiStatus>("phi_status"),
   phiEnsureReady: () => call<PhiStatus>("phi_ensure_ready"),

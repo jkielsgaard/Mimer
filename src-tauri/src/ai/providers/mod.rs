@@ -23,7 +23,7 @@ pub fn http_client() -> AppResult<reqwest::Client> {
         .map_err(|e| AppError::Provider(format!("Could not start the HTTP client: {e}")))
 }
 
-/// Sends a chat request. Only reachable with an approved provider: a `LocalProvider` (see
+/// Sends a chat request. Only reachable with an approved provider: a `NotesProvider` (see
 /// `ai::router`).
 pub async fn chat(
     client: &reqwest::Client,

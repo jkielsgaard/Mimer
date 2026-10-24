@@ -36,13 +36,14 @@ export function ProjectForm({
     useUiStore.getState().openProjectDialog(null);
   };
   const p0 = state.project;
-  // Notes only go to local AI, so only local providers can be chosen for a project.
+  // A project chooses among the AIs on this computer; the cloud AI, when turned on, is Mimer's.
   const localProviders = settings.ai.providers.filter((p) => p.location === "local");
   const [name, setName] = useState(p0?.name ?? "");
   const [instructions, setInstructions] = useState(p0?.instructions ?? "");
   const [providerId, setProviderId] = useState(
     localProviders.some((p) => p.id === p0?.providerId) ? (p0?.providerId ?? GLOBAL) : GLOBAL,
   );
+  const [localOnly, setLocalOnly] = useState(p0?.localOnly ?? false);
   const [askText, setAskText] = useState("");
   const [proposal, setProposal] = useState<string | null>(null);
   const [asking, setAsking] = useState(false);
@@ -72,9 +73,11 @@ export function ProjectForm({
           name: name.trim(),
           instructions,
           providerId: pid,
+          localOnly,
         });
       } else {
         const made = await api.createProject(name.trim(), instructions, pid);
+        if (localOnly) await api.updateProject({ ...made, localOnly });
         // The project's folder is new: show it under Projects.
         await useVaultStore.getState().refreshTree();
         useTreeStore.getState().setSectionOpen("projects", true);
@@ -261,6 +264,23 @@ export function ProjectForm({
                 ))}
               </Select>
             </div>
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={localOnly}
+                onChange={(e) => {
+                  setLocalOnly(e.target.checked);
+                }}
+              />
+              <span>
+                Local AI only
+                <span className="block text-xs text-muted-foreground">
+                  The notes of this project never go to a cloud AI, even when one is turned on under
+                  Settings → AI.
+                </span>
+              </span>
+            </label>
           </div>
           <DialogFooter className="items-center">
             {!isNew && (

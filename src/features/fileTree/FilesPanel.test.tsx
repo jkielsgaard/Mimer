@@ -57,6 +57,7 @@ const project: Project = {
   folder: "Work/Security",
   instructions: "",
   providerId: null,
+  localOnly: false,
   createdAt: "",
   updatedAt: "",
 };
@@ -79,8 +80,9 @@ const settings = (recentNotes: number): Settings => ({
   ai: {
     defaultProviderId: "p1",
     checkAnswers: false,
+    cloudConsent: null,
     builtin: DEFAULT_BUILTIN,
-    foundry: { model: "" },
+    foundry: { model: "", tools: true },
     baseInstruction: "",
     globalInstructions: "",
     embeddings: { enabled: false, providerId: "p1", model: "" },

@@ -38,8 +38,9 @@ const stored: Settings = {
   ai: {
     defaultProviderId: "lm",
     checkAnswers: false,
+    cloudConsent: null,
     builtin: DEFAULT_BUILTIN,
-    foundry: { model: "" },
+    foundry: { model: "", tools: true },
     baseInstruction: "",
     globalInstructions: "",
     embeddings: { enabled: false, providerId: "lm", model: "" },
@@ -78,7 +79,7 @@ const stored: Settings = {
   },
 };
 
-describe("Settings → AI: only local AI for notes", () => {
+describe("Settings → AI: which AI Mimer uses", () => {
   const save = vi.fn().mockResolvedValue(undefined);
 
   beforeEach(() => {
@@ -97,14 +98,12 @@ describe("Settings → AI: only local AI for notes", () => {
     return user;
   };
 
-  it("lists only local providers for Mimer, also when a LM Studio address is not local", async () => {
+  it("shows one list of AIs for Mimer, with cloud AI last and off", async () => {
     await openAiTab();
-    const mimer = screen.getByLabelText("Mimer's provider (local AI)");
-    expect(
-      within(mimer)
-        .getAllByRole("option")
-        .map((o) => o.textContent),
-    ).toEqual(["LM Studio"]);
+    const list = screen.getByRole("radiogroup", { name: "AI for Mimer" });
+    const lines = within(list).getAllByRole("radio");
+    expect(lines.at(-1)).toHaveTextContent(/Cloud AI.*Notes leave this computer.*Off/);
+    expect(lines.length).toBeGreaterThanOrEqual(4);
   });
 
   it("has no Raven setting and no own-knowledge setting any more", async () => {

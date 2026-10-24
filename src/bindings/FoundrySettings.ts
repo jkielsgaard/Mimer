@@ -7,4 +7,8 @@ export type FoundrySettings = {
 /**
  * The alias of the model that is woken (for example `qwen3-4b`); empty until one is downloaded.
  */
-model: string, };
+model: string, 
+/**
+ * Whether that model can call tools. Without them the chat has no vault search or skills.
+ */
+tools: boolean, };

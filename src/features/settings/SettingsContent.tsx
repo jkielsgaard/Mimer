@@ -13,12 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { effectiveLocation, usableProviders } from "@/lib/providers";
+import { effectiveLocation } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { ProviderEditor } from "./ProviderEditor";
 import { AddProviderDialog } from "./AddProviderDialog";
+import { AiChoice } from "./AiChoice";
 import { BuiltInAiTab } from "@/features/engine/BuiltInAiTab";
 import { VaultSettingsTab } from "./VaultSettingsTab";
 import { MimerInstructionSettings } from "./MimerInstructionSettings";
@@ -61,8 +62,6 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
     }
   };
   const provider = draft.ai.providers.find((p) => p.id === providerId) ?? null;
-  // Notes only go to local providers; a cloud provider is never used.
-  const localProviders = usableProviders(draft).filter((p) => effectiveLocation(p) === "local");
 
   return (
     <DialogContent className="h-[640px] max-w-4xl">
@@ -271,7 +270,11 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                     >
                       {p.name}
                       <span className="block text-[11px] text-muted-foreground">
-                        {effectiveLocation(p) === "local" ? "local · Mimer" : "cloud · not used"}
+                        {effectiveLocation(p) === "local"
+                          ? "local · Mimer"
+                          : p.kind === "anthropic"
+                            ? "cloud · not used"
+                            : "cloud · needs your OK"}
                       </span>
                     </button>
                   ))}
@@ -351,29 +354,13 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
           )}
           {tab === "ai" && (
             <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-1.5">
-                  <Label htmlFor="set-default">Mimer's provider (local AI)</Label>
-                  <InfoHint
-                    label="Mimer's provider"
-                    text="The AI Mimer uses for your notes, unless a project chooses another local one. Notes are only ever sent to a local AI, for example LM Studio on this computer."
-                    topic="mimer"
-                  />
-                </div>
-                <Select
-                  id="set-default"
-                  value={draft.ai.defaultProviderId}
-                  onChange={(e) => {
-                    update({ ai: { ...draft.ai, defaultProviderId: e.target.value } });
-                  }}
-                >
-                  {localProviders.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
+              <AiChoice
+                draft={draft}
+                onChange={setDraft}
+                onSetUp={(t) => {
+                  setTab(t);
+                }}
+              />
               <label className="flex items-start gap-2 text-sm">
                 <input
                   type="checkbox"

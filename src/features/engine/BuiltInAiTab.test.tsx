@@ -35,8 +35,9 @@ function settings(defaultProviderId = "lm", foundryModel = ""): Settings {
     ai: {
       defaultProviderId,
       checkAnswers: false,
+      cloudConsent: null,
       builtin: { ...DEFAULT_BUILTIN },
-      foundry: { model: foundryModel },
+      foundry: { model: foundryModel, tools: true },
       baseInstruction: "",
       globalInstructions: "",
       embeddings: { enabled: false, providerId: "lm", model: "" },

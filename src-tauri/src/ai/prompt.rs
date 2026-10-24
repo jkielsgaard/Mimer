@@ -250,6 +250,7 @@ mod tests {
             folder: "Work/Sec".into(),
             instructions: "Be strict".into(),
             provider_id: None,
+            local_only: false,
             created_at: String::new(),
             updated_at: String::new(),
         };

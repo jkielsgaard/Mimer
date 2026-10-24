@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-10-24
+
+### Added
+
+- **Every Foundry Local model.** The Foundry Local list now has every chat model it can run on this computer, not only those with tools, each with what it is good for, its maker, size, where it runs, how much text it reads and its licence. Search and filter it (writing, reasoning, code, tools, downloaded, hardware, size), sort it, or open Microsoft's list of all models. A model without tools can be used for text commands and the chat about the open note.
+- **Which AI Mimer uses**, as one list at the top of Settings → AI, in the order that suits where Mimer runs (Store version on a Copilot+ PC: Phi Silica, Foundry Local, LM Studio; Windows installer and Linux: llama.cpp first), each with its state here, and a button to where it is set up.
+- **Cloud AI as a last resort.** An OpenAI-compatible cloud service can be Mimer's AI when nothing on the computer is good enough. Mimer first says what is sent and that it is the user's responsibility, and it is only used after "I understand" is ticked. While it is on, the status bar shows **Cloud AI** and the chat says in orange where the notes go. Choosing another AI turns it off.
+- **Local AI only** for a project: its notes never go to a cloud AI.
+
+### Fixed
+
+- **Translate kept the text in Danish** (most of all with Phi Silica): text commands and skills were also told to "answer in the language of the text". Now the language the task asks for wins. Phi Silica gets one short prompt with the task first and the text last.
+
 ## [0.14.1] - 2026-10-24
 
 ### Fixed

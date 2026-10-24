@@ -11,7 +11,7 @@ Mimer is a desktop app for Markdown notes with a built-in AI assistant that help
 - **Plain files.** Your notes are normal `.md` files in normal folders. A vault works without Mimer.
 - **Never lose data.** Every vault is a local Git repository, so any change can be restored from the history.
 - **You are in control.** The AI only _proposes_ changes. Nothing is written until you approve it.
-- **Local only.** The AI runs on your own machine, with the built-in AI (llama.cpp or Microsoft's [Foundry Local](https://learn.microsoft.com/azure/foundry-local/), which can use a neural processor) or [LM Studio](https://lmstudio.ai). Your notes are never sent to a cloud service.
+- **Local only.** The AI runs on your own machine, with the built-in AI (llama.cpp or Microsoft's [Foundry Local](https://learn.microsoft.com/azure/foundry-local/), which can use a neural processor) or [LM Studio](https://lmstudio.ai). Your notes stay on your computer; a cloud AI is only used if you turn it on yourself, after a warning.
 - **Works without AI.** Everything that is not AI (notes, tasks, ideas, search, history) works the same when no AI is running.
 
 ## Why Mimer?

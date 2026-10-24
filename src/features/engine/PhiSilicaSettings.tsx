@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 export const PHI_ID = "phi-silica";
 
 /** The provider as the backend keeps it (`settings::phi_silica_provider`). */
-const PHI_PROVIDER: ProviderConfig = {
+export const PHI_PROVIDER: ProviderConfig = {
   id: PHI_ID,
   kind: "phi_silica",
   name: "Built-in AI · Phi Silica",

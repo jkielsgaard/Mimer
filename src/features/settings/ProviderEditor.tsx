@@ -239,7 +239,9 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
       <p className="text-xs text-muted-foreground">
         {effectiveLocation === "local"
           ? "Local: used by Mimer, which reads your notes. It runs on this computer."
-          : "Cloud: not used. Your notes are never sent to a cloud provider."}
+          : provider.kind === "anthropic"
+            ? "Cloud: not used. Mimer has no Anthropic client; use an OpenAI-compatible address."
+            : "Cloud: only used after you turn it on under Settings → AI, which says that your notes are then sent to it."}
       </p>
       <div className="flex items-center gap-4">
         <label className="flex items-center gap-2 text-sm">

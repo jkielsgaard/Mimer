@@ -2,7 +2,12 @@
 
 export type Project = { schemaVersion: number, id: string, name: string, folder: string, instructions: string, 
 /**
- * A local provider for this project (`None` = the default). A cloud provider is ignored:
- * notes only ever go to local AI (see `ai::router`).
+ * The provider for this project (`None` = the default). A cloud provider is only used when
+ * it is the cloud AI the user has turned on (see `ai::router`).
  */
-providerId: string | null, createdAt: string, updatedAt: string, };
+providerId: string | null, 
+/**
+ * Never send this project's notes to a cloud AI, even when one is turned on. (Also read from
+ * project files written before 0.7, which had the same field.)
+ */
+localOnly: boolean, createdAt: string, updatedAt: string, };

@@ -43,6 +43,7 @@ pub fn create(
         folder: folder.clone(),
         instructions,
         provider_id,
+        local_only: false,
         created_at: stamp.clone(),
         updated_at: stamp,
     };
@@ -143,6 +144,7 @@ mod tests {
             folder: "Work".into(),
             instructions: String::new(),
             provider_id: None,
+            local_only: false,
             created_at: String::new(),
             updated_at: String::new(),
         };

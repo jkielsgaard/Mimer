@@ -14,6 +14,7 @@ const project: Project = {
   folder: "Docs",
   instructions: "",
   providerId: null,
+  localOnly: false,
   createdAt: "",
   updatedAt: "",
 };

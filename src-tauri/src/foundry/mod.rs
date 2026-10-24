@@ -56,13 +56,22 @@ pub struct FoundryModel {
     pub name: String,
     #[ts(type = "number")]
     pub size_mb: u64,
-    /// True when the model can call tools. Mimer shows only these: searching and changing notes
-    /// needs them.
+    /// True when the model can call tools. Without them, vault search and skills are off.
     pub tools: bool,
     /// `CPU`, `GPU` or `NPU`: where Foundry Local runs it on this computer.
     pub device: String,
     pub license: Option<String>,
     pub cached: bool,
+    /// Who made it (for example `Microsoft`).
+    #[serde(default)]
+    pub publisher: Option<String>,
+    /// What it does (for example `chat-completion`).
+    #[serde(default)]
+    pub task: Option<String>,
+    /// How much text it can read at once, in tokens.
+    #[serde(default)]
+    #[ts(type = "number | null")]
+    pub context_tokens: Option<u64>,
 }
 
 /// A model that has been downloaded.
@@ -173,10 +182,17 @@ pub fn write_installed(root: &Path, list: &[FoundryInstalled]) -> std::io::Resul
     std::fs::write(installed_file(root), text)
 }
 
-/// Keeps only the models that can call tools, sorted by size (smallest first).
-pub fn tool_models(mut all: Vec<FoundryModel>) -> Vec<FoundryModel> {
-    all.retain(|m| m.tools && m.size_mb > 0);
-    all.sort_by(|a, b| a.size_mb.cmp(&b.size_mb).then(a.alias.cmp(&b.alias)));
+/// Keeps the models that write text (chat), with or without tools, sorted by size (smallest
+/// first, unknown sizes last). Speech and image models are left out: Mimer only writes text.
+pub fn chat_models(mut all: Vec<FoundryModel>) -> Vec<FoundryModel> {
+    all.retain(|m| {
+        m.task
+            .as_deref()
+            .is_none_or(|t| t.to_ascii_lowercase().contains("chat"))
+    });
+    all.sort_by(|a, b| {
+        (a.size_mb == 0, a.size_mb, &a.alias).cmp(&(b.size_mb == 0, b.size_mb, &b.alias))
+    });
     all
 }
 
@@ -194,20 +210,31 @@ mod tests {
             device: "GPU".into(),
             license: None,
             cached: false,
+            publisher: None,
+            task: Some("chat-completion".into()),
+            context_tokens: None,
         }
     }
 
     #[test]
-    fn only_models_with_tools_are_listed_smallest_first() {
-        let list = tool_models(vec![
+    fn every_chat_model_is_listed_smallest_first_and_speech_is_left_out() {
+        let mut speech = model("whisper", false, 300);
+        speech.task = Some("automatic-speech-recognition".into());
+        let mut old = model("no-task", false, 200);
+        old.task = None;
+        let list = chat_models(vec![
             model("big", true, 9000),
             model("no-tools", false, 100),
-            model("speech", false, 0),
+            speech,
+            old,
             model("small", true, 500),
             model("unknown-size", true, 0),
         ]);
         let names: Vec<_> = list.iter().map(|m| m.alias.as_str()).collect();
-        assert_eq!(names, vec!["small", "big"]);
+        assert_eq!(
+            names,
+            vec!["no-tools", "no-task", "small", "big", "unknown-size"]
+        );
     }
 
     #[test]

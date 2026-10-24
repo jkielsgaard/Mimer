@@ -35,7 +35,7 @@ export const PROVIDER_HELP: Record<ProviderKind, ProviderHelp> = {
     ],
     notes: [
       "Only an address on this computer (localhost, 127.0.0.1 or ::1) can be local. Anything else is cloud.",
-      "A cloud service cannot be used: your notes are only ever sent to an AI on this computer.",
+      "A cloud service can be Mimer's AI as a last resort: turn it on under Settings → AI, which says that your notes are then sent to it. Projects marked Local AI only never use it.",
     ],
   },
   anthropic: {

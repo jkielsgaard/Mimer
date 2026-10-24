@@ -21,6 +21,7 @@ const project: Project = {
   folder: "Work/Security",
   instructions: "",
   providerId: null,
+  localOnly: false,
   createdAt: "",
   updatedAt: "",
 };
