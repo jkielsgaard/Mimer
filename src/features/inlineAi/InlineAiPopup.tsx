@@ -8,6 +8,7 @@ import { stripCodeFence } from "@/lib/fence";
 import { wakeIfNeeded } from "@/lib/wake";
 import { cn } from "@/lib/utils";
 import { useNow } from "@/features/chat/useNow";
+import { AiMistakesNote } from "@/components/AiMistakesNote";
 import { DiffView } from "@/components/DiffView";
 import {
   INLINE_ACTIONS,
@@ -261,7 +262,8 @@ export function InlineAiPopup({
               <p className="whitespace-pre-wrap p-2 text-sm">{result || "…"}</p>
             )}
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex items-center justify-end gap-2">
+            <AiMistakesNote className="mr-auto" />
             <Button variant="ghost" size="sm" onClick={close}>
               <X /> {answerOnly ? "Close" : "Reject"}{" "}
               <kbd className="text-[10px] opacity-60">Esc</kbd>

@@ -15,6 +15,7 @@ import { ChatComposer } from "./ChatComposer";
 import { ChatHeader } from "./ChatHeader";
 import { MentionChips } from "./MentionChips";
 import { MentionPicker } from "./MentionPicker";
+import { AiMistakesNote } from "@/components/AiMistakesNote";
 
 /**
  * "Ask about my notes": a plain chat with the local AI. It reads the open note, and the notes and
@@ -219,6 +220,7 @@ export function ChatPanel({ onClose }: { onClose?: () => void } = {}) {
             Include the open note
           </label>
         </ChatComposer>
+        <AiMistakesNote className="px-3 pb-1.5 text-center" />
       </div>
     </div>
   );

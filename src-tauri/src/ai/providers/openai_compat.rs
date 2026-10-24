@@ -29,7 +29,12 @@ fn convert_message(m: &ChatMessage) -> Value {
 
 /// Builds the request body.
 pub fn build_body(model: &str, req: &LlmRequest, supports_tools: bool) -> Value {
-    let mut messages = vec![json!({"role": "system", "content": req.system})];
+    // No empty system message: some chat templates fail on one.
+    let mut messages = if req.system.is_empty() {
+        Vec::new()
+    } else {
+        vec![json!({"role": "system", "content": req.system})]
+    };
     messages.extend(req.messages.iter().map(convert_message));
     let mut body = json!({
         "model": model,
@@ -167,8 +172,57 @@ pub(crate) async fn error_from_response(resp: reqwest::Response) -> AppError {
     ))
 }
 
-/// Streams a chat completion.
+/// True for an error from the server's chat template (for example Foundry Local's template
+/// engine on SmolLM3: `Unknown method: replace at row 23, column 48`), as opposed to the model.
+pub fn is_template_error(e: &AppError) -> bool {
+    let m = e.to_string();
+    m.contains("Unknown method")
+        || (m.contains("at row") && m.contains("column") && m.contains("{%"))
+}
+
+/// The same request with the system text put at the start of the first user message, for a
+/// chat template that cannot handle a system message.
+pub fn without_system(req: &LlmRequest) -> LlmRequest {
+    let mut out = req.clone();
+    out.system = String::new();
+    if let Some(first) = out.messages.iter_mut().find(|m| m.role == Role::User) {
+        first.content = format!("{}\n\n{}", req.system.trim(), first.content);
+    } else {
+        out.messages
+            .insert(0, super::types::ChatMessage::user(req.system.clone()));
+    }
+    out
+}
+
+/// Streams a chat completion. When the server's chat template fails before any text came (some
+/// models in Foundry Local cannot take a system message), it is asked once more with the system
+/// text in the first user message. Other errors and other models are not affected.
 pub async fn chat_stream(
+    client: &reqwest::Client,
+    p: &ProviderConfig,
+    key: Option<&str>,
+    req: &LlmRequest,
+    cancel: &CancellationToken,
+    on_text: &mut (dyn FnMut(&str) + Send),
+) -> AppResult<LlmResponse> {
+    let mut sent = false;
+    let first = {
+        let mut counted = |t: &str| {
+            sent = true;
+            on_text(t);
+        };
+        stream_once(client, p, key, req, cancel, &mut counted).await
+    };
+    match first {
+        Err(e) if !sent && !req.system.is_empty() && is_template_error(&e) => {
+            tracing::info!("chat template failed with a system message; trying without: {e}");
+            stream_once(client, p, key, &without_system(req), cancel, on_text).await
+        }
+        other => other,
+    }
+}
+
+async fn stream_once(
     client: &reqwest::Client,
     p: &ProviderConfig,
     key: Option<&str>,
@@ -242,6 +296,33 @@ pub async fn list_models(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_template_error_is_told_apart_and_the_system_text_moves_into_the_question() {
+        let e = AppError::Provider(
+            "Provider returned 500: Unknown method: replace at row 23, column 48: {%- endif -%}"
+                .into(),
+        );
+        assert!(is_template_error(&e));
+        assert!(!is_template_error(&AppError::Provider(
+            "Stream error: timed out".into()
+        )));
+        let req = LlmRequest {
+            system: "Fix the text.".into(),
+            messages: vec![ChatMessage::user("Teh cat")],
+            tools: vec![],
+            temperature: 0.3,
+        };
+        let body = build_body("m", &without_system(&req), false);
+        assert_eq!(body["messages"].as_array().unwrap().len(), 1);
+        assert_eq!(body["messages"][0]["role"], "user");
+        assert_eq!(body["messages"][0]["content"], "Fix the text.\n\nTeh cat");
+        // The normal request still has its system message.
+        assert_eq!(
+            build_body("m", &req, false)["messages"][0]["role"],
+            "system"
+        );
+    }
     use crate::ai::providers::types::ToolDef;
 
     #[test]

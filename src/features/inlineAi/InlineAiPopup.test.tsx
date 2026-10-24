@@ -80,6 +80,7 @@ describe("InlineAiPopup", () => {
       />,
     );
     expect(await screen.findByRole("status")).toHaveTextContent("Check: 4040 is gone");
+    expect(screen.getByTestId("ai-mistakes")).toHaveTextContent("AI can make mistakes");
     await userEvent.setup().click(screen.getByRole("button", { name: /Accept/ }));
     expect(onAccept).toHaveBeenCalledWith("Call the desk if it fails.", "Rewrite: clearer");
   });

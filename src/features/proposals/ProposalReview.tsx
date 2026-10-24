@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { canApply, useProposalStore } from "@/stores/proposalStore";
 import { badgeFor, ProposalDetail } from "./ProposalDetail";
 import { countByKind, groupProposals, type KindFilter } from "./proposalGroups";
+import { AiMistakesNote } from "@/components/AiMistakesNote";
 
 const KINDS: { id: KindFilter; label: string }[] = [
   { id: "all", label: "All" },
@@ -169,7 +170,8 @@ export function ProposalReview() {
             <p className="p-4 text-sm text-muted-foreground">Nothing to show.</p>
           )}
         </div>
-        <DialogFooter className="border-t px-5 py-3">
+        <DialogFooter className="items-center border-t px-5 py-3">
+          <AiMistakesNote className="mr-auto" />
           <Button
             variant="ghost"
             disabled={applying}
