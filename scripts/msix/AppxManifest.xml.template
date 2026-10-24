@@ -20,7 +20,7 @@
   </Properties>
 
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26226.0" />
     <!-- The Windows App SDK runtime, for Phi Silica (Microsoft.Windows.AI.Text). The Store installs it with Mimer. -->
     <PackageDependency Name="Microsoft.WindowsAppRuntime.2" MinVersion="{{WINAPPSDK_VERSION}}" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
   </Dependencies>
@@ -48,7 +48,8 @@
     <rescap:Capability Name="runFullTrust" />
     <!-- For downloads (the built-in AI's models). -->
     <Capability Name="internetClient" />
-    <!-- Phi Silica, the model built into Windows on Copilot+ PCs. -->
+    <!-- Phi Silica, the model built into Windows on Copilot+ PCs. Windows only grants it when
+         MaxVersionTested above is 10.0.26226.0 or later. -->
     <systemai:Capability Name="systemAIModels" />
   </Capabilities>
 </Package>

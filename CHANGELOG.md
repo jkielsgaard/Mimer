@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-10-24
+
+### Fixed
+
+- **Focus: the buttons under the timer ran out of the window.** "Done, next step" now has its own line, with the timer and Help me start under it.
+- **Phi Silica said "the package lacks a permission" (CapabilityMissing).** The Store package now declares that it is tested with a Windows version new enough for Windows to grant the `systemAIModels` permission.
+
 ## [0.14.0] - 2026-10-23
 
 ### Added
