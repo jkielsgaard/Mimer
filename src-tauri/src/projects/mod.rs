@@ -22,9 +22,13 @@ pub struct Project {
     pub name: String,
     pub folder: String,
     pub instructions: String,
-    /// A local provider for this project (`None` = the default). A cloud provider is ignored:
-    /// notes only ever go to local AI (see `ai::router`).
+    /// The provider for this project (`None` = the default). A cloud provider is only used when
+    /// it is the cloud AI the user has turned on (see `ai::router`).
     pub provider_id: Option<String>,
+    /// Never send this project's notes to a cloud AI, even when one is turned on. (Also read from
+    /// project files written before 0.7, which had the same field.)
+    #[serde(default)]
+    pub local_only: bool,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -92,6 +96,7 @@ mod tests {
             folder: folder.into(),
             instructions: String::new(),
             provider_id: None,
+            local_only: false,
             created_at: now(),
             updated_at: now(),
         }
@@ -112,7 +117,7 @@ mod tests {
 
     #[test]
     fn project_files_from_older_versions_still_load() {
-        // Versions before 0.7.0 stored a `localOnly` flag. It is ignored now.
+        // Versions before 0.7.0 stored a `localOnly` flag; from 0.15 it means the same again.
         let d = tempfile::tempdir().unwrap();
         let dir = d.path().join(PROJECTS_DIR);
         std::fs::create_dir_all(&dir).unwrap();
@@ -125,11 +130,16 @@ mod tests {
         let loaded = load_all(d.path());
         assert_eq!(loaded.len(), 1);
         assert_eq!(loaded[0].name, "Old");
-        save(d.path(), &loaded[0]).unwrap();
-        let text = std::fs::read_to_string(dir.join("old.json")).unwrap();
+        assert!(loaded[0].local_only, "the old flag is kept");
+        std::fs::write(
+            dir.join("old.json"),
+            r#"{"schemaVersion":1,"id":"old","name":"Old","folder":"Work","instructions":"",
+                "providerId":null,"createdAt":"","updatedAt":""}"#,
+        )
+        .unwrap();
         assert!(
-            !text.contains("localOnly"),
-            "the old flag is dropped on save"
+            !load_all(d.path())[0].local_only,
+            "missing means not local only"
         );
     }
 }

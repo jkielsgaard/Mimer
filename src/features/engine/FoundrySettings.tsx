@@ -3,7 +3,18 @@ import type { Settings } from "@/bindings/Settings";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { formatBytes } from "@/lib/bytes";
+import { openLink } from "@/lib/openLink";
+import { cn } from "@/lib/utils";
 import { useFoundryStore } from "@/stores/foundryStore";
+import {
+  filterModels,
+  FOUNDRY_MODELS_URL,
+  goodFor,
+  NO_FILTER,
+  readsLabel,
+  type ModelFilter,
+} from "./foundryModels";
+import { ModelFilters } from "./ModelFilters";
 import { ProblemPanel } from "./ProblemPanel";
 
 interface Props {
@@ -26,6 +37,7 @@ export function FoundrySettings({ draft, onChange }: Props) {
   const [chosen, setChosen] = useState<string | null>(null);
   const [useForMimer, setUseForMimer] = useState(true);
   const [confirmAll, setConfirmAll] = useState(false);
+  const [filter, setFilter] = useState<ModelFilter>(NO_FILTER);
 
   useEffect(() => {
     void useFoundryStore.getState().load();
@@ -49,8 +61,11 @@ export function FoundrySettings({ draft, onChange }: Props) {
   if (!status) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   const awake = status.state === "awake" || status.state === "waking";
-  const alias = chosen ?? (draft.ai.foundry.model || (catalog?.[0]?.alias ?? ""));
+  const installedAliases = new Set(status.installed.map((m) => m.alias));
+  const shown = catalog ? filterModels(catalog, filter, installedAliases) : [];
+  const alias = chosen ?? (draft.ai.foundry.model || (shown[0]?.alias ?? ""));
   const model = catalog?.find((m) => m.alias === alias);
+  const toolsOf = (a: string) => catalog?.find((m) => m.alias === a)?.tools ?? true;
   const downloaded = status.installed.some((m) => m.alias === alias);
 
   return (
@@ -83,8 +98,8 @@ export function FoundrySettings({ draft, onChange }: Props) {
       )}
 
       <section className="flex flex-col gap-2" aria-label="Model">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold">1. Model</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-sm font-semibold">1. Choose a model</h3>
           {available && (
             <Button
               size="sm"
@@ -110,14 +125,26 @@ export function FoundrySettings({ draft, onChange }: Props) {
               Find my hardware
             </Button>
           )}
+          <span className="grow" />
+          <button
+            type="button"
+            className="text-xs text-primary underline-offset-2 hover:underline"
+            onClick={() => {
+              void openLink(FOUNDRY_MODELS_URL);
+            }}
+          >
+            All Foundry Local models at Microsoft ↗
+          </button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Only models that can call tools are shown, because searching and changing notes needs
-          them. “Runs on” says where Foundry Local runs the model on this computer. Until the
-          hardware parts are downloaded, only the processor is listed: press{" "}
-          <strong>Find my hardware</strong> to download them (no model) and see what your graphics
-          card or neural processor can run.
+          Every chat model Foundry Local can run on this computer. Models for speech or images are
+          left out, because Mimer only writes text. A model without tools can fix, rewrite and
+          answer about the open note, but cannot search the vault or run skills. “Runs on” says
+          where Foundry Local runs it; until the hardware parts are downloaded only the processor is
+          listed: press <strong>Find my hardware</strong> to see what your graphics card or neural
+          processor can run.
         </p>
+        {catalog && catalog.length > 0 && <ModelFilters filter={filter} onChange={setFilter} />}
         {catalogLoading && (
           <p className="text-xs text-muted-foreground" role="status">
             Reading the model list from Microsoft… this can take a minute.
@@ -129,12 +156,24 @@ export function FoundrySettings({ draft, onChange }: Props) {
           </p>
         )}
         {catalog && catalog.length === 0 && (
-          <p className="text-xs text-muted-foreground">No model with tool support was found.</p>
+          <p className="text-xs text-muted-foreground">No chat model was found.</p>
         )}
-        {catalog && catalog.length > 0 && (
-          <ul role="radiogroup" aria-label="Foundry Local models" className="flex flex-col gap-1">
-            {catalog.map((m) => {
-              const has = status.installed.some((x) => x.alias === m.alias);
+        {catalog && catalog.length > 0 && shown.length === 0 && (
+          <p className="text-xs text-muted-foreground" data-testid="foundry-no-match">
+            No model matches. Change the filters, or check the name on Microsoft's list.
+          </p>
+        )}
+        {shown.length > 0 && (
+          <ul role="radiogroup" aria-label="Foundry Local models" className="flex flex-col gap-1.5">
+            {shown.map((m) => {
+              const has = installedAliases.has(m.alias);
+              const facts = [
+                m.sizeMb > 0 ? formatBytes(m.sizeMb * MB) : "size unknown",
+                `runs on ${m.device || "?"}`,
+                readsLabel(m.contextTokens),
+                m.license,
+                has ? "downloaded" : null,
+              ].filter((x) => x !== null && x !== "");
               return (
                 <li key={m.alias}>
                   <button
@@ -142,18 +181,34 @@ export function FoundrySettings({ draft, onChange }: Props) {
                     role="radio"
                     aria-checked={alias === m.alias}
                     disabled={busy}
-                    className={`flex w-full items-center gap-2 rounded border px-2 py-1.5 text-left text-sm hover:bg-muted ${alias === m.alias ? "border-primary bg-accent" : ""}`}
+                    className={cn(
+                      "flex w-full flex-col gap-0.5 rounded-md border px-3 py-2 text-left text-sm hover:bg-muted",
+                      alias === m.alias && "border-primary bg-accent",
+                    )}
                     onClick={() => {
                       setChosen(m.alias);
                     }}
                   >
-                    <span className="min-w-0 flex-1 truncate">
-                      {m.name}
-                      {has && <span className="ml-2 text-xs text-success">downloaded</span>}
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold">{m.name}</span>
+                      {m.publisher && (
+                        <span className="text-xs text-muted-foreground">{m.publisher}</span>
+                      )}
+                      <span className="grow" />
+                      <span
+                        className={cn(
+                          "rounded-full px-2 text-[11px] font-semibold",
+                          m.tools
+                            ? "bg-success/15 text-success"
+                            : "border border-warning text-warning",
+                        )}
+                      >
+                        {m.tools ? "Can use tools" : "No tools"}
+                      </span>
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatBytes(m.sizeMb * MB)} · runs on {m.device || "?"}
-                      {m.license ? ` · ${m.license}` : ""}
+                    <span className="text-xs text-foreground/80">{goodFor(m).text}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {facts.join(" · ")}
                     </span>
                   </button>
                 </li>
@@ -227,7 +282,7 @@ export function FoundrySettings({ draft, onChange }: Props) {
                   ...draft,
                   ai: {
                     ...draft.ai,
-                    foundry: { model: alias },
+                    foundry: { model: alias, tools: toolsOf(alias) },
                     defaultProviderId: useForMimer ? "foundry" : draft.ai.defaultProviderId,
                   },
                 });
@@ -261,7 +316,13 @@ export function FoundrySettings({ draft, onChange }: Props) {
                     checked={draft.ai.foundry.model === m.alias}
                     disabled={busy}
                     onChange={() => {
-                      onChange({ ...draft, ai: { ...draft.ai, foundry: { model: m.alias } } });
+                      onChange({
+                        ...draft,
+                        ai: {
+                          ...draft.ai,
+                          foundry: { model: m.alias, tools: toolsOf(m.alias) },
+                        },
+                      });
                     }}
                   />
                   <span className="min-w-0 flex-1 truncate">

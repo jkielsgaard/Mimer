@@ -27,11 +27,25 @@ fn task(req: &InlineRequest) -> String {
     }
 }
 
-/// Builds the system prompt and the single user message for an inline request.
+/// Which language to answer in. A custom task (such as Translate to English) may name another
+/// language, and then the task wins: "answer in the language of the text" made small models
+/// return the text untranslated.
+fn language_rule(req: &InlineRequest) -> &'static str {
+    if req.command == InlineCommand::Custom {
+        "Write in the language the task asks for. If it names none, keep the language of the text."
+    } else {
+        "Answer in the language of the text."
+    }
+}
+
+/// Builds the system prompt and the single user message for an inline request. `small` is for a
+/// small model (Phi Silica): one short message with the task first and the text last, without
+/// the global and project instructions, which a small model mixes up with the task.
 pub fn build_messages(
     req: &InlineRequest,
     global: &str,
     project: Option<&projects::Project>,
+    small: bool,
 ) -> (String, ChatMessage) {
     if req.command == InlineCommand::RefineInstructions {
         let system = "You edit the instructions given to an AI writing assistant in a Markdown notes app. \
@@ -49,8 +63,18 @@ pub fn build_messages(
         );
         return (system, ChatMessage::user(user));
     }
+    if small {
+        let user = format!(
+            "{}\n{}\n{ONLY_REPLACEMENT}\n\nText:\n{}",
+            task(req),
+            language_rule(req),
+            req.text
+        );
+        return (String::new(), ChatMessage::user(user));
+    }
     let mut system = format!(
-        "You are the writing assistant inside Mimer, a Markdown note-taking app. The user sends text; you transform it.\nTask: {}\n{ONLY_REPLACEMENT}\nAnswer in the language of the text.",
+        "You are the writing assistant inside Mimer, a Markdown note-taking app. The user sends text; you transform it.\n{ONLY_REPLACEMENT}\n{}\nTask: {}",
+        language_rule(req),
         task(req)
     );
     if !global.trim().is_empty() {
@@ -82,19 +106,22 @@ pub async fn run_inline(
         (Ok(v), Some(p)) => projects::for_path(&v.project_list(), p).cloned(),
         _ => None,
     };
-    // Inline commands read notes, so only a local provider is accepted. The provider override
-    // comes from the project dialog (unsaved settings) and is checked here, not in the UI.
-    let provider = match req.provider_id.as_deref() {
-        Some(id) => router::select_local(&settings, Some(id))?,
-        None => router::select_for_project(&settings, project.as_ref())?,
-    };
+    // Inline commands read notes, so the router decides (local, or the cloud AI the user turned
+    // on). The provider override comes from the project dialog and is checked here, not in the UI.
+    let provider = router::select_notes(&settings, project.as_ref(), req.provider_id.as_deref())?;
     // The built-in AI must be awake (loaded) before anything is sent to it.
     crate::engine::service::require_awake(&state, provider.config())?;
     crate::foundry::service::require_awake(&state, provider.config())?;
     crate::engine::service::touch(&state);
     crate::foundry::service::touch(&state);
     let key = keychain::get_key(&provider.config().id);
-    let (system, user) = build_messages(&req, &settings.ai.global_instructions, project.as_ref());
+    let small = provider.config().kind == crate::settings::ProviderKind::PhiSilica;
+    let (system, user) = build_messages(
+        &req,
+        &settings.ai.global_instructions,
+        project.as_ref(),
+        small,
+    );
     let llm = LlmRequest {
         system,
         messages: vec![user],
@@ -190,12 +217,53 @@ mod tests {
             InlineCommand::Expand,
             InlineCommand::RestructureList,
         ] {
-            let (sys, user) = build_messages(&req(c, None), "", None);
+            let (sys, user) = build_messages(&req(c, None), "", None, false);
             assert!(sys.contains("Return ONLY the replacement text"));
             assert_eq!(user.content, "hello wrld");
         }
-        let (sys, _) = build_messages(&req(InlineCommand::Custom, Some("make it rhyme")), "", None);
+        let (sys, _) = build_messages(
+            &req(InlineCommand::Custom, Some("make it rhyme")),
+            "",
+            None,
+            false,
+        );
         assert!(sys.contains("make it rhyme"));
+    }
+
+    #[test]
+    fn a_translation_is_not_told_to_keep_the_language_of_the_text() {
+        let translate = "Translate the text into English.";
+        let (sys, _) = build_messages(
+            &req(InlineCommand::Custom, Some(translate)),
+            "",
+            None,
+            false,
+        );
+        assert!(!sys.contains("Answer in the language of the text"), "{sys}");
+        assert!(sys.ends_with(&format!(
+            "Task: Apply this instruction to the text: {translate}"
+        )));
+        let (sys, _) = build_messages(&req(InlineCommand::FixSpelling, None), "", None, false);
+        assert!(sys.contains("Answer in the language of the text"));
+    }
+
+    #[test]
+    fn a_small_model_gets_one_short_message_with_the_text_last() {
+        let (sys, user) = build_messages(
+            &req(
+                InlineCommand::Custom,
+                Some("Translate the text into English."),
+            ),
+            "Always be formal",
+            None,
+            true,
+        );
+        assert!(sys.is_empty());
+        assert!(user
+            .content
+            .starts_with("Apply this instruction to the text: Translate"));
+        assert!(user.content.ends_with("Text:\nhello wrld"));
+        assert!(!user.content.contains("formal"));
     }
 
     #[test]
@@ -204,6 +272,7 @@ mod tests {
             &req(InlineCommand::RefineInstructions, Some("stricter")),
             "",
             None,
+            false,
         );
         assert!(user.content.contains("hello wrld") && user.content.contains("stricter"));
     }

@@ -181,6 +181,9 @@ async fn job(o: Options) -> Result<(), String> {
                     "device": device,
                     "license": i.license,
                     "cached": i.cached,
+                    "publisher": i.publisher,
+                    "task": i.task,
+                    "contextTokens": i.context_length,
                 }));
             }
             emit(&json!({"type": "catalog", "models": list}));

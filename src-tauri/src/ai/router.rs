@@ -1,4 +1,6 @@
-//! Picks the provider for a request. Notes only ever go to local providers.
+//! Picks the provider for a request. Notes go to an AI on this computer, or to the one cloud AI
+//! the user has turned on with "I understand that my notes are sent to …" (never for a project
+//! marked Local AI only). Embeddings only ever use a local provider.
 
 use crate::error::{AppError, AppResult};
 use crate::projects::Project;
@@ -10,20 +12,20 @@ pub trait Approved {
     fn config(&self) -> &ProviderConfig;
 }
 
-/// A local provider (loopback address). The only kind the notes AI, inline commands, project
-/// help and embeddings accept. Can only be created by [`select_local`] or [`select_for_project`].
+/// A provider that may receive notes: local (loopback address, or Windows' own model), or the
+/// cloud AI the user agreed to. Can only be created by the functions in this module.
 #[derive(Debug, Clone)]
-pub struct LocalProvider {
+pub struct NotesProvider {
     config: ProviderConfig,
 }
 
-impl Approved for LocalProvider {
+impl Approved for NotesProvider {
     fn config(&self) -> &ProviderConfig {
         &self.config
     }
 }
 
-impl LocalProvider {
+impl NotesProvider {
     /// The provider configuration that was approved for this request.
     pub fn config(&self) -> &ProviderConfig {
         &self.config
@@ -36,7 +38,7 @@ fn is_local(config: &ProviderConfig) -> bool {
 
 /// Chooses a local provider. `provider_id` of `None` means the default. A cloud provider is
 /// refused with `ProviderBlocked`, whatever the settings file claims about its location.
-pub fn select_local(settings: &Settings, provider_id: Option<&str>) -> AppResult<LocalProvider> {
+pub fn select_local(settings: &Settings, provider_id: Option<&str>) -> AppResult<NotesProvider> {
     let id = provider_id.unwrap_or(&settings.ai.default_provider_id);
     let config = settings
         .provider(id)
@@ -48,19 +50,56 @@ pub fn select_local(settings: &Settings, provider_id: Option<&str>) -> AppResult
             config.name
         )));
     }
-    Ok(LocalProvider { config })
+    Ok(NotesProvider { config })
 }
 
-/// Chooses the local provider for an optional active project. A project provider that is not
-/// local (for example from an older version) is ignored and the default is used.
+/// Chooses the provider for an optional active project. A project provider that may not be used
+/// (a cloud AI the user did not turn on, or one that does not exist) is ignored and Mimer's AI
+/// is used.
 pub fn select_for_project(
     settings: &Settings,
     project: Option<&Project>,
-) -> AppResult<LocalProvider> {
+) -> AppResult<NotesProvider> {
+    select_notes(settings, project, None)
+}
+
+/// Chooses the provider that receives notes: `provider_id`, else the project's own, else Mimer's
+/// AI. A cloud AI is only accepted when the user agreed to it, and never for a project marked
+/// Local AI only; such a project falls back to the first AI on this computer.
+pub fn select_notes(
+    settings: &Settings,
+    project: Option<&Project>,
+    provider_id: Option<&str>,
+) -> AppResult<NotesProvider> {
+    let local_only = project.is_some_and(|p| p.local_only);
+    let allowed = |c: &ProviderConfig| is_local(c) || (!local_only && settings.cloud_consented(c));
     let own = project
         .and_then(|p| p.provider_id.as_deref())
-        .filter(|id| settings.provider(id).is_some_and(is_local));
-    select_local(settings, own)
+        .filter(|id| settings.provider(id).is_some_and(allowed));
+    let id = provider_id
+        .or(own)
+        .unwrap_or(&settings.ai.default_provider_id);
+    let config = settings
+        .provider(id)
+        .cloned()
+        .ok_or_else(|| AppError::Provider(format!("AI provider “{id}” is not configured")))?;
+    if allowed(&config) {
+        return Ok(NotesProvider { config });
+    }
+    if local_only {
+        if let Some(first) = settings.ai.providers.iter().find(|p| is_local(p)) {
+            return Ok(NotesProvider {
+                config: first.clone(),
+            });
+        }
+        return Err(AppError::ProviderBlocked(
+            "This project is marked Local AI only, and there is no AI on this computer. Set one up under Settings → AI.".into(),
+        ));
+    }
+    Err(AppError::ProviderBlocked(format!(
+        "“{}” is a cloud AI. Your notes are only sent to it after you turn it on under Settings → AI. Choose an AI on this computer, or turn it on there.",
+        config.name
+    )))
 }
 
 #[cfg(test)]
@@ -103,6 +142,7 @@ mod tests {
             folder: "P".into(),
             instructions: String::new(),
             provider_id: provider.map(str::to_string),
+            local_only: false,
             created_at: String::new(),
             updated_at: String::new(),
         }
@@ -185,6 +225,69 @@ mod tests {
         let s = settings();
         let r = select_for_project(&s, Some(&project(Some("cloud")))).unwrap();
         assert_eq!(r.config().id, "lmstudio-default");
+    }
+
+    fn with_cloud(s: &mut Settings) {
+        s.ai.providers.push(ProviderConfig {
+            id: "openai".into(),
+            kind: ProviderKind::OpenAiCompatible,
+            name: "OpenAI".into(),
+            base_url: "https://api.openai.com/v1".into(),
+            model: "m".into(),
+            location: Location::Cloud,
+            supports_tools: true,
+            context_tokens: 100_000,
+        });
+    }
+
+    #[test]
+    fn a_cloud_ai_is_only_used_after_the_user_agreed_to_it() {
+        let mut s = settings();
+        with_cloud(&mut s);
+        s.ai.default_provider_id = "openai".into();
+        assert!(matches!(
+            select_for_project(&s, None),
+            Err(AppError::ProviderBlocked(_))
+        ));
+        s.ai.cloud_consent = Some(crate::settings::CloudConsent {
+            provider_id: "openai".into(),
+            base_url: "https://api.openai.com/v1".into(),
+            agreed_at: "2026-10-24T10:00:00Z".into(),
+        });
+        assert_eq!(select_for_project(&s, None).unwrap().config().id, "openai");
+        // Embeddings stay local whatever the user agreed to.
+        assert!(matches!(
+            select_local(&s, Some("openai")),
+            Err(AppError::ProviderBlocked(_))
+        ));
+        // The agreement is for that address only.
+        s.ai.providers.last_mut().unwrap().base_url = "https://elsewhere.example.com/v1".into();
+        assert!(matches!(
+            select_for_project(&s, None),
+            Err(AppError::ProviderBlocked(_))
+        ));
+    }
+
+    #[test]
+    fn a_local_only_project_never_uses_the_cloud_ai() {
+        let mut s = settings();
+        with_cloud(&mut s);
+        s.ai.default_provider_id = "openai".into();
+        s.ai.cloud_consent = Some(crate::settings::CloudConsent {
+            provider_id: "openai".into(),
+            base_url: "https://api.openai.com/v1".into(),
+            agreed_at: String::new(),
+        });
+        let mut p = project(Some("openai"));
+        p.local_only = true;
+        let chosen = select_for_project(&s, Some(&p)).unwrap();
+        assert_eq!(chosen.config().effective_location(), Location::Local);
+        s.ai.providers
+            .retain(|c| c.effective_location() == Location::Cloud);
+        assert!(matches!(
+            select_for_project(&s, Some(&p)),
+            Err(AppError::ProviderBlocked(_))
+        ));
     }
 
     #[test]

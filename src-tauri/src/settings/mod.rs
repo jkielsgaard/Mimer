@@ -231,12 +231,24 @@ impl Default for BuiltInSettings {
 }
 
 /// Settings of Foundry Local, the second built-in AI.
-#[derive(Debug, Clone, Default, Serialize, Deserialize, TS)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase", default)]
 #[ts(export)]
 pub struct FoundrySettings {
     /// The alias of the model that is woken (for example `qwen3-4b`); empty until one is downloaded.
     pub model: String,
+    /// Whether that model can call tools. Without them the chat has no vault search or skills.
+    pub tools: bool,
+}
+
+impl Default for FoundrySettings {
+    fn default() -> Self {
+        Self {
+            model: String::new(),
+            // Before 0.15 only models with tools could be chosen.
+            tools: true,
+        }
+    }
 }
 
 /// The provider that stands for Foundry Local.
@@ -323,6 +335,21 @@ pub struct AiSettings {
     /// Let the AI check its own answer to a text command before it is shown. Off by default: it
     /// takes about twice as long, which matters most with a large model.
     pub check_answers: bool,
+    /// The cloud AI the user agreed to send notes to, when it is Mimer's AI. `None`: notes only
+    /// go to an AI on this computer.
+    pub cloud_consent: Option<CloudConsent>,
+}
+
+/// The user's "I understand that my notes are sent to …" for one cloud provider at one address.
+/// It no longer counts when the address changes or another AI is chosen.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct CloudConsent {
+    pub provider_id: String,
+    pub base_url: String,
+    /// When the user agreed (RFC 3339).
+    pub agreed_at: String,
 }
 
 /// The provider Mimer uses when nothing has been chosen: the built-in AI where it can be
@@ -346,6 +373,7 @@ impl Default for AiSettings {
             embeddings: EmbeddingSettings::default(),
             builtin: BuiltInSettings::default(),
             foundry: FoundrySettings::default(),
+            cloud_consent: None,
             check_answers: false,
             providers: vec![
                 builtin_provider(BuiltInSettings::default().context_tokens),
@@ -474,7 +502,7 @@ impl Settings {
             p.kind = ProviderKind::FoundryLocal;
             p.name = foundry_provider().name;
             p.location = Location::Local;
-            p.supports_tools = true;
+            p.supports_tools = self.ai.foundry.tools;
             if !is_loopback_url(&p.base_url) {
                 p.base_url = foundry_provider().base_url;
             }
@@ -525,10 +553,36 @@ impl Settings {
 
     /// Keeps notes local: the default provider must be local. A cloud default from an older
     /// version is replaced by the first local provider.
+    /// True when `p` is the cloud AI the user agreed to, at the address they agreed to. Only an
+    /// OpenAI-compatible provider can be one; Mimer has no Anthropic client.
+    pub fn cloud_consented(&self, p: &ProviderConfig) -> bool {
+        p.kind == ProviderKind::OpenAiCompatible
+            && p.effective_location() == Location::Cloud
+            && self
+                .ai
+                .cloud_consent
+                .as_ref()
+                .is_some_and(|c| c.provider_id == p.id && c.base_url == p.base_url)
+    }
+
+    /// Mimer's AI is local, or the cloud AI the user agreed to. The agreement only stands while
+    /// that cloud AI is Mimer's AI: choosing another one asks again next time.
     fn separate_local_and_cloud(&mut self) {
+        let default = self.ai.default_provider_id.clone();
+        let consent_holds = self
+            .ai
+            .cloud_consent
+            .as_ref()
+            .is_some_and(|c| c.provider_id == default)
+            && self
+                .provider(&default)
+                .is_some_and(|p| self.cloud_consented(p));
+        if !consent_holds {
+            self.ai.cloud_consent = None;
+        }
         let is_local = |s: &Settings, id: &str| {
             s.provider(id)
-                .is_some_and(|p| p.effective_location() == Location::Local)
+                .is_some_and(|p| p.effective_location() == Location::Local || s.cloud_consented(p))
         };
         if !is_local(self, &self.ai.default_provider_id.clone()) {
             if let Some(first) = self
@@ -784,6 +838,35 @@ mod tests {
             s.provider("foundry").unwrap().name,
             "Built-in AI · Foundry Local"
         );
+    }
+
+    #[test]
+    fn the_cloud_ai_stays_mimers_only_while_the_agreement_holds() {
+        let mut s = Settings::default();
+        s.ai.providers.push(provider(
+            "openai",
+            ProviderKind::OpenAiCompatible,
+            "https://api.openai.com/v1",
+        ));
+        s.ai.default_provider_id = "openai".into();
+        s.normalize();
+        assert_ne!(
+            s.ai.default_provider_id, "openai",
+            "no agreement: a local AI is used"
+        );
+        s.ai.default_provider_id = "openai".into();
+        s.ai.cloud_consent = Some(CloudConsent {
+            provider_id: "openai".into(),
+            base_url: "https://api.openai.com/v1".into(),
+            agreed_at: "2026-10-24T10:00:00Z".into(),
+        });
+        s.normalize();
+        assert_eq!(s.ai.default_provider_id, "openai");
+        assert!(s.ai.cloud_consent.is_some());
+        // Choosing another AI drops the agreement, so the warning comes again next time.
+        s.ai.default_provider_id = "lmstudio-default".into();
+        s.normalize();
+        assert!(s.ai.cloud_consent.is_none());
     }
 
     #[test]

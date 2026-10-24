@@ -270,7 +270,7 @@ fn tool_call(name: &str, args: serde_json::Value) -> ToolCall {
 /// The instruction for rewriting one note.
 fn rewrite_task(instruction: &str) -> String {
     format!(
-        "You are the editing assistant inside Mimer, a Markdown note-taking app.\nTask: {}\nYou receive ONE note. Return the COMPLETE new note and nothing else: no explanation, no preamble, no code fences. Keep the front matter, the [[wiki-links]] and the #tags unless the task says otherwise. Never invent facts. Answer in the language of the note.",
+        "You are the editing assistant inside Mimer, a Markdown note-taking app.\nTask: {}\nYou receive ONE note. Return the COMPLETE new note and nothing else: no explanation, no preamble, no code fences. Keep the front matter, the [[wiki-links]] and the #tags unless the task says otherwise. Never invent facts. Write in the language the task asks for; if it names none, keep the language of the note.",
         instruction.trim()
     )
 }
@@ -293,7 +293,7 @@ fn sort_task(instruction: &str, used: &[String]) -> String {
 /// The instruction for writing one note from several.
 fn create_task(instruction: &str) -> String {
     format!(
-        "You are the writing assistant inside Mimer, a Markdown note-taking app.\nTask: {}\nYou receive several source notes. Write ONE new note. The first line must be a title as `# Title`. Use only information that is in the source notes, and link a source with [[Note name]] where it helps. Return only the note: no preamble and no code fences. Answer in the language of the notes.",
+        "You are the writing assistant inside Mimer, a Markdown note-taking app.\nTask: {}\nYou receive several source notes. Write ONE new note. The first line must be a title as `# Title`. Use only information that is in the source notes, and link a source with [[Note name]] where it helps. Return only the note: no preamble and no code fences. Write in the language the task asks for; if it names none, use the language of the notes.",
         instruction.trim()
     )
 }
@@ -301,7 +301,7 @@ fn create_task(instruction: &str) -> String {
 /// One call to the model with a system and a user message, and the whole answer back.
 async fn ask_model(
     client: &reqwest::Client,
-    provider: &router::LocalProvider,
+    provider: &router::NotesProvider,
     key: Option<&str>,
     cancel: &CancellationToken,
     system: String,
@@ -453,7 +453,7 @@ struct Run<'a> {
     /// Progress goes here; `None` for a preview.
     channel: Option<&'a Channel<ChatEvent>>,
     cancel: &'a CancellationToken,
-    provider: router::LocalProvider,
+    provider: router::NotesProvider,
     key: Option<String>,
     client: reqwest::Client,
     vault: std::sync::Arc<OpenVault>,

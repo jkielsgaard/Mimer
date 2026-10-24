@@ -81,7 +81,7 @@ const VERB: Record<ChipAction, string> = {
 
 /** The facts about the chosen AI that the chip shows, for the chip and for menus that want them. */
 export function useAiChip() {
-  const { provider } = useActiveAi();
+  const { provider, cloud } = useActiveAi();
   const settings = useSettingsStore((s) => s.settings);
   const working = useChatStore((s) => s.streaming);
   const engine = useEngineStore((s) => s.status);
@@ -105,7 +105,7 @@ export function useAiChip() {
     model,
     device,
   });
-  return { provider, isBuiltin, isFoundry, model, device, status, state };
+  return { provider, isBuiltin, isFoundry, model, device, status, state, cloud };
 }
 
 /**
@@ -113,7 +113,7 @@ export function useAiChip() {
  * needs doing (Wake, Stop, Fix). Clicking it opens the details: model, device, privacy.
  */
 export function AiChip() {
-  const { provider, isBuiltin, isFoundry, model, device, status, state } = useAiChip();
+  const { provider, isBuiltin, isFoundry, model, device, status, state, cloud } = useAiChip();
   const [test, setTest] = useState<{ ok: boolean; message: string } | null>(null);
 
   const act = (): void => {
@@ -160,6 +160,14 @@ export function AiChip() {
           <span className="truncate" role={state.tone === "busy" ? "status" : undefined}>
             {state.label}
           </span>
+          {cloud && (
+            <span
+              data-testid="cloud-badge"
+              className="shrink-0 rounded-full border border-warning px-1.5 text-[11px] font-semibold text-warning"
+            >
+              Cloud AI
+            </span>
+          )}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" side="top" className="w-80 p-3 text-xs">
           <div className="flex items-center gap-2">
@@ -188,7 +196,11 @@ export function AiChip() {
             <dt className="text-muted-foreground">Privacy</dt>
             <dd className="flex items-start gap-1.5 font-medium">
               <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-              <span>Local only. Your notes never leave this computer.</span>
+              <span>
+                {cloud
+                  ? `Cloud AI. Your notes are sent to ${provider?.name ?? "it"}; you turned this on under Settings → AI.`
+                  : "Local only. Your notes never leave this computer."}
+              </span>
             </dd>
           </dl>
           <DropdownMenuSeparator />

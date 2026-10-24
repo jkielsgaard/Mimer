@@ -26,8 +26,9 @@ const settings: Settings = {
   ai: {
     defaultProviderId: "lm",
     checkAnswers: false,
+    cloudConsent: null,
     builtin: DEFAULT_BUILTIN,
-    foundry: { model: "" },
+    foundry: { model: "", tools: true },
     baseInstruction: "",
     globalInstructions: "",
     embeddings: { enabled: false, providerId: "lm", model: "" },
@@ -57,9 +58,9 @@ const settings: Settings = {
 };
 
 describe("ProjectForm", () => {
-  it("has no Local AI only choice and offers local providers only", () => {
+  it("has a Local AI only choice (off) and offers local providers only", () => {
     render(<ProjectForm state={{ folder: "Work", project: null }} settings={settings} />);
-    expect(screen.queryByText(/Local AI only/)).toBeNull();
+    expect(screen.getByRole("checkbox", { name: /Local AI only/ })).not.toBeChecked();
     const options = screen.getByLabelText("AI provider").querySelectorAll("option");
     expect([...options].map((o) => o.textContent)).toEqual([
       "Use global default (LM Studio)",
@@ -79,6 +80,7 @@ describe("ProjectForm", () => {
             folder: "Work",
             instructions: "",
             providerId: "claude",
+            localOnly: false,
             createdAt: "",
             updatedAt: "",
           },

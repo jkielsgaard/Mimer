@@ -34,8 +34,9 @@ function settings(
     ai: {
       defaultProviderId: "p1",
       checkAnswers: false,
+      cloudConsent: null,
       builtin: DEFAULT_BUILTIN,
-      foundry: { model: "" },
+      foundry: { model: "", tools: true },
       baseInstruction: "",
       globalInstructions: "",
       embeddings: { enabled: true, providerId: "p1", model: "" },

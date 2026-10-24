@@ -35,3 +35,22 @@ pub async fn finish_close(app: AppHandle) {
     commit_on_close(&app);
     app.exit(0);
 }
+
+/// Where Mimer runs, so the AI choices can be put in the order that suits it.
+#[derive(Debug, Clone, serde::Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct AppPlatform {
+    /// `windows`, `linux` or `macos`.
+    pub os: String,
+    /// True for the Microsoft Store (MSIX) package.
+    pub store: bool,
+}
+
+#[tauri::command]
+pub async fn app_platform() -> AppPlatform {
+    AppPlatform {
+        os: std::env::consts::OS.into(),
+        store: crate::engine::paths::is_packaged(),
+    }
+}

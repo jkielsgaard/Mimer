@@ -41,9 +41,9 @@ export function AboutDialog() {
             <strong>The idea.</strong> Notes should be safe, in your hands, and easy to keep in
             order. Every change is saved in a built-in version history, so nothing is lost. The AI
             in Mimer, also called Mimer, helps you write, structure and find things. It only
-            proposes changes: nothing is written until you approve it. It only ever runs on your own
-            computer, so your notes are never sent to a cloud service, and everything else works
-            without it.
+            proposes changes: nothing is written until you approve it. It runs on your own computer,
+            so your notes stay there. Only if you turn on a cloud AI yourself, after a warning, are
+            they sent to it. Everything else works without an AI.
           </p>
           <p>
             <strong>The name.</strong> Mimer comes from Mímir in Norse mythology, the keeper of the

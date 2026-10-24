@@ -3,7 +3,7 @@
 //! starts it, follows what it prints and turns that into a status the screen can show.
 
 use super::{
-    installed_file, read_installed, tool_models, write_installed, FoundryInstalled, FoundryModel,
+    chat_models, installed_file, read_installed, write_installed, FoundryInstalled, FoundryModel,
     FoundryStatus, Inner, FOUNDRY_ID, STATUS_EVENT,
 };
 use crate::engine::process::{self, Launch, Running};
@@ -366,8 +366,8 @@ fn models_from(done: &Value) -> Vec<FoundryModel> {
         .unwrap_or_default()
 }
 
-/// The models Foundry Local offers on this computer that can call tools (the helper reads them
-/// from Microsoft's catalog). The answer is kept for the session unless `refresh` is set.
+/// The chat models Foundry Local offers on this computer, with or without tools (the helper reads
+/// them from Microsoft's catalog). The answer is kept for the session unless `refresh` is set.
 pub async fn catalog<R: Runtime>(
     app: &AppHandle<R>,
     refresh: bool,
@@ -386,7 +386,7 @@ pub async fn catalog<R: Runtime>(
     running.stop(Duration::from_secs(3));
     match end {
         JobEnd::Finished(done) => {
-            let list = tool_models(models_from(&done));
+            let list = chat_models(models_from(&done));
             with_inner(app, |i| i.catalog = Some(list.clone()));
             Ok(list)
         }
@@ -548,8 +548,17 @@ async fn install_task<R: Runtime>(
                 tracing::warn!("could not save {}: {e}", installed_file(&data).display());
             }
             let alias_s = alias.to_string();
+            // Whether the model can call tools decides if vault search and skills are offered.
+            let tools = with_inner(app, |i| {
+                i.catalog
+                    .as_ref()
+                    .and_then(|c| c.iter().find(|m| m.alias == alias_s).map(|m| m.tools))
+            })
+            .flatten()
+            .unwrap_or(true);
             engine::service::change_settings(app, move |s| {
                 s.ai.foundry.model = alias_s;
+                s.ai.foundry.tools = tools;
                 s.ensure_foundry_provider();
                 if use_for_mimer {
                     s.ai.default_provider_id = FOUNDRY_ID.into();

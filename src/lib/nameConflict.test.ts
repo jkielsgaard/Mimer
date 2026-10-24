@@ -24,6 +24,7 @@ const project = (id: string, name: string, folder: string): Project => ({
   folder,
   instructions: "",
   providerId: null,
+  localOnly: false,
   createdAt: "",
   updatedAt: "",
 });
