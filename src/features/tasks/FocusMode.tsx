@@ -265,7 +265,7 @@ export function FocusMode() {
             />
           ))}
         </div>
-        <div className="flex flex-col items-center gap-5">
+        <div className="flex min-w-0 flex-col items-center gap-5">
           <div className="relative flex size-52 items-center justify-center">
             <svg
               viewBox="0 0 200 200"
@@ -338,37 +338,41 @@ export function FocusMode() {
             )}
           </div>
 
-          <div className="flex w-full gap-2">
+          {/* The right column is narrow: the main button has its own line, so nothing runs out
+              of the window. */}
+          <div className="flex w-full flex-col gap-2">
             {allDone ? (
-              <Button className="h-10 flex-1" onClick={() => void tickTask()}>
+              <Button className="h-10 w-full" onClick={() => void tickTask()}>
                 Mark the task as done
               </Button>
             ) : (
-              <Button className="h-10 flex-1" onClick={done}>
+              <Button className="h-10 w-full" onClick={done}>
                 {step ? "Done, next step" : "Done"}
               </Button>
             )}
-            <Button variant="outline" className="h-10" onClick={running ? pause : start}>
-              {running
-                ? "Pause timer"
-                : over || left < minutes * 60_000
-                  ? "Continue timer"
-                  : "Start timer"}
-            </Button>
-            <Button
-              variant="outline"
-              className="h-10"
-              disabled={
-                aiOff !== null || (stuck !== null && stuck.text === null && stuck.error === null)
-              }
-              title={
-                aiOff ??
-                "Cannot get started? The AI suggests one tiny first step, under five minutes."
-              }
-              onClick={askStuck}
-            >
-              Help me start
-            </Button>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" className="h-10" onClick={running ? pause : start}>
+                {running
+                  ? "Pause timer"
+                  : over || left < minutes * 60_000
+                    ? "Continue timer"
+                    : "Start timer"}
+              </Button>
+              <Button
+                variant="outline"
+                className="h-10"
+                disabled={
+                  aiOff !== null || (stuck !== null && stuck.text === null && stuck.error === null)
+                }
+                title={
+                  aiOff ??
+                  "Cannot get started? The AI suggests one tiny first step, under five minutes."
+                }
+                onClick={askStuck}
+              >
+                Help me start
+              </Button>
+            </div>
           </div>
 
           {askTick && (
