@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-10-24
+
+### Added
+
+- **"AI can make mistakes. Check the answer before you keep it."** under the chat, in the review of a text command and in the review of proposed changes.
+
+### Fixed
+
+- **Some Foundry Local models (for example SmolLM3) failed with "Unknown method: replace".** Their chat template cannot take a system message in Foundry Local. Mimer now asks once more with the instructions in the question; other models and other errors are not affected. No empty system message is sent any more.
+
 ## [0.15.0] - 2026-10-24
 
 ### Added
