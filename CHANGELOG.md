@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-10-24
+
 ### Added
 
 - **Every Foundry Local model.** The Foundry Local list now has every chat model it can run on this computer, not only those with tools, each with what it is good for, its maker, size, where it runs, how much text it reads and its licence. Search and filter it (writing, reasoning, code, tools, downloaded, hardware, size), sort it, or open Microsoft's list of all models. A model without tools can be used for text commands and the chat about the open note.

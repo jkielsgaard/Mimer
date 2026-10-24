@@ -2,7 +2,7 @@
 
 This file is the complete specification for version 1 of Mimer. It is written so that Claude Code or a junior developer can build v1 without asking technical questions. All technical decisions are made here. If something is genuinely not covered, choose the simplest option consistent with the **Core principles** and document the decision in `docs/DECISIONS.md`.
 
-> **Read this first: where the app is now (0.12).** This specification is the plan v1 was built from. The app has grown since, and every change is recorded in `docs/DECISIONS.md` (newest at the bottom). The big differences:
+> **Read this first: where the app is now (0.15).** This specification is the plan v1 was built from. The app has grown since, and every change is recorded in `docs/DECISIONS.md` (newest at the bottom). The big differences:
 >
 > - **The AI runs on the user's own computer.** `ai::router::select_notes` is the only way to a provider. The cloud AI of M11 and "Raven" are gone; from 0.15 an OpenAI-compatible cloud AI can be Mimer's AI as a last resort, only after the user ticks "I understand that my notes are sent to …" (`ai.cloudConsent`), and never for a project marked Local AI only. Embeddings stay local.
 > - **A built-in AI**: llama.cpp (`engine`) and Microsoft's Foundry Local (`foundry`), downloaded at the user's request; LM Studio still works.
