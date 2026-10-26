@@ -185,6 +185,7 @@ pub fn run() {
             commands::tasks::task_delete_log,
             commands::tasks::task_set_note,
             commands::tasks::epic_set_description,
+            commands::tasks::epic_set_title,
             commands::tasks::task_add,
             commands::tasks::task_add_to_note,
             commands::tasks::list_ideas,

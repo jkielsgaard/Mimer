@@ -24,14 +24,17 @@ export function QuickCapture() {
         <DialogHeader>
           <DialogTitle>{kind === "note" ? "Quick note" : "Write it down"}</DialogTitle>
           <DialogDescription>
-            Choose what it is, write it, and go on. Open it again with{" "}
-            {formatShortcut("Mod+Shift+N")}.
+            {kind === "note"
+              ? "Give it a name if you like, write it, and go on."
+              : `Choose what it is, write it, and go on. Open it again with ${formatShortcut("Mod+Shift+N")}.`}
           </DialogDescription>
         </DialogHeader>
         {kind !== null && (
           <CaptureBox
             autoFocus
             initialKind={kind}
+            // Quick note shows only a quick note; the other entries let you choose.
+            kinds={kind === "note" ? ["note"] : undefined}
             onSaved={(what) => {
               toast(`Saved ${what}.`, "success");
               useUiStore.getState().closeCapture();

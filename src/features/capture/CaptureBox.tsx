@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
-import { taskText } from "@/lib/taskLogic";
+import { noteName, taskText } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { fileNameFrom } from "@/lib/noteTitle";
 import { useIdeaStore } from "@/stores/ideaStore";
@@ -17,7 +17,7 @@ const KINDS: { id: CaptureKind; label: string; help: string }[] = [
   {
     id: "task",
     label: "Task",
-    help: "Goes to the epic task Inbox in your task list.",
+    help: "Goes into the epic you choose below, in your task list.",
   },
   {
     id: "idea",
@@ -26,12 +26,24 @@ const KINDS: { id: CaptureKind; label: string; help: string }[] = [
   },
   {
     id: "note",
-    label: "Note",
-    help: "Becomes a real note in Quick notes. You can keep writing in it.",
+    label: "Quick note",
+    help: "Becomes a real note in the Quick notes folder. You can keep writing in it.",
   },
 ];
 
 const KEY = "mimer.captureKind";
+const EPIC_KEY = "mimer.captureEpic";
+/** The choices that are not an epic yet. */
+const NEW_EPIC = "::new";
+const THIS_NOTE = "::note";
+
+function lastEpic(): string | null {
+  try {
+    return localStorage.getItem(EPIC_KEY);
+  } catch {
+    return null;
+  }
+}
 
 function lastKind(): CaptureKind {
   try {
@@ -43,7 +55,7 @@ function lastKind(): CaptureKind {
 }
 
 /**
- * The write-it-down box: choose Task, Idea or Note and write. It is used in Focus and in the box
+ * The write-it-down box: choose Task, Idea or Quick note and write. It is used in Focus and in the box
  * that opens from anywhere (Ctrl/Cmd+Shift+N). Nothing else on the screen changes.
  */
 export function CaptureBox({
@@ -51,6 +63,8 @@ export function CaptureBox({
   kinds,
   onSaved,
   autoFocus = false,
+  epic: epicPath,
+  aroundNote,
 }: {
   initialKind?: CaptureKind;
   /** Offer only these kinds (default: all three). With one kind there is nothing to choose. */
@@ -58,6 +72,10 @@ export function CaptureBox({
   /** Called after something was saved, with a short description. */
   onSaved?: (what: string) => void;
   autoFocus?: boolean;
+  /** The epic a task goes into at first (the one in Focus). Else the one used last. */
+  epic?: string;
+  /** A note (a meeting) whose epic is the first choice; it is made when a task is saved. */
+  aroundNote?: { path: string; title: string };
 }) {
   const offered = KINDS.filter((k) => kinds === undefined || kinds.includes(k.id));
   const [kind, setKind] = useState<CaptureKind>(
@@ -69,11 +87,32 @@ export function CaptureBox({
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const known = useTaskStore((s) => s.epics);
+  // The epic of the screen may be a note with tasks outside `Tasks/`, which is not in the list.
+  const epics =
+    epicPath === undefined || known.some((e) => e.path === epicPath)
+      ? known
+      : [...known, { path: epicPath, title: noteName(epicPath), source: null, description: "" }];
+  const [epic, setEpic] = useState<string | null>(null);
+  const [epicName, setEpicName] = useState("");
   const quickFolder = useVaultStore((s) => s.vault?.config.quickNotesFolder) ?? "";
 
   useEffect(() => {
     if (autoFocus) input.current?.focus();
   }, [autoFocus, kind]);
+
+  useEffect(() => {
+    if (!useTaskStore.getState().loaded) void useTaskStore.getState().load();
+  }, []);
+
+  // Where a task goes: what the screen says, else the epic used last, else a new one.
+  const chosen =
+    epic ??
+    (aroundNote
+      ? THIS_NOTE
+      : epicPath !== undefined && epics.some((e) => e.path === epicPath)
+        ? epicPath
+        : (epics.find((e) => e.path === lastEpic())?.path ?? epics[0]?.path ?? NEW_EPIC));
 
   const choose = (k: CaptureKind): void => {
     setKind(k);
@@ -91,7 +130,25 @@ export function CaptureBox({
     setBusy(true);
     try {
       if (kind === "task") {
-        await useTaskStore.getState().add(taskText(value), note);
+        const tasks = useTaskStore.getState();
+        let target: string | null;
+        if (chosen === NEW_EPIC) {
+          if (epicName.trim() === "") return;
+          target = await tasks.createEpic(epicName.trim(), false);
+        } else if (chosen === THIS_NOTE && aroundNote) {
+          target = await tasks.epicFor(aroundNote.path);
+        } else {
+          target = chosen;
+        }
+        if (target === null) return;
+        await tasks.add(taskText(value), note, undefined, target);
+        setEpic(target);
+        setEpicName("");
+        try {
+          localStorage.setItem(EPIC_KEY, target);
+        } catch {
+          /* only a convenience */
+        }
         onSaved?.("a task");
       } else if (kind === "idea") {
         if (await useIdeaStore.getState().add(value, note)) onSaved?.("an idea");
@@ -118,32 +175,31 @@ export function CaptureBox({
   const noteLabel = kind === "task" ? "Note for the task" : "Note for the idea";
   return (
     <div className="flex w-full flex-col gap-2">
-      <div
-        role="group"
-        aria-label="What is it?"
-        className={cn(
-          "flex overflow-hidden rounded-lg border text-sm",
-          offered.length === 1 && "hidden",
-        )}
-      >
-        {offered.map((k, i) => (
-          <button
-            key={k.id}
-            type="button"
-            aria-pressed={kind === k.id}
-            className={cn(
-              "flex-1 px-3 py-2 text-center focus-visible:ring-2 focus-visible:ring-ring",
-              i > 0 && "border-l",
-              kind === k.id ? "bg-accent font-semibold text-accent-foreground" : "hover:bg-muted",
-            )}
-            onClick={() => {
-              choose(k.id);
-            }}
-          >
-            {k.label}
-          </button>
-        ))}
-      </div>
+      {offered.length > 1 && (
+        <div
+          role="group"
+          aria-label="What is it?"
+          className="flex overflow-hidden rounded-lg border text-sm"
+        >
+          {offered.map((k, i) => (
+            <button
+              key={k.id}
+              type="button"
+              aria-pressed={kind === k.id}
+              className={cn(
+                "flex-1 px-3 py-2 text-center focus-visible:ring-2 focus-visible:ring-ring",
+                i > 0 && "border-l",
+                kind === k.id ? "bg-accent font-semibold text-accent-foreground" : "hover:bg-muted",
+              )}
+              onClick={() => {
+                choose(k.id);
+              }}
+            >
+              {k.label}
+            </button>
+          ))}
+        </div>
+      )}
       {kind === "note" ? (
         <div className="flex flex-col gap-2">
           <Input
@@ -179,7 +235,7 @@ export function CaptureBox({
               void save();
             }}
           >
-            Save the note
+            Save the quick note
           </Button>
         </div>
       ) : (
@@ -199,6 +255,48 @@ export function CaptureBox({
               setText(e.target.value);
             }}
           />
+          {kind === "task" && (
+            <div className="flex flex-col gap-1.5">
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                Into
+                <select
+                  aria-label="Epic for the task"
+                  value={chosen}
+                  className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onChange={(e) => {
+                    setEpic(e.target.value);
+                  }}
+                >
+                  {aroundNote && (
+                    <option value={THIS_NOTE}>{aroundNote.title} · this meeting</option>
+                  )}
+                  {epics.map((e) => (
+                    <option key={e.path} value={e.path}>
+                      {e.title}
+                    </option>
+                  ))}
+                  <option value={NEW_EPIC}>+ New epic…</option>
+                </select>
+              </label>
+              {chosen === NEW_EPIC && (
+                <Input
+                  aria-label="Name of the new epic"
+                  placeholder="Name of the new epic"
+                  value={epicName}
+                  onChange={(e) => {
+                    setEpicName(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    // With two fields and no button, Enter would not send the form.
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      void save();
+                    }
+                  }}
+                />
+              )}
+            </div>
+          )}
           {noteOpen ? (
             <>
               <Textarea
@@ -221,7 +319,11 @@ export function CaptureBox({
                 size="sm"
                 type="submit"
                 className="self-end"
-                disabled={busy || text.trim() === ""}
+                disabled={
+                  busy ||
+                  text.trim() === "" ||
+                  (kind === "task" && chosen === NEW_EPIC && epicName.trim() === "")
+                }
               >
                 Save
               </Button>

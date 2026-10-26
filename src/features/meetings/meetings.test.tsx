@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { TreeNode } from "@/bindings/TreeNode";
-import { buildMeetingNote, setItemNotes } from "@/lib/meeting";
+import { buildMeetingNote, markItem, setItemNotes } from "@/lib/meeting";
 
 const apiMock = vi.hoisted(() => ({
   readNote: vi.fn(),
@@ -24,7 +24,6 @@ const actions = vi.hoisted(() => ({ openFile: vi.fn() }));
 vi.mock("@/lib/actions", () => actions);
 vi.mock("@/features/capture/CaptureBox", () => ({ CaptureBox: () => <div>capture box</div> }));
 
-import { ActionsDialog } from "./ActionsDialog";
 import { MeetingFocus } from "./MeetingFocus";
 import { MeetingForm } from "./MeetingForm";
 import { candidatesIn, comingMeetings, MeetingLine } from "./MeetingLine";
@@ -99,17 +98,6 @@ describe("MeetingFocus", () => {
     vi.useRealTimers();
   });
 
-  it("marks a line with Decision, Action, Question or Park it", async () => {
-    useUiStore.setState({ meetingFocus: PATH });
-    render(<MeetingFocus />);
-    const area = await screen.findByLabelText("Notes for Budget");
-    fireEvent.change(area, { target: { value: "We talked." } });
-    const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Decision" }));
-    await user.type(area, "ship Friday");
-    expect((area as HTMLTextAreaElement).value).toBe("We talked.\n**Decision:** ship Friday");
-  });
-
   it("goes to the next item, ticking this one, and says when it was the last", async () => {
     useUiStore.setState({ meetingFocus: PATH });
     render(<MeetingFocus />);
@@ -168,7 +156,11 @@ describe("MeetingForm", () => {
       expect(useUiStore.getState().meetingFocus).toBe(PATH);
     });
     expect(apiMock.createNote).toHaveBeenCalledWith("Meetings", "2026-10-27 Weekly with Mette");
-    const text = apiMock.writeNote.mock.calls[0]?.[1] as string;
+    // A save left over from the test before may arrive first; the form's own write is the one with the agenda.
+    const text =
+      apiMock.writeNote.mock.calls
+        .map((c) => c[1] as string)
+        .find((t) => t.includes("- [ ] Hiring")) ?? "";
     expect(text).toContain("meeting: 2026-10-27 14:00");
     expect(text).toContain("with: [Mette, Peter]");
     expect(text).toContain("- [ ] Hiring");
@@ -286,85 +278,15 @@ describe("StartMeetingButton", () => {
 });
 
 describe("after the meeting", () => {
-  const held = setItemNotes(
-    setItemNotes(note, "Budget", "**Action:** Send the offer to Acme"),
-    "Hiring",
-    "**Action:** Peter writes the job ad\n**Action:** Book the room (in Tasks)",
-  );
-
-  it("adds the chosen actions to the meeting's epic task, and marks them in the note", async () => {
-    const onDone = vi.fn();
-    const onClose = vi.fn();
-    render(<ActionsDialog path={PATH} content={held} onDone={onDone} onClose={onClose} />);
-    const user = userEvent.setup();
-    expect(screen.getByRole("checkbox", { name: /Book the room/ })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Add 2 to Tasks" })).toBeEnabled();
-    await user.click(screen.getByRole("checkbox", { name: /Peter writes the job ad/ }));
-    await user.click(screen.getByRole("button", { name: "Add 1 to Tasks" }));
-    await waitFor(() => {
-      expect(onClose).toHaveBeenCalled();
-    });
-    expect(apiMock.epicForNote).toHaveBeenCalledWith(PATH);
-    expect(apiMock.taskAdd).toHaveBeenCalledTimes(1);
-    expect(apiMock.taskAdd.mock.calls[0]).toEqual([
-      "Send the offer to Acme",
-      undefined,
-      [],
-      "Tasks/Weekly.md",
-    ]);
-    const next = onDone.mock.calls[0]?.[0] as string;
-    expect(next).toContain("**Action:** Send the offer to Acme (in Tasks)");
-    expect(next).toContain("**Action:** Peter writes the job ad\n");
-  });
-
-  it("can send them to another epic task, and says so when there is nothing to add", async () => {
-    const onDone = vi.fn();
-    const { unmount } = render(
-      <ActionsDialog path={PATH} content={held} onDone={onDone} onClose={() => undefined} />,
-    );
-    const user = userEvent.setup();
-    await user.selectOptions(
-      await screen.findByLabelText("Goes into the epic task"),
-      "Tasks/Launch.md",
-    );
-    await user.click(screen.getByRole("button", { name: "Add 2 to Tasks" }));
-    await waitFor(() => {
-      expect(apiMock.taskAdd).toHaveBeenCalledTimes(2);
-    });
-    expect(apiMock.epicForNote).not.toHaveBeenCalled();
-    expect(apiMock.taskAdd.mock.calls[1]?.[3]).toBe("Tasks/Launch.md");
-    unmount();
-    render(<ActionsDialog path={PATH} content={note} onDone={onDone} onClose={() => undefined} />);
-    expect(screen.getByText(/no lines marked Action yet/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Add 0 to Tasks" })).toBeDisabled();
-  });
-
-  it("is reached from the meeting screen, which saves the marked note", async () => {
-    apiMock.readNote.mockResolvedValue({ path: PATH, content: held, mtime: 0 });
-    useUiStore.setState({ meetingFocus: PATH });
-    render(<MeetingFocus />);
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole("button", { name: /Add actions to Tasks/ }));
-    await user.click(await screen.findByRole("button", { name: "Add 2 to Tasks" }));
-    await user.keyboard("{Escape}");
-    await waitFor(() => {
-      expect(useUiStore.getState().meetingFocus).toBeNull();
-    });
-    expect(apiMock.writeNote.mock.calls.at(-1)?.[1]).toContain(
-      "**Action:** Send the offer to Acme (in Tasks)",
-    );
-  });
-
-  it("opens the meeting window filled in for the next meeting", async () => {
+  it("opens the meeting window filled in for the next meeting, with what was not reached", async () => {
     apiMock.readNote.mockResolvedValue({
       path: PATH,
-      content: setItemNotes(note, "Hiring", "**Action:** Book the room"),
+      content: setItemNotes(markItem(note, "Budget", true), "Hiring", "Talked about it."),
       mtime: 0,
     });
     render(<StartMeetingButton path={PATH} />);
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "After the meeting" }));
-    await user.click(await screen.findByRole("menuitem", { name: /Prepare next meeting/ }));
+    await user.click(screen.getByRole("button", { name: /Prepare next meeting/ }));
     await waitFor(() => {
       expect(useUiStore.getState().meetingFormOpen).toBe(true);
     });
@@ -373,15 +295,13 @@ describe("after the meeting", () => {
       date: "2026-11-03",
       time: "14:00",
       who: "Mette, Peter",
-      agenda: "Budget\nHiring\nFollow up: Book the room",
+      agenda: "Hiring",
     });
     render(<MeetingForm />);
     expect(await screen.findByLabelText("Title")).toHaveValue("Weekly with Mette");
     expect(screen.getByLabelText("Day")).toHaveValue("2026-11-03");
     expect(screen.getByLabelText("With")).toHaveValue("Mette, Peter");
-    expect(screen.getByLabelText("Agenda, one item per line")).toHaveValue(
-      "Budget\nHiring\nFollow up: Book the room",
-    );
+    expect(screen.getByLabelText("Agenda, one item per line")).toHaveValue("Hiring");
     await user.click(screen.getByRole("button", { name: "Cancel" }));
     expect(useUiStore.getState().meetingSeed).toBeNull();
   });

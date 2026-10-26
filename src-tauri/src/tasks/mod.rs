@@ -699,8 +699,22 @@ pub fn move_item(content: &str, line: u32, key: &str, up: bool) -> AppResult<Str
 
 /// Removes a task, with its steps and log, from the note.
 pub fn delete(content: &str, line: u32, key: &str) -> AppResult<String> {
-    let (start, end, _) = block_end(content, line, key)?;
     let mut lines: Vec<&str> = content.split('\n').collect();
+    // A step is one line; a task goes with everything under it.
+    let is_step = parse("", content)
+        .iter()
+        .flat_map(|t| t.steps.iter())
+        .any(|s| s.line == line);
+    if is_step {
+        let at = line as usize;
+        let current = lines.get(at).ok_or_else(conflict)?;
+        if line_key(current.trim_end_matches('\r')) != key {
+            return Err(conflict());
+        }
+        lines.remove(at);
+        return Ok(lines.join("\n"));
+    }
+    let (start, end, _) = block_end(content, line, key)?;
     lines.drain(start..=end);
     Ok(lines.join("\n"))
 }
@@ -743,6 +757,17 @@ mod tests {
     use super::*;
 
     const NOTE: &str = "---\ntags: [x]\n---\n# Møde med Acme\n\n- [ ] Renew the Acme licence #acme #licence due:2026-11-01 status:waiting est:1h30m\n  - [x] Send the price list\n  - [ ] Ask Peter about a discount\n  > 2026-10-14 Mette wants 40 users.\n  > 2026-10-16 Waiting for Peter.\n- [x] Book the room\n\nSome text.\n\n```\n- [ ] not a task\n```\n\n- Shopping\n  - [ ] milk\n";
+
+    #[test]
+    fn a_step_is_deleted_alone_and_only_with_its_own_key() {
+        let t = &parse("", NOTE)[0];
+        let step = &t.steps[1];
+        let after = delete(NOTE, step.line, &step.key).unwrap();
+        assert!(!after.contains("Ask Peter about a discount"));
+        assert!(after.contains("Send the price list"));
+        assert!(after.contains("Waiting for Peter"), "the log stays");
+        assert!(delete(NOTE, step.line, "000000000000").is_err());
+    }
 
     #[test]
     fn reads_title_words_steps_and_log() {

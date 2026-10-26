@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Choose the epic of a task.** The write-it-down box has **Into** for a task: the epic of the meeting, the epic in Focus, or the one used last, any other epic, or **+ New epic…**. Making a task from an idea asks the same. Mimer no longer makes an Inbox epic by itself.
+- **Pencil and waste bin** on epics, tasks and steps (shown when the pointer is over the row or the focus is in it). Titles are no longer text fields. Deleting an epic or a task asks first; a step is deleted at once with **Undo**. An epic is renamed by its heading; the note keeps its file name.
+
+### Changed
+
+- **"Epic task" is now just "Epic"** in the app and the documentation.
+- **Meetings are simpler:** the Decision / Action / Question / Park it buttons and **Add actions to Tasks…** are gone. **Prepare next meeting…** is a button next to **Start meeting** and carries over the agenda items that were not reached.
+
 ## [0.16.0] - 2026-10-26
 
 ### Added

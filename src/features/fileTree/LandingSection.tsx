@@ -11,7 +11,7 @@ import { SidebarSection } from "./SidebarSection";
 import { landingNodes, newNotesIn, type Action } from "./treeUtils";
 
 /**
- * The place new notes land: the folders for meetings, quick notes and epic tasks, kept together
+ * The place new notes land: the folders for meetings, quick notes and epics, kept together
  * above the projects, so they do not fill "All files". New notes are listed first, with a button
  * to move them to a project or a folder when they have a home.
  */

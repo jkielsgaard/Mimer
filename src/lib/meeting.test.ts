@@ -3,9 +3,7 @@ import {
   addDays,
   addItem,
   buildMeetingNote,
-  findActions,
   itemNotes,
-  markActionsAdded,
   markItem,
   meetingMoment,
   nextMeetingSeed,
@@ -146,37 +144,6 @@ describe("time", () => {
   });
 });
 
-describe("actions", () => {
-  const withActions = setItemNotes(
-    setItemNotes(
-      full,
-      "Budget",
-      "Budget is fine.\n**Action:** Send the offer to Acme\n**Decision:** keep it",
-    ),
-    "Hiring",
-    "**Action:** Peter writes the job ad (in Tasks)\n- **Action:** not at the start of the line",
-  );
-
-  it("finds the action lines with their agenda item, and which are already added", () => {
-    const found = findActions(withActions);
-    expect(found.map((a) => [a.item, a.text, a.added])).toEqual([
-      ["Budget", "Send the offer to Acme", false],
-      ["Hiring", "Peter writes the job ad", true],
-    ]);
-    expect(findActions("# T\n\nNo notes here\n")).toEqual([]);
-  });
-
-  it("marks lines as added once, and leaves the rest alone", () => {
-    const first = findActions(withActions)[0];
-    const done = markActionsAdded(withActions, [first?.line ?? -1, first?.line ?? -1]);
-    expect(done).toContain("**Action:** Send the offer to Acme (in Tasks)");
-    expect(done).not.toContain("(in Tasks) (in Tasks)");
-    expect(findActions(done).every((a) => a.added)).toBe(true);
-    expect(done).toContain("**Decision:** keep it");
-    expect(markActionsAdded(withActions, [0])).toBe(withActions);
-  });
-});
-
 describe("the next meeting", () => {
   it("adds days across a month end", () => {
     expect(addDays("2026-10-27", 7)).toBe("2026-11-03");
@@ -184,17 +151,13 @@ describe("the next meeting", () => {
   });
 
   it("starts from the same title, people and time, a week later, with what is left over", () => {
-    const content = setItemNotes(
-      markItem(full, "Budget", true),
-      "Hiring",
-      "**Action:** Book the room\n**Action:** Send it (in Tasks)",
-    );
+    const content = setItemNotes(markItem(full, "Budget", true), "Hiring", "Talked about it.");
     expect(nextMeetingSeed(content)).toEqual({
       title: "Weekly with Mette",
       date: "2026-11-03",
       time: "14:00",
       who: "Mette, Peter",
-      agenda: "Hiring\nFollow up: Book the room",
+      agenda: "Hiring",
     });
     const plain = nextMeetingSeed("# Lunch\n");
     expect(plain.date).toBe("");

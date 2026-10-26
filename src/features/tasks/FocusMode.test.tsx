@@ -181,6 +181,8 @@ describe("FocusMode", () => {
     await user.click(screen.getByRole("button", { name: "Task" }));
     await user.type(screen.getByLabelText("Write a task"), "Call the bank{Enter}");
     expect(apiMock.taskAdd.mock.calls[0]?.[0]).toBe("Call the bank");
+    // It goes into the epic that is in focus, not into an Inbox.
+    expect(apiMock.taskAdd.mock.calls[0]?.[3]).toBeTruthy();
     expect(await screen.findByText(/1 written down/)).toBeInTheDocument();
     expect(useUiStore.getState().focusOpen).toBe(true);
   });
@@ -233,7 +235,7 @@ describe("FocusMode", () => {
     render(<FocusMode />);
     await userEvent.setup().click(screen.getByRole("button", { name: "Mark the task as done" }));
     expect(apiMock.taskSetDone).toHaveBeenCalledWith(task.path, 5, "key-1", true);
-    expect(await screen.findByText("Epic task done")).toBeInTheDocument();
+    expect(await screen.findByText("Epic done")).toBeInTheDocument();
   });
 
   it("moves the mark to the next open task when a task is ticked", async () => {

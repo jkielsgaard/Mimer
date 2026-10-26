@@ -1,7 +1,9 @@
 import { ChevronDown, ChevronRight, Plus, Sparkles, Target } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MoveButtons, moveKey } from "@/components/MoveButtons";
 import { PromptDialog } from "@/components/PromptDialog";
+import { InlineEdit, RowActions } from "@/components/RowActions";
 import { ViewHeader } from "@/components/ViewHeader";
 import { Button } from "@/components/ui/button";
 import { epicGroups, noteName, shortDate, type EpicGroup } from "@/lib/taskLogic";
@@ -38,7 +40,7 @@ export function EpicProgress({ group }: { group: EpicGroup }) {
   );
 }
 
-/** "+ Add a task" at the bottom of an open epic task: Enter adds it to that epic's note. */
+/** "+ Add a task" at the bottom of an open epic: Enter adds it to that epic's note. */
 function AddTask({ group }: { group: EpicGroup }) {
   const [text, setText] = useState("");
   return (
@@ -72,7 +74,7 @@ export function isFolded(g: EpicGroup, folded: Record<string, boolean>): boolean
 }
 
 /**
- * The task list: one outline of epic tasks, each a box you can fold, with its tasks, and their
+ * The task list: one outline of epics, each a box you can fold, with its tasks, and their
  * steps, which can be unfolded too. Done epics are folded together at the bottom.
  */
 export function TasksView() {
@@ -85,6 +87,8 @@ export function TasksView() {
   const aiOff = useAiBlocked();
   const [naming, setNaming] = useState(false);
   const [showDone, setShowDone] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<EpicGroup | null>(null);
 
   useEffect(() => {
     void useTaskStore.getState().load();
@@ -125,25 +129,54 @@ export function TasksView() {
           >
             {shut ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
           </button>
-          <button
-            type="button"
-            title={`Open ${g.title}`}
-            className={cn(
-              "min-w-0 flex-1 truncate text-left text-sm font-semibold hover:underline focus-visible:ring-2 focus-visible:ring-ring",
-              g.allDone && "text-muted-foreground",
-            )}
-            onClick={() => {
-              useTaskStore.getState().openEpic(g.path);
-            }}
-          >
-            {g.title}
-            {g.made !== null && (
-              <span className="font-normal text-muted-foreground">
-                {" "}
-                · made {shortDate(g.made).replace(/^\S+ /, "")}
-              </span>
-            )}
-          </button>
+          {editing === g.path ? (
+            <InlineEdit
+              value={g.title}
+              label={`Name of ${g.title}`}
+              className="text-sm font-semibold"
+              onSave={(t) => {
+                setEditing(null);
+                void useTaskStore.getState().renameEpic(g.path, t);
+              }}
+              onCancel={() => {
+                setEditing(null);
+              }}
+            />
+          ) : (
+            <>
+              <button
+                type="button"
+                title={`Open ${g.title}`}
+                className={cn(
+                  "min-w-0 truncate text-left text-sm font-semibold hover:underline focus-visible:ring-2 focus-visible:ring-ring",
+                  g.allDone && "text-muted-foreground",
+                )}
+                onClick={() => {
+                  useTaskStore.getState().openEpic(g.path);
+                }}
+              >
+                {g.title}
+                {g.made !== null && (
+                  <span className="font-normal text-muted-foreground">
+                    {" "}
+                    · made {shortDate(g.made).replace(/^\S+ /, "")}
+                  </span>
+                )}
+              </button>
+              {g.native && (
+                <RowActions
+                  what={`the epic ${g.title}`}
+                  onEdit={() => {
+                    setEditing(g.path);
+                  }}
+                  onDelete={() => {
+                    setDeleting(g);
+                  }}
+                />
+              )}
+              <span className="flex-1" />
+            </>
+          )}
           {g.source !== null && (
             <span className="hidden text-xs text-muted-foreground md:inline">
               from {noteName(g.source)}
@@ -248,16 +281,16 @@ export function TasksView() {
             setNaming(true);
           }}
         >
-          <Plus /> New epic task
+          <Plus /> New epic
         </Button>
       </ViewHeader>
       <div className="min-h-0 flex-1 space-y-3 overflow-auto px-5 py-4">
         {!loaded && <p className="py-6 text-sm text-muted-foreground">Reading your notes…</p>}
         {loaded && groups.length === 0 && (
           <div className="py-10 text-center text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">No epic tasks yet.</p>
+            <p className="font-medium text-foreground">No epics yet.</p>
             <p>
-              An epic task is a note with tasks. Press <b>New epic task</b>, or write{" "}
+              An epic is a note with tasks. Press <b>New epic</b>, or write{" "}
               <code>- [ ] something</code> in any note. Mimer finds it.
             </p>
           </div>
@@ -281,14 +314,33 @@ export function TasksView() {
         )}
         {loaded && groups.length > 0 && (
           <p className="px-1 text-xs text-muted-foreground">
-            Fold an epic task to see only its name and how far it is. When every task in it is done,
-            it moves to Done.
+            Fold an epic to see only its name and how far it is. When every task in it is done, it
+            moves to Done.
           </p>
         )}
       </div>
+      <ConfirmDialog
+        open={deleting !== null}
+        title={`Delete the epic “${deleting?.title ?? ""}”?`}
+        description={`Its note and the ${String(deleting?.total ?? 0)} tasks in it are removed, but they stay in the version history, so they can be brought back.`}
+        confirmLabel="Delete"
+        destructive
+        onCancel={() => {
+          setDeleting(null);
+        }}
+        onConfirm={() => {
+          const g = deleting;
+          setDeleting(null);
+          if (g === null) return;
+          void useVaultStore
+            .getState()
+            .deletePath(g.path)
+            .then(() => useTaskStore.getState().load());
+        }}
+      />
       <PromptDialog
         open={naming}
-        title="New epic task"
+        title="New epic"
         label="Name"
         confirmLabel="Make it"
         initialValue=""

@@ -63,9 +63,9 @@ describe("TaskPage", () => {
 
   it("shows the task with its progress, the next step and the log, newest first", () => {
     render(<TaskPage />);
-    expect(screen.getByRole("textbox", { name: "Title of the task" })).toHaveValue(
-      "Renew the Acme licence",
-    );
+    // The title is text, not a field: it opens only from the pencil.
+    expect(screen.getByRole("heading", { name: "Renew the Acme licence" })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Title of the task" })).toBeNull();
     expect(screen.getByText(/Steps · 1 of 2/)).toBeInTheDocument();
     expect(screen.getByText("Next")).toBeInTheDocument();
     const log = screen.getAllByRole("listitem").map((l) => l.textContent);
@@ -109,7 +109,7 @@ describe("TaskPage", () => {
     expect(screen.getByText("Mon 19 Oct")).toBeInTheDocument();
   });
 
-  it("goes back to its epic task, and has no Focus button of its own", async () => {
+  it("goes back to its epic, and has no Focus button of its own", async () => {
     render(<TaskPage />);
     const user = userEvent.setup();
     expect(screen.queryByRole("button", { name: "Focus" })).toBeNull();
@@ -165,6 +165,10 @@ describe("TaskPage", () => {
     apiMock.taskMove.mockResolvedValue([task]);
     render(<TaskPage />);
     const user = userEvent.setup();
+    expect(screen.queryByRole("textbox", { name: /Text of the step/ })).toBeNull();
+    await user.click(
+      screen.getByRole("button", { name: "Edit the step Ask Peter about a discount" }),
+    );
     const step = screen.getByRole("textbox", {
       name: "Text of the step Ask Peter about a discount",
     });
@@ -174,9 +178,12 @@ describe("TaskPage", () => {
       expect(apiMock.taskSetTitle).toHaveBeenCalledWith(task.path, 7, "s2", "Ask Peter for 10%");
     });
     // Escape puts the text back and saves nothing.
-    const first = screen.getByRole("textbox", { name: "Text of the step Send the price list" });
-    await user.type(first, " later{Escape}");
-    expect(first).toHaveValue("Send the price list");
+    await user.click(screen.getByRole("button", { name: "Edit the step Send the price list" }));
+    await user.type(
+      screen.getByRole("textbox", { name: "Text of the step Send the price list" }),
+      " later{Escape}",
+    );
+    expect(screen.queryByRole("textbox", { name: /Text of the step/ })).toBeNull();
     expect(apiMock.taskSetTitle).toHaveBeenCalledTimes(1);
 
     // The first step cannot go further up, the last not further down.
@@ -186,7 +193,7 @@ describe("TaskPage", () => {
     ).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "Move Ask Peter about a discount up" }));
     expect(apiMock.taskMove).toHaveBeenCalledWith(task.path, 7, "s2", true);
-    first.focus();
+    screen.getByRole("button", { name: "Move Send the price list down" }).focus();
     await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
     expect(apiMock.taskMove).toHaveBeenCalledWith(task.path, 6, "s1", false);
   });
@@ -198,6 +205,7 @@ describe("TaskPage", () => {
     });
     render(<TaskPage />);
     const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Edit the title" }));
     const title = screen.getByRole("textbox", { name: "Title of the task" });
     await user.clear(title);
     await user.type(title, "Renew the licence{Enter}");

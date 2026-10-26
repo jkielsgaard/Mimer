@@ -9,6 +9,7 @@ import { fileNameFrom } from "@/lib/noteTitle";
 import { shortDate, stepsFromAnswer, todayIso } from "@/lib/taskLogic";
 import { AiAsk } from "@/components/AiAsk";
 import { CaptureBox } from "./CaptureBox";
+import { ChooseEpicDialog } from "./ChooseEpicDialog";
 import { DeleteButton } from "@/components/DeleteButton";
 import { ViewHeader } from "@/components/ViewHeader";
 import { useIdeaStore } from "@/stores/ideaStore";
@@ -16,13 +17,13 @@ import { useTaskStore } from "@/stores/taskStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 
-/** Turns an idea into a task in the Inbox. The idea stays, marked as used. */
-export async function ideaToTask(idea: Idea): Promise<void> {
+/** Turns an idea into a task in the epic at `epicPath`. The idea stays, marked as used. */
+export async function ideaToTask(idea: Idea, epicPath: string): Promise<void> {
   await useTaskStore
     .getState()
-    .add(`${idea.text}${idea.tags.map((t) => ` #${t}`).join("")}`, idea.note);
+    .add(`${idea.text}${idea.tags.map((t) => ` #${t}`).join("")}`, idea.note, undefined, epicPath);
   await useIdeaStore.getState().setStatus(idea, "used");
-  useUiStore.getState().toast("Made a task. It is in the epic task Inbox.", "success");
+  useUiStore.getState().toast("Made a task.", "success");
 }
 
 /** Turns an idea into a note in Quick notes and opens it. The idea stays, marked as used. */
@@ -60,6 +61,8 @@ function IdeaEditor({ idea }: { idea: Idea }) {
   const [title, setTitle] = useState(titleOf(idea));
   const [note, setNote] = useState(idea.note);
   const today = todayIso();
+  // What waits for an epic to be chosen: the idea itself, or the steps the AI suggested.
+  const [asking, setAsking] = useState<((epic: string) => Promise<void>) | null>(null);
   const dirty = title !== titleOf(idea) || note !== idea.note;
 
   useEffect(() => {
@@ -125,7 +128,9 @@ function IdeaEditor({ idea }: { idea: Idea }) {
             <Button
               variant="outline"
               onClick={() => {
-                void save().then(() => ideaToTask(idea));
+                void save().then(() => {
+                  setAsking(() => (epic: string) => ideaToTask(idea, epic));
+                });
               }}
             >
               Make a task
@@ -205,19 +210,16 @@ function IdeaEditor({ idea }: { idea: Idea }) {
                   size="sm"
                   disabled={steps.length === 0}
                   onClick={() => {
-                    void (async () => {
-                      // One task with the steps under it, not one task for each step.
+                    // One task with the steps under it, not one task for each step.
+                    setAsking(() => async (epic: string) => {
                       await useTaskStore
                         .getState()
-                        .add(title.replace(/#\S+/g, "").trim(), "", steps);
+                        .add(title.replace(/#\S+/g, "").trim(), "", steps, epic);
                       useUiStore
                         .getState()
-                        .toast(
-                          `Made one task with ${String(steps.length)} steps. It is in the epic task Inbox.`,
-                          "success",
-                        );
+                        .toast(`Made one task with ${String(steps.length)} steps.`, "success");
                       close();
-                    })();
+                    });
                   }}
                 >
                   Make a task with {steps.length} steps
@@ -231,6 +233,19 @@ function IdeaEditor({ idea }: { idea: Idea }) {
         An idea you turn into a task or a note stays here, marked as used, so nothing is lost. The
         note you write here goes with it.
       </p>
+      {asking !== null && (
+        <ChooseEpicDialog
+          title="Make a task"
+          onCancel={() => {
+            setAsking(null);
+          }}
+          onChoose={(epic) => {
+            const run = asking;
+            setAsking(null);
+            void run(epic);
+          }}
+        />
+      )}
     </div>
   );
 }

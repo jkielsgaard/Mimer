@@ -1,7 +1,9 @@
 import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import type { Task } from "@/bindings/Task";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MoveButtons } from "@/components/MoveButtons";
+import { InlineEdit, RowActions } from "@/components/RowActions";
 import { Button } from "@/components/ui/button";
 import { shortDate, todayIso } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
@@ -54,6 +56,8 @@ export function FocusTask({
   const store = useTaskStore.getState();
   const [log, setLog] = useState("");
   const [step, setStep] = useState("");
+  const [editing, setEditing] = useState<"title" | number | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const shown = open;
   const now = marked ? task.steps.findIndex((s) => !s.done) : -1;
   const stepsDone = task.steps.filter((s) => s.done).length;
@@ -83,15 +87,42 @@ export function FocusTask({
             void store.setDone(task.path, task.line, task.key, !task.done);
           }}
         />
-        <span
-          className={cn(
-            "min-w-0 flex-1 truncate font-semibold",
-            marked ? "text-lg" : "text-sm",
-            task.done && "font-normal text-muted-foreground line-through",
-          )}
-        >
-          {task.title}
-        </span>
+        {editing === "title" ? (
+          <InlineEdit
+            value={task.title}
+            label={`Title of ${task.title}`}
+            className="text-sm font-semibold"
+            onSave={(t) => {
+              setEditing(null);
+              void store.rename(task.path, task.line, task.key, t);
+            }}
+            onCancel={() => {
+              setEditing(null);
+            }}
+          />
+        ) : (
+          <>
+            <span
+              className={cn(
+                "min-w-0 truncate font-semibold",
+                marked ? "text-lg" : "text-sm",
+                task.done && "font-normal text-muted-foreground line-through",
+              )}
+            >
+              {task.title}
+            </span>
+            <RowActions
+              what={`the task ${task.title}`}
+              onEdit={() => {
+                setEditing("title");
+              }}
+              onDelete={() => {
+                setDeleting(true);
+              }}
+            />
+            <span className="flex-1" />
+          </>
+        )}
         {marked ? (
           <span className="rounded-full bg-accent px-2.5 text-xs font-semibold text-accent-foreground">
             Working on it
@@ -141,15 +172,40 @@ export function FocusTask({
                       void store.setDone(task.path, s.line, s.key, !s.done);
                     }}
                   />
-                  <span
-                    className={cn(
-                      "flex-1",
-                      s.done && "text-muted-foreground line-through",
-                      i === now && "font-semibold",
-                    )}
-                  >
-                    {s.text}
-                  </span>
+                  {editing === s.line ? (
+                    <InlineEdit
+                      value={s.text}
+                      label={`Text of the step ${s.text}`}
+                      onSave={(t) => {
+                        setEditing(null);
+                        void store.rename(task.path, s.line, s.key, t);
+                      }}
+                      onCancel={() => {
+                        setEditing(null);
+                      }}
+                    />
+                  ) : (
+                    <>
+                      <span
+                        className={cn(
+                          s.done && "text-muted-foreground line-through",
+                          i === now && "font-semibold",
+                        )}
+                      >
+                        {s.text}
+                      </span>
+                      <RowActions
+                        what={`the step ${s.text}`}
+                        onEdit={() => {
+                          setEditing(s.line);
+                        }}
+                        onDelete={() => {
+                          void store.removeStep(task, s);
+                        }}
+                      />
+                      <span className="flex-1" />
+                    </>
+                  )}
                   {i === now && (
                     <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
                       Now
@@ -227,6 +283,24 @@ export function FocusTask({
           )}
         </div>
       )}
+      <ConfirmDialog
+        open={deleting}
+        title={`Delete the task “${task.title}”?`}
+        description={
+          task.steps.length > 0
+            ? `Its ${String(task.steps.length)} steps go too. They stay in the version history of the note, so they can be brought back.`
+            : "It stays in the version history of the note, so it can be brought back."
+        }
+        confirmLabel="Delete"
+        destructive
+        onCancel={() => {
+          setDeleting(false);
+        }}
+        onConfirm={() => {
+          setDeleting(false);
+          void store.remove(task);
+        }}
+      />
     </section>
   );
 }

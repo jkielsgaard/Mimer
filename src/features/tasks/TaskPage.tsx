@@ -13,6 +13,7 @@ import { BreakDownDialog } from "./BreakDownDialog";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { DeleteButton } from "@/components/DeleteButton";
 import { MoveButtons, moveKey } from "@/components/MoveButtons";
+import { InlineEdit, RowActions } from "@/components/RowActions";
 import { ViewHeader } from "@/components/ViewHeader";
 import { AiAsk } from "@/components/AiAsk";
 import { NoteBox } from "@/components/NoteBox";
@@ -217,6 +218,8 @@ export function TaskPage() {
   const selected = useTaskStore((s) => s.selected);
   const task = findTask(tasks, selected);
   const [step, setStep] = useState("");
+  const [editTitle, setEditTitle] = useState(false);
+  const [editStep, setEditStep] = useState<number | null>(null);
   const [log, setLog] = useState("");
   const [breaking, setBreaking] = useState(false);
   const [showMd, setShowMd] = useState(false);
@@ -291,30 +294,37 @@ export function TaskPage() {
                 {task.done && <Check className="size-3.5" aria-hidden />}
               </button>
               <div className="min-w-0 flex-1">
-                <Input
-                  key={`${task.line}:${task.title}`}
-                  aria-label="Title of the task"
-                  defaultValue={task.title}
-                  className={cn(
-                    "h-auto border-transparent px-1 py-0.5 text-2xl font-semibold leading-snug shadow-none hover:border-input focus-visible:border-input",
-                    task.done && "line-through",
-                  )}
-                  onBlur={(e) => {
-                    const v = e.target.value.trim();
-                    if (v !== "" && v !== task.title) {
+                {editTitle ? (
+                  <InlineEdit
+                    value={task.title}
+                    label="Title of the task"
+                    className="text-2xl font-semibold leading-snug"
+                    onSave={(v) => {
+                      setEditTitle(false);
                       void store.rename(task.path, task.line, task.key, v);
-                    } else {
-                      e.target.value = task.title;
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") e.currentTarget.blur();
-                    if (e.key === "Escape") {
-                      e.currentTarget.value = task.title;
-                      e.currentTarget.blur();
-                    }
-                  }}
-                />
+                    }}
+                    onCancel={() => {
+                      setEditTitle(false);
+                    }}
+                  />
+                ) : (
+                  <div className="group flex items-center gap-2">
+                    <h2
+                      className={cn(
+                        "text-2xl font-semibold leading-snug",
+                        task.done && "line-through",
+                      )}
+                    >
+                      {task.title}
+                    </h2>
+                    <RowActions
+                      what="the title"
+                      onEdit={() => {
+                        setEditTitle(true);
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -383,31 +393,41 @@ export function TaskPage() {
                     >
                       {s.done && <Check className="size-3" aria-hidden />}
                     </button>
-                    <input
-                      key={`${String(s.line)}:${s.text}`}
-                      aria-label={`Text of the step ${s.text}`}
-                      defaultValue={s.text}
-                      className={cn(
-                        "min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1 py-0.5 text-sm hover:border-input focus-visible:border-input focus-visible:outline-none",
-                        s.done && "text-muted-foreground line-through",
-                        i === firstOpen && "font-semibold",
-                      )}
-                      onBlur={(e) => {
-                        const v = e.target.value.trim();
-                        if (v !== "" && v !== s.text) {
+                    {editStep === s.line ? (
+                      <InlineEdit
+                        value={s.text}
+                        label={`Text of the step ${s.text}`}
+                        onSave={(v) => {
+                          setEditStep(null);
                           void store.rename(task.path, s.line, s.key, v);
-                        } else {
-                          e.target.value = s.text;
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") e.currentTarget.blur();
-                        if (e.key === "Escape") {
-                          e.currentTarget.value = s.text;
-                          e.currentTarget.blur();
-                        }
-                      }}
-                    />
+                        }}
+                        onCancel={() => {
+                          setEditStep(null);
+                        }}
+                      />
+                    ) : (
+                      <>
+                        <span
+                          className={cn(
+                            "min-w-0 text-sm",
+                            s.done && "text-muted-foreground line-through",
+                            i === firstOpen && "font-semibold",
+                          )}
+                        >
+                          {s.text}
+                        </span>
+                        <RowActions
+                          what={`the step ${s.text}`}
+                          onEdit={() => {
+                            setEditStep(s.line);
+                          }}
+                          onDelete={() => {
+                            void store.removeStep(task, s);
+                          }}
+                        />
+                        <span className="flex-1" />
+                      </>
+                    )}
                     {i === firstOpen && (
                       <span className="rounded-full bg-accent px-2 text-xs text-accent-foreground">
                         Next
@@ -575,10 +595,10 @@ export function TaskPage() {
                 variant="outline"
                 size="sm"
                 className="justify-start"
-                title="Go to the epic task this task belongs to"
+                title="Go to the epic this task belongs to"
                 onClick={toEpic}
               >
-                <Layers /> Epic task: {epic?.title ?? noteName(task.path)}
+                <Layers /> Epic: {epic?.title ?? noteName(task.path)}
               </Button>
               <Button
                 type="button"

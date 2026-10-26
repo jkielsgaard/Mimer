@@ -2,6 +2,7 @@ import { FileText, Link2, Plus, Sparkles, Target } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { NoteBox } from "@/components/NoteBox";
+import { InlineEdit, RowActions } from "@/components/RowActions";
 import { ViewHeader } from "@/components/ViewHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,7 @@ import { EpicProgress } from "./TasksView";
 import { TaskRow } from "./TaskRow";
 import { firstOpenTask, focusEpic } from "./focusEpic";
 
-/** One epic task: the note its tasks are in, how far it has come, and its tasks. */
+/** One epic: the note its tasks are in, how far it has come, and its tasks. */
 export function EpicPage() {
   const tasks = useTaskStore((s) => s.tasks);
   const epics = useTaskStore((s) => s.epics);
@@ -24,6 +25,7 @@ export function EpicPage() {
   const aiOff = useAiBlocked();
   const [draft, setDraft] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [renaming, setRenaming] = useState(false);
   const epic = epics.find((e) => e.path === epicPath);
   const group = useMemo(
     () => epicGroups(tasks, epics, epicOrder).find((g) => g.path === epicPath) ?? null,
@@ -38,10 +40,10 @@ export function EpicPage() {
 
   if (!group) {
     return (
-      <section aria-label="Epic task" className="flex h-full min-h-0 flex-col bg-background">
-        <ViewHeader title="Epic task" back={back} />
+      <section aria-label="Epic" className="flex h-full min-h-0 flex-col bg-background">
+        <ViewHeader title="Epic" back={back} />
         <p className="p-6 text-sm text-muted-foreground">
-          This epic task is no longer there. Its note may have been moved or deleted.
+          This epic is no longer there. Its note may have been moved or deleted.
         </p>
       </section>
     );
@@ -51,8 +53,8 @@ export function EpicPage() {
   const firstOpen = firstOpenTask(group);
 
   return (
-    <section aria-label="Epic task" className="flex h-full min-h-0 flex-col bg-background">
-      <ViewHeader title="Epic task" back={back}>
+    <section aria-label="Epic" className="flex h-full min-h-0 flex-col bg-background">
+      <ViewHeader title="Epic" back={back}>
         <Button
           size="sm"
           variant="outline"
@@ -78,7 +80,35 @@ export function EpicPage() {
       <div className="min-h-0 flex-1 overflow-auto px-7 py-5">
         <div className="mx-auto flex max-w-3xl flex-col gap-5">
           <div className="flex flex-col gap-1">
-            <h2 className="text-2xl font-semibold">{group.title}</h2>
+            {renaming ? (
+              <InlineEdit
+                value={group.title}
+                label="Name of the epic"
+                className="text-2xl font-semibold"
+                onSave={(t) => {
+                  setRenaming(false);
+                  void useTaskStore.getState().renameEpic(group.path, t);
+                }}
+                onCancel={() => {
+                  setRenaming(false);
+                }}
+              />
+            ) : (
+              <div className="group flex items-center gap-2">
+                <h2 className="text-2xl font-semibold">{group.title}</h2>
+                {group.native && (
+                  <RowActions
+                    what="the epic"
+                    onEdit={() => {
+                      setRenaming(true);
+                    }}
+                    onDelete={() => {
+                      setDeleting(true);
+                    }}
+                  />
+                )}
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               {group.native
                 ? "The tasks of this epic are kept in the note "
@@ -91,7 +121,7 @@ export function EpicPage() {
             <NoteBox
               label="Note"
               value={epic?.description ?? ""}
-              placeholder="What is this epic task about?"
+              placeholder="What is this epic about?"
               hint="Kept as text under the heading of the epic's note."
               onSave={(text) => {
                 void useTaskStore.getState().setDescription(group.path, text);
@@ -192,7 +222,7 @@ export function EpicPage() {
       </div>
       <ConfirmDialog
         open={deleting}
-        title="Delete this epic task?"
+        title="Delete this epic?"
         description="Its note and the tasks in it are removed, but they stay in the version history, so they can be brought back."
         confirmLabel="Delete"
         destructive
