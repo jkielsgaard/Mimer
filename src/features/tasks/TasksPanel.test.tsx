@@ -35,7 +35,7 @@ describe("TasksPanel", () => {
     useUiStore.setState({ centerView: "tasks" });
   });
 
-  it("lists the epic tasks with their count, done ones last, and opens one", async () => {
+  it("lists the epics with their count, done ones last, and opens one", async () => {
     render(<TasksPanel />);
     const user = userEvent.setup();
     expect(await screen.findByRole("button", { name: /Alpha/ })).toHaveTextContent("1/2");

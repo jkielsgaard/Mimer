@@ -6,7 +6,7 @@ import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 
 /**
- * The left panel of the Tasks area: the epic tasks, so they are one click away. Done epics are
+ * The left panel of the Tasks area: the epics, so they are one click away. Done epics are
  * listed last. A click opens the epic in the middle.
  */
 export function TasksPanel() {
@@ -50,10 +50,10 @@ export function TasksPanel() {
     <div className="flex h-full min-h-0 flex-col">
       <PanelHeader title="Tasks" />
       <div className="min-h-0 flex-1 overflow-auto px-2 py-2">
-        <h3 className="section-label px-2 pb-1">Epic tasks</h3>
+        <h3 className="section-label px-2 pb-1">Epics</h3>
         {loaded && open.length === 0 && (
           <p className="px-2 text-xs text-muted-foreground">
-            None yet. Press <b>New epic task</b> in the middle.
+            None yet. Press <b>New epic</b> in the middle.
           </p>
         )}
         <ul>{open.map(row)}</ul>

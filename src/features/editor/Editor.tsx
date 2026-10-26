@@ -208,7 +208,7 @@ export function Editor({ paneId }: { paneId: PaneId }) {
     [inline, save, session, viewRef],
   );
 
-  /** Writes the selected text down as a task (in this note's epic task) or as an idea. */
+  /** Writes the selected text down as a task (in this note's epic) or as an idea. */
   const capture = (kind: "task" | "idea"): void => {
     const view = viewRef.current;
     if (!view) return;
@@ -219,14 +219,14 @@ export function Editor({ paneId }: { paneId: PaneId }) {
     if (kind === "task") {
       const note = activePath;
       if (note === null) return;
-      // The task goes into the epic task of this note (made now if the note has none).
+      // The task goes into the epic of this note (made now if the note has none).
       void useTaskStore
         .getState()
         .epicFor(note)
         .then((epic) => {
           if (epic !== null) void useTaskStore.getState().add(text, undefined, undefined, epic);
         });
-      ui.toast("Added as a task in the epic task of this note.", "success");
+      ui.toast("Added as a task in the epic of this note.", "success");
     } else {
       void useIdeaStore.getState().add(text);
       ui.toast("Written down as an idea.", "success");

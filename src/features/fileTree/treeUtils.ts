@@ -117,7 +117,7 @@ export function isManagedNote(path: string): boolean {
   return MANAGED_NOTES.includes(path);
 }
 
-/** The folder the epic tasks are kept in. */
+/** The folder the epics are kept in. */
 export const EPICS_FOLDER = "Tasks";
 
 /** The top-level folders that are shown in the Landing section, in the order they are given. */

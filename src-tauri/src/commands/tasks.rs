@@ -393,6 +393,26 @@ pub async fn epic_set_description(
     Ok(epics::read_epic(&path, &new))
 }
 
+/// Changes the title of an epic task (its heading). The note keeps its file name.
+#[tauri::command]
+pub async fn epic_set_title(
+    state: State<'_, AppState>,
+    path: String,
+    title: String,
+) -> Result<Epic, AppError> {
+    let v = state.current_vault()?;
+    check_path(&path)?;
+    if !epics::is_epic_path(&path) {
+        return Err(AppError::InvalidPath(format!("{path} is not an epic task")));
+    }
+    let note = fs_ops::read_note(&v.root, &path)?;
+    let new = epics::set_title(&note.content, &title)?;
+    if new != note.content {
+        ops::write_note(&v, &path, &new)?;
+    }
+    Ok(epics::read_epic(&path, &new))
+}
+
 /// Deletes a task with its steps and log. The note is committed first, so the task can be brought
 /// back from its history.
 pub(crate) fn delete_task(
@@ -405,8 +425,7 @@ pub(crate) fn delete_task(
     let title = tasks_of(v, path)
         .into_iter()
         .find(|t| t.line == line)
-        .map(|t| t.title)
-        .unwrap_or_default();
+        .map_or_else(|| "a step".to_string(), |t| t.title);
     v.commit(
         CommitReason::new(
             CommitKind::SnapshotBeforeDelete,

@@ -1,6 +1,6 @@
 [package]
 name = "mimer"
-version = "0.16.0"
+version = "0.17.0"
 description = "Markdown notes with a built-in local AI assistant"
 authors = ["Jesper Ahasverusen Kielsgaard"]
 license = "AGPL-3.0-only"

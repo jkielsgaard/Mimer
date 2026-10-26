@@ -2,12 +2,12 @@
 
 This file is the complete specification for version 1 of Mimer. It is written so that Claude Code or a junior developer can build v1 without asking technical questions. All technical decisions are made here. If something is genuinely not covered, choose the simplest option consistent with the **Core principles** and document the decision in `docs/DECISIONS.md`.
 
-> **Read this first: where the app is now (0.16).** This specification is the plan v1 was built from. The app has grown since, and every change is recorded in `docs/DECISIONS.md` (newest at the bottom). The big differences:
+> **Read this first: where the app is now (0.17).** This specification is the plan v1 was built from. The app has grown since, and every change is recorded in `docs/DECISIONS.md` (newest at the bottom). The big differences:
 >
 > - **The AI runs on the user's own computer.** `ai::router::select_notes` is the only way to a provider. The cloud AI of M11 and "Raven" are gone; from 0.15 an OpenAI-compatible cloud AI can be Mimer's AI as a last resort, only after the user ticks "I understand that my notes are sent to …" (`ai.cloudConsent`), and never for a project marked Local AI only. Embeddings stay local.
 > - **A built-in AI**: llama.cpp (`engine`) and Microsoft's Foundry Local (`foundry`), downloaded at the user's request; LM Studio still works.
 > - **The AI is fixed commands where the user works** (selected text, any text box, the note's AI button, folders, search, tasks, ideas) and **skills** that Mimer carries out note by note. The chat only answers; changes always come as proposals to review (§8.15).
-> - Several things listed as out of scope in §13 now exist: tabs and split view, a command palette, templates and daily notes, export, semantic search, persisted chat history. New areas: tasks and epic tasks, ideas, Focus, Landing, the daily-notes calendar and Trace my work.
+> - Several things listed as out of scope in §13 now exist: tabs and split view, a command palette, templates and daily notes, export, semantic search, persisted chat history. New areas: tasks and epics, ideas, Focus, Landing, the daily-notes calendar and Trace my work.
 > - Releases are built for Windows (installer and Microsoft Store package) and Linux; there is no macOS build for now.
 > - The licence is **AGPL-3.0** from the version after 0.12.0 (it was Apache-2.0).
 

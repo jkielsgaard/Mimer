@@ -46,14 +46,14 @@ describe("FindTasksDialog", () => {
     });
   });
 
-  it("reads the open note, shows the tasks it finds, and adds only the kept ones to the epic task of that note", async () => {
+  it("reads the open note, shows the tasks it finds, and adds only the kept ones to the epic of that note", async () => {
     render(<FindTasksDialog />);
     const user = userEvent.setup();
     expect(await screen.findByText("Send the quote fri")).toBeInTheDocument();
     expect(askMock.mock.calls[0]?.[1]).toBe("Peter sends the quote by friday.");
     expect(apiMock.taskAddToNote).not.toHaveBeenCalled();
     await user.click(screen.getByRole("checkbox", { name: /Ask Lene/ }));
-    await user.click(screen.getByRole("button", { name: "Add 1 task to the epic task" }));
+    await user.click(screen.getByRole("button", { name: "Add 1 task to the epic" }));
     await vi.waitFor(() => {
       expect(apiMock.taskAddToNote).toHaveBeenCalled();
     });

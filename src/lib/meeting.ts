@@ -228,55 +228,6 @@ export function todayAndTomorrow(now: Date): [string, string] {
   return [iso(now), iso(next)];
 }
 
-/** The ending that says an action line has been added to the tasks. */
-const ADDED = " (in Tasks)";
-
-export interface ActionLine {
-  /** 0-based line in the note. */
-  line: number;
-  text: string;
-  /** The agenda item (the `###` part) it was written under, or "". */
-  item: string;
-  /** Already added to the tasks. */
-  added: boolean;
-}
-
-/** The lines marked `**Action:**` in the Notes section, and the agenda item each is under. */
-export function findActions(content: string): ActionLine[] {
-  const lines = content.split("\n");
-  const notes = section(lines, "notes", 0);
-  if (!notes) return [];
-  const found: ActionLine[] = [];
-  let item = "";
-  for (let i = notes.head + 1; i < notes.end; i++) {
-    const l = lines[i] ?? "";
-    const head = /^###\s+(.*\S)\s*$/.exec(l);
-    if (head) {
-      item = head[1] ?? "";
-      continue;
-    }
-    const m = /^\s*\*\*Action:\*\*\s*(\S.*)$/.exec(l);
-    if (!m) continue;
-    const raw = (m[1] ?? "").trim();
-    const added = raw.endsWith(ADDED.trim());
-    const text = (added ? raw.slice(0, raw.length - ADDED.trim().length) : raw).trim();
-    if (text !== "") found.push({ line: i, text, item, added });
-  }
-  return found;
-}
-
-/** The note with these action lines marked as added to the tasks. */
-export function markActionsAdded(content: string, lineNumbers: number[]): string {
-  const lines = content.split("\n");
-  for (const n of lineNumbers) {
-    const l = lines[n] ?? "";
-    if (/^\s*\*\*Action:\*\*\s*\S/.test(l) && !l.trimEnd().endsWith(ADDED.trim())) {
-      lines[n] = `${l.trimEnd()}${ADDED}`;
-    }
-  }
-  return lines.join("\n");
-}
-
 /** A date a number of days later (`YYYY-MM-DD`). */
 export function addDays(date: string, days: number): string {
   const [y, m, d] = date.split("-").map(Number);
@@ -297,14 +248,11 @@ export interface MeetingSeed {
 export function nextMeetingSeed(content: string): MeetingSeed {
   const m = parseMeeting(content);
   const left = m.agenda.filter((a) => !a.done).map((a) => a.text);
-  const open = findActions(content)
-    .filter((a) => !a.added)
-    .map((a) => `Follow up: ${a.text}`);
   return {
     title: m.title,
     date: m.date === null ? "" : addDays(m.date, 7),
     time: m.time ?? "",
     who: m.people.join(", "),
-    agenda: [...left, ...open].join("\n"),
+    agenda: left.join("\n"),
   };
 }

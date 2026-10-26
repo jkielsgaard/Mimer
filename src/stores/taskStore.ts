@@ -3,6 +3,7 @@ import type { MetaPatch } from "@/bindings/MetaPatch";
 import type { Epic } from "@/bindings/Epic";
 import type { Task } from "@/bindings/Task";
 import type { TaskLog } from "@/bindings/TaskLog";
+import type { TaskStep } from "@/bindings/TaskStep";
 import { api, toApiError } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
 import { taskText, todayIso } from "@/lib/taskLogic";
@@ -50,16 +51,20 @@ interface TaskState {
   toggleTaskOpen: (id: string) => void;
   /** Reads every task from every note, and the epics. */
   load: () => Promise<void>;
-  /** The epic tasks in the order the user chose (note paths), from the vault. */
+  /** The epics in the order the user chose (note paths), from the vault. */
   epicOrder: string[];
-  /** Moves an epic task one place up or down among `shown` (the epics in the order on screen). */
+  /** Moves an epic one place up or down among `shown` (the epics in the order on screen). */
   moveEpic: (path: string, up: boolean, shown: readonly string[]) => Promise<void>;
   /** Moves a task (with its steps) or a step one place up or down in its note. */
   move: (path: string, line: number, key: string, up: boolean) => Promise<void>;
+  /** Changes the title of an epic (its heading; the note keeps its name). */
+  renameEpic: (path: string, title: string) => Promise<void>;
+  /** Deletes a step. The note is committed first, and a toast can bring the step back. */
+  removeStep: (t: Task, step: TaskStep) => Promise<void>;
   /** Opens an epic on its page. */
   openEpic: (path: string) => void;
-  /** Makes a new epic task (a note in `Tasks/`) and opens it. Resolves to its note. */
-  createEpic: (title: string) => Promise<string | null>;
+  /** Makes a new epic (a note in `Tasks/`) and opens it, unless `open` is false. Resolves to its note. */
+  createEpic: (title: string, open?: boolean) => Promise<string | null>;
   /** The epic note for a note: itself when it is in `Tasks/`, else the one made for it. */
   epicFor: (note: string) => Promise<string | null>;
   select: (ref: TaskRef | null) => void;
@@ -84,7 +89,7 @@ interface TaskState {
   deleteLog: (t: Task, l: TaskLog) => Promise<void>;
   /** Sets the note of a task (empty text removes it). */
   setNote: (t: Task, text: string) => Promise<void>;
-  /** Sets the description of an epic task (the text under its heading). */
+  /** Sets the description of an epic (the text under its heading). */
   setDescription: (epicPath: string, text: string) => Promise<void>;
   /** Adds tasks to a note (for example the ones the AI found in it). */
   addToNote: (path: string, texts: string[]) => Promise<void>;
@@ -159,13 +164,36 @@ export const useTaskStore = create<TaskState>((set, get) => {
       set({ epicPath: path });
       useUiStore.getState().setCenterView("epic");
     },
-    createEpic: async (title) => {
+    renameEpic: async (path, title) => {
+      try {
+        await flushPendingWrites();
+        const e = await api.epicSetTitle(path, title);
+        set((s) => ({ epics: s.epics.map((x) => (x.path === e.path ? e : x)) }));
+        if (useVaultStore.getState().activePath === path) {
+          useVaultStore.setState((s) => ({ reloadNonce: s.reloadNonce + 1 }));
+        }
+      } catch (e) {
+        reportError(e);
+      }
+    },
+    removeStep: async (t, step) => {
+      const fresh = await mutate(t.path, () => api.taskDelete(t.path, step.line, step.key));
+      if (fresh === null) return;
+      useUiStore.getState().toast("Deleted the step.", "success", {
+        label: "Undo",
+        run: () => {
+          const owner = get().tasks.find((x) => x.path === t.path && x.line === t.line) ?? t;
+          void get().addStep(owner, step.text);
+        },
+      });
+    },
+    createEpic: async (title, open = true) => {
       try {
         await flushPendingWrites();
         const e = await api.epicCreate(title);
         set((s) => ({ epics: [...s.epics.filter((x) => x.path !== e.path), e] }));
         await useVaultStore.getState().refreshTree();
-        get().openEpic(e.path);
+        if (open) get().openEpic(e.path);
         return e.path;
       } catch (e) {
         reportError(e);

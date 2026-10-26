@@ -256,6 +256,7 @@ export const api = {
     call<Task[]>("task_set_note", { path, line, key, text }),
   epicSetDescription: (path: string, text: string) =>
     call<Epic>("epic_set_description", { path, text }),
+  epicSetTitle: (path: string, title: string) => call<Epic>("epic_set_title", { path, title }),
   listEpics: () => call<Epic[]>("list_epics"),
   epicCreate: (title: string) => call<Epic>("epic_create", { title }),
   epicForNote: (note: string) => call<Epic>("epic_for_note_cmd", { note }),

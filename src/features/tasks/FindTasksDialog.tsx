@@ -27,7 +27,7 @@ const MAX_CHARS = 12_000;
 
 /**
  * "Find tasks in this note": the local AI reads the open note and proposes tasks. You choose which
- * ones to keep, and only those are added, as checklist lines, to the epic task of the note.
+ * ones to keep, and only those are added, as checklist lines, to the epic of the note.
  */
 export function FindTasksDialog() {
   const open = useUiStore((s) => s.findTasksOpen);
@@ -91,7 +91,7 @@ function Finder({ path, mode }: { path: string; mode: "tasks" | "steps" }) {
     setAdding(true);
     try {
       const texts = found.filter((_, i) => chosen.has(i)).map(taskText);
-      // Tasks found in an ordinary note go into the epic task made for it; steps go into the epic.
+      // Tasks found in an ordinary note go into the epic made for it; steps go into the epic.
       const target = mode === "steps" ? path : await useTaskStore.getState().epicFor(path);
       if (target === null) return;
       await useTaskStore.getState().addToNote(target, texts);
@@ -118,8 +118,8 @@ function Finder({ path, mode }: { path: string; mode: "tasks" | "steps" }) {
           <DialogDescription>
             {noteName(path)}.{" "}
             {mode === "steps"
-              ? "The AI reads the note and suggests the next steps. You choose which ones to keep, and only those are added to the epic task."
-              : "The AI reads the note and suggests tasks. You choose which ones to keep, and only those are added to the epic task of this note."}
+              ? "The AI reads the note and suggests the next steps. You choose which ones to keep, and only those are added to the epic."
+              : "The AI reads the note and suggests tasks. You choose which ones to keep, and only those are added to the epic of this note."}
           </DialogDescription>
         </DialogHeader>
         <div className="min-h-28">
@@ -177,7 +177,7 @@ function Finder({ path, mode }: { path: string; mode: "tasks" | "steps" }) {
           >
             {adding
               ? "Adding…"
-              : `Add ${String(chosen.size)} task${chosen.size === 1 ? "" : "s"} to the epic task`}
+              : `Add ${String(chosen.size)} task${chosen.size === 1 ? "" : "s"} to the epic`}
           </Button>
         </DialogFooter>
       </DialogContent>

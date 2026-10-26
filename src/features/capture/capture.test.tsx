@@ -10,6 +10,11 @@ const apiMock = vi.hoisted(() => ({
   ideaDelete: vi.fn(),
   ideaSetStatus: vi.fn(),
   taskAdd: vi.fn(),
+  epicCreate: vi.fn(),
+  epicForNote: vi.fn(),
+  listTasks: vi.fn(),
+  listEpics: vi.fn(),
+  getEpicOrder: vi.fn(),
   createNote: vi.fn(),
   writeNote: vi.fn(),
 }));
@@ -27,6 +32,7 @@ import { IdeasPanel } from "./IdeasPanel";
 import { IdeasView } from "./IdeasView";
 import { QuickCapture } from "./QuickCapture";
 import { useIdeaStore } from "@/stores/ideaStore";
+import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 
@@ -49,6 +55,10 @@ describe("CaptureBox", () => {
     apiMock.taskAdd.mockResolvedValue([]);
     apiMock.createNote.mockResolvedValue("Quick/Cheat sheet.md");
     apiMock.writeNote.mockResolvedValue(undefined);
+    useTaskStore.setState({
+      epics: [{ path: "Tasks/Work.md", title: "Work", source: null, description: "" }],
+      loaded: true,
+    });
     useVaultStore.setState({
       vault: { name: "V", path: "/v", config: { quickNotesFolder: "Quick" } } as never,
       refreshTree: vi.fn().mockResolvedValue(undefined),
@@ -73,15 +83,65 @@ describe("CaptureBox", () => {
     expect(screen.getByRole("button", { name: "Task" })).toHaveAttribute("aria-pressed", "true");
     await user.type(screen.getByLabelText("Write a task"), "Later task{Enter}");
     expect(apiMock.taskAdd.mock.calls[2]?.[0]).toBe("Later task");
-    await user.click(screen.getByRole("button", { name: "Note" }));
+    await user.click(screen.getByRole("button", { name: "Quick note" }));
     await user.type(screen.getByLabelText("Title of the note"), "Cheat sheet");
     await user.type(screen.getByLabelText("Write the note"), "VLAN 10 is the office");
-    await user.click(screen.getByRole("button", { name: "Save the note" }));
+    await user.click(screen.getByRole("button", { name: "Save the quick note" }));
     await waitFor(() => {
       expect(apiMock.writeNote).toHaveBeenCalled();
     });
     expect(apiMock.createNote.mock.calls[0]?.[0]).toBe("Quick");
     expect(apiMock.writeNote.mock.calls[0]?.[1]).toBe("# Cheat sheet\n\nVLAN 10 is the office\n");
+  });
+
+  it("puts a task in the epic you choose, or in a new one, and remembers the choice", async () => {
+    apiMock.epicCreate.mockResolvedValue({
+      path: "Tasks/Launch.md",
+      title: "Launch",
+      source: null,
+      description: "",
+    });
+    const user = userEvent.setup();
+    const { unmount } = render(<CaptureBox initialKind="task" />);
+    expect(screen.getByLabelText("Epic for the task")).toHaveValue("Tasks/Work.md");
+    await user.selectOptions(screen.getByLabelText("Epic for the task"), "::new");
+    // A new epic needs a name; nothing is made without one.
+    await user.type(screen.getByLabelText("Write a task"), "Plan it");
+    await user.keyboard("{Enter}");
+    expect(apiMock.taskAdd).not.toHaveBeenCalled();
+    await user.type(screen.getByLabelText("Name of the new epic"), "Launch{Enter}");
+    await waitFor(() => {
+      expect(apiMock.taskAdd).toHaveBeenCalled();
+    });
+    expect(apiMock.epicCreate).toHaveBeenCalledWith("Launch");
+    expect(apiMock.taskAdd.mock.calls[0]?.[3]).toBe("Tasks/Launch.md");
+    unmount();
+    render(<CaptureBox initialKind="task" />);
+    expect(screen.getByLabelText("Epic for the task")).toHaveValue("Tasks/Launch.md");
+  });
+
+  it("starts with the epic of a meeting, made when the first task is saved", async () => {
+    apiMock.epicForNote.mockResolvedValue({
+      path: "Tasks/Weekly.md",
+      title: "Weekly",
+      source: null,
+      description: "",
+    });
+    render(
+      <CaptureBox
+        initialKind="task"
+        aroundNote={{ path: "Meetings/Weekly.md", title: "Weekly" }}
+      />,
+    );
+    const user = userEvent.setup();
+    expect(screen.getByLabelText("Epic for the task")).toHaveValue("::note");
+    expect(apiMock.epicForNote).not.toHaveBeenCalled();
+    await user.type(screen.getByLabelText("Write a task"), "Book the room{Enter}");
+    await waitFor(() => {
+      expect(apiMock.taskAdd).toHaveBeenCalled();
+    });
+    expect(apiMock.epicForNote).toHaveBeenCalledWith("Meetings/Weekly.md");
+    expect(apiMock.taskAdd.mock.calls[0]?.[3]).toBe("Tasks/Weekly.md");
   });
 
   it("lets a task and an idea have a small note", async () => {
@@ -125,6 +185,16 @@ describe("QuickCapture", () => {
       expect(useUiStore.getState().captureKind).toBeNull();
     });
     expect(useUiStore.getState().toasts[0]?.message).toBe("Saved an idea.");
+  });
+
+  it("shows only a quick note when it is opened from Quick note", async () => {
+    useUiStore.getState().openCapture("note");
+    render(<QuickCapture />);
+    expect(await screen.findByLabelText("Title of the note")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Quick note" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Task" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Idea" })).toBeNull();
+    expect(screen.queryByLabelText("What is it?")).toBeNull();
   });
 });
 
@@ -207,16 +277,20 @@ describe("Ideas", () => {
     expect(apiMock.ideaAdd.mock.calls[0]?.[2]).toBe("Details");
   });
 
-  it("turns an idea into a task in the Inbox with its note, and marks it as used", async () => {
+  it("turns an idea into a task in the epic you choose, with its note, and marks it as used", async () => {
     useIdeaStore.setState({ selectedLine: 4 });
     render(<IdeasView />);
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: "Make a task" }));
+    // Nothing is made until an epic is chosen.
+    expect(apiMock.taskAdd).not.toHaveBeenCalled();
+    await user.click(await screen.findByRole("button", { name: "Make the task" }));
     await waitFor(() => {
       expect(apiMock.ideaSetStatus).toHaveBeenCalledWith(4, "k", "used");
     });
     expect(apiMock.taskAdd.mock.calls[0]?.[0]).toBe("Newest idea");
     expect(apiMock.taskAdd.mock.calls[0]?.[1]).toBe("Why it matters");
+    expect(apiMock.taskAdd.mock.calls[0]?.[3]).toBe("Tasks/Work.md");
   });
 
   it("turns an idea into a note in Quick notes with its note, and opens it", async () => {
@@ -260,6 +334,7 @@ describe("Ideas", () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: /Suggest first steps/ }));
     await user.click(await screen.findByRole("button", { name: "Make a task with 3 steps" }));
+    await user.click(await screen.findByRole("button", { name: "Make the task" }));
     await waitFor(() => {
       expect(apiMock.taskAdd).toHaveBeenCalledTimes(1);
     });

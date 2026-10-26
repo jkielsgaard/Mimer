@@ -4,27 +4,12 @@ import { Button } from "@/components/ui/button";
 import { CaptureBox } from "@/features/capture/CaptureBox";
 import { api } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
-import {
-  addItem,
-  findActions,
-  itemNotes,
-  markItem,
-  parseMeeting,
-  setItemNotes,
-} from "@/lib/meeting";
+import { addItem, itemNotes, markItem, parseMeeting, setItemNotes } from "@/lib/meeting";
 import { cn } from "@/lib/utils";
-import { ActionsDialog } from "./ActionsDialog";
 import { reportError, useUiStore } from "@/stores/uiStore";
 
 /** The item that holds the notes when the meeting has no agenda. */
 const GENERAL = "Notes";
-
-const MARKS = [
-  { label: "Decision", text: "**Decision:** " },
-  { label: "Action", text: "**Action:** " },
-  { label: "Question", text: "**Question:** " },
-  { label: "Park it", text: "**Parked:** " },
-];
 
 /**
  * A running meeting: the agenda on the left (one item at a time), the notes for that item in the
@@ -39,7 +24,6 @@ export function MeetingFocus() {
   const [adding, setAdding] = useState("");
   const [parked, setParked] = useState(0);
   const [last, setLast] = useState(false);
-  const [actionsOpen, setActionsOpen] = useState(false);
   const area = useRef<HTMLTextAreaElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef<{ path: string; content: string } | null>(null);
@@ -124,7 +108,6 @@ export function MeetingFocus() {
   if (path === null || content === null || meeting === null) return null;
 
   const items = meeting.agenda;
-  const openActions = findActions(content).filter((a) => !a.added).length;
 
   /** Goes to another item: what was written is already in the note. */
   const go = (item: string, text = content): void => {
@@ -137,19 +120,6 @@ export function MeetingFocus() {
   const write = (text: string): void => {
     setDraft(text);
     change(setItemNotes(content, current, text));
-  };
-
-  const mark = (text: string): void => {
-    // The box gets the focus at once, so what is typed next goes into it and not onto the button.
-    area.current?.focus();
-    const gap = draft === "" || draft.endsWith("\n") ? "" : "\n";
-    write(`${draft}${gap}${text}`);
-    setTimeout(() => {
-      const el = area.current;
-      if (!el) return;
-      el.focus();
-      el.setSelectionRange(el.value.length, el.value.length);
-    }, 0);
   };
 
   const next = (): void => {
@@ -193,20 +163,6 @@ export function MeetingFocus() {
           </span>
         )}
         <span className="flex-1" />
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            setActionsOpen(true);
-          }}
-        >
-          Add actions to Tasks…
-          {openActions > 0 && (
-            <span className="rounded-full bg-accent px-1.5 text-[11px] font-semibold text-accent-foreground">
-              {openActions}
-            </span>
-          )}
-        </Button>
         <Button size="sm" variant="outline" onClick={leave}>
           Leave meeting <kbd className="text-[10px] opacity-60">Esc</kbd>
         </Button>
@@ -294,18 +250,6 @@ export function MeetingFocus() {
             className="min-h-64 flex-1 resize-none rounded-lg border bg-card px-4 py-3 text-[15px] leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           <div className="flex flex-wrap items-center gap-2">
-            {MARKS.map((m) => (
-              <Button
-                key={m.label}
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  mark(m.text);
-                }}
-              >
-                {m.label}
-              </Button>
-            ))}
             <span className="flex-1" />
             {last && <span className="text-sm text-muted-foreground">That was the last item.</span>}
             {items.some((a) => a.text === current) && (
@@ -319,6 +263,7 @@ export function MeetingFocus() {
         <div className="flex min-w-0 flex-col gap-1.5">
           <span className="section-label">Something popped into your head?</span>
           <CaptureBox
+            aroundNote={{ path, title: meeting.title }}
             onSaved={() => {
               setParked((n) => n + 1);
             }}
@@ -330,19 +275,6 @@ export function MeetingFocus() {
           </p>
         </div>
       </div>
-      {actionsOpen && (
-        <ActionsDialog
-          path={path}
-          content={content}
-          onDone={(next) => {
-            change(next);
-            setDraft(itemNotes(next, current));
-          }}
-          onClose={() => {
-            setActionsOpen(false);
-          }}
-        />
-      )}
     </div>
   );
 }

@@ -82,6 +82,30 @@ pub fn read_epic(path: &str, content: &str) -> Epic {
     }
 }
 
+/// Sets the title of an epic note: its first heading (made when there is none). The file keeps
+/// its name, so no link breaks.
+pub fn set_title(content: &str, title: &str) -> AppResult<String> {
+    let title = title.split_whitespace().collect::<Vec<_>>().join(" ");
+    if title.is_empty() {
+        return Err(AppError::InvalidPath("The epic needs a name".into()));
+    }
+    let mut lines: Vec<String> = content.split('\n').map(str::to_string).collect();
+    let mut start = 0;
+    if lines.first().is_some_and(|l| l.trim_end() == "---") {
+        if let Some(close) = lines[1..].iter().position(|l| l.trim_end() == "---") {
+            start = close + 2;
+        }
+    }
+    match lines[start..].iter().position(|l| l.starts_with("# ")) {
+        Some(i) => lines[start + i] = format!("# {title}"),
+        None => {
+            lines.insert(start, String::new());
+            lines.insert(start, format!("# {title}"));
+        }
+    }
+    Ok(lines.join("\n"))
+}
+
 fn is_task_line(line: &str) -> bool {
     let t = line.trim_start();
     ["- [", "* [", "+ ["].iter().any(|p| {
@@ -231,5 +255,16 @@ mod tests {
         );
         assert!(new_epic_text("  ", None).is_err());
         assert_eq!(file_name_for("a/b: c?"), "a b c");
+    }
+
+    #[test]
+    fn the_title_is_changed_in_the_heading_and_the_rest_stays() {
+        let note = "---\nsource: \"[[A]]\"\n---\n# Old\n\nText\n- [ ] T\n";
+        assert_eq!(
+            set_title(note, "  New   name ").unwrap(),
+            "---\nsource: \"[[A]]\"\n---\n# New name\n\nText\n- [ ] T\n"
+        );
+        assert_eq!(set_title("- [ ] T\n", "X").unwrap(), "# X\n\n- [ ] T\n");
+        assert!(set_title("# Old\n", "  ").is_err());
     }
 }

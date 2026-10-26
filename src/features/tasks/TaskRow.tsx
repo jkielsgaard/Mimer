@@ -1,7 +1,9 @@
 import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import type { Task } from "@/bindings/Task";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MoveButtons, moveKey } from "@/components/MoveButtons";
+import { InlineEdit, RowActions } from "@/components/RowActions";
 import { cn } from "@/lib/utils";
 import { noteName, shortDate } from "@/lib/taskLogic";
 import { useTaskStore } from "@/stores/taskStore";
@@ -50,6 +52,9 @@ export function TaskRow({
   const id = `${task.path}:${String(task.line)}`;
   const stepsOpen = useTaskStore((s) => s.openTasks[id] === true);
   const [step, setStep] = useState("");
+  // What is open for change: the title of the task, or the step at that line.
+  const [editing, setEditing] = useState<"title" | number | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const stepsDone = task.steps.filter((s) => s.done).length;
   const dim = task.done || task.status === "dropped";
   const moveUp = () => useTaskStore.getState().move(task.path, task.line, task.key, true);
@@ -89,18 +94,45 @@ export function TaskRow({
             void setDone(task.path, task.line, task.key, !task.done);
           }}
         />
-        <button
-          type="button"
-          className={cn(
-            "min-w-0 flex-1 truncate text-left text-sm font-semibold focus-visible:ring-2 focus-visible:ring-ring",
-            dim && "font-normal text-muted-foreground line-through",
-          )}
-          onClick={() => {
-            open(task);
-          }}
-        >
-          {task.title}
-        </button>
+        {editing === "title" ? (
+          <InlineEdit
+            value={task.title}
+            label={`Title of ${task.title}`}
+            className="text-sm font-semibold"
+            onSave={(t) => {
+              setEditing(null);
+              void useTaskStore.getState().rename(task.path, task.line, task.key, t);
+            }}
+            onCancel={() => {
+              setEditing(null);
+            }}
+          />
+        ) : (
+          <>
+            <button
+              type="button"
+              className={cn(
+                "min-w-0 truncate text-left text-sm font-semibold focus-visible:ring-2 focus-visible:ring-ring",
+                dim && "font-normal text-muted-foreground line-through",
+              )}
+              onClick={() => {
+                open(task);
+              }}
+            >
+              {task.title}
+            </button>
+            <RowActions
+              what={`the task ${task.title}`}
+              onEdit={() => {
+                setEditing("title");
+              }}
+              onDelete={() => {
+                setDeleting(true);
+              }}
+            />
+            <span className="flex-1" />
+          </>
+        )}
         {task.tags.slice(0, 2).map((t) => (
           <span
             key={t}
@@ -130,7 +162,7 @@ export function TaskRow({
       {stepsOpen && (
         <ul aria-label={`Steps of ${task.title}`} className="mb-1 ml-12 flex flex-col gap-0.5">
           {task.steps.map((s) => (
-            <li key={s.line} className="flex items-center gap-2 py-0.5 text-sm">
+            <li key={s.line} className="group flex items-center gap-2 py-0.5 text-sm">
               <Tick
                 done={s.done}
                 label={s.text}
@@ -138,7 +170,34 @@ export function TaskRow({
                   void setDone(task.path, s.line, s.key, !s.done);
                 }}
               />
-              <span className={cn(s.done && "text-muted-foreground line-through")}>{s.text}</span>
+              {editing === s.line ? (
+                <InlineEdit
+                  value={s.text}
+                  label={`Text of the step ${s.text}`}
+                  onSave={(t) => {
+                    setEditing(null);
+                    void useTaskStore.getState().rename(task.path, s.line, s.key, t);
+                  }}
+                  onCancel={() => {
+                    setEditing(null);
+                  }}
+                />
+              ) : (
+                <>
+                  <span className={cn(s.done && "text-muted-foreground line-through")}>
+                    {s.text}
+                  </span>
+                  <RowActions
+                    what={`the step ${s.text}`}
+                    onEdit={() => {
+                      setEditing(s.line);
+                    }}
+                    onDelete={() => {
+                      void useTaskStore.getState().removeStep(task, s);
+                    }}
+                  />
+                </>
+              )}
             </li>
           ))}
           <li>
@@ -164,6 +223,24 @@ export function TaskRow({
           </li>
         </ul>
       )}
+      <ConfirmDialog
+        open={deleting}
+        title={`Delete the task “${task.title}”?`}
+        description={
+          task.steps.length > 0
+            ? `Its ${String(task.steps.length)} steps go too. They stay in the version history of the note, so they can be brought back.`
+            : "It stays in the version history of the note, so it can be brought back."
+        }
+        confirmLabel="Delete"
+        destructive
+        onCancel={() => {
+          setDeleting(false);
+        }}
+        onConfirm={() => {
+          setDeleting(false);
+          void useTaskStore.getState().remove(task);
+        }}
+      />
     </li>
   );
 }

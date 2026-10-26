@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { makeTask } from "@/test/taskFixtures";
@@ -7,6 +7,10 @@ const apiMock = vi.hoisted(() => ({
   listTasks: vi.fn(),
   listEpics: vi.fn(),
   epicCreate: vi.fn(),
+  epicSetTitle: vi.fn(),
+  taskDelete: vi.fn(),
+  taskSetTitle: vi.fn(),
+  deletePath: vi.fn(),
   taskSetDone: vi.fn(),
   taskAdd: vi.fn(),
   taskAddStep: vi.fn(),
@@ -55,6 +59,7 @@ describe("TasksView", () => {
       epicOrder: [],
       loaded: false,
       folded: {},
+      openTasks: {},
       epicPath: null,
     });
     useUiStore.setState({ centerView: "tasks", focusOpen: false });
@@ -102,7 +107,7 @@ describe("TasksView", () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole("button", { name: /^VPN guide/ }));
     expect(useUiStore.getState().centerView).toBe("epic");
-    await user.click(screen.getByRole("button", { name: /New epic task/ }));
+    await user.click(screen.getByRole("button", { name: /New epic/ }));
     await user.type(screen.getByLabelText("Name"), "New one{Enter}");
     expect(apiMock.epicCreate).toHaveBeenCalledWith("New one");
   });
@@ -139,6 +144,9 @@ describe("TasksView", () => {
       screen.getByRole("checkbox", { name: /Mark as not done: Draft it/ }),
     ).toBeInTheDocument();
     await user.type(screen.getByLabelText("Add a step to Write the steps"), "Check it{Enter}");
+    await waitFor(() => {
+      expect(apiMock.taskAddStep).toHaveBeenCalled();
+    });
     expect(apiMock.taskAddStep).toHaveBeenCalledWith("Tasks/VPN guide.md", 3, "key-1", "Check it");
     await user.type(screen.getByLabelText("Add a task to VPN guide"), "Test on Linux{Enter}");
     expect(apiMock.taskAdd.mock.calls[0]?.[0]).toBe("Test on Linux");
@@ -203,5 +211,61 @@ describe("TasksView", () => {
     screen.getByRole("button", { name: "Test on a Mac" }).focus();
     await user.keyboard("{Alt>}{ArrowUp}{/Alt}");
     expect(apiMock.taskMove).toHaveBeenCalledWith("Tasks/VPN guide.md", 4, "b", true);
+  });
+
+  it("changes and deletes through the pencil and the waste bin, never from a field", async () => {
+    apiMock.epicSetTitle.mockResolvedValue({
+      path: "Tasks/VPN guide.md",
+      title: "VPN",
+      source: null,
+      description: "",
+    });
+    apiMock.taskDelete.mockResolvedValue([]);
+    render(<TasksView />);
+    const vpn = await screen.findByRole("region", { name: "VPN guide" });
+    // Nothing on the screen is a text field until the pencil is pressed.
+    expect(within(vpn).queryByRole("textbox", { name: /^Name of/ })).toBeNull();
+    const user = userEvent.setup();
+    await user.click(within(vpn).getByRole("button", { name: "Edit the epic VPN guide" }));
+    const field = within(vpn).getByRole("textbox", { name: "Name of VPN guide" });
+    await user.clear(field);
+    await user.type(field, "VPN{Enter}");
+    expect(apiMock.epicSetTitle).toHaveBeenCalledWith("Tasks/VPN guide.md", "VPN");
+
+    // Escape goes back and changes nothing.
+    await user.click(within(vpn).getByRole("button", { name: "Edit the epic VPN" }));
+    await user.type(within(vpn).getByRole("textbox", { name: /^Name of/ }), "x{Escape}");
+    expect(apiMock.epicSetTitle).toHaveBeenCalledTimes(1);
+
+    // A task is deleted only after the question.
+    await user.click(within(vpn).getByRole("button", { name: "Delete the task Write the steps" }));
+    expect(apiMock.taskDelete).not.toHaveBeenCalled();
+    await user.click(await screen.findByRole("button", { name: "Delete" }));
+    expect(apiMock.taskDelete).toHaveBeenCalledWith("Tasks/VPN guide.md", 3, expect.any(String));
+  });
+
+  it("deletes a step at once, and the toast can bring it back", async () => {
+    apiMock.taskDelete.mockResolvedValue([]);
+    apiMock.taskAddStep.mockResolvedValue([]);
+    render(<TasksView />);
+    const vpn = await screen.findByRole("region", { name: "VPN guide" });
+    const user = userEvent.setup();
+    await user.click(
+      within(vpn).getByRole("button", { name: /Show the steps of Write the steps/ }),
+    );
+    await user.click(within(vpn).getByRole("button", { name: "Delete the step Draft it" }));
+    expect(apiMock.taskDelete).toHaveBeenCalledWith("Tasks/VPN guide.md", 4, "s1");
+    const toast = useUiStore.getState().toasts.at(-1);
+    expect(toast?.action?.label).toBe("Undo");
+    toast?.action?.run();
+    await waitFor(() => {
+      expect(apiMock.taskAddStep).toHaveBeenCalled();
+    });
+    expect(apiMock.taskAddStep).toHaveBeenCalledWith(
+      "Tasks/VPN guide.md",
+      3,
+      expect.any(String),
+      "Draft it",
+    );
   });
 });

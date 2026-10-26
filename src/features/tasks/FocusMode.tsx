@@ -30,7 +30,7 @@ function nextOpen(tasks: readonly Task[], current: Task): Task | undefined {
 }
 
 /**
- * Focus on an epic task: the whole epic on one page, with the task worked on open and marked and
+ * Focus on an epic: the whole epic on one page, with the task worked on open and marked and
  * the rest folded, a timer, "Do this now" and a place to put thoughts that pop up. Everything else
  * is hidden. What is written here is the task's ordinary log, so leaving puts you back where you
  * were.
@@ -117,7 +117,7 @@ export function FocusMode() {
         aria-label="Focus"
         className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background"
       >
-        <p className="text-lg font-semibold">Epic task done</p>
+        <p className="text-lg font-semibold">Epic done</p>
         <p className="text-sm text-muted-foreground">Every task in {group.title} is done.</p>
         <Button
           onClick={() => {
@@ -445,6 +445,7 @@ export function FocusMode() {
           <div className="mt-2 flex w-full flex-col gap-1.5">
             <span className="section-label">Something popped into your head?</span>
             <CaptureBox
+              epic={group?.path ?? task.path}
               onSaved={() => {
                 setParked((n) => n + 1);
               }}

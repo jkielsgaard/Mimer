@@ -28,8 +28,10 @@ Keep it up to date: when a feature changes, change its lines here in the same co
 - [ ] **New** above the tree: Note, From a template…, Meeting note…, Quick note, Today's daily note, Folder…, Project… all work, and there is no "From a starter". **File** has the same first five, then **Capture a task, idea or note…**. The `···` menu has no Search or Quick open.
 - [ ] **Quick note**: opens the small box on Note; with a name it saves `Quick notes/<name>.md`, without one it uses the first line; the note you are in stays open and unchanged.
 - [ ] **Meeting note…**: everything can be left empty. With a day and time, the note is `Meetings/<day> <title>.md` with `meeting:` and `with:` at the top, the agenda as a checklist and a `###` part per item. **Create** keeps you where you are; **Create and start** opens the meeting screen.
-- [ ] **Meeting screen**: the first open item is **Now**; typing writes to the note (open it in another tab to see it); **Decision / Action / Question / Park it** add a marked line; **Next item** ticks the item; **+ Add an item** adds it; the write-it-down box does not change the notes; **Esc** leaves. **Start meeting** shows above notes in the Meetings folder.
-- [ ] **After the meeting**: above a meeting note, the small arrow next to **Start meeting** has **Add actions to Tasks…** (lines marked Action get ticks; lines already added are greyed; the epic task is "This meeting" or another; afterwards the note has "(in Tasks)" on them and the tasks are in the epic task) and **Prepare next meeting…** (the window is filled in: same title and people, a week later, unticked agenda items and "Follow up: …" lines). The meeting screen has the same **Add actions to Tasks…** in its header.
+- [ ] **Meeting screen**: the first open item is **Now**; typing writes to the note (open it in another tab to see it); **Next item** ticks the item; **+ Add an item** adds it; the write-it-down box does not change the notes; **Esc** leaves. **Start meeting** shows above notes in the Meetings folder.
+- [ ] **After the meeting**: next to **Start meeting**, **Prepare next meeting…** fills in the window: same title and people, a week later, only the agenda items that were not ticked.
+- [ ] **Where a task goes**: in the write-it-down box (Focus, meeting screen, Ctrl+Shift+N) a task has **Into**. Focus starts on the epic in focus, a meeting on its own epic (made when the first task is saved), else the one used last; **+ New epic…** asks for a name; nothing is made without one; no "Inbox" appears.
+- [ ] **Pencil and waste bin**: over an epic, a task and a step (list, epic page, task page, Focus) the pencil opens a field (Enter saves, Esc and the cross go back, clicking away changes nothing) and the waste bin deletes. Epic and task ask first and say how much goes with them; a step goes at once and **Undo** in the message puts it back at the end. Tab reaches both buttons.
 - [ ] **Landing** has one line with the next meeting of today or tomorrow and **Start**; **+N** shows the others; with no meeting today or tomorrow there is no line.
 - [ ] Folders first, then notes, A–Z ignoring case; `.md` is hidden. Files and folders starting with `.` never show. Folders show how many notes they hold.
 - [ ] Rename (right-click → **Rename**, or F2), drag a note onto a folder, delete (the dialog says it can be restored from history).
@@ -87,37 +89,37 @@ Check with `git log --oneline` in the vault folder.
 - [ ] **(AI)** Semantic search (Settings → AI, a local embedding model): **Keyword / Meaning / Both** appear; **Meaning** finds a note by a phrase that is not in it. `.vault/embeddings.db` is ignored by Git.
 - [ ] **(AI)** A search like "what is the service desk number?" shows **Answer from my notes**; **Get an answer** answers with the notes it used.
 
-### 7. Tasks and epic tasks
+### 7. Tasks and epics
 
-- [ ] `Ctrl/Cmd+Shift+T` or the Tasks icon: one outline of epic tasks, each a box with "N of M" and a bar; the left panel lists the epics. There is no Today, Later, due date or "Moved from earlier" anywhere.
+- [ ] `Ctrl/Cmd+Shift+T` or the Tasks icon: one outline of epics, each a box with "N of M" and a bar; the left panel lists the epics. There is no Today, Later, due date or "Moved from earlier" anywhere.
 - [ ] Fold an epic: only its name and progress are left. **Fold all** and **Unfold all** do every epic. Restart: what was folded is still folded. Finished epics are under **Done · N** at the bottom, folded; the button shows them.
 - [ ] A task with steps has an arrow: unfold it, tick a step and add one (**+ Add a step**) right in the list; the note shows the step.
 - [ ] **+ Add a task to …** at the bottom of an open epic: type "Print the guide tomorrow" and press Enter. The title is exactly that (no date is read from it) and the file has `made:<today>` at the end of the line; the list shows the day it was made.
-- [ ] **New epic task** "Office move": `Tasks/Office move.md` is made and opens. Add three tasks, tick all: the epic moves to **Done**; untick one: it comes back.
+- [ ] **New epic** "Office move": `Tasks/Office move.md` is made and opens. Add three tasks, tick all: the epic moves to **Done**; untick one: it comes back.
 - [ ] Select a line in a note → **As a task**: `Tasks/<note>.md` has a `source:` line and the task (with `made:`); the note is unchanged. The epic page shows **Came from**.
-- [ ] Task page: two columns. Left: title, **Note**, steps, "What has happened". Right: status (a "Status: …" log line appears), **Made**, **Epic task: …**, **Open the note** and the tags. The way back at the top goes to the epic task. No due date, time or today's list.
-- [ ] Task page **Note**: write two lines and click away: the file has them as plain indented text right under the task. An epic made with **New epic task** has a **Note** too (text under its heading).
+- [ ] Task page: two columns. Left: title, **Note**, steps, "What has happened". Right: status (a "Status: …" log line appears), **Made**, **Epic: …**, **Open the note** and the tags. The way back at the top goes to the epic. No due date, time or today's list.
+- [ ] Task page **Note**: write two lines and click away: the file has them as plain indented text right under the task. An epic made with **New epic** has a **Note** too (text under its heading).
 - [ ] "What has happened": a new line is written as `  - <today> text` (a list item). Hold the mouse over a line: the pencil changes its text and date, the bin deletes it (it asks; History of the note still has it).
 - [ ] Old file: a task with `> 2026-10-19 …` log lines and a `> note` line still shows its log and note. Add a log line: that task's lines are now all in the new form; other tasks are untouched. Words like `due:2026-10-23` stay in the file but are not shown.
 - [ ] Open the epic's note in another Markdown editor (or GitHub): every log line is on its own line, and the note reads as text under the task.
 - [ ] **Focus** in the Tasks panel starts with the first open task of the epic that is open (or of the first epic).
 - [ ] **(AI)** **Break it down** suggests steps; only the ticked ones are added. **Write a status line from the log** uses the written lines, the steps and the note, not the "Status:" lines. **Suggest steps from the note** on an epic adds only the ticked ones.
-- [ ] Order: hover an epic, a task and a step and use the arrows; then the same with **Alt+↑/↓** (the focus stays on the item, so it can be pressed again). The note has the new order (a task moves with its steps, note and log). The Inbox has no arrows and stays first. Restart Mimer: the epic order is kept. Change a step's text on the task page: Enter saves, Esc puts it back. Rename a task: `made:` stays.
+- [ ] Order: hover an epic, a task and a step and use the arrows; then the same with **Alt+↑/↓** (the focus stays on the item, so it can be pressed again). The note has the new order (a task moves with its steps, note and log). Restart Mimer: the epic order is kept. Change a step's text with the pencil on the task page: Enter saves, Esc goes back; no title or step is a text field before the pencil is pressed. Rename a task: `made:` stays.
 - [ ] Delete a task: it asks; History has "Snapshot before delete".
 
 ### 8. Ideas, write it down and Focus
 
 - [ ] The light bulb: ideas Open / Used / Archived; **New idea**; change the title and note, click away: `Ideas.md` has the note indented under the line (hidden from the tree and not a task).
-- [ ] **Make a task**: in the epic task Inbox, with the idea's note as the task's note; the idea is Used. **Make a note**: a note in Quick notes opens. Archive and Bring back work.
+- [ ] **Make a task**: asks which epic (or a new one), then puts it there with the idea's note as the task's note; the idea is Used. **Make a note**: a note in Quick notes opens. Archive and Bring back work.
 - [ ] `Ctrl/Cmd+Shift+N` from inside a note: Task, Idea and Note each save and close; the note you were writing is unchanged.
 - [ ] **Focus** is only on an epic: in its heading in the task list and at the top of the epic page (not in the left panel, not on task rows, not on the task page). It shows the whole epic as an outline, every task open, the task marked **Working on it** (its status is Doing), its next step marked **Now**. Fold any task (also the marked one), **Work on this** moves the mark, **Fold the rest** folds all but the marked one. Move tasks and steps with the arrows (or Alt+Up/Down), and add a step under a task with Enter.
-- [ ] In Focus, write in **What has happened** and press Enter: the line is in the task's log with today's date and you stay in Focus. **Done, next step** on the last step asks "Tick the task too?"; yes marks the next open task. When the epic is done: "Epic task done" and **Back to the task list**. The timer can be paused; the write-it-down box keeps you in Focus; Esc leaves.
+- [ ] In Focus, write in **What has happened** and press Enter: the line is in the task's log with today's date and you stay in Focus. **Done, next step** on the last step asks "Tick the task too?"; yes marks the next open task. When the epic is done: "Epic done" and **Back to the task list**. The timer can be paused; the write-it-down box keeps you in Focus; Esc leaves.
 - [ ] **(AI)** **Help me start** in Focus, **Think it through** and **Suggest first steps** on an idea: nothing is added until you press the button.
 
 ### 9. Daily notes and Trace my work
 
 - [ ] `Ctrl/Cmd+Shift+D` makes `Daily/<today>.md`; again opens the same note. Settings → Vault: daily folder, date format and template are used.
-- [ ] Settings → General → **Trace my work** on: write in a note, make a task, add a log line, tick it. Today's daily note has "## Worked on" with one line for each; task lines end with `in [[Tasks/…]]`, a link to the epic task's note. Write in the same note again: no second line. Remove a line: it stays removed while Mimer runs. Off: nothing is written.
+- [ ] Settings → General → **Trace my work** on: write in a note, make a task, add a log line, tick it. Today's daily note has "## Worked on" with one line for each; task lines end with `in [[Tasks/…]]`, a link to the epic's note. Write in the same note again: no second line. Remove a line: it stays removed while Mimer runs. Off: nothing is written.
 
 ### 10. Setting up the AI
 

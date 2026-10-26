@@ -37,7 +37,7 @@ export function isOpen(t: Task): boolean {
   return !t.done && t.status !== "dropped";
 }
 
-/** An epic task: a note with its tasks. */
+/** An epic: a note with its tasks. */
 export interface EpicGroup {
   /** The note. */
   path: string;
@@ -60,7 +60,7 @@ export interface EpicGroup {
 export const INBOX = "Tasks/Inbox.md";
 
 /**
- * The epic tasks of the vault: every epic note in `Tasks/` (also when empty) and every other note
+ * The epics of the vault: every epic note in `Tasks/` (also when empty) and every other note
  * that has tasks. The Inbox first, then the user's own order (`order`, note paths), then the rest
  * by name; the tasks in the order they are in the note.
  */

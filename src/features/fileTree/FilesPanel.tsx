@@ -35,7 +35,7 @@ export function FilesPanel() {
     () =>
       withoutFolders(withoutManagedNotes(withoutImages(tree)), [
         ...projects.map((p) => p.folder),
-        // Meetings, quick notes and epic tasks have their own place above; the daily notes are
+        // Meetings, quick notes and epics have their own place above; the daily notes are
         // reached from the calendar, so their folder is not listed.
         ...landing,
         ...(config?.dailyNotesFolder ? [config.dailyNotesFolder] : []),

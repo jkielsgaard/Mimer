@@ -42,6 +42,6 @@ A fenced block written with the language `mermaid` is drawn as a diagram while t
 ```mermaid
 flowchart LR
   A[Idea] --> B{Worth it?}
-  B -- yes --> C[Epic task]
+  B -- yes --> C[Epic]
 ```
 ````
