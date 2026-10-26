@@ -75,10 +75,10 @@ export function CommandPalette() {
     });
     const actions: PaletteItem[] = [
       act("new-note", "New note", newNoteInCurrentFolder, formatShortcut("Mod+N")),
-      act("daily", "Open today's note", () => void openDailyNote(), formatShortcut("Mod+Shift+D")),
+      act("daily", "Today's daily note", () => void openDailyNote(), formatShortcut("Mod+Shift+D")),
       act(
         "search",
-        "Search in notes",
+        "Search",
         () => {
           ui().focusSearch();
         },
@@ -86,7 +86,7 @@ export function CommandPalette() {
       ),
       act(
         "history",
-        "Show history of this note",
+        "History of the note",
         () => {
           ui().setRightTab("history");
         },
@@ -102,7 +102,7 @@ export function CommandPalette() {
       ),
       act(
         "tasks",
-        "Open the task list",
+        "Tasks",
         () => {
           ui().openArea("tasks");
         },
@@ -110,20 +110,23 @@ export function CommandPalette() {
       ),
       act(
         "capture",
-        "Write something down (task, idea or note)",
+        "Capture a task, idea or note",
         () => {
           ui().openCapture();
         },
         formatShortcut("Mod+Shift+N"),
       ),
-      act("ideas", "Open the ideas list", () => {
+      act("ideas", "Ideas", () => {
         ui().openArea("ideas");
       }),
       act("find-tasks", "Find tasks in this note (AI)", () => {
         ui().setFindTasksOpen(true);
       }),
-      act("starter", "New note from a starter…", () => {
-        ui().setStarterOpen(true);
+      act("meeting", "Meeting note…", () => {
+        ui().setMeetingFormOpen(true);
+      }),
+      act("quick-note", "Quick note", () => {
+        ui().openCapture("note");
       }),
       act(
         "settings",

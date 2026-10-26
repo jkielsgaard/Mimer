@@ -1,8 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { PanelHeader } from "@/components/PanelHeader";
-import { Target } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { epicGroups, isOpen } from "@/lib/taskLogic";
+import { epicGroups } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
@@ -26,11 +24,6 @@ export function TasksPanel() {
   const groups = useMemo(() => epicGroups(tasks, epics, epicOrder), [tasks, epics, epicOrder]);
   const open = groups.filter((g) => !g.allDone);
   const done = groups.filter((g) => g.allDone);
-  // Focus starts with the first open task of the epic that is open, else of the first epic.
-  const first =
-    groups.find((g) => g.path === epicPath)?.tasks.find(isOpen) ??
-    open.flatMap((g) => g.tasks).find(isOpen);
-
   const row = (g: (typeof groups)[number]) => (
     <li key={g.path}>
       <button
@@ -55,26 +48,7 @@ export function TasksPanel() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <PanelHeader title="Tasks">
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={first === undefined}
-          title={
-            first === undefined ? "There is no open task" : `Work on one thing: ${first.title}`
-          }
-          onClick={() => {
-            if (first) {
-              useTaskStore
-                .getState()
-                .select({ path: first.path, line: first.line, title: first.title });
-            }
-            useUiStore.getState().setFocusOpen(true);
-          }}
-        >
-          <Target /> Focus
-        </Button>
-      </PanelHeader>
+      <PanelHeader title="Tasks" />
       <div className="min-h-0 flex-1 overflow-auto px-2 py-2">
         <h3 className="section-label px-2 pb-1">Epic tasks</h3>
         {loaded && open.length === 0 && (

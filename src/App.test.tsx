@@ -141,6 +141,7 @@ describe("App smoke test", () => {
     // A test that opened a note saves the tabs of the vault; start without any, so the order and
     // speed of the tests do not decide which note is open.
     window.localStorage.clear();
+    window.localStorage.setItem("mimer.betaNoticeSeen", "1");
     useWorkspaceStore.setState({ layout: emptyLayout() });
     useVaultStore.setState({
       vault: null,
@@ -224,6 +225,7 @@ describe("editor without a note", () => {
     useSettingsStore.setState({ settings: null, error: null });
     // Earlier tests save the open tabs of this vault; start without any so no note opens.
     window.localStorage.clear();
+    window.localStorage.setItem("mimer.betaNoticeSeen", "1");
     useWorkspaceStore.setState({ layout: emptyLayout() });
     useVaultStore.setState({
       vault: null,

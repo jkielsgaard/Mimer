@@ -87,3 +87,8 @@ export function planTitleRename(
 export function isUntitledName(path: string): boolean {
   return /^Untitled( \d+)?\.md$/i.test(basename(path));
 }
+
+/** A file name from a title: no characters or endings a file cannot have. */
+export function fileNameFrom(title: string): string {
+  return fileNameFromTitle(title.replace(/#/g, " ")) ?? "Untitled";
+}

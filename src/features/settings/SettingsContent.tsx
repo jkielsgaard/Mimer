@@ -1,5 +1,5 @@
-import { Plus } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import type { Settings } from "@/bindings/Settings";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +21,7 @@ import { ProviderEditor } from "./ProviderEditor";
 import { AddProviderDialog } from "./AddProviderDialog";
 import { AiChoice } from "./AiChoice";
 import { BuiltInAiTab } from "@/features/engine/BuiltInAiTab";
+import { BetaBadge } from "@/components/BetaBadge";
 import { VaultSettingsTab } from "./VaultSettingsTab";
 import { MimerInstructionSettings } from "./MimerInstructionSettings";
 import { SemanticSearchSettings } from "./SemanticSearchSettings";
@@ -30,23 +31,53 @@ import { InfoHint } from "@/components/InfoHint";
 /** The one entry in the provider list that stands for both built-in engines. */
 const BUILTIN_ROW = "__builtin__";
 
-type Tab = "general" | "providers" | "ai" | "builtin" | "history" | "vault";
+type Tab = "general" | "ai" | "history" | "vault";
+type AiSection = "builtin" | "more";
 const TABS: { id: Tab; label: string }[] = [
   { id: "general", label: "General" },
-  { id: "providers", label: "AI providers" },
   { id: "ai", label: "AI" },
-  { id: "builtin", label: "Built-in AI" },
   { id: "history", label: "Version history" },
   { id: "vault", label: "Vault" },
 ];
+
+/** A folded part of the AI tab: the heading is a button, the body shows when it is open. */
+function Section({
+  title,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-md border">
+      <button
+        type="button"
+        aria-expanded={open}
+        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium hover:bg-muted"
+        onClick={onToggle}
+      >
+        {open ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+        {title}
+      </button>
+      {open && <div className="border-t p-3">{children}</div>}
+    </section>
+  );
+}
 
 export function SettingsContent({ stored, onClose }: { stored: Settings; onClose: () => void }) {
   const save = useSettingsStore((s) => s.save);
   const [draft, setDraft] = useState<Settings>(() => structuredClone(stored));
   const [tab, setTab] = useState<Tab>(() => {
-    const wanted = useUiStore.getState().settingsTab;
-    return wanted === "builtin" ? wanted : "general";
+    return useUiStore.getState().settingsTab === "builtin" ? "ai" : "general";
   });
+  /** The AI setup section that is open (the others are folded away). */
+  const [section, setSection] = useState<AiSection | null>(() =>
+    useUiStore.getState().settingsTab === "builtin" ? "builtin" : null,
+  );
   const [providerId, setProviderId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const update = (patch: Partial<Settings>): void => {
@@ -85,6 +116,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
               }}
             >
               {t.label}
+              {t.id === "ai" && <BetaBadge className="ml-1.5" />}
             </button>
           ))}
         </nav>
@@ -235,132 +267,154 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
               </p>
             </div>
           )}
-          {tab === "providers" && (
-            <div className="flex gap-4">
-              <div className="flex w-44 shrink-0 flex-col gap-1">
-                <button
-                  type="button"
-                  className={cn(
-                    "truncate rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
-                    providerId === BUILTIN_ROW && "bg-accent",
-                  )}
-                  onClick={() => {
-                    setProviderId(BUILTIN_ROW);
-                  }}
-                >
-                  Built-in AI
-                  <span className="block text-[11px] text-muted-foreground">local · Mimer</span>
-                </button>
-                {draft.ai.providers
-                  .filter(
-                    (p) =>
-                      p.kind !== "builtin" && p.kind !== "foundry_local" && p.kind !== "phi_silica",
-                  )
-                  .map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      className={cn(
-                        "truncate rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
-                        providerId === p.id && "bg-accent",
-                      )}
-                      onClick={() => {
-                        setProviderId(p.id);
-                      }}
-                    >
-                      {p.name}
-                      <span className="block text-[11px] text-muted-foreground">
-                        {effectiveLocation(p) === "local"
-                          ? "local · Mimer"
-                          : p.kind === "anthropic"
-                            ? "cloud · not used"
-                            : "cloud · needs your OK"}
-                      </span>
-                    </button>
-                  ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setAdding(true);
-                  }}
-                >
-                  <Plus /> Add provider
-                </Button>
-              </div>
-              <div className="min-w-0 flex-1">
-                {providerId === BUILTIN_ROW ? (
-                  <div className="flex flex-col gap-2 text-sm">
-                    <p className="font-medium">Built-in AI</p>
-                    <p className="text-muted-foreground">
-                      This is Mimer's own AI. It runs on this computer, so your notes never leave
-                      it. Choose the engine (Foundry Local, llama.cpp or, in the Store version, Phi
-                      Silica) and the model, and download it, under Built-in AI. Mimer only uses an
-                      AI on this computer.
-                    </p>
-                    <div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setTab("builtin");
-                        }}
-                      >
-                        Open Built-in AI
-                      </Button>
-                    </div>
-                  </div>
-                ) : provider ? (
-                  <ProviderEditor
-                    provider={provider}
-                    persist={persist}
-                    onChange={(p) => {
-                      setDraft({
-                        ...draft,
-                        ai: {
-                          ...draft.ai,
-                          providers: draft.ai.providers.map((x) => (x.id === p.id ? p : x)),
-                        },
-                      });
-                    }}
-                    onRemove={() => {
-                      const rest = draft.ai.providers.filter((x) => x.id !== provider.id);
-                      const firstLocal = rest.find((x) => effectiveLocation(x) === "local");
-                      setDraft({
-                        ...draft,
-                        ai: {
-                          ...draft.ai,
-                          providers: rest,
-                          defaultProviderId:
-                            draft.ai.defaultProviderId === provider.id
-                              ? (firstLocal?.id ?? "")
-                              : draft.ai.defaultProviderId,
-                        },
-                      });
-                      setProviderId(null);
-                    }}
-                  />
-                ) : (
-                  <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                    <p>Choose a provider on the left to change it, or press Add provider.</p>
-                    <p>
-                      Mimer only uses an AI that runs on this computer, so your notes never leave
-                      it.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
           {tab === "ai" && (
             <div className="flex flex-col gap-3">
+              <p className="rounded-md bg-warning/15 p-2.5 text-xs" data-testid="ai-beta-note">
+                <BetaBadge className="mr-1.5" />
+                The AI in Mimer is still being built. It will change and can make mistakes.
+                Everything else in Mimer works without it.
+              </p>
               <AiChoice
                 draft={draft}
                 onChange={setDraft}
                 onSetUp={(t) => {
-                  setTab(t);
+                  setSection(t === "builtin" ? "builtin" : "more");
                 }}
               />
+              <Section
+                title="Built-in AI: set up"
+                open={section === "builtin"}
+                onToggle={() => {
+                  setSection(section === "builtin" ? null : "builtin");
+                }}
+              >
+                <BuiltInAiTab draft={draft} onChange={setDraft} />
+              </Section>
+              <Section
+                title="More: LM Studio and other providers"
+                open={section === "more"}
+                onToggle={() => {
+                  setSection(section === "more" ? null : "more");
+                }}
+              >
+                <div className="flex gap-4">
+                  <div className="flex w-44 shrink-0 flex-col gap-1">
+                    <button
+                      type="button"
+                      className={cn(
+                        "truncate rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
+                        providerId === BUILTIN_ROW && "bg-accent",
+                      )}
+                      onClick={() => {
+                        setProviderId(BUILTIN_ROW);
+                      }}
+                    >
+                      Built-in AI
+                      <span className="block text-[11px] text-muted-foreground">local · Mimer</span>
+                    </button>
+                    {draft.ai.providers
+                      .filter(
+                        (p) =>
+                          p.kind !== "builtin" &&
+                          p.kind !== "foundry_local" &&
+                          p.kind !== "phi_silica",
+                      )
+                      .map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className={cn(
+                            "truncate rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
+                            providerId === p.id && "bg-accent",
+                          )}
+                          onClick={() => {
+                            setProviderId(p.id);
+                          }}
+                        >
+                          {p.name}
+                          <span className="block text-[11px] text-muted-foreground">
+                            {effectiveLocation(p) === "local"
+                              ? "local · Mimer"
+                              : p.kind === "anthropic"
+                                ? "cloud · not used"
+                                : "cloud · needs your OK"}
+                          </span>
+                        </button>
+                      ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setAdding(true);
+                      }}
+                    >
+                      <Plus /> Add provider
+                    </Button>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    {providerId === BUILTIN_ROW ? (
+                      <div className="flex flex-col gap-2 text-sm">
+                        <p className="font-medium">Built-in AI</p>
+                        <p className="text-muted-foreground">
+                          This is Mimer's own AI. It runs on this computer, so your notes never
+                          leave it. Choose the engine (Foundry Local, llama.cpp or, in the Store
+                          version, Phi Silica) and the model, and download it, under Built-in AI.
+                          Mimer only uses an AI on this computer.
+                        </p>
+                        <div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSection("builtin");
+                            }}
+                          >
+                            Open Built-in AI
+                          </Button>
+                        </div>
+                      </div>
+                    ) : provider ? (
+                      <ProviderEditor
+                        provider={provider}
+                        persist={persist}
+                        onChange={(p) => {
+                          setDraft({
+                            ...draft,
+                            ai: {
+                              ...draft.ai,
+                              providers: draft.ai.providers.map((x) => (x.id === p.id ? p : x)),
+                            },
+                          });
+                        }}
+                        onRemove={() => {
+                          const rest = draft.ai.providers.filter((x) => x.id !== provider.id);
+                          const firstLocal = rest.find((x) => effectiveLocation(x) === "local");
+                          setDraft({
+                            ...draft,
+                            ai: {
+                              ...draft.ai,
+                              providers: rest,
+                              defaultProviderId:
+                                draft.ai.defaultProviderId === provider.id
+                                  ? (firstLocal?.id ?? "")
+                                  : draft.ai.defaultProviderId,
+                            },
+                          });
+                          setProviderId(null);
+                        }}
+                      />
+                    ) : (
+                      <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+                        <p>Choose a provider on the left to change it, or press Add provider.</p>
+                        <p>
+                          Mimer only uses an AI that runs on this computer, so your notes never
+                          leave it.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Section>
               <label className="flex items-start gap-2 text-sm">
                 <input
                   type="checkbox"
@@ -404,7 +458,6 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
               <SemanticSearchSettings draft={draft} onChange={setDraft} persist={persist} />
             </div>
           )}
-          {tab === "builtin" && <BuiltInAiTab draft={draft} onChange={setDraft} />}
           {tab === "vault" && <VaultSettingsTab />}
           {tab === "history" && (
             <div className="flex flex-col gap-3">

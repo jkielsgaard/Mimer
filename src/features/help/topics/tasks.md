@@ -52,11 +52,11 @@ Open a note and press **Find tasks in a note** in the task list (or use the comm
 
 ### Write it down from anywhere
 
-**Ctrl/Cmd+Shift+N** (also **File → Write something down…**, and the command palette) opens a small box. Choose **Task**, **Idea** or **Note** and write. A task goes into the epic task **Inbox**; a note gets a title and goes to Quick notes. The note you are writing is not changed.
+**Ctrl/Cmd+Shift+N** (also **File → Capture a task, idea or note…**, **New → Quick note**, and the command palette) opens a small box. Choose **Task**, **Idea** or **Note** and write. A task goes into the epic task **Inbox**; a note gets a title and goes to Quick notes. The note you are writing is not changed.
 
 ### Focus
 
-Press **Focus** on a task, or on an epic task. Everything else is hidden. You see the whole epic task as one outline: the task you work on is open and marked **Working on it** (its status becomes Doing), with its note, its steps (the next one marked **Now**) and what has happened. The other tasks are folded; unfold one to read it, tick a step or write a line, and press **Work on this** to move the mark to it. **Fold the rest** folds them all again.
+Press **Focus** on an epic task (in its heading in the list, or at the top of its page). Everything else is hidden. You see the whole epic task as one outline: every task is open, and the one you work on is marked **Working on it** (its status becomes Doing), with its note, its steps (the next one marked **Now**) and what has happened. Nothing is locked: fold or unfold any task, press **Work on this** to move the mark, move a task or a step up or down with the arrows that show when the mouse is over it (or Alt+Up and Alt+Down), and add a step under a task without leaving Focus. **Fold the rest** folds every task but the marked one.
 
 - **What has happened** under the marked task: write a line and press Enter. It is added to the log with today's date, and you stay in Focus.
 - **Done, next step** on the right ticks the Now step. After the last step it asks if the task is done too; then the next open task in the epic is marked. When every task is done, Focus says so and takes you back to the task list.
@@ -64,7 +64,3 @@ Press **Focus** on a task, or on an epic task. Everything else is hidden. You se
 - **Help me start** is for when you sit and cannot begin. The AI suggests one tiny first step, something under five minutes, for example "open the file and write the heading". It is only added to the task if you press Add it as a step.
 - **Something popped into your head?** Use the same box as above: choose Task, Idea or Note and write it. A task goes into the Inbox. You stay in Focus.
 - **Esc** or **Leave focus** leaves focus.
-
-## New note from a starter
-
-**New → From a starter…** above the file tree, **File → New note from a starter…**, the command palette, or the button on the empty editor screen makes a note from a few questions: **Meeting**, **Status update**, **Reply to an e-mail** or **Idea**. You answer, Mimer writes the note, and you see it while you write. Parts in `[brackets]` are blanks to fill in. A meeting note goes into the meetings folder; the others into the quick notes folder. No AI is used.

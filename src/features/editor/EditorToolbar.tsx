@@ -128,7 +128,7 @@ export function EditorToolbar({ viewRef, disabled, onPickLink, onInsertImage, tr
     <div
       role="toolbar"
       aria-label="Formatting"
-      className="flex shrink-0 flex-wrap items-center gap-0.5 border-b bg-sidebar px-2 py-1"
+      className="@container flex shrink-0 flex-wrap items-center gap-0.5 border-b bg-sidebar px-2 py-1"
       // Keep the selection and focus in the editor when a tool is clicked.
       onMouseDown={(e) => {
         e.preventDefault();

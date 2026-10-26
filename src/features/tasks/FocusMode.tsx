@@ -47,7 +47,8 @@ export function FocusMode() {
   const [stuck, setStuck] = useState<{ text: string | null; error: string | null } | null>(null);
   const epics = useTaskStore((s) => s.epics);
   const epicOrder = useTaskStore((s) => s.epicOrder);
-  const [unfolded, setUnfolded] = useState<Record<number, boolean>>({});
+  // What the user chose to fold or unfold; every other task is open (a done one starts folded).
+  const [opened, setOpened] = useState<Record<number, boolean>>({});
   const [askTick, setAskTick] = useState(false);
   const [epicDone, setEpicDone] = useState(false);
   const ask = useRef<AiAnswer | null>(null);
@@ -69,7 +70,7 @@ export function FocusMode() {
     setLeft(minutes * 60_000);
     setStuck(null);
     setParked(0);
-    setUnfolded({});
+    setOpened({});
     setAskTick(false);
     setEpicDone(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- starts fresh each time it opens
@@ -233,7 +234,11 @@ export function FocusMode() {
           size="sm"
           variant="outline"
           onClick={() => {
-            setUnfolded({});
+            setOpened(
+              Object.fromEntries(
+                tasksOfEpic.filter((t) => t.line !== task.line).map((t) => [t.line, false]),
+              ),
+            );
           }}
         >
           Fold the rest
@@ -250,14 +255,15 @@ export function FocusMode() {
       </div>
       <div className="grid min-h-0 flex-1 gap-6 overflow-auto px-6 py-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="flex min-w-0 flex-col gap-2.5">
-          {tasksOfEpic.map((t) => (
+          {tasksOfEpic.map((t, i, all) => (
             <FocusTask
               key={`${t.path}:${String(t.line)}`}
               task={t}
               marked={t.line === task.line}
-              open={unfolded[t.line] === true}
+              open={opened[t.line] ?? !t.done}
+              canMove={{ up: i > 0, down: i < all.length - 1 }}
               onToggle={() => {
-                setUnfolded((u) => ({ ...u, [t.line]: u[t.line] !== true }));
+                setOpened((o) => ({ ...o, [t.line]: !(o[t.line] ?? !t.done) }));
               }}
               onWork={() => {
                 work(t);

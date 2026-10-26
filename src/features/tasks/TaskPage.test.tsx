@@ -109,11 +109,10 @@ describe("TaskPage", () => {
     expect(screen.getByText("Mon 19 Oct")).toBeInTheDocument();
   });
 
-  it("goes back to its epic task, and starts focus", async () => {
+  it("goes back to its epic task, and has no Focus button of its own", async () => {
     render(<TaskPage />);
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Focus" }));
-    expect(useUiStore.getState().focusOpen).toBe(true);
+    expect(screen.queryByRole("button", { name: "Focus" })).toBeNull();
     await user.click(screen.getByRole("button", { name: "Acme" }));
     expect(useUiStore.getState().centerView).toBe("epic");
   });
@@ -157,7 +156,7 @@ describe("TaskPage", () => {
     expect(screen.getByRole("button", { name: /Break it down/ })).toBeDisabled();
     expect(screen.getByRole("button", { name: /Write a status line/ })).toBeDisabled();
     // Everything else works.
-    expect(screen.getByRole("button", { name: "Focus" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Delete" })).toBeEnabled();
     blocked.reason = null;
   });
 

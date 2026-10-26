@@ -1,6 +1,15 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import { afterEach, beforeEach } from "vitest";
+
+// The first-start notice would sit on top of every screen; the tests that cover it clear this.
+beforeEach(() => {
+  try {
+    localStorage.setItem("mimer.betaNoticeSeen", "1");
+  } catch {
+    /* no storage in this test */
+  }
+});
 
 afterEach(() => {
   cleanup();

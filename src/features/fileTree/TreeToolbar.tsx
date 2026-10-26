@@ -1,5 +1,6 @@
 import {
   ArrowDownUp,
+  CalendarDays,
   Check,
   ChevronsDownUp,
   Crosshair,
@@ -8,7 +9,6 @@ import {
   FolderPlus,
   MoreHorizontal,
   Plus,
-  Search,
   Sparkles,
   Users,
   Zap,
@@ -23,7 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { newNoteInCurrentFolder, revealInTree } from "@/lib/actions";
+import { newNoteInCurrentFolder, openDailyNote, revealInTree } from "@/lib/actions";
 import { formatShortcut } from "@/lib/shortcuts";
 import { useNarrow } from "@/lib/useNarrow";
 import { nameError } from "@/lib/nameConflict";
@@ -42,7 +42,7 @@ const SORTS: { id: "name" | "modified" | "manual"; label: string }[] = [
   { id: "manual", label: "My own order" },
 ];
 
-type Asking = "meeting" | "folder" | null;
+type Asking = "folder" | null;
 
 /**
  * The row above the file tree: one New menu (note, meeting note, quick note, folder, project),
@@ -99,15 +99,15 @@ export function TreeToolbar() {
           <DropdownMenuItem
             className="justify-start gap-2"
             onSelect={() => {
-              useUiStore.getState().setStarterOpen(true);
+              useUiStore.getState().setTemplatePickerOpen(true);
             }}
           >
-            <Sparkles className="size-4" /> From a starter…
+            <Sparkles className="size-4" /> From a template…
           </DropdownMenuItem>
           <DropdownMenuItem
             className="justify-start gap-2"
             onSelect={() => {
-              setAsking("meeting");
+              useUiStore.getState().setMeetingFormOpen(true);
             }}
           >
             <Users className="size-4" /> Meeting note…
@@ -115,10 +115,24 @@ export function TreeToolbar() {
           <DropdownMenuItem
             className="justify-start gap-2"
             onSelect={() => {
-              void useVaultStore.getState().createStandardNote("quick");
+              useUiStore.getState().openCapture("note");
             }}
           >
             <Zap className="size-4" /> Quick note
+            <span className="ml-auto text-xs text-muted-foreground">
+              {formatShortcut("Mod+Shift+N")}
+            </span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="justify-start gap-2"
+            onSelect={() => {
+              void openDailyNote();
+            }}
+          >
+            <CalendarDays className="size-4" /> Today's daily note
+            <span className="ml-auto text-xs text-muted-foreground">
+              {formatShortcut("Mod+Shift+D")}
+            </span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
@@ -163,20 +177,6 @@ export function TreeToolbar() {
               }}
             >
               <Crosshair className="size-4" /> Show the open note in the tree
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => {
-                useUiStore.getState().setQuickOpen(true);
-              }}
-            >
-              <FolderOpen className="size-4" /> Quick open
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => {
-                useUiStore.getState().focusSearch();
-              }}
-            >
-              <Search className="size-4" /> Search
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Sort</DropdownMenuLabel>
@@ -251,46 +251,9 @@ export function TreeToolbar() {
             </DropdownMenuContent>
           </DropdownMenu>
           <span className="mx-0.5 h-4 w-px bg-border" aria-hidden />
-          <button
-            type="button"
-            className={iconButton}
-            aria-label="Quick open"
-            title={`Quick open (${formatShortcut("Mod+P")})`}
-            onClick={() => {
-              useUiStore.getState().setQuickOpen(true);
-            }}
-          >
-            <FolderOpen className="size-4" />
-          </button>
-          <button
-            type="button"
-            className={iconButton}
-            aria-label="Search"
-            title={`Search the vault (${formatShortcut("Mod+Shift+F")})`}
-            onClick={() => {
-              useUiStore.getState().focusSearch();
-            }}
-          >
-            <Search className="size-4" />
-          </button>
         </>
       )}
 
-      <PromptDialog
-        open={asking === "meeting"}
-        title="New meeting note"
-        label="Meeting title"
-        initialValue="Meeting"
-        confirmLabel="Create"
-        validate={(v) => (v.trim() === "" ? "Enter a title" : null)}
-        onCancel={() => {
-          setAsking(null);
-        }}
-        onSubmit={(title) => {
-          setAsking(null);
-          void useVaultStore.getState().createStandardNote("meeting", title.trim());
-        }}
-      />
       <PromptDialog
         open={asking === "folder"}
         title="New folder"

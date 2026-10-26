@@ -8,6 +8,7 @@ import {
   type InlineSelection,
   type InlineStart,
 } from "@/features/inlineAi/InlineAiPopup";
+import { EditorContextMenu } from "./EditorContextMenu";
 import { SelectionBubble } from "./SelectionBubble";
 import { useAiBlocked } from "@/lib/useAiBlocked";
 import { askAi } from "@/lib/askAi";
@@ -26,6 +27,7 @@ import { useTaskStore } from "@/stores/taskStore";
 import { useTagStore } from "@/stores/tagStore";
 import { useTitleFollow } from "@/stores/titleFollowStore";
 import { assetUrlFor, openHref, openWikiLink, searchForTag } from "@/lib/actions";
+import { newNoteInCurrentFolder } from "@/lib/actions";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useEditorStore } from "@/stores/editorStore";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -35,6 +37,7 @@ import type { PreviewConfig } from "./extensions/previewConfig";
 import { insertNoteLink } from "./extensions/formatCommands";
 import { insertImagesFromDialog } from "./insertImages";
 import { EditorToolbar } from "./EditorToolbar";
+import { StartMeetingButton } from "@/features/meetings/StartMeetingButton";
 import { NoteAiMenu } from "./NoteAiMenu";
 import { LinkNoteDialog } from "./LinkNoteDialog";
 import { TitleFollowChip } from "./TitleFollowChip";
@@ -59,6 +62,8 @@ export function Editor({ paneId }: { paneId: PaneId }) {
   const [inline, setInline] = useState<InlineSelection | null>(null);
   const [inlineStart, setInlineStart] = useState<InlineStart | undefined>(undefined);
   const [linkQuery, setLinkQuery] = useState<string | null>(null);
+  /** Where the text menu (right-click on selected text) is shown. */
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
 
   const activePath = useWorkspaceStore(
     (s) => s.layout.panes.find((p) => p.id === paneId)?.active ?? null,
@@ -125,6 +130,10 @@ export function Editor({ paneId }: { paneId: PaneId }) {
     });
   }, []);
 
+  const openMenu = useCallback((_view: EditorView, x: number, y: number): void => {
+    setMenu({ x, y });
+  }, []);
+
   const viewRefHolder = useRef<RefObject<EditorView | null> | null>(null);
   /** Opens the note picker, pre-filled with a one-line selection. */
   const openLinkPicker = useCallback(() => {
@@ -164,6 +173,7 @@ export function Editor({ paneId }: { paneId: PaneId }) {
     spellcheck,
     sourceMode,
     onInline: openInline,
+    onContext: openMenu,
     onLinkPicker: openLinkPicker,
     onSaved: followTitle,
     spelling: () => spelling.current,
@@ -197,6 +207,31 @@ export function Editor({ paneId }: { paneId: PaneId }) {
     },
     [inline, save, session, viewRef],
   );
+
+  /** Writes the selected text down as a task (in this note's epic task) or as an idea. */
+  const capture = (kind: "task" | "idea"): void => {
+    const view = viewRef.current;
+    if (!view) return;
+    const sel = view.state.selection.main;
+    const text = view.state.sliceDoc(sel.from, sel.to).replace(/\s+/g, " ").trim().slice(0, 300);
+    if (text === "") return;
+    const ui = useUiStore.getState();
+    if (kind === "task") {
+      const note = activePath;
+      if (note === null) return;
+      // The task goes into the epic task of this note (made now if the note has none).
+      void useTaskStore
+        .getState()
+        .epicFor(note)
+        .then((epic) => {
+          if (epic !== null) void useTaskStore.getState().add(text, undefined, undefined, epic);
+        });
+      ui.toast("Added as a task in the epic task of this note.", "success");
+    } else {
+      void useIdeaStore.getState().add(text);
+      ui.toast("Written down as an idea.", "success");
+    }
+  };
 
   return (
     <div
@@ -233,11 +268,9 @@ export function Editor({ paneId }: { paneId: PaneId }) {
               size="sm"
               variant="outline"
               className="pointer-events-auto"
-              onClick={() => {
-                useUiStore.getState().setStarterOpen(true);
-              }}
+              onClick={newNoteInCurrentFolder}
             >
-              New note from a starter
+              New note
             </Button>
           </div>
         </div>
@@ -254,6 +287,7 @@ export function Editor({ paneId }: { paneId: PaneId }) {
         trailing={
           <span className="ml-auto flex items-center gap-1">
             <TitleFollowChip path={activePath} />
+            <StartMeetingButton path={activePath} />
             <NoteAiMenu path={activePath} />
             <Button
               type="button"
@@ -294,34 +328,7 @@ export function Editor({ paneId }: { paneId: PaneId }) {
         viewRef={viewRef}
         hidden={inline !== null || activePath === null}
         aiOff={aiOff}
-        onCapture={(kind) => {
-          const view = viewRef.current;
-          if (!view) return;
-          const sel = view.state.selection.main;
-          const text = view.state
-            .sliceDoc(sel.from, sel.to)
-            .replace(/\s+/g, " ")
-            .trim()
-            .slice(0, 300);
-          if (text === "") return;
-          const ui = useUiStore.getState();
-          if (kind === "task") {
-            const note = activePath;
-            if (note === null) return;
-            // The task goes into the epic task of this note (made now if the note has none).
-            void useTaskStore
-              .getState()
-              .epicFor(note)
-              .then((epic) => {
-                if (epic !== null)
-                  void useTaskStore.getState().add(text, undefined, undefined, epic);
-              });
-            ui.toast("Added as a task in the epic task of this note.", "success");
-          } else {
-            void useIdeaStore.getState().add(text);
-            ui.toast("Written down as an idea.", "success");
-          }
-        }}
+        onCapture={capture}
         onChoose={(start) => {
           const view = viewRef.current;
           if (!view) return;
@@ -329,6 +336,21 @@ export function Editor({ paneId }: { paneId: PaneId }) {
           setInlineStart(start);
         }}
       />
+      {menu !== null && viewRef.current !== null && (
+        <EditorContextMenu
+          at={menu}
+          view={viewRef.current}
+          aiOff={aiOff}
+          onAi={() => {
+            const view = viewRef.current;
+            if (view) openInline(view, menu.x, menu.y);
+          }}
+          onCapture={capture}
+          onClose={() => {
+            setMenu(null);
+          }}
+        />
+      )}
       {spell && (
         <SpellPopover
           mark={spell.mark}

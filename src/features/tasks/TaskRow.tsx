@@ -1,12 +1,10 @@
-import { Check, ChevronDown, ChevronRight, Target } from "lucide-react";
+import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import type { Task } from "@/bindings/Task";
 import { MoveButtons, moveKey } from "@/components/MoveButtons";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { noteName, shortDate } from "@/lib/taskLogic";
 import { useTaskStore } from "@/stores/taskStore";
-import { useUiStore } from "@/stores/uiStore";
 
 /** A checkbox for a task or a step. */
 function Tick({ done, label, onToggle }: { done: boolean; label: string; onToggle: () => void }) {
@@ -118,23 +116,6 @@ export function TaskRow({
           <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
             {facts.join(" · ")}
           </span>
-        )}
-        {!task.done && (
-          <Button
-            size="sm"
-            variant="outline"
-            aria-label={`Focus on ${task.title}`}
-            // Shown on the row under the mouse or with the keyboard focus; its space is kept.
-            className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100 group-focus-within:opacity-100"
-            onClick={() => {
-              useTaskStore
-                .getState()
-                .select({ path: task.path, line: task.line, title: task.title });
-              useUiStore.getState().setFocusOpen(true);
-            }}
-          >
-            <Target /> Focus
-          </Button>
         )}
         {canMove && (
           <MoveButtons

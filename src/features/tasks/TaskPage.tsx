@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, FileText, Layers, Pencil, Sparkles, Target, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, FileText, Layers, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -252,15 +252,6 @@ export function TaskPage() {
   return (
     <section aria-label="Task" className="flex h-full min-h-0 flex-col bg-background">
       <ViewHeader title="Task" back={{ label: epic?.title ?? noteName(task.path), run: toEpic }}>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            useUiStore.getState().setFocusOpen(true);
-          }}
-        >
-          <Target /> Focus
-        </Button>
         <Button
           size="sm"
           variant="outline"

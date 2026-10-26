@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import type { MeetingSeed } from "@/lib/meeting";
 import type { Project } from "@/bindings/Project";
 import type { RenamePreview } from "@/bindings/RenamePreview";
 import { toApiError } from "@/lib/api";
@@ -102,8 +103,15 @@ interface UiState {
     text?: string,
     opts?: { path: string; mode: "tasks" | "steps" },
   ) => void;
-  starterOpen: boolean;
-  setStarterOpen: (open: boolean) => void;
+  /** The window that prepares a meeting (title, when, who, agenda). */
+  meetingFormOpen: boolean;
+  setMeetingFormOpen: (open: boolean) => void;
+  /** What the meeting window starts with (the next meeting), or null for an empty one. */
+  meetingSeed: MeetingSeed | null;
+  openMeetingFormWith: (seed: MeetingSeed) => void;
+  /** The note of the meeting that is running (the meeting screen is open), or null. */
+  meetingFocus: string | null;
+  setMeetingFocus: (path: string | null) => void;
   quickOpen: boolean;
   commandPalette: boolean;
   settingsOpen: boolean;
@@ -119,6 +127,9 @@ interface UiState {
   setImportOpen: (open: boolean) => void;
   aboutOpen: boolean;
   setAboutOpen: (open: boolean) => void;
+  /** The first-start notice (first version, AI is beta) is shown. */
+  betaNoticeOpen: boolean;
+  setBetaNoticeOpen: (open: boolean) => void;
   helpOpen: boolean;
   /** The topic of the how-to guide that is shown. */
   helpTopic: string;
@@ -224,9 +235,17 @@ export const useUiStore = create<UiState>((set, get) => ({
       findTasksOpts: findTasksOpen && opts ? opts : { path: null, mode: "tasks" },
     });
   },
-  starterOpen: false,
-  setStarterOpen: (starterOpen) => {
-    set({ starterOpen });
+  meetingFormOpen: false,
+  setMeetingFormOpen: (meetingFormOpen) => {
+    set(meetingFormOpen ? { meetingFormOpen } : { meetingFormOpen, meetingSeed: null });
+  },
+  meetingSeed: null,
+  openMeetingFormWith: (meetingSeed) => {
+    set({ meetingSeed, meetingFormOpen: true });
+  },
+  meetingFocus: null,
+  setMeetingFocus: (meetingFocus) => {
+    set({ meetingFocus });
   },
   quickOpen: false,
   commandPalette: false,
@@ -252,6 +271,10 @@ export const useUiStore = create<UiState>((set, get) => ({
   aboutOpen: false,
   setAboutOpen: (aboutOpen) => {
     set({ aboutOpen });
+  },
+  betaNoticeOpen: false,
+  setBetaNoticeOpen: (betaNoticeOpen) => {
+    set({ betaNoticeOpen });
   },
   helpOpen: false,
   helpTopic: "start",

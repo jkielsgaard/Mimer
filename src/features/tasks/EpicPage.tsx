@@ -12,6 +12,7 @@ import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { EpicProgress } from "./TasksView";
 import { TaskRow } from "./TaskRow";
+import { firstOpenTask, focusEpic } from "./focusEpic";
 
 /** One epic task: the note its tasks are in, how far it has come, and its tasks. */
 export function EpicPage() {
@@ -47,7 +48,7 @@ export function EpicPage() {
   }
 
   const from = group.source === null ? null : resolver.resolve(group.source);
-  const firstOpen = group.tasks.find((t) => !t.done && t.status !== "dropped");
+  const firstOpen = firstOpenTask(group);
 
   return (
     <section aria-label="Epic task" className="flex h-full min-h-0 flex-col bg-background">
@@ -57,11 +58,7 @@ export function EpicPage() {
           variant="outline"
           disabled={firstOpen === undefined}
           onClick={() => {
-            if (!firstOpen) return;
-            useTaskStore
-              .getState()
-              .select({ path: firstOpen.path, line: firstOpen.line, title: firstOpen.title });
-            useUiStore.getState().setFocusOpen(true);
+            focusEpic(group);
           }}
         >
           <Target /> Focus

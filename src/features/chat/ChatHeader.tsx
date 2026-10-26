@@ -1,4 +1,5 @@
 import { Plus, X } from "lucide-react";
+import { BetaBadge } from "@/components/BetaBadge";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -15,7 +16,10 @@ export function ChatHeader({
 }) {
   return (
     <div className="flex h-9 shrink-0 items-center gap-1 border-b px-3">
-      <span className="flex-1 text-xs font-semibold">Ask about my notes</span>
+      <span className="flex items-center gap-1.5 text-xs font-semibold">
+        Ask about my notes <BetaBadge />
+      </span>
+      <span className="flex-1" />
       {children}
       <Button size="sm" variant="ghost" onClick={onNew} aria-label="New chat">
         <Plus /> New chat

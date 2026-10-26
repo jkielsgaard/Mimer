@@ -81,6 +81,8 @@ export interface NoteSessionOptions {
   sourceMode: boolean;
   /** Opens the inline AI popup for the current selection; `x`/`y` are screen coordinates. */
   onInline: (view: EditorView, x?: number, y?: number) => void;
+  /** Right-click on selected text: shows the text menu at the screen position. */
+  onContext: (view: EditorView, x: number, y: number) => void;
   /** Opens the "link to a note" picker (Mod+Shift+K). */
   onLinkPicker: () => void;
   /** Called after a note was written to disk, with its path and the text that was saved. */
@@ -101,6 +103,7 @@ export function useNoteSession({
   spellcheck,
   sourceMode,
   onInline,
+  onContext,
   onLinkPicker,
   onSaved,
   spelling,
@@ -250,7 +253,7 @@ export function useNoteSession({
           contextmenu: (e, v) => {
             if (v.state.selection.main.empty) return false;
             e.preventDefault();
-            onInline(v, e.clientX, e.clientY);
+            onContext(v, e.clientX, e.clientY);
             return true;
           },
         }),
@@ -267,7 +270,7 @@ export function useNoteSession({
       const anchor = doc === "# " ? doc.length : fm ? Math.min(fm.to + 1, doc.length) : 0;
       return EditorState.create({ doc, extensions, selection: { anchor } });
     },
-    [schedule, paneId, onInline, onLinkPicker],
+    [schedule, paneId, onInline, onContext, onLinkPicker],
   );
 
   useEffect(() => {
