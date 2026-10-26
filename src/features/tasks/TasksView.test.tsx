@@ -145,6 +145,20 @@ describe("TasksView", () => {
     expect(apiMock.taskAdd.mock.calls[0]?.[3]).toBe("Tasks/VPN guide.md");
   });
 
+  it("has one Focus button per epic with an open task, and none on the task rows", async () => {
+    render(<TasksView />);
+    const user = userEvent.setup();
+    // The VPN guide has an open task; the finished Office move has none.
+    expect(await screen.findByRole("button", { name: "Focus on VPN guide" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Focus on Office move" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /^Focus on (Write the steps|Test on a Mac)/ }),
+    ).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Focus on VPN guide" }));
+    expect(useUiStore.getState().focusOpen).toBe(true);
+    expect(useTaskStore.getState().selected?.title).toBe("Write the steps");
+  });
+
   it("ticks a task off from its row", async () => {
     apiMock.taskSetDone.mockResolvedValue([
       makeTask({ path: "Møder/Acme.md", line: 5, done: true }),

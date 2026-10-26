@@ -54,9 +54,17 @@ describe("Header menus", () => {
     render(<Header />);
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "File menu" }));
-    expect(
-      await screen.findByRole("menuitem", { name: /New note from a starter/ }),
-    ).toBeInTheDocument();
+    // The same list as the New button in Files, then the capture box.
+    const names = (await screen.findAllByRole("menuitem")).map((i) => i.textContent);
+    expect(names.slice(0, 6).map((n) => n.replace(/Ctrl\+.+$|⌘.+$/, "").trim())).toEqual([
+      "Note",
+      "From a template…",
+      "Meeting note…",
+      "Quick note",
+      "Today's daily note",
+      "Capture a task, idea or note…",
+    ]);
+    expect(screen.queryByRole("menuitem", { name: /starter/i })).toBeNull();
     expect(screen.queryByRole("menuitem", { name: /About Mimer/ })).toBeNull();
     await user.keyboard("{Escape}");
     await user.click(screen.getByRole("button", { name: "Go menu" }));

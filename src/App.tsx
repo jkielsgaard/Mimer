@@ -7,7 +7,6 @@ import { ProposalReview } from "@/features/proposals/ProposalReview";
 import { QuickCapture } from "@/features/capture/QuickCapture";
 import { FindTasksDialog } from "@/features/tasks/FindTasksDialog";
 import { FocusMode } from "@/features/tasks/FocusMode";
-import { StarterDialog } from "@/features/starters/StarterDialog";
 import { FirstRunDialog } from "@/features/welcome/FirstRunDialog";
 import { CommandPalette } from "@/features/quickOpen/CommandPalette";
 import { QuickOpen } from "@/features/quickOpen/QuickOpen";
@@ -17,6 +16,9 @@ import { Welcome } from "@/features/welcome/Welcome";
 import { TemplatePicker } from "@/features/templates/TemplatePicker";
 import { ExportDialog } from "@/features/export/ExportDialog";
 import { AboutDialog } from "@/features/about/AboutDialog";
+import { BetaNoticeDialog } from "@/features/welcome/BetaNoticeDialog";
+import { MeetingFocus } from "@/features/meetings/MeetingFocus";
+import { MeetingForm } from "@/features/meetings/MeetingForm";
 import { HelpDialog } from "@/features/help/HelpDialog";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { AppContextMenu } from "@/components/AppContextMenu";
@@ -260,11 +262,13 @@ export function App() {
       {vault ? <AppShell /> : <Welcome />}
       <QuickOpen />
       <CommandPalette />
+      <BetaNoticeDialog />
+      <MeetingForm />
+      <MeetingFocus />
       <FirstRunDialog />
       <FocusMode />
       <FindTasksDialog />
       <QuickCapture />
-      <StarterDialog />
       <SettingsDialog />
       <RecoverDeletedDialog />
       <TemplatePicker />

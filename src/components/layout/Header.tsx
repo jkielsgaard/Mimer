@@ -76,15 +76,19 @@ export function Header() {
       {menu(
         "File",
         <>
-          {item("New note", "Mod+N", newNoteInCurrentFolder)}
-          {item("New note from a starter…", null, () => {
-            ui.setStarterOpen(true);
-          })}
-          {item("New note from a template…", null, () => {
+          {item("Note", "Mod+N", newNoteInCurrentFolder)}
+          {item("From a template…", null, () => {
             ui.setTemplatePickerOpen(true);
           })}
+          {item("Meeting note…", null, () => {
+            ui.setMeetingFormOpen(true);
+          })}
+          {item("Quick note", null, () => {
+            ui.openCapture("note");
+          })}
           {item("Today's daily note", "Mod+Shift+D", () => void openDailyNote())}
-          {item("Write something down…", "Mod+Shift+N", () => {
+          <DropdownMenuSeparator />
+          {item("Capture a task, idea or note…", "Mod+Shift+N", () => {
             ui.openCapture();
           })}
           <DropdownMenuSeparator />
@@ -174,6 +178,9 @@ export function Header() {
             reportAi("Mimer").catch(reportError);
           })}
           <DropdownMenuSeparator />
+          {item("About the AI beta…", null, () => {
+            ui.setBetaNoticeOpen(true);
+          })}
           {item("About Mimer…", null, () => {
             ui.setAboutOpen(true);
           })}

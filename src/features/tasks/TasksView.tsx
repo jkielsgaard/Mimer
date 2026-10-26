@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Plus, Sparkles } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Sparkles, Target } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { MoveButtons, moveKey } from "@/components/MoveButtons";
 import { PromptDialog } from "@/components/PromptDialog";
@@ -11,6 +11,7 @@ import { INBOX_PATH, useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { TaskRow } from "./TaskRow";
+import { firstOpenTask, focusEpic } from "./focusEpic";
 
 /** How far an epic has come: a thin bar and "2 of 4". */
 export function EpicProgress({ group }: { group: EpicGroup }) {
@@ -152,6 +153,18 @@ export function TasksView() {
             <span className="hidden text-xs text-muted-foreground md:inline">in a note</span>
           )}
           <EpicProgress group={g} />
+          {firstOpenTask(g) !== undefined && (
+            <Button
+              size="sm"
+              variant="outline"
+              aria-label={`Focus on ${g.title}`}
+              onClick={() => {
+                focusEpic(g);
+              }}
+            >
+              <Target /> Focus
+            </Button>
+          )}
           {at !== -1 && (
             <MoveButtons
               label={g.title}

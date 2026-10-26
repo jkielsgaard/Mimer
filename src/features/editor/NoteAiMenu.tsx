@@ -1,4 +1,5 @@
 import { ChevronDown, Sparkles } from "lucide-react";
+import { BetaBadge } from "@/components/BetaBadge";
 import { useState } from "react";
 import type { Skill } from "@/bindings/Skill";
 import { AiOffNote } from "@/components/AiOffNote";
@@ -111,9 +112,11 @@ export function NoteAiMenu({ path }: { path: string | null }) {
           size="sm"
           disabled={path === null}
           className="gap-1 text-primary"
+          aria-label="AI for this note"
           title={off ?? "AI for this note"}
         >
-          <Sparkles /> AI <ChevronDown className="size-3" aria-hidden />
+          <Sparkles /> AI<span className="hidden @5xl:inline"> for this note</span> <BetaBadge />{" "}
+          <ChevronDown className="size-3" aria-hidden />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">

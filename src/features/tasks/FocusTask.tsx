@@ -1,6 +1,7 @@
 import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import type { Task } from "@/bindings/Task";
+import { MoveButtons } from "@/components/MoveButtons";
 import { Button } from "@/components/ui/button";
 import { shortDate, todayIso } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
@@ -31,26 +32,29 @@ function logDay(iso: string): string {
 }
 
 /**
- * One task of the epic in Focus. The task worked on is open and marked, with its note, its steps
- * (the next one marked Now) and a box to write what has happened. Any other task can be unfolded
- * to read it, tick a step or write a line, and "Work on this" moves the mark to it.
+ * One task of the epic in Focus. The task worked on is marked, with its note, its steps (the next
+ * one marked Now) and a box to write what has happened. Every task can be folded or unfolded, its
+ * steps and the task itself can be moved, a step can be added, and "Work on this" moves the mark.
  */
 export function FocusTask({
   task,
   marked,
   open,
+  canMove,
   onToggle,
   onWork,
 }: {
   task: Task;
   marked: boolean;
   open: boolean;
+  canMove: { up: boolean; down: boolean };
   onToggle: () => void;
   onWork: () => void;
 }) {
   const store = useTaskStore.getState();
   const [log, setLog] = useState("");
-  const shown = marked || open;
+  const [step, setStep] = useState("");
+  const shown = open;
   const now = marked ? task.steps.findIndex((s) => !s.done) : -1;
   const stepsDone = task.steps.filter((s) => s.done).length;
   return (
@@ -62,13 +66,12 @@ export function FocusTask({
         marked && "border-2 border-primary px-[15px] py-[11px]",
       )}
     >
-      <div className="flex items-center gap-2.5">
+      <div className="group flex items-center gap-2.5">
         <button
           type="button"
           aria-expanded={shown}
           aria-label={`${shown ? "Fold" : "Unfold"} ${task.title}`}
-          disabled={marked}
-          className="rounded p-0.5 text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+          className="rounded p-0.5 text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
           onClick={onToggle}
         >
           {shown ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
@@ -107,6 +110,13 @@ export function FocusTask({
             )}
           </>
         )}
+        <MoveButtons
+          label={task.title}
+          canUp={canMove.up}
+          canDown={canMove.down}
+          onUp={() => store.move(task.path, task.line, task.key, true)}
+          onDown={() => store.move(task.path, task.line, task.key, false)}
+        />
       </div>
 
       {shown && (
@@ -120,7 +130,7 @@ export function FocusTask({
                 <li
                   key={s.line}
                   className={cn(
-                    "-mx-2.5 flex items-center gap-2.5 rounded-lg px-2.5 py-1 text-sm",
+                    "group -mx-2.5 flex items-center gap-2.5 rounded-lg px-2.5 py-1 text-sm",
                     i === now && "bg-accent/60",
                   )}
                 >
@@ -145,9 +155,37 @@ export function FocusTask({
                       Now
                     </span>
                   )}
+                  <MoveButtons
+                    label={s.text}
+                    canUp={i > 0}
+                    canDown={i < task.steps.length - 1}
+                    onUp={() => store.move(task.path, s.line, s.key, true)}
+                    onDown={() => store.move(task.path, s.line, s.key, false)}
+                  />
                 </li>
               ))}
             </ul>
+          )}
+          {!task.done && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const text = step.trim();
+                if (text === "") return;
+                setStep("");
+                void store.addStep(task, text);
+              }}
+            >
+              <input
+                aria-label={`Add a step to ${task.title}`}
+                value={step}
+                placeholder="+ Add a step. Enter adds it."
+                onChange={(e) => {
+                  setStep(e.target.value);
+                }}
+                className="w-full rounded-md border border-dashed bg-background px-2.5 py-1.5 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </form>
           )}
           <form
             className="flex flex-col gap-1.5"

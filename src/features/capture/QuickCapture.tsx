@@ -22,7 +22,7 @@ export function QuickCapture() {
     >
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Write it down</DialogTitle>
+          <DialogTitle>{kind === "note" ? "Quick note" : "Write it down"}</DialogTitle>
           <DialogDescription>
             Choose what it is, write it, and go on. Open it again with{" "}
             {formatShortcut("Mod+Shift+N")}.

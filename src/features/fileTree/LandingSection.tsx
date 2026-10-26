@@ -5,6 +5,7 @@ import { openFile } from "@/lib/actions";
 import { noteTitle } from "@/lib/utils";
 import { isNewNote, useSeen } from "@/stores/seenStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { MeetingLine } from "@/features/meetings/MeetingLine";
 import { FileTree } from "./FileTree";
 import { SidebarSection } from "./SidebarSection";
 import { landingNodes, newNotesIn, type Action } from "./treeUtils";
@@ -31,6 +32,7 @@ export function LandingSection({
   if (nodes.length === 0) return null;
   return (
     <SidebarSection title="Landing" storageKey="landing" count={fresh.length}>
+      <MeetingLine />
       {fresh.length > 0 && (
         <ul aria-label="New notes" className="px-1 pb-1">
           {fresh.map((n) => (

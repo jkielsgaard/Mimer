@@ -85,7 +85,7 @@ Open **Settings → Built-in AI** and choose the engine. **Foundry Local** (Micr
 
 1. Install [LM Studio](https://lmstudio.ai) and download a model that supports tool calling.
 2. In LM Studio's **Developer** tab, load the model and start the local server (`http://localhost:1234/v1`).
-3. In Mimer open **Settings → AI providers → LM Studio**, load the models, pick one and press **Test connection**.
+3. In Mimer open **Settings → AI → More: LM Studio and other providers**, load the models, pick one and press **Test connection**.
 
 Give the model a context length of at least 16k in LM Studio, and use the same value in Mimer's settings.
 

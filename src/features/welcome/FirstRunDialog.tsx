@@ -34,7 +34,9 @@ export function FirstRunDialog() {
   const [dismissed, setDismissed] = useState(firstRunDone);
   const [choice, setChoice] = useState<Choice>("builtin");
 
-  const candidate = vault !== null && !dismissed && settings !== null;
+  // The first-start notice (AI is beta) comes first; the set-up help follows when it is closed.
+  const noticeOpen = useUiStore((s) => s.betaNoticeOpen);
+  const candidate = vault !== null && !dismissed && settings !== null && !noticeOpen;
   useEffect(() => {
     if (!candidate) return;
     void useEngineStore.getState().load();

@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
 import { taskText } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
-import { fileNameFrom } from "@/features/starters/StarterDialog";
+import { fileNameFrom } from "@/lib/noteTitle";
 import { useIdeaStore } from "@/stores/ideaStore";
 import { useTaskStore } from "@/stores/taskStore";
 import { reportError, useUiStore } from "@/stores/uiStore";

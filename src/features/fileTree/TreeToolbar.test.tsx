@@ -58,22 +58,26 @@ describe("TreeToolbar", () => {
     expect(actions.newNoteInCurrentFolder).toHaveBeenCalled();
   });
 
-  it("New → Quick note is one click", async () => {
+  it("New → Quick note opens the write-it-down box on Note, without a new note", async () => {
+    useUiStore.setState({ captureKind: null });
     const user = await openMenu();
     await user.click(await screen.findByRole("menuitem", { name: /Quick note/ }));
-    expect(createStandardNote).toHaveBeenCalledWith("quick");
+    expect(useUiStore.getState().captureKind).toBe("note");
+    expect(createStandardNote).not.toHaveBeenCalled();
   });
 
-  it("New → Meeting note asks for a title", async () => {
+  it("New → Meeting note opens the meeting window", async () => {
+    useUiStore.setState({ meetingFormOpen: false });
     const user = await openMenu();
     await user.click(await screen.findByRole("menuitem", { name: /Meeting note/ }));
-    const box = screen.getByLabelText("Meeting title");
-    await user.clear(box);
-    await user.type(box, " Weekly sync ");
-    await user.click(screen.getByRole("button", { name: "Create" }));
-    await waitFor(() => {
-      expect(createStandardNote).toHaveBeenCalledWith("meeting", "Weekly sync");
-    });
+    expect(useUiStore.getState().meetingFormOpen).toBe(true);
+  });
+
+  it("New has no starter, and offers a template and the daily note", async () => {
+    await openMenu();
+    expect(screen.queryByRole("menuitem", { name: /starter/i })).toBeNull();
+    expect(await screen.findByRole("menuitem", { name: /From a template/ })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /Today's daily note/ })).toBeInTheDocument();
   });
 
   it("New → Folder asks for a name and creates it", async () => {

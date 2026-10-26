@@ -25,7 +25,12 @@ Keep it up to date: when a feature changes, change its lines here in the same co
 
 ### 2. The file panel
 
-- [ ] **New** above the tree: Note, From a starter…, Meeting note…, Quick note, Folder…, Project… all work.
+- [ ] **New** above the tree: Note, From a template…, Meeting note…, Quick note, Today's daily note, Folder…, Project… all work, and there is no "From a starter". **File** has the same first five, then **Capture a task, idea or note…**. The `···` menu has no Search or Quick open.
+- [ ] **Quick note**: opens the small box on Note; with a name it saves `Quick notes/<name>.md`, without one it uses the first line; the note you are in stays open and unchanged.
+- [ ] **Meeting note…**: everything can be left empty. With a day and time, the note is `Meetings/<day> <title>.md` with `meeting:` and `with:` at the top, the agenda as a checklist and a `###` part per item. **Create** keeps you where you are; **Create and start** opens the meeting screen.
+- [ ] **Meeting screen**: the first open item is **Now**; typing writes to the note (open it in another tab to see it); **Decision / Action / Question / Park it** add a marked line; **Next item** ticks the item; **+ Add an item** adds it; the write-it-down box does not change the notes; **Esc** leaves. **Start meeting** shows above notes in the Meetings folder.
+- [ ] **After the meeting**: above a meeting note, the small arrow next to **Start meeting** has **Add actions to Tasks…** (lines marked Action get ticks; lines already added are greyed; the epic task is "This meeting" or another; afterwards the note has "(in Tasks)" on them and the tasks are in the epic task) and **Prepare next meeting…** (the window is filled in: same title and people, a week later, unticked agenda items and "Follow up: …" lines). The meeting screen has the same **Add actions to Tasks…** in its header.
+- [ ] **Landing** has one line with the next meeting of today or tomorrow and **Start**; **+N** shows the others; with no meeting today or tomorrow there is no line.
 - [ ] Folders first, then notes, A–Z ignoring case; `.md` is hidden. Files and folders starting with `.` never show. Folders show how many notes they hold.
 - [ ] Rename (right-click → **Rename**, or F2), drag a note onto a folder, delete (the dialog says it can be restored from history).
 - [ ] Create, change and delete a `.md` file in another program: the tree follows within a second or two.
@@ -100,15 +105,14 @@ Check with `git log --oneline` in the vault folder.
 - [ ] Order: hover an epic, a task and a step and use the arrows; then the same with **Alt+↑/↓** (the focus stays on the item, so it can be pressed again). The note has the new order (a task moves with its steps, note and log). The Inbox has no arrows and stays first. Restart Mimer: the epic order is kept. Change a step's text on the task page: Enter saves, Esc puts it back. Rename a task: `made:` stays.
 - [ ] Delete a task: it asks; History has "Snapshot before delete".
 
-### 8. Ideas, write it down, Focus and starters
+### 8. Ideas, write it down and Focus
 
 - [ ] The light bulb: ideas Open / Used / Archived; **New idea**; change the title and note, click away: `Ideas.md` has the note indented under the line (hidden from the tree and not a task).
 - [ ] **Make a task**: in the epic task Inbox, with the idea's note as the task's note; the idea is Used. **Make a note**: a note in Quick notes opens. Archive and Bring back work.
 - [ ] `Ctrl/Cmd+Shift+N` from inside a note: Task, Idea and Note each save and close; the note you were writing is unchanged.
-- [ ] **Focus** on an epic (epic page) or on a task: the whole epic as an outline, the task marked **Working on it** (its status is Doing), its next step marked **Now**; other tasks folded. Unfold one, tick a step, **Work on this** moves the mark; **Fold the rest** folds them again.
+- [ ] **Focus** is only on an epic: in its heading in the task list and at the top of the epic page (not in the left panel, not on task rows, not on the task page). It shows the whole epic as an outline, every task open, the task marked **Working on it** (its status is Doing), its next step marked **Now**. Fold any task (also the marked one), **Work on this** moves the mark, **Fold the rest** folds all but the marked one. Move tasks and steps with the arrows (or Alt+Up/Down), and add a step under a task with Enter.
 - [ ] In Focus, write in **What has happened** and press Enter: the line is in the task's log with today's date and you stay in Focus. **Done, next step** on the last step asks "Tick the task too?"; yes marks the next open task. When the epic is done: "Epic task done" and **Back to the task list**. The timer can be paused; the write-it-down box keeps you in Focus; Esc leaves.
 - [ ] **(AI)** **Help me start** in Focus, **Think it through** and **Suggest first steps** on an idea: nothing is added until you press the button.
-- [ ] **New → From a starter…**: each starter shows a live preview with `[blanks]`; Create makes the note in the right folder.
 
 ### 9. Daily notes and Trace my work
 
@@ -129,7 +133,7 @@ Check with `git log --oneline` in the vault folder.
 - [ ] A problem (too large a context, missing driver) shows a red box with steps, **Show details** and **Copy details**.
 - [ ] **Remove** a model and all files (with a confirmation) cleans the folder shown in the settings.
 - [ ] Nothing from the built-in AI is reachable from outside: `curl http://127.0.0.1:<port>/v1/models` without a key is refused.
-- [ ] **Settings → AI providers** → LM Studio: **Load models**, pick one, **Test connection** says connected. An OpenAI-compatible provider with a non-local address shows that it is not used.
+- [ ] **Settings → AI → More: LM Studio and other providers** → LM Studio: **Load models**, pick one, **Test connection** says connected. An OpenAI-compatible provider with a non-local address shows that it is not used.
 - [ ] An API key shows "Key stored" and is **not** in `settings.json` (it is in the system keychain).
 - [ ] The status bar AI chip: green when ready, grey when asleep (with **Wake**), blue while working (with **Stop**), red with **Fix** on a problem. Clicking it shows the model and where it runs.
 - [ ] First run with no model: the welcome appears once; **Skip setup** does not bring it back.
@@ -187,7 +191,9 @@ Check with `git log --oneline` in the vault folder.
 
 ### 17. Settings
 
-- [ ] **File → Settings…** (`Ctrl/Cmd+,`): General, AI providers, AI, Built-in AI, Version history, Vault.
+- [ ] **File → Settings…** (`Ctrl/Cmd+,`): General, AI (marked Beta), Version history, Vault. The AI tab has the beta note, the list of AIs, then the folded sections **Built-in AI: set up** and **More: LM Studio and other providers**.
+- [ ] **First start** (clear `mimer.betaNoticeSeen`): "Welcome to Mimer" says it is a first version and that the AI is beta; **Got it** is remembered; **Help → About the AI beta…** shows it again. **Beta** marks sit by the editor AI button, the chat title and the AI tab.
+- [ ] **Right-click on selected text**: Cut, Copy, Paste, Select all, then **AI ›**, Add as a task, Add as an idea. Without a selection the system's own menu shows.
 - [ ] General: theme switches after Save; font size, line width, spellcheck, recent notes, spelling help, Trace my work and your own words take effect.
 - [ ] Vault: daily notes folder and template, meetings and quick notes folders, image style; a folder like `../outside` is refused. **Add standard folders and templates** does not overwrite your edits.
 - [ ] Edit `settings.json` and set `"schemaVersion": 99`: "Settings could not be loaded" and the file is not overwritten (restore it afterwards).

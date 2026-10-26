@@ -7,6 +7,7 @@ const apiMock = vi.hoisted(() => ({
   taskSetDone: vi.fn(),
   taskAdd: vi.fn(),
   taskAddStep: vi.fn(),
+  taskMove: vi.fn(),
   taskAddLog: vi.fn(),
   taskSetMeta: vi.fn(),
   ideaAdd: vi.fn(),
@@ -76,7 +77,7 @@ describe("FocusMode", () => {
     expect(apiMock.taskSetDone).toHaveBeenCalledWith(task.path, 7, "s2", true);
   });
 
-  it("shows the whole epic: other tasks folded, unfolded on demand, and the mark can move", async () => {
+  it("shows the whole epic unfolded: any task can be folded, and the mark can move", async () => {
     const other = makeTask({
       line: 12,
       key: "k2",
@@ -86,13 +87,45 @@ describe("FocusMode", () => {
     useTaskStore.setState({ tasks: [task, other] });
     render(<FocusMode />);
     const user = userEvent.setup();
-    expect(screen.queryByText("Ask for a price")).toBeNull();
-    await user.click(screen.getByRole("button", { name: "Unfold Order the tokens" }));
     expect(screen.getByText("Ask for a price")).toBeInTheDocument();
+    // Nothing is locked: the task worked on can be folded too.
+    await user.click(screen.getByRole("button", { name: `Fold ${task.title}` }));
+    expect(screen.queryByText(task.steps[0]?.text ?? "")).toBeNull();
+    await user.click(screen.getByRole("button", { name: `Unfold ${task.title}` }));
     await user.click(screen.getByRole("button", { name: "Fold the rest" }));
     expect(screen.queryByText("Ask for a price")).toBeNull();
     await user.click(screen.getByRole("button", { name: "Work on this" }));
     expect(useTaskStore.getState().selected?.title).toBe("Order the tokens");
+  });
+
+  it("adds a step and moves steps and tasks without leaving focus", async () => {
+    const other = makeTask({ line: 12, key: "k2", title: "Order the tokens", steps: [] });
+    useTaskStore.setState({ tasks: [task, other] });
+    apiMock.taskAddStep.mockResolvedValue([task, other]);
+    apiMock.taskMove.mockResolvedValue([task, other]);
+    render(<FocusMode />);
+    const user = userEvent.setup();
+    await user.type(
+      screen.getByLabelText(`Add a step to ${task.title}`),
+      "Send the invoice{Enter}",
+    );
+    expect(apiMock.taskAddStep).toHaveBeenCalled();
+    expect(apiMock.taskAddStep.mock.calls[0]?.[3]).toBe("Send the invoice");
+    // The first task cannot go up, the last cannot go down.
+    expect(screen.getByRole("button", { name: `Move ${task.title} up` })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: `Move ${task.title} down` }));
+    expect(apiMock.taskMove).toHaveBeenCalledWith(task.path, task.line, task.key, false);
+    const firstStep = task.steps[0];
+    if (firstStep) {
+      await user.click(screen.getByRole("button", { name: `Move ${firstStep.text} down` }));
+      expect(apiMock.taskMove).toHaveBeenCalledWith(
+        task.path,
+        firstStep.line,
+        firstStep.key,
+        false,
+      );
+    }
+    expect(useUiStore.getState().focusOpen).toBe(true);
   });
 
   it("writes what has happened without leaving focus", async () => {

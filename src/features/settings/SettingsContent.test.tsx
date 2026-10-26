@@ -94,7 +94,7 @@ describe("Settings → AI: which AI Mimer uses", () => {
         <SettingsContent stored={stored} onClose={() => undefined} />
       </Dialog>,
     );
-    await user.click(screen.getByRole("button", { name: "AI" }));
+    await user.click(screen.getByRole("button", { name: /^AI\s*Beta$/ }));
     return user;
   };
 
@@ -104,6 +104,21 @@ describe("Settings → AI: which AI Mimer uses", () => {
     const lines = within(list).getAllByRole("radio");
     expect(lines.at(-1)).toHaveTextContent(/Cloud AI.*Notes leave this computer.*Off/);
     expect(lines.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it("has one AI tab marked Beta, with the set-up folded in sections", async () => {
+    const user = await openAiTab();
+    const nav = screen.getByRole("navigation", { name: "Settings sections" });
+    expect(
+      within(nav)
+        .getAllByRole("button")
+        .map((b) => b.textContent),
+    ).toEqual(["General", "AIBeta", "Version history", "Vault"]);
+    expect(screen.getByTestId("ai-beta-note")).toHaveTextContent("still being built");
+    const built = screen.getByRole("button", { name: "Built-in AI: set up" });
+    expect(built).toHaveAttribute("aria-expanded", "false");
+    await user.click(built);
+    expect(built).toHaveAttribute("aria-expanded", "true");
   });
 
   it("has no Raven setting and no own-knowledge setting any more", async () => {
@@ -128,7 +143,8 @@ describe("Settings → AI providers", () => {
         <SettingsContent stored={stored} onClose={() => undefined} />
       </Dialog>,
     );
-    await user.click(screen.getByRole("button", { name: "AI providers" }));
+    await user.click(screen.getByRole("button", { name: /^AI\s*Beta$/ }));
+    await user.click(screen.getByRole("button", { name: "More: LM Studio and other providers" }));
     return user;
   };
 
@@ -201,8 +217,9 @@ describe("Settings → AI providers", () => {
         <SettingsContent stored={withBuiltIns} onClose={() => undefined} />
       </Dialog>,
     );
-    await user.click(screen.getByRole("button", { name: "AI providers" }));
-    expect(screen.getAllByRole("button", { name: /Built-in AI/ })).toHaveLength(2);
+    await user.click(screen.getByRole("button", { name: /^AI\s*Beta$/ }));
+    await user.click(screen.getByRole("button", { name: "More: LM Studio and other providers" }));
+    expect(screen.getAllByRole("button", { name: /^Built-in AI\s*local/ })).toHaveLength(1);
     // The other providers are still listed, and the two engines are not listed separately.
     expect(screen.getByRole("button", { name: /^LM Studio/ })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /llama\.cpp/ })).toBeNull();

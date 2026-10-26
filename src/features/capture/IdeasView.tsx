@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
-import { fileNameFrom } from "@/features/starters/StarterDialog";
+import { fileNameFrom } from "@/lib/noteTitle";
 import { shortDate, stepsFromAnswer, todayIso } from "@/lib/taskLogic";
 import { AiAsk } from "@/components/AiAsk";
 import { CaptureBox } from "./CaptureBox";

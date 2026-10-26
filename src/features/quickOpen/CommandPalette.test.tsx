@@ -72,6 +72,6 @@ describe("CommandPalette", () => {
     render(<CommandPalette />);
     expect(await screen.findByText(/Open a note or select a folder/)).toBeInTheDocument();
     expect(screen.getByRole("option", { name: /^New note(?! from)/ })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /Open the task list/ })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: /^Tasks/ })).toBeInTheDocument();
   });
 });

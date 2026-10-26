@@ -6,6 +6,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-10-26
+
+### Added
+
+- **Meetings.** **New → Meeting note…** (also under File) asks for a title, a day and time, who is with you and an agenda, all optional, and saves an ordinary Markdown note in Meetings. **Start** opens the meeting screen: the agenda on the left, one item at a time with its notes in the middle, buttons that mark a line as a Decision, Action, Question or Parked, **Next item**, and the write-it-down box on the right. Everything is written into the note as you go. The next meeting of today or tomorrow shows as one line at the top of Landing with **Start**; **Start meeting** also shows above notes in the Meetings folder.
+- **After a meeting.** **Add actions to Tasks…** (in the meeting screen, and in the small menu next to **Start meeting**) puts the lines marked Action into an epic task, by default one for the meeting; added lines are marked "(in Tasks)" so they are not added twice. **Prepare next meeting…** opens the meeting window filled in from the last one: the same title, people and time a week later, and the agenda items not reached plus actions not yet in Tasks as "Follow up". Neither uses AI.
+- **Right-click on selected text** shows Cut, Copy, Paste and Select all first, then **AI ›** and Add as a task or idea.
+- **Beta mark on the AI.** A small **Beta** by the editor AI button, the chat title and the AI tab in Settings, a note at the top of Settings → AI, and a first-start notice that says this is a first version and that the AI is beta (Help → About the AI beta… shows it again).
+- **Focus** can add a step under any task and move tasks and steps up and down, like the task list.
+
+### Changed
+
+- **Focus is one button, on the epic task** (in its heading in the task list and at the top of its page). It is gone from the task rows, the task page and the left panel. In Focus every task is open and any task can be folded, also the one worked on.
+- **Quick note** opens the write-it-down box on Note, with an optional name, and saves in Quick notes without moving you away from what you are doing. Ctrl+Shift+N opens the same box.
+- **New and File have the same list**: Note, From a template, Meeting note, Quick note and Today's daily note. "Write something down" is now "Capture a task, idea or note".
+- **Settings has one AI tab** instead of three: the choice of AI, then the folded sections Built-in AI: set up and More: LM Studio and other providers.
+- The editor's AI button says **AI for this note** when there is room.
+
+### Removed
+
+- **New note from a starter** (Meeting, Status update, Reply to an e-mail and Idea), in New, File, the command palette and the empty editor screen.
+- Search and Quick open from the `···` menu and toolbar in Files; they are in the left rail and have shortcuts.
+
 ## [0.15.1] - 2026-10-24
 
 ### Added
