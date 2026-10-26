@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-10-26
+
 ### Added
 
 - **Choose the epic of a task.** The write-it-down box has **Into** for a task: the epic of the meeting, the epic in Focus, or the one used last, any other epic, or **+ New epic…**. Making a task from an idea asks the same. Mimer no longer makes an Inbox epic by itself.
