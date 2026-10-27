@@ -37,6 +37,7 @@ import type { PreviewConfig } from "./extensions/previewConfig";
 import { insertNoteLink } from "./extensions/formatCommands";
 import { insertImagesFromDialog } from "./insertImages";
 import { EditorToolbar } from "./EditorToolbar";
+import { NoteMenu } from "@/features/editor/NoteMenu";
 import { StartMeetingButton } from "@/features/meetings/StartMeetingButton";
 import { NoteAiMenu } from "./NoteAiMenu";
 import { LinkNoteDialog } from "./LinkNoteDialog";
@@ -288,6 +289,7 @@ export function Editor({ paneId }: { paneId: PaneId }) {
           <span className="ml-auto flex items-center gap-1">
             <TitleFollowChip path={activePath} />
             <StartMeetingButton path={activePath} />
+            <NoteMenu path={activePath} />
             <NoteAiMenu path={activePath} />
             <Button
               type="button"

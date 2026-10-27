@@ -184,16 +184,23 @@ fn create_epic_note(v: &OpenVault, title: &str, source: Option<&str>) -> Result<
     Ok(epics::read_epic(&path, &text))
 }
 
-/// Every epic note (the notes in `Tasks/`).
+/// Every epic: a note with the tag `epic`, wherever it is. A note in `Tasks/` without the tag is
+/// only a note.
 pub(crate) fn all_epics(v: &OpenVault) -> Vec<Epic> {
-    let mut out: Vec<Epic> = v
-        .file_list()
+    let tagged = v
+        .with_index(|c| crate::search::notes_with_tag(c, epics::EPIC_TAG))
+        .unwrap_or_default();
+    let files = v.file_list();
+    let mut out: Vec<Epic> = files
         .iter()
-        .filter(|f| epics::is_epic_path(f))
+        .filter(|f| epics::is_epic_path(f) || tagged.contains(f))
         .filter_map(|f| {
-            fs_ops::read_note(&v.root, f)
-                .ok()
-                .map(|n| epics::read_epic(f, &n.content))
+            let n = fs_ops::read_note(&v.root, f).ok()?;
+            // The note itself is asked, so a tag just written counts before the index has it.
+            crate::markdown::tags::extract_tags(&n.content)
+                .iter()
+                .any(|t| t == epics::EPIC_TAG)
+                .then(|| epics::read_epic(f, &n.content))
         })
         .collect();
     out.sort_by_key(|a| a.title.to_lowercase());
@@ -278,6 +285,21 @@ pub async fn task_set_title(
 ) -> Result<Vec<Task>, AppError> {
     let v = state.current_vault()?;
     edit_note(&v, &path, |c| tasks::set_title(c, line, &key, &title))
+}
+
+/// Points a task at a note, or takes the link off (`link` is `None`).
+#[tauri::command]
+pub async fn task_set_link(
+    state: State<'_, AppState>,
+    path: String,
+    line: u32,
+    key: String,
+    link: Option<String>,
+) -> Result<Vec<Task>, AppError> {
+    let v = state.current_vault()?;
+    edit_note(&v, &path, |c| {
+        tasks::set_link(c, line, &key, link.as_deref())
+    })
 }
 
 /// Moves a task or a step one place up or down in its note.
@@ -391,6 +413,60 @@ pub async fn epic_set_description(
         ops::write_note(&v, &path, &new)?;
     }
     Ok(epics::read_epic(&path, &new))
+}
+
+/// Makes a note with tasks an epic by giving it the tag `epic`; nothing else in it changes.
+#[tauri::command]
+pub async fn epic_adopt(state: State<'_, AppState>, path: String) -> Result<Epic, AppError> {
+    let v = state.current_vault()?;
+    check_path(&path)?;
+    let note = fs_ops::read_note(&v.root, &path)?;
+    let new = crate::markdown::note_tags::add_tag(&note.content, epics::EPIC_TAG);
+    if new != note.content {
+        ops::write_note(&v, &path, &new)?;
+    }
+    Ok(epics::read_epic(&path, &new))
+}
+
+/// The tags in the properties of a note (lower case).
+#[tauri::command]
+pub async fn note_tags(state: State<'_, AppState>, path: String) -> Result<Vec<String>, AppError> {
+    let v = state.current_vault()?;
+    check_path(&path)?;
+    let note = fs_ops::read_note(&v.root, &path)?;
+    Ok(crate::markdown::note_tags::front_matter_tags(&note.content))
+}
+
+/// Puts a tag on a note or takes it off, in the properties. Nothing else in the note changes.
+/// Returns the tags the note has afterwards.
+#[tauri::command]
+pub async fn note_set_tag(
+    state: State<'_, AppState>,
+    path: String,
+    tag: String,
+    on: bool,
+) -> Result<Vec<String>, AppError> {
+    use crate::markdown::note_tags;
+    let v = state.current_vault()?;
+    check_path(&path)?;
+    let tag = tag.trim().to_lowercase();
+    if tag.is_empty()
+        || !tag
+            .chars()
+            .all(|c| c.is_alphanumeric() || matches!(c, '-' | '_'))
+    {
+        return Err(AppError::InvalidPath(format!("“{tag}” is not a tag")));
+    }
+    let note = fs_ops::read_note(&v.root, &path)?;
+    let new = if on {
+        note_tags::add_tag(&note.content, &tag)
+    } else {
+        note_tags::remove_tag(&note.content, &tag)
+    };
+    if new != note.content {
+        ops::write_note(&v, &path, &new)?;
+    }
+    Ok(note_tags::front_matter_tags(&new))
 }
 
 /// Changes the title of an epic task (its heading). The note keeps its file name.
@@ -745,7 +821,10 @@ mod tests {
         let steps: Vec<&str> = list[1].steps.iter().map(|s| s.text.as_str()).collect();
         assert_eq!(steps, ["Find the model", "Order"]);
         let text = std::fs::read_to_string(d.path().join("Tasks/Inbox.md")).unwrap();
-        assert!(text.starts_with("# Inbox\n\n- [ ] Call Mette"), "{text}");
+        assert!(
+            text.starts_with("---\ntags: [epic]\n---\n# Inbox\n\n- [ ] Call Mette"),
+            "{text}"
+        );
         assert!(add_task_to(&v, epics::INBOX, "  ", "", &[]).is_err());
         let after = delete_task(&v, epics::INBOX, list[1].line, &list[1].key).unwrap();
         assert_eq!(after.len(), 1);

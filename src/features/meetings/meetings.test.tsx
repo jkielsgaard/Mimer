@@ -14,6 +14,7 @@ const apiMock = vi.hoisted(() => ({
   getEpicOrder: vi.fn(),
   epicForNote: vi.fn(),
   taskAdd: vi.fn(),
+  noteTags: vi.fn(),
 }));
 vi.mock("@/lib/api", () => ({
   api: apiMock,
@@ -137,6 +138,23 @@ describe("MeetingFocus", () => {
     render(<MeetingFocus />);
     expect(await screen.findByLabelText("Notes for Notes")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Next item →" })).toBeNull();
+  });
+
+  it("lists an item added to a meeting that had no agenda, and writes it in the note", async () => {
+    apiMock.readNote.mockResolvedValue({ path: PATH, content: "# Lunch\n\nsome text\n", mtime: 0 });
+    useUiStore.setState({ meetingFocus: PATH });
+    render(<MeetingFocus />);
+    await screen.findByLabelText("Notes for Notes");
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Add an item to the agenda"), "Food{Enter}");
+    // The item is in the agenda list now, and the "No agenda" text is gone.
+    expect(await screen.findByRole("button", { name: "Food" })).toBeInTheDocument();
+    expect(screen.queryByText(/No agenda/)).toBeNull();
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(useUiStore.getState().meetingFocus).toBeNull();
+    });
+    expect(apiMock.writeNote.mock.calls.at(-1)?.[1]).toContain("## Agenda\n\n- [ ] Food");
   });
 });
 
@@ -268,12 +286,28 @@ describe("the next meeting in Landing", () => {
 });
 
 describe("StartMeetingButton", () => {
-  it("is shown above notes in the meetings folder only", async () => {
-    const { rerender } = render(<StartMeetingButton path="Welcome.md" />);
+  it("is shown above a note tagged as a meeting, wherever it is", async () => {
+    apiMock.noteTags.mockResolvedValue(["meeting"]);
+    render(<StartMeetingButton path="Work/Weekly.md" />);
+    expect(await screen.findByRole("button", { name: /Start meeting/ })).toBeInTheDocument();
+    apiMock.noteTags.mockReset();
+  });
+
+  it("is shown above a note tagged as a meeting only, also in the meetings folder", async () => {
+    apiMock.noteTags.mockResolvedValue([]);
+    const { rerender } = render(<StartMeetingButton path={PATH} />);
     expect(screen.queryByRole("button", { name: /Start meeting/ })).toBeNull();
-    rerender(<StartMeetingButton path={PATH} />);
-    await userEvent.setup().click(screen.getByRole("button", { name: /Start meeting/ }));
-    expect(useUiStore.getState().meetingFocus).toBe(PATH);
+    apiMock.noteTags.mockResolvedValue(["meeting"]);
+    rerender(<StartMeetingButton path="Work/Weekly.md" />);
+    await userEvent.setup().click(await screen.findByRole("button", { name: /Start meeting/ }));
+    expect(useUiStore.getState().meetingFocus).toBe("Work/Weekly.md");
+  });
+
+  it("is shown above a note tagged as a meeting, wherever it is", async () => {
+    apiMock.noteTags.mockResolvedValue(["meeting"]);
+    render(<StartMeetingButton path="Work/Weekly.md" />);
+    expect(await screen.findByRole("button", { name: /Start meeting/ })).toBeInTheDocument();
+    apiMock.noteTags.mockReset();
   });
 });
 
@@ -284,9 +318,10 @@ describe("after the meeting", () => {
       content: setItemNotes(markItem(note, "Budget", true), "Hiring", "Talked about it."),
       mtime: 0,
     });
+    apiMock.noteTags.mockResolvedValue(["meeting"]);
     render(<StartMeetingButton path={PATH} />);
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: /Prepare next meeting/ }));
+    await user.click(await screen.findByRole("button", { name: /Prepare next meeting/ }));
     await waitFor(() => {
       expect(useUiStore.getState().meetingFormOpen).toBe(true);
     });

@@ -18,6 +18,7 @@ export function makeTask(patch: Partial<Task> = {}): Task {
     log: [],
     note: "",
     made: null,
+    link: null,
     ...patch,
   };
 }

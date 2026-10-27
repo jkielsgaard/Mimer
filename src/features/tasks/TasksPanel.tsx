@@ -21,7 +21,10 @@ export function TasksPanel() {
     void useTaskStore.getState().load();
   }, []);
 
-  const groups = useMemo(() => epicGroups(tasks, epics, epicOrder), [tasks, epics, epicOrder]);
+  const groups = useMemo(
+    () => epicGroups(tasks, epics, epicOrder).filter((g) => g.adopted),
+    [tasks, epics, epicOrder],
+  );
   const open = groups.filter((g) => !g.allDone);
   const done = groups.filter((g) => g.allDone);
   const row = (g: (typeof groups)[number]) => (

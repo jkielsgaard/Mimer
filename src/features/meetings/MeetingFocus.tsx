@@ -4,12 +4,9 @@ import { Button } from "@/components/ui/button";
 import { CaptureBox } from "@/features/capture/CaptureBox";
 import { api } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
-import { addItem, itemNotes, markItem, parseMeeting, setItemNotes } from "@/lib/meeting";
+import { addItem, GENERAL, itemNotes, markItem, parseMeeting, setItemNotes } from "@/lib/meeting";
 import { cn } from "@/lib/utils";
 import { reportError, useUiStore } from "@/stores/uiStore";
-
-/** The item that holds the notes when the meeting has no agenda. */
-const GENERAL = "Notes";
 
 /**
  * A running meeting: the agenda on the left (one item at a time), the notes for that item in the

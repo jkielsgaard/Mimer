@@ -1,6 +1,6 @@
 ## Tasks and epics
 
-A task in Mimer is an ordinary line in an ordinary note: `- [ ] Renew the licence`. Mimer reads these lines in **every** note. Press the **Tasks** icon at the left edge, or **Ctrl/Cmd+Shift+T**. The notes stay yours: without Mimer the lines are still a checklist in any Markdown editor.
+A task in Mimer is an ordinary line in an ordinary note: `- [ ] Renew the licence`. Mimer reads these lines in **every** note, but only a note with the tag `epic` is an epic (**New epic** adds it for you). Tasks in other notes wait under **Tasks in other notes** (press **Make an epic** to list one), so a checklist in an ordinary note does not become an epic by accident. The agenda of a meeting note is not tasks. Press the **Tasks** icon at the left edge, or **Ctrl/Cmd+Shift+T**. The notes stay yours: without Mimer the lines are still a checklist in any Markdown editor.
 
 ### Epics
 
@@ -66,3 +66,11 @@ Press **Focus** on an epic (in its heading in the list, or at the top of its pag
 - **Help me start** is for when you sit and cannot begin. The AI suggests one tiny first step, something under five minutes, for example "open the file and write the heading". It is only added to the task if you press Add it as a step.
 - **Something popped into your head?** Use the same box as above: choose Task, Idea or Quick note and write it. A task goes into the epic you choose (the one in Focus at first). You stay in Focus.
 - **Esc** or **Leave focus** leaves focus.
+
+## Tag a note as an epic or a meeting
+
+**···** above a note has **Tags…**, which lists what the note can be: a **Meeting** or an **Epic**. Tick one and it is written in the note's properties (`tags: [epic]`), and the note stays where it is. A note tagged Epic is listed with your epics; a note tagged Meeting gets **Start meeting**. You can write the tag yourself in the properties too.
+
+## A note for a task
+
+A task can point at a note of its own. On the task page, **Linked note** has **Link a note…** (a note you already have) and **Make a note for this task**. The link is written in the task's line as `[[the note]]`, so it works in any Markdown editor. A small chip with the note's name shows in the list; a click opens the note. **Unlink** takes the link off the task and leaves the note alone.

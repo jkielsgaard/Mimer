@@ -219,3 +219,25 @@ Check with `git log --oneline` in the vault folder.
 - [ ] The **?** in the top bar, **Help → How to use Mimer** and **F1** open the guide; the search narrows the topics; Esc closes it. A **?** next to a setting explains it and **Read more in the guide** opens the right topic.
 - [ ] **Help → About Mimer…** shows the picture, version, build date, the licence (AGPL-3.0) and who made it.
 - [ ] **Help → Report a bug…**, **Suggest a feature…** and **Report inappropriate AI content…** open GitHub with the form filled in (version and system).
+
+## Epics and other notes with tasks
+
+- [ ] Write `- [ ] test` in an ordinary note: no new epic in the Tasks panel. In **Show all tasks** it is under **Tasks in other notes** (folded).
+- [ ] **Make an epic** on it: the note gets `tags: [epic]` (other properties are kept), and it is listed with the epics. Outside `Tasks/` it has no pencil or waste bin.
+- [ ] **New epic** makes a note with `tags: [epic]` in its properties. A note in `Tasks/` from before (no tag) is under **Tasks in other notes**; **Make the notes in Tasks epics** tags them all (this button goes in the release after 0.18.0).
+- [ ] A meeting note: the agenda lines are not tasks and no epic is made. A task written under `## Notes` in it still shows up.
+- [ ] A meeting without an agenda: the text is written under `## Notes`, with no `### Notes` heading.
+
+## Tags on a note
+
+- [ ] The **···** menu above a note: Rename… renames it (links are asked about as in the tree), History opens the history, Export… opens the export. **Tags…**: Meeting and Epic. Tick Epic on an ordinary note: it gets `tags: [epic]` in its properties, a chip shows, and it is listed with your epics. The cross takes it off again.
+- [ ] Tick Meeting on any note: **Start meeting** shows. Take it off: it goes, also in the meetings folder.
+- [ ] A note with other properties and its own `#tags`: only the `tags:` line changes. A note whose properties only held the tag gets no empty `---` block left behind.
+
+## A note for a task
+
+- [ ] Task page → **Linked note** → **Make a note for this task**: name is the task title, folder is the task note's folder. The note opens with the heading and a line `Task in [[…]]`. The task line gets `[[Name]]` after its title, before `#tags` and `due:`/`made:`.
+- [ ] A small chip with the note's name shows in the task list, in Focus and on the task page; a click opens the note.
+- [ ] **Link a note…** picks an existing note. The pencil changes it; the cross unlinks (the note stays).
+- [ ] Rename the linked note in the tree: the link in the task line follows. Delete it: the chip is dimmed and says "Note missing"; on the task page **Make the note** makes it again.
+- [ ] Rename the task title: the link stays. The link is not in the title anywhere.

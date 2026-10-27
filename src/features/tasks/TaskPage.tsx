@@ -17,6 +17,7 @@ import { InlineEdit, RowActions } from "@/components/RowActions";
 import { ViewHeader } from "@/components/ViewHeader";
 import { AiAsk } from "@/components/AiAsk";
 import { NoteBox } from "@/components/NoteBox";
+import { LinkedNote } from "@/features/tasks/TaskNote";
 import type { Task } from "@/bindings/Task";
 import type { TaskLog } from "@/bindings/TaskLog";
 import { useAiBlocked } from "@/lib/useAiBlocked";
@@ -329,6 +330,8 @@ export function TaskPage() {
             </div>
 
             {showMd && <MarkdownOfTask path={task.path} from={task.line} to={task.end} />}
+
+            <LinkedNote task={task} />
 
             <NoteBox
               label="Note"

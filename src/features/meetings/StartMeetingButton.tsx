@@ -3,18 +3,17 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
 import { nextMeetingSeed } from "@/lib/meeting";
+import { useNoteTags } from "@/lib/useNoteTags";
 import { reportError, useUiStore } from "@/stores/uiStore";
-import { useVaultStore } from "@/stores/vaultStore";
 
 /**
- * Above a note in the meetings folder: "Start meeting" and "Prepare next meeting…" (the same
- * window as a new meeting note, filled in from this one). Nothing is shown for other notes.
+ * Above a note tagged `meeting`: "Start meeting" and "Prepare next meeting…" (the same window as
+ * a new meeting note, filled in from this one). Nothing is shown for other notes.
  */
 export function StartMeetingButton({ path }: { path: string | null }) {
-  const folder = useVaultStore((s) => s.vault?.config.meetingsFolder) ?? "";
-  if (path === null || folder === "" || !path.startsWith(`${folder.replace(/\/+$/, "")}/`)) {
-    return null;
-  }
+  const { tags } = useNoteTags(path);
+  // The tag makes a note a meeting, wherever it is; a note without it is only a note.
+  if (path === null || !tags.includes("meeting")) return null;
 
   /** Opens the window for the next meeting, from the note as it is on disk. */
   const prepareNext = (): void => {

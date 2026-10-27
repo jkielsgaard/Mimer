@@ -46,6 +46,8 @@ export interface EpicGroup {
   source: string | null;
   /** The note is in `Tasks/` (an epic of its own); otherwise it is an ordinary note with tasks. */
   native: boolean;
+  /** Whether it is an epic (in `Tasks/` or tagged `epic`), not only a note that has tasks. */
+  adopted: boolean;
   tasks: Task[];
   /** Tasks that are done or dropped. */
   done: number;
@@ -54,6 +56,11 @@ export interface EpicGroup {
   allDone: boolean;
   /** The day the first of its tasks was made (`made:`), if any task has one. */
   made: string | null;
+}
+
+/** Whether a note is in the epic folder (`Tasks/`): its epic can be renamed and deleted here. */
+export function inEpicFolder(path: string): boolean {
+  return /^Tasks\/[^/]+\.md$/i.test(path);
 }
 
 /** The Inbox epic, where tasks go when no epic is chosen. */
@@ -71,7 +78,12 @@ export function epicGroups(
 ): EpicGroup[] {
   const byPath = new Map<string, Task[]>();
   for (const t of tasks) byPath.set(t.path, [...(byPath.get(t.path) ?? []), t]);
-  const make = (path: string, title: string, source: string | null, native: boolean): EpicGroup => {
+  const make = (
+    path: string,
+    title: string,
+    source: string | null,
+    adopted: boolean,
+  ): EpicGroup => {
     const list = (byPath.get(path) ?? []).sort((a, b) => a.line - b.line);
     const done = list.filter((t) => !isOpen(t)).length;
     const dates = list.map((t) => t.made).filter((d): d is string => d !== null);
@@ -79,7 +91,8 @@ export function epicGroups(
       path,
       title,
       source,
-      native,
+      native: inEpicFolder(path),
+      adopted,
       tasks: list,
       done,
       total: list.length,

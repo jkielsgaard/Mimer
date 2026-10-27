@@ -258,11 +258,17 @@ export const api = {
     call<Epic>("epic_set_description", { path, text }),
   epicSetTitle: (path: string, title: string) => call<Epic>("epic_set_title", { path, title }),
   listEpics: () => call<Epic[]>("list_epics"),
+  noteTags: (path: string) => call<string[]>("note_tags", { path }),
+  noteSetTag: (path: string, tag: string, on: boolean) =>
+    call<string[]>("note_set_tag", { path, tag, on }),
+  epicAdopt: (path: string) => call<Epic>("epic_adopt", { path }),
   epicCreate: (title: string) => call<Epic>("epic_create", { title }),
   epicForNote: (note: string) => call<Epic>("epic_for_note_cmd", { note }),
   listDailyDates: () => call<string[]>("list_daily_dates"),
   taskMove: (path: string, line: number, key: string, up: boolean) =>
     call<Task[]>("task_move", { path, line, key, up }),
+  taskSetLink: (path: string, line: number, key: string, link: string | null) =>
+    call<Task[]>("task_set_link", { path, line, key, link }),
   taskSetTitle: (path: string, line: number, key: string, title: string) =>
     call<Task[]>("task_set_title", { path, line, key, title }),
   taskDelete: (path: string, line: number, key: string) =>

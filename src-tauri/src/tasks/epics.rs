@@ -157,6 +157,9 @@ pub fn set_description(content: &str, text: &str) -> String {
     out.join("\n")
 }
 
+/// The tag that makes a note an epic.
+pub const EPIC_TAG: &str = "epic";
+
 /// The text of a new epic note.
 pub fn new_epic_text(title: &str, source: Option<&str>) -> AppResult<String> {
     let title = title.split_whitespace().collect::<Vec<_>>().join(" ");
@@ -164,8 +167,8 @@ pub fn new_epic_text(title: &str, source: Option<&str>) -> AppResult<String> {
         return Err(AppError::InvalidPath("The epic task needs a name".into()));
     }
     Ok(match source {
-        Some(s) => format!("---\nsource: \"[[{s}]]\"\n---\n# {title}\n\n"),
-        None => format!("# {title}\n\n"),
+        Some(s) => format!("---\ntags: [{EPIC_TAG}]\nsource: \"[[{s}]]\"\n---\n# {title}\n\n"),
+        None => format!("---\ntags: [{EPIC_TAG}]\n---\n# {title}\n\n"),
     })
 }
 
@@ -247,11 +250,11 @@ mod tests {
     fn a_new_epic_has_a_heading_and_maybe_a_source() {
         assert_eq!(
             new_epic_text(" Office  move ", None).unwrap(),
-            "# Office move\n\n"
+            "---\ntags: [epic]\n---\n# Office move\n\n"
         );
         assert_eq!(
             new_epic_text("Guide", Some("IT/Guide")).unwrap(),
-            "---\nsource: \"[[IT/Guide]]\"\n---\n# Guide\n\n"
+            "---\ntags: [epic]\nsource: \"[[IT/Guide]]\"\n---\n# Guide\n\n"
         );
         assert!(new_epic_text("  ", None).is_err());
         assert_eq!(file_name_for("a/b: c?"), "a b c");
