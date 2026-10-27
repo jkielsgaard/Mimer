@@ -2,6 +2,7 @@
 
 pub mod frontmatter;
 pub mod links;
+pub mod note_tags;
 pub mod tags;
 
 use pulldown_cmark::{Event, Options, Parser, Tag};

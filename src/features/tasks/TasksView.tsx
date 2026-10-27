@@ -87,6 +87,7 @@ export function TasksView() {
   const aiOff = useAiBlocked();
   const [naming, setNaming] = useState(false);
   const [showDone, setShowDone] = useState(false);
+  const [showLoose, setShowLoose] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<EpicGroup | null>(null);
 
@@ -94,7 +95,10 @@ export function TasksView() {
     void useTaskStore.getState().load();
   }, []);
 
-  const groups = useMemo(() => epicGroups(tasks, epics, epicOrder), [tasks, epics, epicOrder]);
+  const all = useMemo(() => epicGroups(tasks, epics, epicOrder), [tasks, epics, epicOrder]);
+  // Notes that only have a checklist in them are kept apart until the person makes them epics.
+  const groups = all.filter((g) => g.adopted);
+  const loose = all.filter((g) => !g.adopted);
   const open = groups.filter((g) => !g.allDone);
   const done = groups.filter((g) => g.allDone);
   // The Inbox stays at the top; the other open epics are moved in the order shown.
@@ -163,7 +167,7 @@ export function TasksView() {
                   </span>
                 )}
               </button>
-              {g.native && (
+              {g.native && g.adopted && (
                 <RowActions
                   what={`the epic ${g.title}`}
                   onEdit={() => {
@@ -184,6 +188,18 @@ export function TasksView() {
           )}
           {!g.native && (
             <span className="hidden text-xs text-muted-foreground md:inline">in a note</span>
+          )}
+          {!g.adopted && (
+            <Button
+              size="sm"
+              variant="outline"
+              title="Gives the note the tag epic, so it is listed with your epics"
+              onClick={() => {
+                void useTaskStore.getState().adoptEpic(g.path);
+              }}
+            >
+              Make an epic
+            </Button>
           )}
           <EpicProgress group={g} />
           {firstOpenTask(g) !== undefined && (
@@ -290,8 +306,8 @@ export function TasksView() {
           <div className="py-10 text-center text-sm text-muted-foreground">
             <p className="font-medium text-foreground">No epics yet.</p>
             <p>
-              An epic is a note with tasks. Press <b>New epic</b>, or write{" "}
-              <code>- [ ] something</code> in any note. Mimer finds it.
+              An epic is a note with tasks. Press <b>New epic</b>. Tasks you write in other notes
+              are kept under <b>Tasks in other notes</b> until you make that note an epic.
             </p>
           </div>
         )}
@@ -310,6 +326,46 @@ export function TasksView() {
               Done · {done.length}
             </button>
             {showDone && done.map(box)}
+          </>
+        )}
+        {loose.length > 0 && (
+          <>
+            <button
+              type="button"
+              aria-expanded={showLoose}
+              className="flex items-center gap-1 px-1 pt-2 section-label hover:text-foreground"
+              onClick={() => {
+                setShowLoose(!showLoose);
+              }}
+            >
+              {showLoose ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+              Tasks in other notes · {loose.length}
+            </button>
+            {showLoose && (
+              <>
+                <p className="px-1 text-xs text-muted-foreground">
+                  A note is an epic only when it has the tag <code>epic</code>. Press{" "}
+                  <b>Make an epic</b> to list one with your epics.
+                </p>
+                {/* TEMPORARY: remove in the release after 0.18.0 (docs/DECISIONS.md). */}
+                {loose.some((g) => g.native) && (
+                  <div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        void useTaskStore
+                          .getState()
+                          .adoptEpics(loose.filter((g) => g.native).map((g) => g.path));
+                      }}
+                    >
+                      Make the notes in Tasks epics
+                    </Button>
+                  </div>
+                )}
+                {loose.map(box)}
+              </>
+            )}
           </>
         )}
         {loaded && groups.length > 0 && (

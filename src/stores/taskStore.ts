@@ -59,6 +59,20 @@ interface TaskState {
   move: (path: string, line: number, key: string, up: boolean) => Promise<void>;
   /** Changes the title of an epic (its heading; the note keeps its name). */
   renameEpic: (path: string, title: string) => Promise<void>;
+  /** Makes a note that has tasks an epic (it gets the tag `epic`). */
+  adoptEpic: (path: string) => Promise<void>;
+  /** Makes several notes epics at once. TEMPORARY: remove in the release after 0.18.0. */
+  adoptEpics: (paths: readonly string[]) => Promise<void>;
+  /** Points a task at a note (a link target), or takes the link off with `null`. */
+  setLink: (t: Task, link: string | null) => Promise<void>;
+  /**
+   * Makes a note for a task, links the task to it and writes a line in the note that points back.
+   * Resolves to the new note's path, or null when it could not be made.
+   */
+  makeNote: (
+    t: Task,
+    opts: { name: string; folder: string; template: string | null },
+  ) => Promise<string | null>;
   /** Deletes a step. The note is committed first, and a toast can bring the step back. */
   removeStep: (t: Task, step: TaskStep) => Promise<void>;
   /** Opens an epic on its page. */
@@ -175,6 +189,43 @@ export const useTaskStore = create<TaskState>((set, get) => {
       } catch (e) {
         reportError(e);
       }
+    },
+    setLink: async (t, link) => {
+      await mutate(t.path, () => api.taskSetLink(t.path, t.line, t.key, link));
+    },
+    makeNote: async (t, opts) => {
+      try {
+        await flushPendingWrites();
+        const path = await api.createNoteFromTemplate(opts.folder, opts.name, opts.template);
+        const note = await api.readNote(path);
+        const vault = useVaultStore.getState();
+        const back = vault.resolver.shortestForm(t.path);
+        await api.writeNote(path, `${note.content.trimEnd()}\n\nTask in [[${back}]]\n`);
+        await vault.refreshTree();
+        const resolver = useVaultStore.getState().resolver;
+        const stem = path.replace(/\.md$/i, "");
+        const name = stem.split("/").pop() ?? stem;
+        await get().setLink(t, resolver.resolve(name) === path ? name : stem);
+        return path;
+      } catch (e) {
+        reportError(e);
+        return null;
+      }
+    },
+    adoptEpic: async (path) => {
+      try {
+        await flushPendingWrites();
+        const e = await api.epicAdopt(path);
+        set((s) => ({ epics: [...s.epics.filter((x) => x.path !== e.path), e] }));
+        if (useVaultStore.getState().activePath === path) {
+          useVaultStore.setState((s) => ({ reloadNonce: s.reloadNonce + 1 }));
+        }
+      } catch (e) {
+        reportError(e);
+      }
+    },
+    adoptEpics: async (paths) => {
+      for (const p of paths) await get().adoptEpic(p);
     },
     removeStep: async (t, step) => {
       const fresh = await mutate(t.path, () => api.taskDelete(t.path, step.line, step.key));

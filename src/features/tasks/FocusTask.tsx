@@ -5,6 +5,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MoveButtons } from "@/components/MoveButtons";
 import { InlineEdit, RowActions } from "@/components/RowActions";
 import { Button } from "@/components/ui/button";
+import { TaskNoteChip } from "@/features/tasks/TaskNote";
 import { shortDate, todayIso } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/taskStore";
@@ -123,6 +124,7 @@ export function FocusTask({
             <span className="flex-1" />
           </>
         )}
+        <TaskNoteChip task={task} />
         {marked ? (
           <span className="rounded-full bg-accent px-2.5 text-xs font-semibold text-accent-foreground">
             Working on it

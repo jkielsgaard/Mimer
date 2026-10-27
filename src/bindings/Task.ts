@@ -34,4 +34,9 @@ note: string,
 /**
  * When the task was made (`made:YYYY-MM-DD`), written once by Mimer.
  */
-made: string | null, };
+made: string | null, 
+/**
+ * The note the task points at: the first `[[wiki-link]]` in its line, as a link target
+ * (an alias or a heading after it is left out). The link is not part of the title.
+ */
+link: string | null, };

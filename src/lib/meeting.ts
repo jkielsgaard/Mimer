@@ -134,10 +134,18 @@ export function parseMeeting(content: string): Meeting {
   };
 }
 
+/** The name of the part under `## Notes` itself, for a meeting without an agenda. */
+export const GENERAL = "Notes";
+
 /** The `### item` part of the Notes section: where it starts and where it ends. */
 function itemAt(lines: string[], item: string): { head: number; end: number } | null {
   const notes = section(lines, "notes", 0);
   if (!notes) return null;
+  if (item === GENERAL) {
+    // The text straight under `## Notes`, before the first `###`: it has no heading of its own.
+    const first = lines.findIndex((l, i) => i > notes.head && i < notes.end && /^###\s/.test(l));
+    return { head: notes.head, end: first === -1 ? notes.end : first };
+  }
   const head = lines.findIndex(
     (l, i) => i > notes.head && i < notes.end && l.trim() === `### ${item}`,
   );
@@ -174,6 +182,10 @@ export function setItemNotes(content: string, item: string, text: string): strin
     lines.push("", "## Notes", "");
     notes = section(lines, "notes", 0);
   }
+  if (item === GENERAL) {
+    lines.splice((notes?.head ?? lines.length - 1) + 1, 0, ...block);
+    return lines.join("\n");
+  }
   const end = notes?.end ?? lines.length;
   lines.splice(end, 0, `### ${item}`, ...block);
   return lines.join("\n");
@@ -194,13 +206,35 @@ export function markItem(content: string, item: string, done: boolean): string {
   return lines.join("\n");
 }
 
+/**
+ * A note that has no `## Agenda` yet, with one made that holds `item`: before `## Notes` when
+ * there is one, else under the title (or at the top, below the properties, when there is none).
+ */
+function withAgenda(lines: string[], item: string): string {
+  const out = [...lines];
+  const block = ["## Agenda", "", `- [ ] ${item}`, ""];
+  const start = frontmatter(out).start;
+  const notes = section(out, "notes", start);
+  let at: number;
+  if (notes) {
+    at = notes.head;
+  } else {
+    const title = out.findIndex((l, i) => i >= start && /^#\s+\S/.test(l));
+    at = title === -1 ? start : title + 1;
+    // Keep a blank line between the title (or the properties) and the new part.
+    if (at > 0 && (out[at - 1] ?? "").trim() !== "" && title !== -1) block.unshift("");
+  }
+  out.splice(at, 0, ...block);
+  return out.join("\n");
+}
+
 /** The note with one more agenda item, at the end of the Agenda (and a part in Notes). */
 export function addItem(content: string, item: string): string {
   const text = cleanItem(item);
   if (text === "") return content;
   const lines = content.split("\n");
   const agenda = section(lines, "agenda", frontmatter(lines).start);
-  if (!agenda) return content;
+  if (!agenda) return setItemNotes(withAgenda(lines, text), text, "");
   let last = agenda.end;
   while (last > agenda.head + 1 && (lines[last - 1] ?? "").trim() === "") last--;
   // An empty first line ("- [ ] ") made for an agenda nobody wrote is used up first.

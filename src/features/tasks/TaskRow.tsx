@@ -4,6 +4,7 @@ import type { Task } from "@/bindings/Task";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MoveButtons, moveKey } from "@/components/MoveButtons";
 import { InlineEdit, RowActions } from "@/components/RowActions";
+import { TaskNoteChip } from "@/features/tasks/TaskNote";
 import { cn } from "@/lib/utils";
 import { noteName, shortDate } from "@/lib/taskLogic";
 import { useTaskStore } from "@/stores/taskStore";
@@ -133,6 +134,7 @@ export function TaskRow({
             <span className="flex-1" />
           </>
         )}
+        <TaskNoteChip task={task} />
         {task.tags.slice(0, 2).map((t) => (
           <span
             key={t}

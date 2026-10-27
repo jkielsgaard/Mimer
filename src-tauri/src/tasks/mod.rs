@@ -68,6 +68,9 @@ pub struct Task {
     pub note: String,
     /// When the task was made (`made:YYYY-MM-DD`), written once by Mimer.
     pub made: Option<String>,
+    /// The note the task points at: the first `[[wiki-link]]` in its line, as a link target
+    /// (an alias or a heading after it is left out). The link is not part of the title.
+    pub link: Option<String>,
 }
 
 /// What to change in a task's words. `None` leaves a word alone, `Some(None)` removes it.
@@ -117,6 +120,8 @@ static LOG_ITEM_RE: LazyLock<Regex> = LazyLock::new(|| {
 static MARKED_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"^\s*([-*+]\s|\d+[.)]\s|>|#{1,6}\s)").expect("valid marker regex")
 });
+static LINK_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\[\[[^\[\]]+\]\]").expect("valid link regex"));
 static TAG_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(^|\s)#([\p{L}\p{N}_/-]*\p{L}[\p{L}\p{N}_/-]*)").expect("valid tag regex")
 });
@@ -186,6 +191,7 @@ struct Words {
     status: Option<String>,
     est: Option<u32>,
     made: Option<String>,
+    link: Option<String>,
 }
 
 fn split_words(text: &str) -> Words {
@@ -197,6 +203,7 @@ fn split_words(text: &str) -> Words {
         status: None,
         est: None,
         made: None,
+        link: None,
     };
     for c in WORD_RE.captures_iter(text) {
         let (key, value) = (&c[1], c[2].to_string());
@@ -213,6 +220,9 @@ fn split_words(text: &str) -> Words {
         .captures_iter(text)
         .map(|c| c[2].to_string())
         .collect();
+    w.link = LINK_RE.find(text).map(|m| link_target(m.as_str()));
+    let no_links = LINK_RE.replace_all(text, "");
+    let text = no_links.as_ref();
     let no_words = WORD_RE.replace_all(text, "");
     let no_tags = TAG_RE.replace_all(&no_words, "$1");
     w.title = no_tags.split_whitespace().collect::<Vec<_>>().join(" ");
@@ -235,6 +245,13 @@ fn live_lines(content: &str) -> Vec<bool> {
             }
         }
     }
+    // The agenda of a meeting note is a checklist for the meeting, not tasks.
+    let meeting = crate::markdown::frontmatter::split(content).is_some_and(|f| {
+        crate::markdown::frontmatter::tags(f.yaml)
+            .iter()
+            .any(|t| t == "meeting")
+    });
+    let mut in_agenda = false;
     let mut in_code = false;
     for (j, l) in lines.iter().enumerate().skip(i) {
         let t = l.trim_start();
@@ -243,6 +260,16 @@ fn live_lines(content: &str) -> Vec<bool> {
             live[j] = false;
         } else if in_code {
             live[j] = false;
+        } else if meeting {
+            if l.starts_with('#') {
+                in_agenda = l
+                    .trim_start_matches('#')
+                    .trim()
+                    .eq_ignore_ascii_case("agenda");
+            }
+            if in_agenda {
+                live[j] = false;
+            }
         }
     }
     live
@@ -294,6 +321,7 @@ pub fn parse(path: &str, content: &str) -> Vec<Task> {
                 log: Vec::new(),
                 note: String::new(),
                 made: w.made,
+                link: w.link,
             });
             current = Some((tasks.len() - 1, indent));
             continue;
@@ -385,6 +413,50 @@ fn edit_line(
     Ok(lines.join("\n"))
 }
 
+/// The target of a `[[wiki-link]]`: the part before an alias (`|`) or a heading (`#`).
+fn link_target(link: &str) -> String {
+    let inner = link.trim_start_matches("[[").trim_end_matches("]]");
+    let name = inner.split(['|', '#']).next().unwrap_or(inner);
+    name.trim().to_string()
+}
+
+/// A task line's text split into its title, its `[[links]]` and the words and tags that follow
+/// the title (`#tag`, `due:` and so on).
+fn line_parts(body: &str) -> (String, Vec<String>, Vec<String>) {
+    let links: Vec<String> = LINK_RE
+        .find_iter(body)
+        .map(|m| m.as_str().to_string())
+        .collect();
+    let rest = LINK_RE.replace_all(body, " ");
+    let is_kept = |t: &str| {
+        (t.starts_with('#') && t.len() > 1)
+            || ["due:", "plan:", "status:", "est:", "made:"]
+                .iter()
+                .any(|w| t.starts_with(w) && t.len() > w.len())
+    };
+    let kept = rest
+        .split_whitespace()
+        .filter(|t| is_kept(t))
+        .map(str::to_string)
+        .collect();
+    let title = rest
+        .split_whitespace()
+        .filter(|t| !is_kept(t))
+        .collect::<Vec<_>>()
+        .join(" ");
+    (title, links, kept)
+}
+
+/// Puts a task line back together: the title, then the links, then the words and tags.
+fn compose_line(prefix: &str, title: &str, links: &[String], kept: &[String]) -> String {
+    let mut new = format!("{prefix}{title}");
+    for part in links.iter().chain(kept) {
+        new.push(' ');
+        new.push_str(part);
+    }
+    new
+}
+
 /// Changes the title of a task or a step. Its tags and `due:`, `plan:`, `status:` and `est:` words
 /// stay where they are (after the new title).
 pub fn set_title(content: &str, line: u32, key: &str, title: &str) -> AppResult<String> {
@@ -400,23 +472,40 @@ pub fn set_title(content: &str, line: u32, key: &str, title: &str) -> AppResult<
         };
         let body = c.get(3).map_or("", |m| m.as_str());
         let start = c.get(3).map_or(l.len(), |m| m.start());
-        let kept: Vec<&str> = body
-            .split_whitespace()
-            .filter(|t| {
-                (t.starts_with('#') && t.len() > 1)
-                    || ["due:", "plan:", "status:", "est:", "made:"]
-                        .iter()
-                        .any(|w| t.starts_with(w) && t.len() > w.len())
-            })
-            .collect();
-        let mut new = format!("{}{title}", &l[..start]);
-        for k in kept {
-            new.push(' ');
-            new.push_str(k);
-        }
-        new
+        let (_, links, kept) = line_parts(body);
+        compose_line(&l[..start], &title, &links, &kept)
     })?;
     if empty {
+        return Err(conflict());
+    }
+    Ok(out)
+}
+
+/// Points a task at a note (`[[link]]` after its title), or removes the link when `link` is
+/// `None`. A task points at one note: an earlier link is replaced.
+pub fn set_link(content: &str, line: u32, key: &str, link: Option<&str>) -> AppResult<String> {
+    let link = link.map(|l| {
+        l.trim()
+            .trim_start_matches("[[")
+            .trim_end_matches("]]")
+            .trim()
+    });
+    if link.is_some_and(|l| l.is_empty() || l.contains(['[', ']', '|'])) {
+        return Err(AppError::InvalidPath("That is not a note name".into()));
+    }
+    let mut missing = false;
+    let out = edit_line(content, line, key, |l| {
+        let Some(c) = TASK_RE.captures(l) else {
+            missing = true;
+            return l.to_string();
+        };
+        let body = c.get(3).map_or("", |m| m.as_str());
+        let start = c.get(3).map_or(l.len(), |m| m.start());
+        let (title, _, kept) = line_parts(body);
+        let links: Vec<String> = link.map(|n| format!("[[{n}]]")).into_iter().collect();
+        compose_line(&l[..start], &title, &links, &kept)
+    })?;
+    if missing {
         return Err(conflict());
     }
     Ok(out)
@@ -757,6 +846,51 @@ mod tests {
     use super::*;
 
     const NOTE: &str = "---\ntags: [x]\n---\n# Møde med Acme\n\n- [ ] Renew the Acme licence #acme #licence due:2026-11-01 status:waiting est:1h30m\n  - [x] Send the price list\n  - [ ] Ask Peter about a discount\n  > 2026-10-14 Mette wants 40 users.\n  > 2026-10-16 Waiting for Peter.\n- [x] Book the room\n\nSome text.\n\n```\n- [ ] not a task\n```\n\n- Shopping\n  - [ ] milk\n";
+
+    #[test]
+    fn the_agenda_of_a_meeting_note_is_not_tasks() {
+        let note = "---\ntags: [meeting]\n---\n# Weekly\n\n## Agenda\n\n- [ ] Budget\n- [x] Hiring\n\n## Notes\n\n- [ ] Call Mette\n";
+        let t = parse("Meetings/Weekly.md", note);
+        assert_eq!(t.len(), 1, "{t:?}");
+        assert_eq!(t[0].title, "Call Mette");
+        // The same text in a note that is not a meeting keeps its tasks.
+        let plain = note.replace("tags: [meeting]", "tags: [other]");
+        assert_eq!(parse("A.md", &plain).len(), 3);
+    }
+
+    #[test]
+    fn a_task_points_at_a_note_with_a_link_that_is_not_part_of_the_title() {
+        let n = "- [ ] Send the offer [[Offer to Acme|the offer]] #sales due:2026-11-01 made:2026-10-27\n  - [ ] Ask Peter\n";
+        let t = &parse("n.md", n)[0];
+        assert_eq!(t.title, "Send the offer");
+        assert_eq!(t.link.as_deref(), Some("Offer to Acme"));
+        assert_eq!(t.tags, ["sales"]);
+        assert_eq!(t.due.as_deref(), Some("2026-11-01"));
+        // The title can be changed without losing the link.
+        let renamed = set_title(n, t.line, &t.key, "Send the new offer").unwrap();
+        assert!(
+            renamed.starts_with("- [ ] Send the new offer [[Offer to Acme|the offer]] #sales due:")
+        );
+        // A link is put on, replaced and taken off again; the rest of the line stays.
+        let plain = "- [ ] Call Mette #office made:2026-10-27\n";
+        let t = &parse("n.md", plain)[0];
+        let on = set_link(plain, t.line, &t.key, Some("Mette")).unwrap();
+        assert_eq!(on, "- [ ] Call Mette [[Mette]] #office made:2026-10-27\n");
+        let t = &parse("n.md", &on)[0];
+        assert_eq!(t.link.as_deref(), Some("Mette"));
+        let other = set_link(&on, t.line, &t.key, Some("Mette Hansen")).unwrap();
+        assert_eq!(
+            other,
+            "- [ ] Call Mette [[Mette Hansen]] #office made:2026-10-27\n"
+        );
+        let t = &parse("n.md", &other)[0];
+        let off = set_link(&other, t.line, &t.key, None).unwrap();
+        assert_eq!(off, plain);
+        // A step is not given a link by mistake, and a name with brackets is refused.
+        assert!(set_link(plain, t.line, "wrong", Some("x")).is_err());
+        let t = &parse("n.md", plain)[0];
+        assert!(set_link(plain, t.line, &t.key, Some("a]b")).is_err());
+    }
 
     #[test]
     fn a_step_is_deleted_alone_and_only_with_its_own_key() {

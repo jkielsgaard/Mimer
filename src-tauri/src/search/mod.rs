@@ -407,6 +407,13 @@ pub fn backlinks(
     Ok(out)
 }
 
+/// The notes that have a tag (lower case), by path.
+pub fn notes_with_tag(conn: &Connection, tag: &str) -> AppResult<Vec<String>> {
+    let mut stmt = conn.prepare("SELECT DISTINCT path FROM tags WHERE tag = ?1 ORDER BY path")?;
+    let rows = stmt.query_map([tag], |r| r.get::<_, String>(0))?;
+    Ok(rows.filter_map(Result::ok).collect())
+}
+
 /// All tags with usage counts.
 pub fn all_tags(conn: &Connection) -> AppResult<Vec<TagCount>> {
     let mut stmt = conn.prepare("SELECT tag, COUNT(*) FROM tags GROUP BY tag ORDER BY tag")?;

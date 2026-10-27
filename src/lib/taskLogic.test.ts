@@ -19,6 +19,7 @@ function task(patch: Partial<Task>): Task {
     log: [],
     note: "",
     made: null,
+    link: null,
     ...patch,
   };
 }

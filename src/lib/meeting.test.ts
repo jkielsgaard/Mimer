@@ -108,6 +108,38 @@ describe("notes per agenda item", () => {
   });
 });
 
+describe("a meeting without an agenda", () => {
+  it("writes under ## Notes without a second heading called Notes", () => {
+    const made = setItemNotes("# Lunch\n\nsome text\n", "Notes", "Talked about food");
+    expect(made).toContain("## Notes\n\nTalked about food");
+    expect(made).not.toContain("### Notes");
+    expect(itemNotes(made, "Notes")).toBe("Talked about food");
+    // A part of an item that is added later does not end up in the general text.
+    const more = setItemNotes(made, "Budget", "x");
+    expect(itemNotes(more, "Notes")).toBe("Talked about food");
+    expect(itemNotes(more, "Budget")).toBe("x");
+  });
+});
+
+describe("adding an item to a meeting without an agenda", () => {
+  it("makes the Agenda before the Notes, so the item is listed", () => {
+    const made = addItem("# Lunch\n\n## Notes\n\nsome text\n", "Food");
+    expect(made).toContain("## Agenda\n\n- [ ] Food");
+    expect(made.indexOf("## Agenda")).toBeLessThan(made.indexOf("## Notes"));
+    expect(parseMeeting(made).agenda).toEqual([{ text: "Food", done: false }]);
+    // What was written under Notes stays.
+    expect(made).toContain("some text");
+  });
+
+  it("makes it under the title when the note has nothing else, and below the properties", () => {
+    expect(parseMeeting(addItem("# Lunch\n\nsome text\n", "Food")).agenda).toHaveLength(1);
+    const withFront = addItem("---\ntags: [meeting]\n---\n# Lunch\n", "Food");
+    expect(withFront.startsWith("---\ntags: [meeting]\n---\n# Lunch\n")).toBe(true);
+    expect(parseMeeting(withFront).agenda).toHaveLength(1);
+    expect(parseMeeting(addItem("just text\n", "Food")).agenda).toHaveLength(1);
+  });
+});
+
 describe("the agenda", () => {
   it("ticks and unticks an item", () => {
     const ticked = markItem(full, "Budget", true);

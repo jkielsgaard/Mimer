@@ -8,6 +8,7 @@ const apiMock = vi.hoisted(() => ({
   listEpics: vi.fn(),
   epicCreate: vi.fn(),
   epicSetTitle: vi.fn(),
+  epicAdopt: vi.fn(),
   taskDelete: vi.fn(),
   taskSetTitle: vi.fn(),
   deletePath: vi.fn(),
@@ -72,7 +73,9 @@ describe("TasksView", () => {
     expect(within(vpn).getByRole("progressbar")).toHaveAttribute("aria-valuenow", "1");
     expect(within(vpn).getByText("1 of 2")).toBeInTheDocument();
     expect(within(vpn).getByText("Write the steps")).toBeInTheDocument();
-    // A note that only has tasks written in it is an epic too.
+    // A note that only has tasks written in it is not an epic: it waits in its own fold.
+    expect(screen.queryByRole("region", { name: "Acme" })).toBeNull();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Tasks in other notes · 1" }));
     expect(screen.getByRole("region", { name: "Acme" })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Empty one" })).toBeInTheDocument();
     // The finished epic is under Done, and folded.
@@ -172,10 +175,52 @@ describe("TasksView", () => {
       makeTask({ path: "Møder/Acme.md", line: 5, done: true }),
     ]);
     render(<TasksView />);
-    await userEvent
-      .setup()
-      .click(await screen.findByRole("checkbox", { name: /Mark as done: Renew the licence/ }));
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Tasks in other notes · 1" }));
+    await user.click(
+      await screen.findByRole("checkbox", { name: /Mark as done: Renew the licence/ }),
+    );
     expect(apiMock.taskSetDone).toHaveBeenCalledWith("Møder/Acme.md", 5, "key-1", true);
+  });
+
+  it("keeps a note in Tasks without the tag epic apart, and makes all of them epics at once", async () => {
+    apiMock.listTasks.mockResolvedValue([
+      makeTask({ path: "Tasks/Old one.md", line: 2, title: "Old task" }),
+      makeTask({ path: "Tasks/Old two.md", line: 2, title: "Other old task" }),
+    ]);
+    apiMock.listEpics.mockResolvedValue([]);
+    apiMock.epicAdopt.mockImplementation((path: string) =>
+      Promise.resolve({ path, title: path, source: null }),
+    );
+    render(<TasksView />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Tasks in other notes · 2" }));
+    // It is a note in Tasks, but not an epic yet: no pencil or waste bin.
+    expect(screen.queryByRole("button", { name: /Delete the epic/ })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Make the notes in Tasks epics" }));
+    await waitFor(() => {
+      expect(apiMock.epicAdopt).toHaveBeenCalledTimes(2);
+    });
+    expect(apiMock.epicAdopt).toHaveBeenCalledWith("Tasks/Old one.md");
+    expect(apiMock.epicAdopt).toHaveBeenCalledWith("Tasks/Old two.md");
+  });
+
+  it("keeps the tasks of an ordinary note apart until it is made an epic", async () => {
+    apiMock.epicAdopt.mockResolvedValue({ path: "Møder/Acme.md", title: "Acme", source: null });
+    render(<TasksView />);
+    const user = userEvent.setup();
+    expect(screen.queryByText("Renew the licence")).toBeNull();
+    await user.click(await screen.findByRole("button", { name: "Tasks in other notes · 1" }));
+    const acme = screen.getByRole("region", { name: "Acme" });
+    await user.click(within(acme).getByRole("button", { name: "Make an epic" }));
+    expect(apiMock.epicAdopt).toHaveBeenCalledWith("Møder/Acme.md");
+    // It is listed with the epics now, and there is no "other notes" fold left.
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: /Tasks in other notes/ })).toBeNull();
+    });
+    expect(screen.getByRole("region", { name: "Acme" })).toBeInTheDocument();
+    // Not in Tasks/, so it cannot be renamed or deleted from here.
+    expect(screen.queryByRole("button", { name: "Delete the epic Acme" })).toBeNull();
   });
   it("moves epics and tasks up and down, and keeps the Inbox at the top", async () => {
     apiMock.listTasks.mockResolvedValue([

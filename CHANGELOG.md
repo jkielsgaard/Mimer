@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-10-27
+
+### Added
+
+- **A note for a task.** The task page has **Linked note**: **Link a note…** picks a note you have, **Make a note for this task** makes one (name, folder and an optional template) with a line in it that points back at the task. The link is a `[[wiki-link]]` in the task's own line (`- [ ] Send the offer [[Offer to Acme]] made:…`), so it works in any editor, shows in backlinks and follows a rename. The task list, Focus and the task page show a small chip with the note's name; a click opens the note. **Unlink** only takes the link off the task. A note that is gone shows as "Note missing" and can be made again.
+- **Tags on a note: Meeting and Epic.** The new **···** menu above a note (Rename, History, Tags, Export) has **Tags…**, a short list; ticking one writes it in the properties of the note (`tags: [meeting]`) and the note stays where it is. A tag the note has shows as a chip with a cross that takes it off. A note tagged Meeting gets **Start meeting** wherever it is; a note tagged Epic is listed with your epics. You can also write `tags: [epic]` yourself.
+
+### Changed
+
+- **The tag decides what is an epic.** A note is an epic only when it has the tag `epic`, wherever it is; **New epic** and the Inbox make their notes with the tag. A note without it is only a note: its `- [ ]` lines are kept under **Tasks in other notes** (folded, in **Show all tasks**), each with **Make an epic** (adds the tag). Notes already in the Tasks folder from before have no tag: **Make the notes in Tasks epics** tags them all at once (this button is only for this upgrade and is removed in the next release).
+- **Start meeting** shows above a note tagged `meeting` only (the notes Mimer makes for a meeting have the tag).
+- **The agenda of a meeting note is not tasks**, so a meeting no longer makes an epic by itself.
+
+### Fixed
+
+- **Add an item to a meeting without an agenda** now works: the note gets an `## Agenda` with the item, and it is listed in the meeting screen. Before, only the heading in the middle changed.
+- A meeting without an agenda no longer writes a second **Notes** heading under **Notes**; the text goes straight under it.
+
 ## [0.17.0] - 2026-10-26
 
 ### Added
