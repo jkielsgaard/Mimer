@@ -74,6 +74,43 @@ pub struct FoundryModel {
     pub context_tokens: Option<u64>,
 }
 
+/// The file that says the hardware parts were downloaded (written by the helper).
+pub const HARDWARE_READY: &str = "hardware-ready";
+/// The file that says the person chose to use only the processor, so nothing is downloaded.
+pub const HARDWARE_DECLINED: &str = "hardware-declined";
+
+/// What the person chose about the hardware parts (the pieces that let a model use the graphics
+/// card or the neural processor). Until a choice is made, no model list is shown and nothing is
+/// downloaded.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub enum FoundryHardware {
+    /// Not asked yet.
+    Unknown,
+    /// Only the processor: the hardware parts are never downloaded.
+    CpuOnly,
+    /// The hardware parts are downloaded.
+    Ready,
+}
+
+/// The choice, read from the files in Foundry Local's folder. Downloaded parts win.
+pub fn hardware_choice(root: &Path) -> FoundryHardware {
+    if root.join(HARDWARE_READY).exists() {
+        FoundryHardware::Ready
+    } else if root.join(HARDWARE_DECLINED).exists() {
+        FoundryHardware::CpuOnly
+    } else {
+        FoundryHardware::Unknown
+    }
+}
+
+/// Remembers that only the processor is to be used.
+pub fn choose_cpu_only(root: &Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(root)?;
+    std::fs::write(root.join(HARDWARE_DECLINED), "1")
+}
+
 /// A model that has been downloaded.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -111,6 +148,8 @@ pub struct FoundryStatus {
     pub restart_needed: bool,
     /// The last lines the helper printed.
     pub log: Vec<String>,
+    /// Whether the hardware parts are downloaded, refused or not asked about yet.
+    pub hardware: FoundryHardware,
 }
 
 pub(crate) struct Inner {
@@ -250,6 +289,17 @@ mod tests {
         assert_eq!(read_installed(d.path()), list);
         std::fs::write(installed_file(d.path()), "not json").unwrap();
         assert!(read_installed(d.path()).is_empty());
+    }
+
+    #[test]
+    fn the_hardware_choice_is_read_from_its_files_and_downloaded_parts_win() {
+        let d = tempfile::tempdir().unwrap();
+        let root = d.path().join("foundry");
+        assert_eq!(hardware_choice(&root), FoundryHardware::Unknown);
+        choose_cpu_only(&root).unwrap();
+        assert_eq!(hardware_choice(&root), FoundryHardware::CpuOnly);
+        std::fs::write(root.join(HARDWARE_READY), "1").unwrap();
+        assert_eq!(hardware_choice(&root), FoundryHardware::Ready);
     }
 
     #[test]

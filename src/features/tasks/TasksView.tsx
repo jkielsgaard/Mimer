@@ -347,22 +347,6 @@ export function TasksView() {
                   A note is an epic only when it has the tag <code>epic</code>. Press{" "}
                   <b>Make an epic</b> to list one with your epics.
                 </p>
-                {/* TEMPORARY: remove in the release after 0.18.0 (docs/DECISIONS.md). */}
-                {loose.some((g) => g.native) && (
-                  <div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        void useTaskStore
-                          .getState()
-                          .adoptEpics(loose.filter((g) => g.native).map((g) => g.path));
-                      }}
-                    >
-                      Make the notes in Tasks epics
-                    </Button>
-                  </div>
-                )}
                 {loose.map(box)}
               </>
             )}

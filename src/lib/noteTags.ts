@@ -21,4 +21,9 @@ export const NOTE_TAGS: readonly NoteTag[] = [
     label: "Epic",
     does: "Its tasks are listed with your epics in Tasks.",
   },
+  {
+    tag: "pinned",
+    label: "Pinned",
+    does: "The note is listed under Pinned on the start page.",
+  },
 ];

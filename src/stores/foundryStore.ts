@@ -18,6 +18,8 @@ interface FoundryStoreState {
   setStatus: (s: FoundryStatus) => void;
   install: (alias: string, useForMimer: boolean) => Promise<void>;
   setupHardware: () => Promise<void>;
+  /** Uses only the processor: the hardware parts are never downloaded. */
+  useCpuOnly: () => Promise<void>;
   cancelInstall: () => Promise<void>;
   wake: () => Promise<void>;
   sleep: () => Promise<void>;
@@ -67,6 +69,7 @@ export const useFoundryStore = create<FoundryStoreState>((set, get) => {
     },
     install: (alias, useForMimer) => run(() => api.foundryInstall(alias, useForMimer)),
     setupHardware: () => run(() => api.foundrySetupHardware()),
+    useCpuOnly: () => run(() => api.foundryUseCpuOnly()),
     cancelInstall: () => run(() => api.foundryCancelInstall()),
     wake: () => run(() => api.foundryWake()),
     sleep: () => run(() => api.foundrySleep()),

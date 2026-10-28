@@ -1,7 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { TreeNode } from "@/bindings/TreeNode";
 import { buildMeetingNote, markItem, setItemNotes } from "@/lib/meeting";
 
 const apiMock = vi.hoisted(() => ({
@@ -15,6 +14,7 @@ const apiMock = vi.hoisted(() => ({
   epicForNote: vi.fn(),
   taskAdd: vi.fn(),
   noteTags: vi.fn(),
+  taggedNotes: vi.fn(),
 }));
 vi.mock("@/lib/api", () => ({
   api: apiMock,
@@ -23,11 +23,13 @@ vi.mock("@/lib/api", () => ({
 vi.mock("@/lib/flush", () => ({ flushPendingWrites: () => Promise.resolve() }));
 const actions = vi.hoisted(() => ({ openFile: vi.fn() }));
 vi.mock("@/lib/actions", () => actions);
-vi.mock("@/features/capture/CaptureBox", () => ({ CaptureBox: () => <div>capture box</div> }));
+vi.mock("@/features/capture/CapturePicker", () => ({
+  CapturePicker: () => <div>capture box</div>,
+}));
 
 import { MeetingFocus } from "./MeetingFocus";
 import { MeetingForm } from "./MeetingForm";
-import { candidatesIn, comingMeetings, MeetingLine } from "./MeetingLine";
+import { comingMeetings, MeetingLine } from "./MeetingLine";
 import { StartMeetingButton } from "./StartMeetingButton";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
@@ -63,6 +65,7 @@ function vault(): void {
 
 beforeEach(() => {
   for (const f of Object.values(apiMock)) f.mockReset();
+  apiMock.taggedNotes.mockResolvedValue([]);
   actions.openFile.mockReset();
   apiMock.writeNote.mockResolvedValue(undefined);
   apiMock.getTree.mockResolvedValue([]);
@@ -199,37 +202,6 @@ describe("MeetingForm", () => {
 });
 
 describe("the next meeting in Landing", () => {
-  const f = (name: string, dir = "Meetings"): TreeNode => ({
-    name,
-    path: `${dir}/${name}`,
-    isDir: false,
-    children: [],
-    modified: 0,
-  });
-  const tree: TreeNode[] = [
-    {
-      name: "Meetings",
-      path: "Meetings",
-      isDir: true,
-      modified: 0,
-      children: [
-        f("2026-10-27 Weekly with Mette.md"),
-        f("2026-10-28 Budget review.md"),
-        f("2026-10-30 Later.md"),
-        f("Untitled.md"),
-      ],
-    },
-  ];
-
-  it("picks only today's and tomorrow's notes in the meetings folder", () => {
-    const now = new Date(2026, 9, 27, 9, 0);
-    expect(candidatesIn(tree, "Meetings", now)).toEqual([
-      "Meetings/2026-10-27 Weekly with Mette.md",
-      "Meetings/2026-10-28 Budget review.md",
-    ]);
-    expect(candidatesIn(tree, "Nothing", now)).toEqual([]);
-  });
-
   it("keeps a meeting for two hours after it started, in the order they happen", () => {
     const mk = (date: string, time: string | null, title: string) => ({
       path: title,
@@ -249,37 +221,47 @@ describe("the next meeting in Landing", () => {
     expect(titles(11)).toEqual(["Today", "No time", "Tomorrow"]);
   });
 
-  it("shows one line with Start and +N, and nothing when there is no meeting", async () => {
+  it("shows one line with Start and +N, from the notes tagged as meetings", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date(2026, 9, 27, 9, 0) });
-    useVaultStore.setState({ tree });
-    apiMock.readNote.mockImplementation((path: string) =>
-      Promise.resolve({
-        path,
+    apiMock.taggedNotes.mockResolvedValue([
+      { path: "Work/Weekly.md", mtime: 0, content: note },
+      {
+        path: "Work/Budget.md",
         mtime: 0,
-        content: path.includes("Weekly")
-          ? note
-          : buildMeetingNote({
-              title: "Budget review",
-              date: "2026-10-28",
-              time: "11:00",
-              people: [],
-              agenda: [],
-            }),
-      }),
-    );
+        content: buildMeetingNote({
+          title: "Budget review",
+          date: "2026-10-28",
+          time: "11:00",
+          people: [],
+          agenda: [],
+        }),
+      },
+      {
+        path: "Work/Later.md",
+        mtime: 0,
+        content: buildMeetingNote({
+          title: "Later",
+          date: "2026-10-30",
+          time: "11:00",
+          people: [],
+          agenda: [],
+        }),
+      },
+    ]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<MeetingLine />);
     const start = await screen.findByRole("button", { name: "Start Weekly with Mette" });
     expect(screen.queryByText("Budget review")).toBeNull();
+    expect(screen.queryByText("Later")).toBeNull();
     await user.click(screen.getByRole("button", { name: "1 more meetings" }));
     expect(screen.getByText("Budget review")).toBeInTheDocument();
     await user.click(start);
-    expect(useUiStore.getState().meetingFocus).toBe("Meetings/2026-10-27 Weekly with Mette.md");
+    expect(useUiStore.getState().meetingFocus).toBe("Work/Weekly.md");
     vi.useRealTimers();
   });
 
   it("renders nothing without a meeting today or tomorrow", () => {
-    useVaultStore.setState({ tree: [] });
+    apiMock.taggedNotes.mockResolvedValue([]);
     const { container } = render(<MeetingLine />);
     expect(container).toBeEmptyDOMElement();
   });

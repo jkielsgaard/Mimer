@@ -183,7 +183,7 @@ describe("TasksView", () => {
     expect(apiMock.taskSetDone).toHaveBeenCalledWith("Møder/Acme.md", 5, "key-1", true);
   });
 
-  it("keeps a note in Tasks without the tag epic apart, and makes all of them epics at once", async () => {
+  it("keeps a note in Tasks without the tag epic apart, and makes it an epic on its own", async () => {
     apiMock.listTasks.mockResolvedValue([
       makeTask({ path: "Tasks/Old one.md", line: 2, title: "Old task" }),
       makeTask({ path: "Tasks/Old two.md", line: 2, title: "Other old task" }),
@@ -197,12 +197,13 @@ describe("TasksView", () => {
     await user.click(await screen.findByRole("button", { name: "Tasks in other notes · 2" }));
     // It is a note in Tasks, but not an epic yet: no pencil or waste bin.
     expect(screen.queryByRole("button", { name: /Delete the epic/ })).toBeNull();
-    await user.click(screen.getByRole("button", { name: "Make the notes in Tasks epics" }));
+    // The one-time button for all of them is gone; each note has its own Make an epic.
+    expect(screen.queryByRole("button", { name: "Make the notes in Tasks epics" })).toBeNull();
+    const old = screen.getByRole("region", { name: "Old one" });
+    await user.click(within(old).getByRole("button", { name: "Make an epic" }));
     await waitFor(() => {
-      expect(apiMock.epicAdopt).toHaveBeenCalledTimes(2);
+      expect(apiMock.epicAdopt).toHaveBeenCalledWith("Tasks/Old one.md");
     });
-    expect(apiMock.epicAdopt).toHaveBeenCalledWith("Tasks/Old one.md");
-    expect(apiMock.epicAdopt).toHaveBeenCalledWith("Tasks/Old two.md");
   });
 
   it("keeps the tasks of an ordinary note apart until it is made an epic", async () => {

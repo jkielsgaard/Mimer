@@ -8,6 +8,9 @@ import {
 import { EditorArea } from "@/features/workspace/EditorArea";
 import { IdeasPanel } from "@/features/capture/IdeasPanel";
 import { IdeasView } from "@/features/capture/IdeasView";
+import { MeetingsPanel } from "@/features/meetings/MeetingsPanel";
+import { MeetingsView } from "@/features/meetings/MeetingsView";
+import { StartPage } from "@/features/start/StartPage";
 import { EpicPage } from "@/features/tasks/EpicPage";
 import { TaskPage } from "@/features/tasks/TaskPage";
 import { TasksPanel } from "@/features/tasks/TasksPanel";
@@ -48,8 +51,15 @@ export function AppShell() {
   const left = useRef<ImperativePanelHandle>(null);
   const right = useRef<ImperativePanelHandle>(null);
 
-  usePanelCollapse(left, ui.leftCollapsed);
-  usePanelCollapse(right, ui.rightCollapsed);
+  // With no note open the middle shows the start page instead of an empty editor.
+  const showStart = ui.centerView === "start" || (ui.centerView === "notes" && activePath === null);
+  const showNotes = ui.centerView === "notes" && !showStart;
+
+  // The house opens the start page on its own: both side panels go while it is shown (and come
+  // back as they were). With no note open they stay.
+  const startOnly = ui.centerView === "start";
+  usePanelCollapse(left, ui.leftCollapsed || startOnly);
+  usePanelCollapse(right, ui.rightCollapsed || startOnly);
 
   return (
     <div className="flex h-full flex-col">
@@ -72,11 +82,17 @@ export function AppShell() {
             collapsible
             collapsedSize={0}
             onCollapse={() => {
-              if (!useUiStore.getState().leftCollapsed)
+              if (
+                useUiStore.getState().centerView !== "start" &&
+                !useUiStore.getState().leftCollapsed
+              )
                 useUiStore.setState({ leftCollapsed: true });
             }}
             onExpand={() => {
-              if (useUiStore.getState().leftCollapsed)
+              if (
+                useUiStore.getState().centerView !== "start" &&
+                useUiStore.getState().leftCollapsed
+              )
                 useUiStore.setState({ leftCollapsed: false });
             }}
             className="bg-sidebar"
@@ -90,19 +106,22 @@ export function AppShell() {
               )}
               {ui.leftTab === "tasks" && <TasksPanel />}
               {ui.leftTab === "ideas" && <IdeasPanel />}
+              {ui.leftTab === "meetings" && <MeetingsPanel />}
             </div>
           </Panel>
           <PanelResizeHandle className="w-px bg-border transition-colors hover:bg-primary data-[resize-handle-active]:bg-primary" />
           <Panel id="center" order={2} minSize={30}>
             <main className="h-full min-h-0">
               {/* The notes stay mounted while the tasks are shown, so nothing typed is lost. */}
-              <div className={cn("h-full min-h-0", ui.centerView !== "notes" && "hidden")}>
+              <div className={cn("h-full min-h-0", !showNotes && "hidden")}>
                 <EditorArea />
               </div>
               {ui.centerView === "tasks" && <TasksView />}
               {ui.centerView === "epic" && <EpicPage />}
               {ui.centerView === "task" && <TaskPage />}
               {ui.centerView === "ideas" && <IdeasView />}
+              {ui.centerView === "meetings" && <MeetingsView />}
+              {showStart && <StartPage />}
             </main>
           </Panel>
           <PanelResizeHandle className="w-px bg-border transition-colors hover:bg-primary data-[resize-handle-active]:bg-primary" />
@@ -116,11 +135,17 @@ export function AppShell() {
             collapsible
             collapsedSize={0}
             onCollapse={() => {
-              if (!useUiStore.getState().rightCollapsed)
+              if (
+                useUiStore.getState().centerView !== "start" &&
+                !useUiStore.getState().rightCollapsed
+              )
                 useUiStore.setState({ rightCollapsed: true });
             }}
             onExpand={() => {
-              if (useUiStore.getState().rightCollapsed)
+              if (
+                useUiStore.getState().centerView !== "start" &&
+                useUiStore.getState().rightCollapsed
+              )
                 useUiStore.setState({ rightCollapsed: false });
             }}
             className="bg-sidebar"
@@ -148,7 +173,7 @@ export function AppShell() {
             </div>
           </Panel>
         </PanelGroup>
-        <RightRail />
+        {!startOnly && <RightRail />}
       </div>
       <AskWindow />
       <FieldAi />

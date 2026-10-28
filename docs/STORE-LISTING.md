@@ -30,7 +30,7 @@ Mimer is a notes app for people who want to own their notes. Your notes are ordi
 - Tasks are plain checklist lines in your notes, with steps, a note and a log. Epics group them in one outline you can fold, and move to Done when every task is done. A task made from a note gets an epic of its own that points back to the note.
 - An ideas list, and a Focus view that shows one task at a time.
 - Landing keeps Meetings, Quick notes and Tasks together, with a mark on new notes and a button to move them where they belong.
-- Daily notes in a calendar at the top of the file panel. Wiki-links, tags (typing # suggests the ones you already use), images, templates and index pages.
+- Daily notes in a calendar at the top of the file panel. Wiki-links, tags (typing # suggests the ones you already use), images and index pages.
 - Full-text search, and search by meaning with a local embedding model.
 - Export to HTML, Word and PDF. Import from a folder of Markdown files, for example a OneNote export.
 

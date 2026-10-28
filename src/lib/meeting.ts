@@ -134,6 +134,43 @@ export function parseMeeting(content: string): Meeting {
   };
 }
 
+/** What can be changed about a meeting after it was made. */
+export interface MeetingWhen {
+  /** `YYYY-MM-DD`, or "" for no date. */
+  date: string;
+  /** `HH:MM`, or "". */
+  time: string;
+  people: string[];
+}
+
+/**
+ * The note with its `meeting:` and `with:` properties changed (a line is added when it was not
+ * there, and taken away when it is now empty). Nothing else in the note changes.
+ */
+export function setMeetingWhen(content: string, when: MeetingWhen): string {
+  const lines = content.split("\n");
+  const front = frontmatter(lines);
+  if (front.start === 0) return content;
+  const close = front.start - 1;
+  const body = lines.slice(1, close);
+  const people = when.people.map(cleanName).filter((p) => p !== "");
+  const set = (key: string, value: string | null): void => {
+    const at = body.findIndex((l) => new RegExp(`^${key}:`).test(l));
+    if (at !== -1) {
+      // A value written as a block (`with:` and `  - Mette` under it) goes with its key.
+      let end = at + 1;
+      while (end < body.length && /^\s+\S/.test(body[end] ?? "")) end++;
+      body.splice(at, end - at, ...(value === null ? [] : [`${key}: ${value}`]));
+    } else if (value !== null) body.push(`${key}: ${value}`);
+  };
+  set(
+    "meeting",
+    when.date === "" ? null : `${when.date}${when.time !== "" ? ` ${when.time}` : ""}`,
+  );
+  set("with", people.length > 0 ? `[${people.join(", ")}]` : null);
+  return [lines[0] ?? "---", ...body, ...lines.slice(close)].join("\n");
+}
+
 /** The name of the part under `## Notes` itself, for a meeting without an agenda. */
 export const GENERAL = "Notes";
 

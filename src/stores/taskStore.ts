@@ -62,7 +62,6 @@ interface TaskState {
   /** Makes a note that has tasks an epic (it gets the tag `epic`). */
   adoptEpic: (path: string) => Promise<void>;
   /** Makes several notes epics at once. TEMPORARY: remove in the release after 0.18.0. */
-  adoptEpics: (paths: readonly string[]) => Promise<void>;
   /** Points a task at a note (a link target), or takes the link off with `null`. */
   setLink: (t: Task, link: string | null) => Promise<void>;
   /**
@@ -223,9 +222,6 @@ export const useTaskStore = create<TaskState>((set, get) => {
       } catch (e) {
         reportError(e);
       }
-    },
-    adoptEpics: async (paths) => {
-      for (const p of paths) await get().adoptEpic(p);
     },
     removeStep: async (t, step) => {
       const fresh = await mutate(t.path, () => api.taskDelete(t.path, step.line, step.key));

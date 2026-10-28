@@ -73,11 +73,11 @@ describe("TreeToolbar", () => {
     expect(useUiStore.getState().meetingFormOpen).toBe(true);
   });
 
-  it("New has no starter, and offers a template and the daily note", async () => {
+  it("New has no starter and no template, and offers the daily note", async () => {
     await openMenu();
+    expect(await screen.findByRole("menuitem", { name: /Today's daily note/ })).toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: /starter/i })).toBeNull();
-    expect(await screen.findByRole("menuitem", { name: /From a template/ })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: /Today's daily note/ })).toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /template/i })).toBeNull();
   });
 
   it("New → Folder asks for a name and creates it", async () => {

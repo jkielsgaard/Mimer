@@ -18,6 +18,7 @@ export function NoteBox({ label, hint, value, placeholder, onSave }: Props) {
       <Textarea
         key={value}
         aria-label={label}
+        indent
         rows={value === "" ? 2 : Math.min(10, value.split("\n").length + 1)}
         className="min-h-0 resize-y"
         placeholder={placeholder}

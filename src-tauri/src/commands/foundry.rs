@@ -30,6 +30,12 @@ pub async fn foundry_setup_hardware(app: AppHandle) -> Result<(), AppError> {
     service::start_hardware(&app)
 }
 
+/// Uses only the processor: the hardware parts are never downloaded.
+#[tauri::command]
+pub async fn foundry_use_cpu_only(app: AppHandle) -> Result<(), AppError> {
+    service::use_cpu_only(&app)
+}
+
 #[tauri::command]
 pub async fn foundry_cancel_install(app: AppHandle) -> Result<(), AppError> {
     service::cancel_install(&app);

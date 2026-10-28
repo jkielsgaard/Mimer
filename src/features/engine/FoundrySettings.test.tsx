@@ -57,6 +57,7 @@ function status(over: Partial<FoundryStatus> = {}): FoundryStatus {
     diskBytes: 0,
     restartNeeded: false,
     log: [],
+    hardware: "ready",
     ...over,
   };
 }
@@ -101,6 +102,67 @@ describe("Settings → Built-in AI → Foundry Local", () => {
     const box = screen.getByTestId("foundry-download-explained");
     expect(box).toHaveTextContent("Foundry Local is part of Mimer");
     expect(box).toHaveTextContent("Nothing is downloaded until you press Download");
+    expect(box).toHaveTextContent("already downloaded");
+  });
+
+  it("asks first about the hardware parts, and shows no model list before that", async () => {
+    const loadCatalog = vi.fn().mockResolvedValue(undefined);
+    const setupHardware = vi.fn().mockResolvedValue(undefined);
+    const useCpuOnly = vi.fn().mockResolvedValue(undefined);
+    useFoundryStore.setState({
+      status: status({ hardware: "unknown" }),
+      catalog: null,
+      loadCatalog,
+      setupHardware,
+      useCpuOnly,
+    });
+    render(<FoundrySettings draft={settings()} onChange={onChange} />);
+    const user = userEvent.setup();
+    expect(
+      screen.getByRole("heading", { name: /graphics card or neural processor/ }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("radiogroup", { name: "Foundry Local models" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Download" })).toBeNull();
+    // Nothing is asked of Microsoft yet.
+    expect(loadCatalog).not.toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Use only the processor" }));
+    expect(useCpuOnly).toHaveBeenCalled();
+    await user.click(screen.getByRole("button", { name: "Download and find my hardware" }));
+    expect(setupHardware).toHaveBeenCalled();
+  });
+
+  it("after choosing only the processor, lists the models and offers Find my hardware", () => {
+    useFoundryStore.setState({ status: status({ hardware: "cpuOnly" }) });
+    render(<FoundrySettings draft={settings()} onChange={onChange} />);
+    expect(screen.getByRole("button", { name: "Find my hardware" })).toBeInTheDocument();
+    expect(screen.getByTestId("foundry-download-explained")).toHaveTextContent(
+      "the hardware parts are not downloaded",
+    );
+  });
+
+  it("shows a failed hardware download in the question", () => {
+    useFoundryStore.setState({
+      status: status({
+        hardware: "unknown",
+        state: "error",
+        problem: { title: "The download did not work", steps: ["Check the network"], details: "" },
+      }),
+    });
+    render(<FoundrySettings draft={settings()} onChange={onChange} />);
+    expect(screen.getByText("The download did not work")).toBeInTheDocument();
+  });
+
+  it("shows the progress of the hardware parts in the question", () => {
+    useFoundryStore.setState({
+      status: status({
+        hardware: "unknown",
+        state: "installing",
+        message: "Setting up the hardware parts… 30%",
+        install: { phase: "hardware", file: "", done: 30, total: 100 },
+      }),
+    });
+    render(<FoundrySettings draft={settings()} onChange={onChange} />);
+    expect(screen.getByTestId("foundry-hardware-progress")).toHaveTextContent("30%");
   });
 
   it("downloads the chosen model, keeps the open Settings from undoing it, and makes it Mimer's", async () => {

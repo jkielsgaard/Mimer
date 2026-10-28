@@ -1,19 +1,11 @@
-import { CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { SidebarSection } from "@/features/fileTree/SidebarSection";
-import { Button } from "@/components/ui/button";
+import { MonthCalendar } from "@/components/MonthCalendar";
 import { api } from "@/lib/api";
-import { monthGrid, monthTitle, sameDayLastMonth, shortMonthTitle } from "@/lib/calendar";
+import { sameDayLastMonth } from "@/lib/calendar";
 import { InfoHint } from "@/components/InfoHint";
-import { useNarrow } from "@/lib/useNarrow";
 import { shortDate, todayIso } from "@/lib/taskLogic";
-import { cn } from "@/lib/utils";
 import { useVaultStore } from "@/stores/vaultStore";
-
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-/** Below this width the weekdays are one letter and the month is short, so nothing runs together. */
-const NARROW = 230;
 
 /** The dates that have a daily note, read again when the files change. */
 export function useDailyDates(): Set<string> {
@@ -42,21 +34,10 @@ export function useDailyDates(): Set<string> {
 export function CalendarSection() {
   const today = todayIso();
   const dates = useDailyDates();
-  const [shown, setShown] = useState(() => {
-    const [y, m] = today.split("-").map(Number);
-    return { year: y ?? 1970, month: (m ?? 1) - 1 };
-  });
-  const weeks = useMemo(() => monthGrid(shown.year, shown.month), [shown]);
-  const step = (n: number): void => {
-    const d = new Date(shown.year, shown.month + n, 1);
-    setShown({ year: d.getFullYear(), month: d.getMonth() });
-  };
   const open = (iso: string): void => {
     void useVaultStore.getState().openDailyNote(iso);
   };
   const lastMonth = sameDayLastMonth(today);
-  const { ref, narrow } = useNarrow<HTMLDivElement>(NARROW);
-
   return (
     <SidebarSection
       title="Daily notes"
@@ -69,105 +50,7 @@ export function CalendarSection() {
         />
       }
     >
-      <div ref={ref} className="px-2 pb-2">
-        <div className="mb-1 flex items-center">
-          <Button
-            size="icon"
-            variant="ghost"
-            className={narrow ? "size-6" : "size-7"}
-            aria-label="Previous month"
-            onClick={() => {
-              step(-1);
-            }}
-          >
-            <ChevronLeft />
-          </Button>
-          <span
-            className={cn(
-              "min-w-0 flex-1 truncate text-center font-semibold",
-              narrow ? "text-[11px]" : "text-xs",
-            )}
-          >
-            {narrow
-              ? shortMonthTitle(shown.year, shown.month)
-              : monthTitle(shown.year, shown.month)}
-          </span>
-          <Button
-            size="icon"
-            variant="ghost"
-            className={narrow ? "size-6" : "size-7"}
-            aria-label="Next month"
-            onClick={() => {
-              step(1);
-            }}
-          >
-            <ChevronRight />
-          </Button>
-          <Button
-            size={narrow ? "icon" : "sm"}
-            variant="outline"
-            className={narrow ? "ml-0.5 size-6" : "ml-1 h-7"}
-            aria-label="Today"
-            title="Today's note"
-            onClick={() => {
-              const [y, m] = today.split("-").map(Number);
-              setShown({ year: y ?? 1970, month: (m ?? 1) - 1 });
-              open(today);
-            }}
-          >
-            {narrow ? <CalendarCheck /> : "Today"}
-          </Button>
-        </div>
-        <div
-          role="grid"
-          aria-label={monthTitle(shown.year, shown.month)}
-          className="flex flex-col gap-0.5"
-        >
-          <div
-            role="row"
-            className="grid grid-cols-7 text-center text-[10px] text-muted-foreground"
-          >
-            {WEEKDAYS.map((d) => (
-              <span key={d} role="columnheader" aria-label={d}>
-                {narrow ? d.slice(0, 1) : d}
-              </span>
-            ))}
-          </div>
-          {weeks.map((week) => (
-            <div key={week[0]?.iso} role="row" className="grid grid-cols-7 gap-0.5">
-              {week.map((d) => (
-                <button
-                  key={d.iso}
-                  type="button"
-                  role="gridcell"
-                  aria-label={`${shortDate(d.iso)}${dates.has(d.iso) ? ", has a note" : ""}`}
-                  aria-current={d.iso === today ? "date" : undefined}
-                  className={cn(
-                    "flex h-8 flex-col items-center justify-center gap-0.5 rounded-md text-xs hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring",
-                    !d.inMonth && "text-muted-foreground/60",
-                    d.iso === today && "bg-primary text-primary-foreground hover:bg-primary",
-                  )}
-                  onClick={() => {
-                    open(d.iso);
-                  }}
-                >
-                  {d.day}
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "size-1 rounded-full",
-                      dates.has(d.iso)
-                        ? d.iso === today
-                          ? "bg-primary-foreground"
-                          : "bg-primary"
-                        : "bg-transparent",
-                    )}
-                  />
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
+      <MonthCalendar dots={dates} dotLabel="has a note" onPick={open} todayTitle="Today's note">
         {dates.has(lastMonth) && (
           <button
             type="button"
@@ -179,7 +62,7 @@ export function CalendarSection() {
             This day last month: {shortDate(lastMonth)}
           </button>
         )}
-      </div>
+      </MonthCalendar>
     </SidebarSection>
   );
 }

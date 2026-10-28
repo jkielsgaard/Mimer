@@ -267,10 +267,10 @@ describe("TaskPage", () => {
     const user = userEvent.setup();
     const box = screen.getByRole("textbox", { name: "Note" });
     await user.click(box);
-    await user.tab();
+    await user.click(document.body); // Tab indents in a note box, so click away
     expect(apiMock.taskSetNote).not.toHaveBeenCalled();
     await user.type(box, "Ask about the price");
-    await user.tab();
+    await user.click(document.body); // Tab indents in a note box, so click away
     expect(apiMock.taskSetNote).toHaveBeenCalledWith(task.path, 5, "key-1", "Ask about the price");
   });
 

@@ -1,6 +1,6 @@
 ## Meeting notes and quick notes
 
-**New → Quick note** (also **Ctrl/Cmd+Shift+N**) opens a small box with the Note choice on. Write a thought, give it a name if you like, and press Save. It goes to **Quick notes** and the note you are working on stays open.
+**New → Quick note** opens the Quick note box. Write a thought, give it a name if you like, and press Save. It goes to **Quick notes** and the note you are working on stays open.
 
 **New → Meeting note…** (also under File) asks for a title, a day and time, who is with you and an agenda, and every question is optional. **Create** saves the note in the meetings folder and leaves you where you are; **Create and start** opens the meeting at once. The note is an ordinary Markdown note: the day and the people are properties at the top, the agenda is a checklist, and each agenda item has its own part under **Notes**.
 
@@ -12,13 +12,17 @@ The meeting line at the top of **Landing** shows the next meeting, today or tomo
 
 A new vault starts with the folders and templates. In an older vault, use **Settings → Vault → Add standard folders and templates**. Existing templates are never overwritten.
 
+## The Meetings area
+
+The **calendar clock** at the left edge opens Meetings, an area like Tasks. A note is a meeting when it has the tag **Meeting**, wherever it is. On the left, a calendar with a dot on every day that has a meeting; below it **Today** (the day's meetings), **Upcoming** and **Past**. Pick a day in the calendar to see only that day. In the middle, the chosen meeting: its agenda (tick an item to write it in the note), the tasks written in the note and what was written under each item, with **Start meeting**, **Prepare next…** and **Open the note**. Nothing is stored apart from the notes.
+
 ## Daily note
 
 Press **Ctrl/Cmd+Shift+D** for today's note. It is created from your daily template the first time and opened after that.
 
-## Your own templates
+## How new meeting, quick and daily notes start
 
-Templates are ordinary notes in `.vault/templates/`. Edit **Meeting** or **Quick note** there, or open a note you like and choose **File → Save the note as a template…**. Make a note from a template with **New → From a template…** or **File → From a template…**.
+Meeting notes, quick notes and daily notes start from the notes **Meeting**, **Quick note** and the daily template in `.vault/templates/`. You can change them there (any Markdown editor works).
 
 | Write this in a template | Mimer fills in              |
 | ------------------------ | --------------------------- |

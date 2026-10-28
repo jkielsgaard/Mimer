@@ -36,7 +36,7 @@ Click the **</>** button at the right end of the toolbar (or **Go → Show Markd
 
 ## Diagrams
 
-A fenced block written with the language `mermaid` is drawn as a diagram while the cursor is somewhere else; click the picture to edit the code. It is plain Markdown (GitHub draws it too), and it is drawn on this computer. A diagram with a mistake shows what is wrong and its code.
+A fenced block written with the language `mermaid` (or with no language, when its first line starts a diagram such as `graph TD`) is drawn as a diagram while the cursor is somewhere else; click the picture to edit the code. It is plain Markdown (GitHub draws it too), and it is drawn on this computer. A diagram with a mistake shows what is wrong and its code.
 
 ````
 ```mermaid

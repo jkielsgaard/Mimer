@@ -6,7 +6,7 @@ import { epicGroups, isOpen } from "@/lib/taskLogic";
 import { EpicProgress } from "./TasksView";
 import { FocusTask } from "./FocusTask";
 import { Button } from "@/components/ui/button";
-import { CaptureBox } from "@/features/capture/CaptureBox";
+import { CapturePicker } from "@/features/capture/CapturePicker";
 import { askAi, type AiAnswer } from "@/lib/askAi";
 import { useNow } from "@/features/chat/useNow";
 import { findTask, useTaskStore } from "@/stores/taskStore";
@@ -444,7 +444,7 @@ export function FocusMode() {
 
           <div className="mt-2 flex w-full flex-col gap-1.5">
             <span className="section-label">Something popped into your head?</span>
-            <CaptureBox
+            <CapturePicker
               epic={group?.path ?? task.path}
               onSaved={() => {
                 setParked((n) => n + 1);

@@ -110,7 +110,7 @@ export function CommandPalette() {
       ),
       act(
         "capture",
-        "Capture a task, idea or note",
+        "Write it down…",
         () => {
           ui().openCapture();
         },
@@ -127,6 +127,12 @@ export function CommandPalette() {
       }),
       act("quick-note", "Quick note", () => {
         ui().openCapture("note");
+      }),
+      act("new-task", "New task", () => {
+        ui().openCapture("task");
+      }),
+      act("new-idea", "New idea", () => {
+        ui().openCapture("idea");
       }),
       act(
         "settings",

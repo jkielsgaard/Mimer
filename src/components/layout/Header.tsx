@@ -1,6 +1,5 @@
 import { CircleHelp, PanelLeft, PanelRight } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
-import { PromptDialog } from "@/components/PromptDialog";
+import { useEffect, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,15 +9,12 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { api } from "@/lib/api";
 import { setWindowTitle } from "@/lib/window";
 import { releaseStage } from "@/lib/version";
-import { flushPendingWrites } from "@/lib/flush";
 import { newNoteInCurrentFolder, openDailyNote } from "@/lib/actions";
 import { formatShortcut } from "@/lib/shortcuts";
 import { reportAi } from "@/lib/reportAi";
 import { reportIssue } from "@/lib/reportIssue";
-import { noteTitle } from "@/lib/utils";
 import { VaultSwitcher } from "@/features/vaults/VaultSwitcher";
 import { useProposalStore } from "@/stores/proposalStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
@@ -31,7 +27,6 @@ export function Header() {
   const closeVault = useVaultStore((s) => s.closeVault);
   const ui = useUiStore();
   const lastApplied = useProposalStore((s) => s.lastAppliedSha);
-  const [templateName, setTemplateName] = useState<string | null>(null);
   const title = vault
     ? activePath
       ? `${vault.name} — ${activeTitle(activePath)}`
@@ -60,46 +55,30 @@ export function Header() {
     </DropdownMenu>
   );
 
-  const saveTemplate = async (name: string): Promise<void> => {
-    if (activePath === null) return;
-    try {
-      await flushPendingWrites();
-      await api.saveTemplateFromNote(activePath, name);
-      ui.toast("Template saved", "success");
-    } catch (e) {
-      reportError(e);
-    }
-  };
-
   return (
     <header className="flex h-9 shrink-0 items-center gap-1 border-b bg-sidebar px-2">
       {menu(
         "File",
         <>
           {item("Note", "Mod+N", newNoteInCurrentFolder)}
-          {item("From a template…", null, () => {
-            ui.setTemplatePickerOpen(true);
-          })}
           {item("Meeting note…", null, () => {
             ui.setMeetingFormOpen(true);
           })}
           {item("Quick note", null, () => {
             ui.openCapture("note");
           })}
+          {item("Task", null, () => {
+            ui.openCapture("task");
+          })}
+          {item("Idea", null, () => {
+            ui.openCapture("idea");
+          })}
           {item("Today's daily note", "Mod+Shift+D", () => void openDailyNote())}
           <DropdownMenuSeparator />
-          {item("Capture a task, idea or note…", "Mod+Shift+N", () => {
+          {item("Write it down…", "Mod+Shift+N", () => {
             ui.openCapture();
           })}
           <DropdownMenuSeparator />
-          {item(
-            "Save the note as a template…",
-            null,
-            () => {
-              setTemplateName(noteTitle(activePath ?? ""));
-            },
-            activePath === null,
-          )}
           {item(
             "Export…",
             null,
@@ -222,21 +201,6 @@ export function Header() {
       >
         <PanelRight />
       </Button>
-      <PromptDialog
-        open={templateName !== null}
-        title="Save as template"
-        label="Template name"
-        confirmLabel="Save"
-        initialValue={templateName ?? ""}
-        validate={(v) => (v.trim() === "" ? "Enter a name" : null)}
-        onCancel={() => {
-          setTemplateName(null);
-        }}
-        onSubmit={(name) => {
-          setTemplateName(null);
-          void saveTemplate(name);
-        }}
-      />
     </header>
   );
 }

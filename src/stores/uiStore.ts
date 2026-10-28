@@ -3,10 +3,11 @@ import type { MeetingSeed } from "@/lib/meeting";
 import type { Project } from "@/bindings/Project";
 import type { RenamePreview } from "@/bindings/RenamePreview";
 import { toApiError } from "@/lib/api";
+import type { TimeFormat } from "@/lib/timeFormat";
 
-export type LeftTab = "files" | "search" | "tasks" | "ideas";
+export type LeftTab = "files" | "search" | "tasks" | "ideas" | "meetings";
 /** What fills the middle of the window. */
-export type CenterView = "notes" | "tasks" | "epic" | "task" | "ideas";
+export type CenterView = "notes" | "tasks" | "epic" | "task" | "ideas" | "meetings" | "start";
 
 /** The task list, an epic or a task: all of them are the Tasks area. */
 export function isTasksView(v: CenterView): boolean {
@@ -19,6 +20,29 @@ const SOURCE_MODE_KEY = "mimer.sourceMode";
 function readSourceMode(): boolean {
   try {
     return localStorage.getItem(SOURCE_MODE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+const TIME_KEY = "mimer.timeFormat";
+
+/** How times are written (remembered between runs, per computer). */
+function readTimeFormat(): TimeFormat {
+  try {
+    const v = localStorage.getItem(TIME_KEY);
+    return v === "24" || v === "12" ? v : "system";
+  } catch {
+    return "system";
+  }
+}
+
+const START_KEY = "mimer.startOnLaunch";
+
+/** Whether Mimer opens on the start page instead of the last note (remembered between runs). */
+function readStartOnLaunch(): boolean {
+  try {
+    return localStorage.getItem(START_KEY) === "1";
   } catch {
     return false;
   }
@@ -61,6 +85,12 @@ export interface ImagePreview {
 }
 
 interface UiState {
+  /** How times are written: the computer's own way, 24-hour or 12-hour. */
+  timeFormat: TimeFormat;
+  setTimeFormat: (f: TimeFormat) => void;
+  /** Open the start page when Mimer starts, instead of the last note. */
+  startOnLaunch: boolean;
+  setStartOnLaunch: (on: boolean) => void;
   /** True = the editor shows the Markdown source instead of the live preview. */
   sourceMode: boolean;
   setSourceMode: (on: boolean) => void;
@@ -85,9 +115,11 @@ interface UiState {
   setCenterView: (v: CenterView) => void;
   /** Where "open the note" came from, so the note can offer a way back to the task or epic. */
   /** Shows the tasks or the ideas: their own panel on the left and their page in the middle. */
-  openArea: (area: "tasks" | "ideas") => void;
-  /** The write-it-down box (Ctrl+Shift+N), opened with this kind chosen. */
-  captureKind: "task" | "idea" | "note" | null;
+  openArea: (area: "tasks" | "ideas" | "meetings") => void;
+  /** Shows the start page in the middle (the left panel stays as it is). */
+  openStart: () => void;
+  /** The window for writing one thing down: that kind's box, or "choose" first (Ctrl+Shift+N). */
+  captureKind: "task" | "idea" | "note" | "choose" | null;
   openCapture: (kind?: "task" | "idea" | "note") => void;
   closeCapture: () => void;
   /** The focus screen is open. */
@@ -120,7 +152,6 @@ interface UiState {
   /** Opens Settings on the Built-in AI tab. */
   openBuiltInSettings: () => void;
   recoverOpen: boolean;
-  templatePickerOpen: boolean;
   vaultSwitcherOpen: boolean;
   setVaultSwitcherOpen: (open: boolean) => void;
   importOpen: boolean;
@@ -138,7 +169,6 @@ interface UiState {
   openHelp: (topic?: string) => void;
   exportDialog: { path: string; isFolder: boolean } | null;
   openExportDialog: (target: { path: string; isFolder: boolean } | null) => void;
-  setTemplatePickerOpen: (open: boolean) => void;
   projectDialog: ProjectDialogState | null;
   linkUpdate: LinkUpdatePrompt | null;
   toasts: Toast[];
@@ -166,7 +196,30 @@ interface UiState {
 
 let toastId = 1;
 
+/** The middle view after a side panel is asked for: the notes instead of the start page. */
+function leavingStart(v: CenterView): CenterView {
+  return v === "start" ? "notes" : v;
+}
+
 export const useUiStore = create<UiState>((set, get) => ({
+  timeFormat: readTimeFormat(),
+  setTimeFormat: (timeFormat) => {
+    try {
+      localStorage.setItem(TIME_KEY, timeFormat);
+    } catch {
+      /* the choice just is not remembered */
+    }
+    set({ timeFormat });
+  },
+  startOnLaunch: readStartOnLaunch(),
+  setStartOnLaunch: (startOnLaunch) => {
+    try {
+      localStorage.setItem(START_KEY, startOnLaunch ? "1" : "0");
+    } catch {
+      /* the choice just is not remembered */
+    }
+    set({ startOnLaunch });
+  },
   notice: null,
   showNotice: (notice) => {
     set((s) => {
@@ -206,7 +259,7 @@ export const useUiStore = create<UiState>((set, get) => ({
   centerView: "notes",
   captureKind: null,
   openCapture: (kind) => {
-    set({ captureKind: kind ?? "idea" });
+    set({ captureKind: kind ?? "choose" });
   },
   closeCapture: () => {
     set({ captureKind: null });
@@ -216,7 +269,8 @@ export const useUiStore = create<UiState>((set, get) => ({
     set((s) => ({
       centerView,
       leftTab:
-        centerView === "notes" && (s.leftTab === "tasks" || s.leftTab === "ideas")
+        centerView === "notes" &&
+        (s.leftTab === "tasks" || s.leftTab === "ideas" || s.leftTab === "meetings")
           ? "files"
           : s.leftTab,
     }));
@@ -255,7 +309,6 @@ export const useUiStore = create<UiState>((set, get) => ({
     set({ settingsOpen: true, settingsTab: "builtin" });
   },
   recoverOpen: false,
-  templatePickerOpen: false,
   vaultSwitcherOpen: false,
   setVaultSwitcherOpen: (vaultSwitcherOpen) => {
     set({ vaultSwitcherOpen });
@@ -288,9 +341,6 @@ export const useUiStore = create<UiState>((set, get) => ({
   openExportDialog: (exportDialog) => {
     set({ exportDialog });
   },
-  setTemplatePickerOpen: (templatePickerOpen) => {
-    set({ templatePickerOpen });
-  },
   projectDialog: null,
   linkUpdate: null,
   toasts: [],
@@ -301,17 +351,29 @@ export const useUiStore = create<UiState>((set, get) => ({
   openArea: (area) => {
     set({ leftTab: area, leftCollapsed: false, centerView: area });
   },
+  openStart: () => {
+    set({ centerView: "start" });
+  },
+  // The start page is shown without side panels: asking for a panel leaves it for the notes.
   setLeftTab: (leftTab) => {
-    set({ leftTab, leftCollapsed: false });
+    set((s) => ({ leftTab, leftCollapsed: false, centerView: leavingStart(s.centerView) }));
   },
   setRightTab: (rightTab) => {
-    set({ rightTab, rightCollapsed: false });
+    set((s) => ({ rightTab, rightCollapsed: false, centerView: leavingStart(s.centerView) }));
   },
   toggleLeft: () => {
-    set((s) => ({ leftCollapsed: !s.leftCollapsed }));
+    set((s) =>
+      s.centerView === "start"
+        ? { centerView: "notes", leftCollapsed: false }
+        : { leftCollapsed: !s.leftCollapsed },
+    );
   },
   toggleRight: () => {
-    set((s) => ({ rightCollapsed: !s.rightCollapsed }));
+    set((s) =>
+      s.centerView === "start"
+        ? { centerView: "notes", rightCollapsed: false }
+        : { rightCollapsed: !s.rightCollapsed },
+    );
   },
   setQuickOpen: (quickOpen) => {
     set({ quickOpen });
@@ -335,6 +397,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     set((s) => ({
       leftTab: "search",
       leftCollapsed: false,
+      centerView: leavingStart(s.centerView),
       focusSearchNonce: s.focusSearchNonce + 1,
       searchSeed: seed ?? s.searchSeed,
     }));

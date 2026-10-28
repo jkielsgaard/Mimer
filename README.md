@@ -27,10 +27,13 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
 ## Features
 
 - Live-preview Markdown editor with a formatting toolbar, tabs, split view, a table editor and Mermaid diagrams
-- `[[Wiki-links]]`, tags (typing `#` suggests the ones you use), images, templates and index pages
+- `[[Wiki-links]]`, tags (typing `#` suggests the ones you use), images and index pages
 - Daily notes in a calendar at the top of the file panel, and **Trace my work**: one line a day under "Worked on" for each note and task you worked on (off by default)
-- Tasks as checklist lines in your notes, with steps, a note and a log of what happened, in an outline of **epics** you can fold; **Focus** shows one task at a time
-- Ideas: write something down from anywhere (`Ctrl/Cmd+Shift+N`) and turn it into a task or a note later
+- Tasks as checklist lines in your notes, with steps, a note, a status and a log of what happened, in an outline of **epics** you can fold; **Focus** shows one task at a time
+- A **start page** you build yourself from widgets (Continue, Recent, Pinned, Next meeting, Working on and more)
+- **Meetings**: an area with a calendar, today's and coming meetings, the agenda, the tasks from each meeting and a meeting screen to write in while you talk
+- Write a quick note, a task or an idea down from anywhere (`Ctrl/Cmd+Shift+N`), each in its own small box
+- Ideas: a list of ideas you turn into a task or a note later
 - Full-text search, plus search by meaning with a local embedding model
 - Version history per note: compare, restore, recover deleted notes
 - AI on selected text in a note **and in every text box** (fix spelling, rewrite, shorten, translate …), AI commands for a whole note or folder, and a chat that searches and reads your notes to answer
