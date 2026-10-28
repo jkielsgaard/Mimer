@@ -16,6 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PINNED_TAG } from "@/lib/startPage";
 import { nameError } from "@/lib/nameConflict";
 import { NOTE_TAGS } from "@/lib/noteTags";
 import { useNoteTags } from "@/lib/useNoteTags";
@@ -70,7 +71,7 @@ export function NoteMenu({ path }: { path: string | null }) {
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuItem
             onSelect={() => {
               setRenaming(true);
@@ -84,6 +85,13 @@ export function NoteMenu({ path }: { path: string | null }) {
             }}
           >
             History
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => {
+              void setTag(PINNED_TAG, !tags.includes(PINNED_TAG));
+            }}
+          >
+            {tags.includes(PINNED_TAG) ? "Unpin from the start page" : "Pin to the start page"}
           </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={() => {

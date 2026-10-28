@@ -25,7 +25,7 @@ Keep it up to date: when a feature changes, change its lines here in the same co
 
 ### 2. The file panel
 
-- [ ] **New** above the tree: Note, From a template…, Meeting note…, Quick note, Today's daily note, Folder…, Project… all work, and there is no "From a starter". **File** has the same first five, then **Capture a task, idea or note…**. The `···` menu has no Search or Quick open.
+- [ ] **New** above the tree: Note, Meeting note…, Quick note, Today's daily note, Folder…, Project… all work, and there is no "From a starter". **File** has Note, Meeting note…, Quick note, Task, Idea, Today's daily note, then **Write it down…**. The `···` menu has no Search or Quick open.
 - [ ] **Quick note**: opens the small box on Note; with a name it saves `Quick notes/<name>.md`, without one it uses the first line; the note you are in stays open and unchanged.
 - [ ] **Meeting note…**: everything can be left empty. With a day and time, the note is `Meetings/<day> <title>.md` with `meeting:` and `with:` at the top, the agenda as a checklist and a `###` part per item. **Create** keeps you where you are; **Create and start** opens the meeting screen.
 - [ ] **Meeting screen**: the first open item is **Now**; typing writes to the note (open it in another tab to see it); **Next item** ticks the item; **+ Add an item** adds it; the write-it-down box does not change the notes; **Esc** leaves. **Start meeting** shows above notes in the Meetings folder.
@@ -111,7 +111,7 @@ Check with `git log --oneline` in the vault folder.
 
 - [ ] The light bulb: ideas Open / Used / Archived; **New idea**; change the title and note, click away: `Ideas.md` has the note indented under the line (hidden from the tree and not a task).
 - [ ] **Make a task**: asks which epic (or a new one), then puts it there with the idea's note as the task's note; the idea is Used. **Make a note**: a note in Quick notes opens. Archive and Bring back work.
-- [ ] `Ctrl/Cmd+Shift+N` from inside a note: Task, Idea and Note each save and close; the note you were writing is unchanged.
+- [ ] `Ctrl/Cmd+Shift+N` from inside a note asks first (T, I, N or the buttons) and then shows only that box; each saves and closes with a message that has **Open**; the note you were writing is unchanged. **New → Task**, **New → Idea** and **Quick note** (start page, File, palette) show only that box, with no choice of kind. In a meeting, Focus and the start-page widget: **+ Task**, **+ Idea**, **+ Quick note** open one box, which stays open after saving; the cross closes it.
 - [ ] **Focus** is only on an epic: in its heading in the task list and at the top of the epic page (not in the left panel, not on task rows, not on the task page). It shows the whole epic as an outline, every task open, the task marked **Working on it** (its status is Doing), its next step marked **Now**. Fold any task (also the marked one), **Work on this** moves the mark, **Fold the rest** folds all but the marked one. Move tasks and steps with the arrows (or Alt+Up/Down), and add a step under a task with Enter.
 - [ ] In Focus, write in **What has happened** and press Enter: the line is in the task's log with today's date and you stay in Focus. **Done, next step** on the last step asks "Tick the task too?"; yes marks the next open task. When the epic is done: "Epic done" and **Back to the task list**. The timer can be paused; the write-it-down box keeps you in Focus; Esc leaves.
 - [ ] **(AI)** **Help me start** in Focus, **Think it through** and **Suggest first steps** on an idea: nothing is added until you press the button.
@@ -130,7 +130,7 @@ Check with `git log --oneline` in the vault folder.
 - [ ] **Cloud AI**: add an OpenAI-compatible provider with a cloud address and key; choose Cloud AI: the warning lists what is sent, **Use the cloud AI** is greyed out until "I understand…" is ticked; **Keep the AI on this computer** changes nothing. After using it: the status bar shows **Cloud AI**, the chat note is orange ("your notes go to …"), and a chat answer comes from it. A project with **Local AI only** uses a local AI instead. Choose another AI, then Cloud AI again: the warning comes again.
 - [ ] Foundry Local list: every chat model (also "No tools"), each with "good for", maker, size, runs on, reads about N words, licence. Search, Writing/Reasoning/Code, Can use tools, Downloaded, Runs on, Size and Sort work; **All Foundry Local models at Microsoft** opens the browser. Download a model without tools: text commands work, the chat says tools are not available.
 - [ ] Translate to English on Danish text (Phi Silica and a Foundry model): the answer is in English.
-- [ ] Foundry Local (Windows 11 24H2 or later; Linux is experimental): the model list loads (only models with tools), **Find my hardware** fetches the hardware parts, a small model downloads.
+- [ ] Foundry Local (Windows 11 24H2 or later; Linux is experimental), on a computer that has never used it (or after **Remove all**): there is no model list, only the question about the hardware parts, and nothing is downloaded. **Use only the processor**: the list shows CPU models, **Find my hardware** is offered, and downloading a model or waking it fetches no hardware parts. **Download and find my hardware**: progress, then the list shows GPU/NPU where the computer can. A small model downloads.
 - [ ] **Wake** in the status bar loads the model; **Sleep** frees the memory (no `llama-server` or helper `mimer` process left). An AI command while asleep wakes it by itself. Closing or killing Mimer stops the engine. **Sleep after** 1 minute works.
 - [ ] A problem (too large a context, missing driver) shows a red box with steps, **Show details** and **Copy details**.
 - [ ] **Remove** a model and all files (with a confirmation) cleans the folder shown in the settings.
@@ -186,7 +186,7 @@ Check with `git log --oneline` in the vault folder.
 
 ### 16. Templates, import, export and index pages
 
-- [ ] **File → Save the note as a template…**: `Template: added …`; **File → New note from a template…** fills `{{title}}` and `{{date:…}}`.
+- [ ] There is no **From a template…** or **Save the note as a template…** anywhere (New, File, the start page). A new meeting, quick note and daily note still start from their template in `.vault/templates/` and fill `{{title}}` and `{{date:…}}`.
 - [ ] **File → Import notes from a folder…** (see [docs/IMPORT-ONENOTE.md](IMPORT-ONENOTE.md)): the preview counts match, "Left out" lists hidden and unsupported files; import shows progress and a report; pictures are in **Images**, not in the tree; importing again numbers the copies; a folder inside the vault is refused; the source folder is unchanged.
 - [ ] **File → Export…** of a note with a heading, a table, a picture, a `[[link]]` and `<script>alert(1)</script>`: HTML shows the picture and the script as text (no dialog); Word has the formatting; PDF opens a preview and prints only the note. A folder exports as one document with a table of contents. Exporting makes no commit.
 - [ ] Right-click a folder → **Make an index page**: a list of links; your own text above it is kept when you make it again.
@@ -224,7 +224,7 @@ Check with `git log --oneline` in the vault folder.
 
 - [ ] Write `- [ ] test` in an ordinary note: no new epic in the Tasks panel. In **Show all tasks** it is under **Tasks in other notes** (folded).
 - [ ] **Make an epic** on it: the note gets `tags: [epic]` (other properties are kept), and it is listed with the epics. Outside `Tasks/` it has no pencil or waste bin.
-- [ ] **New epic** makes a note with `tags: [epic]` in its properties. A note in `Tasks/` from before (no tag) is under **Tasks in other notes**; **Make the notes in Tasks epics** tags them all (this button goes in the release after 0.18.0).
+- [ ] **New epic** makes a note with `tags: [epic]` in its properties. A note in `Tasks/` from before (no tag) is under **Tasks in other notes**; **Make an epic** on each tags it.
 - [ ] A meeting note: the agenda lines are not tasks and no epic is made. A task written under `## Notes` in it still shows up.
 - [ ] A meeting without an agenda: the text is written under `## Notes`, with no `### Notes` heading.
 
@@ -241,3 +241,17 @@ Check with `git log --oneline` in the vault folder.
 - [ ] **Link a note…** picks an existing note. The pencil changes it; the cross unlinks (the note stays).
 - [ ] Rename the linked note in the tree: the link in the task line follows. Delete it: the chip is dimmed and says "Note missing"; on the task page **Make the note** makes it again.
 - [ ] Rename the task title: the link stays. The link is not in the title anywhere.
+
+## Tab, status, Meetings and the start page
+
+- [ ] In a bullet list, **Tab** moves the item one level in, **Shift+Tab** out; a selection over several items moves them all; a numbered and a task item work too. **Enter** on an empty nested item takes it out one level; on an empty item at the left edge the list ends. A plain line with the caret at its start moves two spaces in and out; with the caret after some text, Tab puts a tab there and Shift+Tab takes it back; in a table cell Tab still moves between cells. The same in the meeting screen, the note box of a task, an epic and an idea, and the write-it-down box (there Tab no longer leaves the box: click away).
+- [ ] A task with the status Doing, Waiting or Dropped shows a label at the right end of its row in Tasks and in an epic; a task without a status shows none. The status is still set on the task page.
+- [ ] The **calendar clock** at the left edge opens Meetings. The calendar has a dot on the days with a meeting. Today lists the day's meetings with their time (no daily note); Upcoming and Past follow. A click on a day shows only that day; the cross shows everything again.
+- [ ] A click on a meeting shows it in the middle: agenda (ticking an item changes `- [ ]` in the note), tasks from the note, notes under each item. **Start meeting**, **Prepare next…** and **Open the note** work. **+ New** opens the meeting window. A note without the tag Meeting is not listed, also in the meetings folder.
+- [ ] The **house** opens the start page; so does closing the last note. **Continue** shows the last note with its first lines and **Open** opens it. Recent has the filters; **Show more** lists up to 20. **···** → **Pin to the start page** puts the note under Pinned (tag `pinned`); the cross on the start page unpins it. A new vault shows three buttons. Narrow the window: one column.
+- [ ] **Settings → General → Open the start page when Mimer starts**: on, restart: the start page shows, not the last note. Off (default): the last note opens as before.
+- [ ] **Settings → General → Time format**: choose 12-hour: the Meetings list, the meeting page, the Landing line and the start page write `2:30 PM`; the Time field of a new meeting shows `2:30 PM` and accepts `14:30`, `1430` and `2:30 pm`. Choose 24-hour: `14:30`. System follows the computer (24-hour on a Linux with a 24-hour language, AM/PM on a Windows with US settings).
+- [ ] A new meeting has today in the Day field; it is listed under Today without picking a day. **Change…** on a meeting changes the day, time and people; the list and the Landing line follow. Clearing the day puts it under No date.
+- [ ] A fenced block with no language whose first line is `graph TD` (or `sequenceDiagram`, …) is drawn as a diagram; a ```mermaid block still is; other code is not.
+- [ ] The house: the start page fills the window: the left panel (whatever it showed), the right panel and its icon bar are gone and no icon is marked; pressing Files (or opening a note) brings them back as they were. **Delete** on a meeting asks, then removes the note (find it again in History / Recover deleted notes) and the list updates.
+- [ ] Start page → **Customize**: each widget has up/down arrows, Half/Full and a cross; **Add widget** lists the widgets that are not on the page (each can be added once); **Reset** brings back Continue, Recent and Pinned; **Done** leaves. Restart: the layout is the same. Each widget works: Write it down saves a note, task or idea; Search and ask searches (Ask AI is off with a message when no AI is on); Next meeting starts a meeting; Working on opens a task; Areas opens each area; Epic progress opens an epic. A narrow window is one column.

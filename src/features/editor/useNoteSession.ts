@@ -23,6 +23,7 @@ import { useVaultStore } from "@/stores/vaultStore";
 import { useWorkspaceStore, type PaneId } from "@/stores/workspaceStore";
 import { insertTable, toggleWrap } from "./extensions/commands";
 import { findFrontmatter, livePreview } from "./extensions/livePreview";
+import { listIndent } from "./extensions/listIndent";
 import { pasteImage } from "./extensions/pasteImage";
 import { previewConfig, type PreviewConfig } from "./extensions/previewConfig";
 import { dropLink } from "./extensions/dropLink";
@@ -202,6 +203,7 @@ export function useNoteSession({
         closeBrackets(),
         EditorView.lineWrapping,
         markdown({ base: markdownLanguage }),
+        listIndent,
         viewModeCompartment.current.of(
           sourceModeRef.current ? sourceModeTheme : livePreview({ untilFocused: true }),
         ),

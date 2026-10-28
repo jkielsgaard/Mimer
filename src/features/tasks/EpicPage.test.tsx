@@ -72,7 +72,7 @@ describe("EpicPage", () => {
     render(<EpicPage />);
     const user = userEvent.setup();
     await user.type(screen.getByRole("textbox", { name: "Note" }), "About the guide");
-    await user.tab();
+    await user.click(document.body); // Tab indents in a note box, so click away
     await waitFor(() => {
       expect(apiMock.epicSetDescription).toHaveBeenCalledWith(epicNote, "About the guide");
     });

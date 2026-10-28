@@ -79,16 +79,22 @@ fn note() -> Option<String> {
 pub fn status<R: Runtime>(app: &AppHandle<R>) -> FoundryStatus {
     let state = runtime(app);
     let chosen = state.settings_snapshot().ai.foundry.model;
-    let (folder, installed, disk) = match root(app) {
+    let (folder, installed, disk, hardware) = match root(app) {
         Ok(r) => {
             let list = read_installed(&r);
             (
                 r.display().to_string(),
                 list,
                 engine::service::folder_size(&r),
+                super::hardware_choice(&r),
             )
         }
-        Err(_) => (String::new(), Vec::new(), 0),
+        Err(_) => (
+            String::new(),
+            Vec::new(),
+            0,
+            super::FoundryHardware::Unknown,
+        ),
     };
     let reason = unavailable_reason(app);
     let has_model = installed.iter().any(|m| m.alias == chosen);
@@ -108,6 +114,7 @@ pub fn status<R: Runtime>(app: &AppHandle<R>) -> FoundryStatus {
             disk_bytes: disk,
             restart_needed: false,
             log: Vec::new(),
+            hardware,
         };
     };
     let st = match inner.phase {
@@ -158,6 +165,7 @@ pub fn status<R: Runtime>(app: &AppHandle<R>) -> FoundryStatus {
         disk_bytes: disk,
         restart_needed,
         log: tail,
+        hardware,
     }
 }
 
@@ -590,6 +598,16 @@ async fn install_task<R: Runtime>(
             set_problem(app, problem);
         }
     }
+}
+
+/// Remembers that only the processor is used: the hardware parts are never downloaded, and the
+/// model list shows what the processor can run.
+pub fn use_cpu_only<R: Runtime>(app: &AppHandle<R>) -> AppResult<()> {
+    let data = root(app)?;
+    super::choose_cpu_only(&data).map_err(|e| AppError::Io(e.to_string()))?;
+    with_inner(app, |i| i.catalog = None);
+    emit(app);
+    Ok(())
 }
 
 /// Cancels a running download.

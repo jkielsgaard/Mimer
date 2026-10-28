@@ -2,11 +2,23 @@ import { EditorView, WidgetType } from "@codemirror/view";
 
 let counter = 0;
 
-/** The code inside a fenced block that is written with the language `mermaid`, or null. */
+/** The first line of a Mermaid diagram, which is how a block without a language is recognised. */
+const DIAGRAM_START =
+  /^\s*(graph|flowchart)\s+(TB|TD|BT|RL|LR)\b|^\s*(sequenceDiagram|classDiagram(-v2)?|stateDiagram(-v2)?|erDiagram|gantt|journey|pie|mindmap|timeline|gitGraph|quadrantChart|requirementDiagram)\b/;
+
+/**
+ * The code inside a fenced block that is written with the language `mermaid`, or null. A block
+ * with no language whose first line starts a diagram (`graph TD`, `sequenceDiagram`, …) counts
+ * too, because the language is easy to forget.
+ */
 export function mermaidSource(block: string): string | null {
   const lines = block.split("\n");
-  const open = /^\s*(```|~~~)\s*mermaid\b/i.exec(lines[0] ?? "");
+  const open = /^\s*(```|~~~)\s*(\S*)/.exec(lines[0] ?? "");
   if (!open) return null;
+  const language = (open[2] ?? "").toLowerCase();
+  if (language !== "mermaid" && !(language === "" && DIAGRAM_START.test(lines[1] ?? ""))) {
+    return null;
+  }
   const fence = open[1] ?? "```";
   const last = lines.length > 1 ? (lines[lines.length - 1] ?? "") : "";
   const end = last.trim().startsWith(fence) ? lines.length - 1 : lines.length;

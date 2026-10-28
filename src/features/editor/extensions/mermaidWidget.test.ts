@@ -32,6 +32,11 @@ describe("Mermaid diagrams in live preview", () => {
     expect(mermaidSource("~~~Mermaid\nA --> B\n~~~")).toBe("A --> B");
     expect(mermaidSource("```js\nlet a = 1;\n```")).toBeNull();
     expect(mermaidSource("```mermaid\n```")).toBeNull();
+    // No language: a diagram when the first line starts one, ordinary code otherwise.
+    expect(mermaidSource("```\ngraph TD;\n  A-->B;\n```")).toBe("graph TD;\n  A-->B;");
+    expect(mermaidSource("```\nsequenceDiagram\n  A->>B: hi\n```")).toContain("sequenceDiagram");
+    expect(mermaidSource("```\nlet graph = 1;\n```")).toBeNull();
+    expect(mermaidSource("```js\ngraph TD\n```")).toBeNull();
   });
 
   it("draws a diagram when the cursor is elsewhere, and shows the code when it is inside", () => {

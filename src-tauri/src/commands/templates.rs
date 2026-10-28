@@ -65,16 +65,6 @@ pub async fn list_daily_dates(state: State<'_, AppState>) -> Result<Vec<String>,
 }
 
 #[tauri::command]
-pub async fn save_template_from_note(
-    state: State<'_, AppState>,
-    note_path: String,
-    name: String,
-) -> Result<TemplateInfo, AppError> {
-    let v = state.current_vault()?;
-    templates::save_from_note(&v, &note_path, &name)
-}
-
-#[tauri::command]
 pub async fn update_vault_config(
     state: State<'_, AppState>,
     config: VaultConfig,

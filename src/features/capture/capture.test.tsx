@@ -65,28 +65,32 @@ describe("CaptureBox", () => {
     });
   });
 
-  it("writes an idea, a task and a note, and remembers the kind", async () => {
+  it("writes one kind per box: an idea, a task and a quick note", async () => {
     const onSaved = vi.fn();
-    const { unmount } = render(<CaptureBox onSaved={onSaved} />);
     const user = userEvent.setup();
+    const { unmount } = render(<CaptureBox kind="idea" onSaved={onSaved} />);
+    // The box is only for ideas: nothing to choose.
+    expect(screen.queryByRole("button", { name: "Task" })).toBeNull();
     await user.type(screen.getByLabelText("Write an idea"), "An idea{Enter}");
     expect(apiMock.ideaAdd.mock.calls[0]?.[1]).toBe("An idea");
-    expect(onSaved).toHaveBeenCalledWith("an idea");
-    await user.click(screen.getByRole("button", { name: "Task" }));
+    expect(onSaved.mock.calls[0]?.[0]).toBe("an idea");
+    unmount();
+
+    const task = render(<CaptureBox kind="task" onSaved={onSaved} />);
     await user.type(screen.getByLabelText("Write a task"), "Call Mette{Enter}");
     expect(apiMock.taskAdd.mock.calls[0]?.[0]).toBe("Call Mette");
-    await user.type(screen.getByLabelText("Write a task"), "Pay the bill fri{Enter}");
+    await waitFor(() => {
+      expect(onSaved.mock.calls[1]?.[0]).toBe("the task in Work");
+    });
+    await user.type(screen.getByLabelText("Write a task"), "Pay the bill fri");
+    await user.click(screen.getByRole("button", { name: "Save task" }));
     expect(apiMock.taskAdd.mock.calls[1]?.[0]).toBe("Pay the bill fri");
-    unmount();
-    // The choice is remembered.
-    render(<CaptureBox />);
-    expect(screen.getByRole("button", { name: "Task" })).toHaveAttribute("aria-pressed", "true");
-    await user.type(screen.getByLabelText("Write a task"), "Later task{Enter}");
-    expect(apiMock.taskAdd.mock.calls[2]?.[0]).toBe("Later task");
-    await user.click(screen.getByRole("button", { name: "Quick note" }));
+    task.unmount();
+
+    render(<CaptureBox kind="note" onSaved={onSaved} />);
     await user.type(screen.getByLabelText("Title of the note"), "Cheat sheet");
     await user.type(screen.getByLabelText("Write the note"), "VLAN 10 is the office");
-    await user.click(screen.getByRole("button", { name: "Save the quick note" }));
+    await user.click(screen.getByRole("button", { name: "Save note" }));
     await waitFor(() => {
       expect(apiMock.writeNote).toHaveBeenCalled();
     });
@@ -102,7 +106,7 @@ describe("CaptureBox", () => {
       description: "",
     });
     const user = userEvent.setup();
-    const { unmount } = render(<CaptureBox initialKind="task" />);
+    const { unmount } = render(<CaptureBox kind="task" />);
     expect(screen.getByLabelText("Epic for the task")).toHaveValue("Tasks/Work.md");
     await user.selectOptions(screen.getByLabelText("Epic for the task"), "::new");
     // A new epic needs a name; nothing is made without one.
@@ -116,7 +120,7 @@ describe("CaptureBox", () => {
     expect(apiMock.epicCreate).toHaveBeenCalledWith("Launch");
     expect(apiMock.taskAdd.mock.calls[0]?.[3]).toBe("Tasks/Launch.md");
     unmount();
-    render(<CaptureBox initialKind="task" />);
+    render(<CaptureBox kind="task" />);
     expect(screen.getByLabelText("Epic for the task")).toHaveValue("Tasks/Launch.md");
   });
 
@@ -127,12 +131,7 @@ describe("CaptureBox", () => {
       source: null,
       description: "",
     });
-    render(
-      <CaptureBox
-        initialKind="task"
-        aroundNote={{ path: "Meetings/Weekly.md", title: "Weekly" }}
-      />,
-    );
+    render(<CaptureBox kind="task" aroundNote={{ path: "Meetings/Weekly.md", title: "Weekly" }} />);
     const user = userEvent.setup();
     expect(screen.getByLabelText("Epic for the task")).toHaveValue("::note");
     expect(apiMock.epicForNote).not.toHaveBeenCalled();
@@ -145,21 +144,23 @@ describe("CaptureBox", () => {
   });
 
   it("lets a task and an idea have a small note", async () => {
-    render(<CaptureBox initialKind="idea" />);
     const user = userEvent.setup();
+    const idea = render(<CaptureBox kind="idea" />);
     await user.type(screen.getByLabelText("Write an idea"), "An idea");
-    await user.click(screen.getByRole("button", { name: "Add a note" }));
+    await user.click(screen.getByRole("button", { name: "+ Add a note" }));
     await user.type(screen.getByLabelText("Note for the idea"), "Because of the VPN");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Save idea" }));
     await waitFor(() => {
       expect(apiMock.ideaAdd).toHaveBeenCalled();
     });
     expect(apiMock.ideaAdd.mock.calls[0]?.[1]).toBe("An idea");
     expect(apiMock.ideaAdd.mock.calls[0]?.[2]).toBe("Because of the VPN");
-    await user.click(screen.getByRole("button", { name: "Task" }));
+    idea.unmount();
+    render(<CaptureBox kind="task" />);
     await user.type(screen.getByLabelText("Write a task"), "Call Mette");
+    await user.click(screen.getByRole("button", { name: "+ Add a note" }));
     await user.type(screen.getByLabelText("Note for the task"), "About the licence");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Save task" }));
     await waitFor(() => {
       expect(apiMock.taskAdd).toHaveBeenCalled();
     });
@@ -185,6 +186,26 @@ describe("QuickCapture", () => {
       expect(useUiStore.getState().captureKind).toBeNull();
     });
     expect(useUiStore.getState().toasts[0]?.message).toBe("Saved an idea.");
+    expect(useUiStore.getState().toasts[0]?.action?.label).toBe("Open");
+  });
+
+  it("asks first when it is opened without a kind, and a letter picks the box", async () => {
+    useUiStore.getState().openCapture();
+    render(<QuickCapture />);
+    const user = userEvent.setup();
+    expect(await screen.findByRole("heading", { name: "Write down a…" })).toBeInTheDocument();
+    await user.keyboard("t");
+    expect(await screen.findByRole("heading", { name: "New task" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Write a task")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Write an idea")).toBeNull();
+  });
+
+  it("shows only the idea box when it is opened from New idea", async () => {
+    useUiStore.getState().openCapture("idea");
+    render(<QuickCapture />);
+    expect(await screen.findByRole("heading", { name: "New idea" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Write a task")).toBeNull();
+    expect(screen.queryByLabelText("Title of the note")).toBeNull();
   });
 
   it("shows only a quick note when it is opened from Quick note", async () => {
@@ -257,7 +278,7 @@ describe("Ideas", () => {
     expect(note).toHaveValue("Why it matters");
     await user.clear(note);
     await user.type(note, "A better reason");
-    await user.tab();
+    await user.click(document.body); // Tab indents in a note box, so click away
     await waitFor(() => {
       expect(apiMock.ideaEdit).toHaveBeenCalledWith(4, "k", "Newest idea", "A better reason");
     });
@@ -269,7 +290,7 @@ describe("Ideas", () => {
     const user = userEvent.setup();
     await user.type(await screen.findByLabelText("Write an idea"), "Fresh");
     await user.type(screen.getByLabelText("Note for the idea"), "Details");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Save idea" }));
     await waitFor(() => {
       expect(apiMock.ideaAdd).toHaveBeenCalled();
     });

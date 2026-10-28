@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { TimeInput } from "@/components/TimeInput";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +16,7 @@ import { api } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
 import { buildMeetingNote, todayAndTomorrow } from "@/lib/meeting";
 import { fileNameFrom } from "@/lib/noteTitle";
+import { useMeetingStore } from "@/stores/meetingStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 
@@ -31,17 +33,21 @@ export function MeetingForm() {
   const [who, setWho] = useState("");
   const [agenda, setAgenda] = useState("");
   const [busy, setBusy] = useState(false);
+  /** The time box holds text that is not a time: nothing is saved until it is fixed. */
+  const [timeOk, setTimeOk] = useState(true);
 
   useEffect(() => {
     if (!open) return;
     // Open from the meeting that was held (the next one), or empty.
     const seed = useUiStore.getState().meetingSeed;
     setTitle(seed?.title ?? "");
-    setDate(seed?.date ?? "");
+    // A new meeting is for today unless another day is picked; the day can be cleared.
+    setDate(seed?.date ?? todayAndTomorrow(new Date())[0]);
     setTime(seed?.time ?? "");
     setWho(seed?.who ?? "");
     setAgenda(seed?.agenda ?? "");
     setBusy(false);
+    setTimeOk(true);
   }, [open]);
 
   const close = (): void => {
@@ -49,6 +55,7 @@ export function MeetingForm() {
   };
 
   const create = async (start: boolean): Promise<void> => {
+    if (!timeOk) return;
     setBusy(true);
     try {
       const today = todayAndTomorrow(new Date())[0];
@@ -65,6 +72,8 @@ export function MeetingForm() {
       await flushPendingWrites();
       const path = await api.createNote(folder, name);
       await api.writeNote(path, text);
+      // The Meetings list would otherwise show the note as it was when it was made.
+      void useMeetingStore.getState().load();
       close();
       if (start) useUiStore.getState().setMeetingFocus(path);
       else
@@ -125,14 +134,7 @@ export function MeetingForm() {
             </div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="meeting-time">Time</Label>
-              <Input
-                id="meeting-time"
-                type="time"
-                value={time}
-                onChange={(e) => {
-                  setTime(e.target.value);
-                }}
-              />
+              <TimeInput id="meeting-time" value={time} onChange={setTime} onValid={setTimeOk} />
             </div>
           </div>
           <div className="flex flex-col gap-1">
@@ -162,12 +164,12 @@ export function MeetingForm() {
             <Button type="button" variant="ghost" onClick={close}>
               Cancel
             </Button>
-            <Button type="submit" variant="outline" disabled={busy}>
+            <Button type="submit" variant="outline" disabled={busy || !timeOk}>
               Create
             </Button>
             <Button
               type="button"
-              disabled={busy}
+              disabled={busy || !timeOk}
               onClick={() => {
                 void create(true);
               }}

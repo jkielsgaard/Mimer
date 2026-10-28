@@ -4,7 +4,6 @@ pub mod render;
 pub mod standard;
 
 use crate::error::{AppError, AppResult};
-use crate::git::{CommitKind, CommitReason};
 use crate::vault::fs_ops;
 use crate::vault::ops;
 use crate::vault::paths::{resolve, resolve_internal};
@@ -63,46 +62,6 @@ pub fn read(root: &Path, name: &str) -> AppResult<String> {
     let abs = resolve_internal(root, &template_rel(name)?)?;
     std::fs::read_to_string(abs)
         .map_err(|_| AppError::NotFound(format!("Template “{name}” does not exist")))
-}
-
-/// Saves a note as a template and commits it.
-pub fn save_from_note(v: &OpenVault, note_path: &str, name: &str) -> AppResult<TemplateInfo> {
-    let note = fs_ops::read_note(&v.root, note_path)?;
-    let name = clean_name(name)?;
-    let rel = format!("{DIR}/{name}.md");
-    let abs = resolve_internal(&v.root, &rel)?;
-    if abs.exists() {
-        return Err(AppError::AlreadyExists(format!(
-            "A template called “{name}” already exists"
-        )));
-    }
-    if let Some(dir) = abs.parent() {
-        std::fs::create_dir_all(dir)?;
-    }
-    fs_ops::write_atomic(&abs, note.content.as_bytes())?;
-    v.commit(
-        CommitReason::new(CommitKind::Template, Some(format!("added {name}"))),
-        Some(std::slice::from_ref(&rel)),
-    )?;
-    Ok(TemplateInfo { name, path: rel })
-}
-
-/// Deletes a template and commits the removal.
-pub fn delete(v: &OpenVault, name: &str) -> AppResult<()> {
-    let rel = template_rel(name)?;
-    let abs = resolve_internal(&v.root, &rel)?;
-    if !abs.exists() {
-        return Err(AppError::NotFound(format!(
-            "Template “{name}” does not exist"
-        )));
-    }
-    std::fs::remove_file(&abs)?;
-    let clean = clean_name(name)?;
-    v.commit(
-        CommitReason::new(CommitKind::Template, Some(format!("removed {clean}"))),
-        Some(std::slice::from_ref(&rel)),
-    )?;
-    Ok(())
 }
 
 /// Creates `<folder>/<name>.md`, filled from a template when given. Returns the new path.
@@ -221,24 +180,11 @@ mod tests {
     }
 
     #[test]
-    fn save_and_delete_each_make_one_commit() {
-        let d = tempfile::tempdir().unwrap();
-        let v = open_for_test(d.path());
-        ops::write_note(&v, "Meet.md", "# {{title}}").unwrap();
-        save_from_note(&v, "Meet.md", "Meeting").unwrap();
-        assert!(save_from_note(&v, "Meet.md", "Meeting").is_err());
-        assert_eq!(read(&v.root, "Meeting").unwrap(), "# {{title}}");
-        delete(&v, "Meeting").unwrap();
-        assert!(read(&v.root, "Meeting").is_err());
-    }
-
-    #[test]
     fn bad_template_names_are_rejected() {
         let d = tempfile::tempdir().unwrap();
         let v = open_for_test(d.path());
         ops::write_note(&v, "n.md", "x").unwrap();
         for name in ["../evil", "a/b", ".hidden", ""] {
-            assert!(save_from_note(&v, "n.md", name).is_err(), "{name}");
             assert!(read(&v.root, name).is_err(), "{name}");
         }
     }

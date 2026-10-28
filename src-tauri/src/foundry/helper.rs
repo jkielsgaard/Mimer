@@ -121,7 +121,17 @@ fn manager(o: &Options) -> Result<std::sync::Arc<FoundryLocalManager>, String> {
 /// each process separately, so the model list asks for them again (a quick step when they are
 /// already on disk) before it reads the catalog; without it the list shows only the processor.
 fn hardware_marker(o: &Options) -> Option<PathBuf> {
-    o.data.as_ref().map(|d| d.join("hardware-ready"))
+    o.data.as_ref().map(|d| d.join(super::HARDWARE_READY))
+}
+
+/// Registers the hardware parts, but only when the person chose to download them (the marker is
+/// there). A person who chose only the processor never gets a download from a model or a wake.
+async fn hardware_if_chosen(m: &FoundryLocalManager, o: &Options) -> Result<(), String> {
+    if hardware_marker(o).is_some_and(|p| p.exists()) {
+        hardware(m, o).await
+    } else {
+        Ok(())
+    }
 }
 
 /// Downloads (when missing) and registers the hardware parts (NPU / GPU), reporting progress.
@@ -142,6 +152,12 @@ async fn hardware(m: &FoundryLocalManager, o: &Options) -> Result<(), String> {
             emit(
                 &json!({"type": "hardware", "success": r.success, "status": r.status, "eps": eps}),
             );
+            if !r.success {
+                return Err(format!(
+                    "The hardware parts could not be set up: {}",
+                    r.status
+                ));
+            }
             if let Some(path) = hardware_marker(o) {
                 let _ = std::fs::write(path, "1");
             }
@@ -155,10 +171,8 @@ async fn job(o: Options) -> Result<(), String> {
     let m = manager(&o)?;
     match o.command.as_str() {
         "catalog" => {
-            // Only when the hardware parts were set up before, so the list never starts a big download.
-            if hardware_marker(&o).is_some_and(|p| p.exists()) {
-                let _ = hardware(&m, &o).await;
-            }
+            // Only when the hardware parts were chosen, so the list never starts a download.
+            let _ = hardware_if_chosen(&m, &o).await;
             let models = m
                 .catalog()
                 .get_models()
@@ -194,7 +208,7 @@ async fn job(o: Options) -> Result<(), String> {
         }
         "install" => {
             let alias = o.alias.clone().ok_or("--alias is missing")?;
-            hardware(&m, &o).await?;
+            hardware_if_chosen(&m, &o).await?;
             let model = m
                 .catalog()
                 .get_model(&alias)
@@ -215,7 +229,7 @@ async fn job(o: Options) -> Result<(), String> {
         }
         "serve" => {
             let alias = o.alias.clone().ok_or("--alias is missing")?;
-            hardware(&m, &o).await?;
+            hardware_if_chosen(&m, &o).await?;
             let model = m
                 .catalog()
                 .get_model(&alias)

@@ -28,6 +28,28 @@ function Tick({ done, label, onToggle }: { done: boolean; label: string; onToggl
   );
 }
 
+/**
+ * The status of a task as a small label at the right end of its row: Doing, Waiting or Dropped.
+ * A task without a status shows nothing. The status is set on the task page, and Focus sets Doing.
+ */
+export function StatusChip({ status }: { status: string | null }) {
+  if (status === null || status === "") return null;
+  const tone =
+    status === "doing"
+      ? "bg-accent text-accent-foreground"
+      : status === "waiting"
+        ? "bg-warning/25 text-foreground"
+        : "bg-muted text-muted-foreground line-through";
+  return (
+    <span
+      title={`Status: ${status}`}
+      className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold capitalize", tone)}
+    >
+      {status}
+    </span>
+  );
+}
+
 /** `19 Oct` (the day a task was made). */
 function madeLabel(iso: string): string {
   return shortDate(iso).replace(/^\S+ /, "");
@@ -143,14 +165,12 @@ export function TaskRow({
             #{t}
           </span>
         ))}
-        {task.status !== null && task.status !== "dropped" && !task.done && (
-          <span className="rounded-full border px-2 text-xs capitalize">{task.status}</span>
-        )}
         {facts.length > 0 && (
           <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
             {facts.join(" · ")}
           </span>
         )}
+        {!task.done && <StatusChip status={task.status} />}
         {canMove && (
           <MoveButtons
             label={task.title}

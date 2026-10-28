@@ -32,6 +32,22 @@ describe("NoteMenu", () => {
     expect(useUiStore.getState().exportDialog).toEqual({ path: "Work/Plan.md", isFolder: false });
   });
 
+  it("pins a note to the start page and unpins it again", async () => {
+    apiMock.noteTags.mockResolvedValue([]);
+    apiMock.noteSetTag.mockImplementation(() => {
+      apiMock.noteTags.mockResolvedValue(["pinned"]);
+      return Promise.resolve(["pinned"]);
+    });
+    render(<NoteMenu path="Work/Plan.md" />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "More for this note" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Pin to the start page" }));
+    expect(apiMock.noteSetTag).toHaveBeenCalledWith("Work/Plan.md", "pinned", true);
+    await user.click(screen.getByRole("button", { name: "More for this note" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Unpin from the start page" }));
+    expect(apiMock.noteSetTag).toHaveBeenLastCalledWith("Work/Plan.md", "pinned", false);
+  });
+
   it("shows only the button for a note without a tag, and ticks a tag on from Tags…", async () => {
     apiMock.noteTags.mockResolvedValue([]);
     apiMock.noteSetTag.mockImplementation(() => {

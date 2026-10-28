@@ -6,7 +6,12 @@ import { ActivityRail } from "./ActivityRail";
 
 describe("ActivityRail", () => {
   beforeEach(() => {
-    useUiStore.setState({ leftTab: "files", leftCollapsed: false, settingsOpen: false });
+    useUiStore.setState({
+      leftTab: "files",
+      leftCollapsed: false,
+      settingsOpen: false,
+      centerView: "notes",
+    });
   });
 
   it("marks the open panel and switches to another", async () => {
@@ -26,6 +31,37 @@ describe("ActivityRail", () => {
     await user.click(screen.getByRole("tab", { name: "Search" }));
     expect(useUiStore.getState().leftCollapsed).toBe(false);
     expect(useUiStore.getState().leftTab).toBe("search");
+  });
+
+  it("opens the start page, and Files brings the notes back", async () => {
+    render(<ActivityRail />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Start" }));
+    expect(useUiStore.getState().centerView).toBe("start");
+    expect(screen.getByRole("button", { name: "Start" })).toHaveAttribute("aria-pressed", "true");
+    // The page is shown on its own: no panel is marked as open.
+    expect(screen.getByRole("tab", { name: "Files" })).toHaveAttribute("aria-selected", "false");
+    await user.click(screen.getByRole("tab", { name: "Files" }));
+    expect(useUiStore.getState().centerView).toBe("notes");
+    expect(useUiStore.getState().leftCollapsed).toBe(false);
+  });
+
+  it("leaves the start page when a side panel or search is asked for", () => {
+    useUiStore.getState().openStart();
+    useUiStore.getState().focusSearch("vpn");
+    expect(useUiStore.getState().centerView).toBe("notes");
+    expect(useUiStore.getState().leftTab).toBe("search");
+    useUiStore.getState().openStart();
+    useUiStore.getState().toggleRight();
+    expect(useUiStore.getState().centerView).toBe("notes");
+    expect(useUiStore.getState().rightCollapsed).toBe(false);
+  });
+
+  it("opens the Meetings area", async () => {
+    render(<ActivityRail />);
+    await userEvent.setup().click(screen.getByRole("tab", { name: "Meetings" }));
+    expect(useUiStore.getState().leftTab).toBe("meetings");
+    expect(useUiStore.getState().centerView).toBe("meetings");
   });
 
   it("opens the settings", async () => {

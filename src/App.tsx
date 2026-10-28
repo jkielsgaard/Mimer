@@ -13,7 +13,6 @@ import { QuickOpen } from "@/features/quickOpen/QuickOpen";
 import { RecoverDeletedDialog } from "@/features/history/RecoverDeletedDialog";
 import { SettingsDialog } from "@/features/settings/SettingsDialog";
 import { Welcome } from "@/features/welcome/Welcome";
-import { TemplatePicker } from "@/features/templates/TemplatePicker";
 import { ExportDialog } from "@/features/export/ExportDialog";
 import { AboutDialog } from "@/features/about/AboutDialog";
 import { BetaNoticeDialog } from "@/features/welcome/BetaNoticeDialog";
@@ -132,7 +131,10 @@ export function App() {
     void (async () => {
       await useSettingsStore.getState().load();
       const last = useSettingsStore.getState().settings?.lastVault;
-      if (last) await useVaultStore.getState().openVault(last);
+      if (last) {
+        await useVaultStore.getState().openVault(last);
+        if (useUiStore.getState().startOnLaunch) useUiStore.getState().openStart();
+      }
       setBooted(true);
     })();
   }, []);
@@ -271,7 +273,6 @@ export function App() {
       <QuickCapture />
       <SettingsDialog />
       <RecoverDeletedDialog />
-      <TemplatePicker />
       <ExportDialog />
       <ImportDialog />
       <AppContextMenu />

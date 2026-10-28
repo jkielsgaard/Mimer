@@ -74,6 +74,7 @@ describe("Settings → Built-in AI: the engine choice", () => {
         diskBytes: 0,
         restartNeeded: false,
         log: [],
+        hardware: "ready",
       },
       catalog: [],
       load: vi.fn().mockResolvedValue(undefined),

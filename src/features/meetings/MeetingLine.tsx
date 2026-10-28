@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
-import { meetingMoment, parseMeeting, todayAndTomorrow, type Meeting } from "@/lib/meeting";
+import { meetingMoment, todayAndTomorrow, type Meeting } from "@/lib/meeting";
+import { formatTime, type TimeFormat } from "@/lib/timeFormat";
 import { openFile } from "@/lib/actions";
-import type { TreeNode } from "@/bindings/TreeNode";
+import { useMeetingStore } from "@/stores/meetingStore";
 import { useUiStore } from "@/stores/uiStore";
-import { useVaultStore } from "@/stores/vaultStore";
+import { useMeetingsLoaded } from "./useMeetings";
 
 /** How long a meeting stays on the line after it has started. */
 const STAYS_MS = 2 * 60 * 60 * 1000;
@@ -13,25 +13,6 @@ const STAYS_MS = 2 * 60 * 60 * 1000;
 export interface PlannedMeeting {
   path: string;
   meeting: Meeting;
-}
-
-/** The folder `path` in the tree, however deep it is. */
-function findDir(nodes: TreeNode[], path: string): TreeNode | null {
-  for (const n of nodes) {
-    if (!n.isDir) continue;
-    if (n.path === path) return n;
-    if (path.startsWith(`${n.path}/`)) return findDir(n.children, path);
-  }
-  return null;
-}
-
-/** The notes in the meetings folder whose name starts with today's or tomorrow's date. */
-export function candidatesIn(tree: TreeNode[], folder: string, now: Date): string[] {
-  const days = todayAndTomorrow(now);
-  const dir = folder === "" ? null : findDir(tree, folder.replace(/\/+$/, ""));
-  return (dir?.children ?? [])
-    .filter((n) => !n.isDir && days.some((d) => n.name.startsWith(`${d} `)))
-    .map((n) => n.path);
 }
 
 /** The meetings still to come, or started less than two hours ago, in the order they happen. */
@@ -45,10 +26,11 @@ export function comingMeetings(list: PlannedMeeting[], now: Date): PlannedMeetin
 }
 
 /** `14:00`, `Today` or `Tomorrow 11:00`. */
-function when(m: Meeting, now: Date): string {
+function when(m: Meeting, now: Date, format: TimeFormat): string {
   const today = todayAndTomorrow(now)[0];
   const day = m.date === today ? "" : "Tomorrow";
-  return [day, m.time ?? (m.date === today ? "Today" : "")].filter((x) => x !== "").join(" ");
+  const time = m.time === null ? (m.date === today ? "Today" : "") : formatTime(m.time, format);
+  return [day, time].filter((x) => x !== "").join(" ");
 }
 
 /**
@@ -56,14 +38,11 @@ function when(m: Meeting, now: Date): string {
  * Nothing is shown when no meeting is today or tomorrow.
  */
 export function MeetingLine() {
-  const tree = useVaultStore((s) => s.tree);
-  const folder = useVaultStore((s) => s.vault?.config.meetingsFolder) ?? "";
-  const [planned, setPlanned] = useState<PlannedMeeting[]>([]);
+  const meetings = useMeetingStore((s) => s.meetings);
+  const format = useUiStore((s) => s.timeFormat);
   const [more, setMore] = useState(false);
   const [now, setNow] = useState(() => new Date());
-
-  const paths = useMemo(() => candidatesIn(tree, folder, now), [tree, folder, now]);
-  const key = paths.join("\n");
+  useMeetingsLoaded();
 
   // The clock moves on: what is "next" changes without anything else changing.
   useEffect(() => {
@@ -75,24 +54,13 @@ export function MeetingLine() {
     };
   }, []);
 
-  useEffect(() => {
-    let live = true;
-    void Promise.all(
-      key === ""
-        ? []
-        : key.split("\n").map((path) =>
-            api
-              .readNote(path)
-              .then((n): PlannedMeeting => ({ path, meeting: parseMeeting(n.content) }))
-              .catch(() => null),
-          ),
-    ).then((all) => {
-      if (live) setPlanned(all.filter((x): x is PlannedMeeting => x !== null));
-    });
-    return () => {
-      live = false;
-    };
-  }, [key]);
+  // Today's and tomorrow's meetings, wherever their notes are: the tag makes a note a meeting.
+  const planned = useMemo<PlannedMeeting[]>(() => {
+    const days = todayAndTomorrow(now);
+    return meetings
+      .filter((m) => m.meeting.date !== null && days.includes(m.meeting.date))
+      .map((m) => ({ path: m.path, meeting: m.meeting }));
+  }, [meetings, now]);
 
   const coming = useMemo(() => comingMeetings(planned, now), [planned, now]);
   const first = coming[0];
@@ -101,7 +69,9 @@ export function MeetingLine() {
 
   const row = (p: PlannedMeeting, strong: boolean) => (
     <li key={p.path} className="flex items-center gap-2 rounded px-2 py-1 hover:bg-muted">
-      <span className="w-11 shrink-0 text-xs text-muted-foreground">{when(p.meeting, now)}</span>
+      <span className="w-16 shrink-0 text-xs text-muted-foreground">
+        {when(p.meeting, now, format)}
+      </span>
       <button
         type="button"
         title={`Open ${p.meeting.title}`}

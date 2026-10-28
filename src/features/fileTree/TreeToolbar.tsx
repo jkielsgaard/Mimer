@@ -9,7 +9,6 @@ import {
   FolderPlus,
   MoreHorizontal,
   Plus,
-  Sparkles,
   Users,
   Zap,
 } from "lucide-react";
@@ -95,14 +94,6 @@ export function TreeToolbar() {
               <FilePlus className="size-4" /> Note
             </span>
             <span className="text-xs text-muted-foreground">{formatShortcut("Mod+N")}</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="justify-start gap-2"
-            onSelect={() => {
-              useUiStore.getState().setTemplatePickerOpen(true);
-            }}
-          >
-            <Sparkles className="size-4" /> From a template…
           </DropdownMenuItem>
           <DropdownMenuItem
             className="justify-start gap-2"

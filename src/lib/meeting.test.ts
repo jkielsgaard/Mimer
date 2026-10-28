@@ -9,6 +9,7 @@ import {
   nextMeetingSeed,
   parseMeeting,
   setItemNotes,
+  setMeetingWhen,
   todayAndTomorrow,
 } from "./meeting";
 
@@ -194,5 +195,56 @@ describe("the next meeting", () => {
     const plain = nextMeetingSeed("# Lunch\n");
     expect(plain.date).toBe("");
     expect(plain.agenda).toBe("");
+  });
+});
+
+describe("setMeetingWhen", () => {
+  const note = buildMeetingNote({
+    title: "Weekly",
+    date: "2026-10-28",
+    time: "10:00",
+    people: ["Mette"],
+    agenda: ["Budget"],
+  });
+
+  it("changes the day, the time and the people and nothing else", () => {
+    const changed = setMeetingWhen(note, {
+      date: "2026-10-30",
+      time: "14:30",
+      people: ["Peter", "Mette"],
+    });
+    expect(changed).toBe(
+      note
+        .replace("meeting: 2026-10-28 10:00", "meeting: 2026-10-30 14:30")
+        .replace("with: [Mette]", "with: [Peter, Mette]"),
+    );
+    expect(parseMeeting(changed).time).toBe("14:30");
+  });
+
+  it("takes the lines away when they are emptied, and adds them when they were not there", () => {
+    const bare = setMeetingWhen(note, { date: "", time: "", people: [] });
+    expect(bare).not.toContain("meeting:");
+    expect(bare).not.toContain("with:");
+    expect(bare).toContain("tags: [meeting]");
+    const again = setMeetingWhen(bare, { date: "2026-11-02", time: "", people: ["Ann"] });
+    expect(parseMeeting(again).date).toBe("2026-11-02");
+    expect(parseMeeting(again).people).toEqual(["Ann"]);
+  });
+
+  it("replaces a value written as a block list, so the properties stay valid", () => {
+    const block =
+      "---\ntags: [meeting]\nwith:\n  - Mette\n  - Peter\nmeeting: 2026-10-28\n---\n# W\n";
+    expect(setMeetingWhen(block, { date: "2026-10-28", time: "", people: ["Ann"] })).toBe(
+      "---\ntags: [meeting]\nwith: [Ann]\nmeeting: 2026-10-28\n---\n# W\n",
+    );
+    expect(setMeetingWhen(block, { date: "2026-10-28", time: "", people: [] })).toBe(
+      "---\ntags: [meeting]\nmeeting: 2026-10-28\n---\n# W\n",
+    );
+  });
+
+  it("leaves a note without properties alone", () => {
+    expect(setMeetingWhen("# Just a note\n", { date: "2026-10-30", time: "", people: [] })).toBe(
+      "# Just a note\n",
+    );
   });
 });

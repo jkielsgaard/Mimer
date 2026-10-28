@@ -105,6 +105,7 @@ function IdeaEditor({ idea }: { idea: Idea }) {
       />
       <Textarea
         aria-label="Note for the idea"
+        indent
         rows={10}
         className="resize-y"
         placeholder="A note for the idea. Write what you were thinking, links, next steps… It is saved when you click away."
@@ -300,8 +301,8 @@ export function IdeasView() {
               </p>
             </div>
             <CaptureBox
-              initialKind="idea"
-              kinds={["idea"]}
+              kind="idea"
+              withNote
               onSaved={() => {
                 useIdeaStore.getState().select(useIdeaStore.getState().ideas[0]?.line ?? null);
               }}

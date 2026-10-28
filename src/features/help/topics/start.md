@@ -40,3 +40,7 @@ Use **Help → Report a bug…** or **Help → Suggest a feature…**. The same 
 
 - **Landing** in the Files panel holds the folders new notes land in: Meetings, Quick notes and Tasks. New notes have a **NEW** mark for a week until you open them. Use the button, or right-click → **Move to…**, to move a note to a project or a folder when it has a home.
 - **Daily notes** are a calendar at the top of the Files panel, with a dot on every day that has a note. Click a day to open its note, or to make it. **Today** opens today's note (Ctrl/Cmd+Shift+D does too). The daily notes folder is not listed in All files: the calendar is the way to them.
+
+## The start page
+
+The page is made of widgets you can change: press **Customize**, then **Add widget**, move a widget with its arrows, choose **Half** or **Full** width, or remove it with the cross. **Reset** goes back to the page you start with. The layout is kept on this computer. The **house** at the top of the left edge opens the start page. It also shows when no note is open. **Continue** is the note you worked on last, with its first lines; **Recent** lists the notes you opened lately (the filters show only notes, meetings or epics); **Pinned** lists the notes you pinned from the **···** menu above a note (**Pin to the start page**). Everything comes from your own notes, so it works without AI. To open Mimer on the start page instead of the last note, tick **Open the start page when Mimer starts** in Settings → General.

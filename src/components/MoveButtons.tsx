@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { KeyboardEvent } from "react";
+import { cn } from "@/lib/utils";
 
 type Move = () => Promise<void> | void;
 
@@ -46,6 +47,7 @@ export function MoveButtons({
   canDown,
   onUp,
   onDown,
+  always = false,
 }: {
   /** What is moved, for the button names ("Move Call Mette up"). */
   label: string;
@@ -53,11 +55,18 @@ export function MoveButtons({
   canDown: boolean;
   onUp: Move;
   onDown: Move;
+  /** Show the buttons all the time, not only under the mouse (while a page is being arranged). */
+  always?: boolean;
 }) {
   const button =
     "rounded p-0.5 text-muted-foreground hover:bg-card hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:invisible";
   return (
-    <span className="flex shrink-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100">
+    <span
+      className={cn(
+        "flex shrink-0",
+        always ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
+      )}
+    >
       <button
         type="button"
         aria-label={`Move ${label} up`}

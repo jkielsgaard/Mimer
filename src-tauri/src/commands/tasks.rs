@@ -11,6 +11,9 @@ use tauri::State;
 /// The most tasks one list holds.
 const MAX_TASKS: usize = 5_000;
 
+/// The most notes `tagged_notes` returns.
+const MAX_TAGGED: usize = 2_000;
+
 /// The note that holds the ideas.
 const IDEAS_NOTE: &str = "Ideas.md";
 
@@ -437,6 +440,35 @@ pub async fn note_tags(state: State<'_, AppState>, path: String) -> Result<Vec<S
     Ok(crate::markdown::note_tags::front_matter_tags(&note.content))
 }
 
+/// The notes that have `tag` in their properties, with their text. The note itself is asked, so a
+/// tag just written counts before the index has it, and a `#tag` in the text does not.
+fn notes_with_front_tag(v: &OpenVault, tag: &str) -> Vec<fs_ops::NoteContent> {
+    let paths = v
+        .with_index(|c| crate::search::notes_with_tag(c, tag))
+        .unwrap_or_default();
+    paths
+        .iter()
+        .take(MAX_TAGGED)
+        .filter_map(|p| fs_ops::read_note(&v.root, p).ok())
+        .filter(|n| {
+            crate::markdown::note_tags::front_matter_tags(&n.content)
+                .iter()
+                .any(|t| t == tag)
+        })
+        .collect()
+}
+
+/// The notes with a tag, with their text: the meetings of the Meetings area and the pinned notes
+/// of the start page.
+#[tauri::command]
+pub async fn tagged_notes(
+    state: State<'_, AppState>,
+    tag: String,
+) -> Result<Vec<fs_ops::NoteContent>, AppError> {
+    let v = state.current_vault()?;
+    Ok(notes_with_front_tag(&v, &tag.trim().to_lowercase()))
+}
+
 /// Puts a tag on a note or takes it off, in the properties. Nothing else in the note changes.
 /// Returns the tags the note has afterwards.
 #[tauri::command]
@@ -724,6 +756,18 @@ pub async fn idea_set_status(
 mod tests {
     use super::*;
     use crate::vault::open_for_test;
+
+    #[test]
+    fn tagged_notes_are_found_by_their_properties_not_by_a_tag_in_the_text() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        ops::write_note(&v, "A.md", "---\ntags: [meeting]\n---\n# A\n").unwrap();
+        ops::write_note(&v, "B.md", "# B\n\nA #meeting in the text.\n").unwrap();
+        ops::write_note(&v, "C.md", "# C\n").unwrap();
+        let found = notes_with_front_tag(&v, "meeting");
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].path, "A.md");
+    }
 
     #[test]
     fn tasks_are_collected_from_every_note_and_changed_in_place() {

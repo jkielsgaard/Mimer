@@ -1,0 +1,392 @@
+/* Static renditions of Mimer's components, written from src/components (Tailwind classes there). */
+.m-root {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--foreground);
+  background: var(--background);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.m-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.m-btn {
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: var(--control-height);
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  background: transparent;
+  color: var(--foreground);
+}
+.m-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+.m-btn.sm {
+  height: var(--control-height-sm);
+  padding: 0 8px;
+  font-size: 12px;
+}
+.m-btn.icon {
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  padding: 0;
+}
+.m-btn.primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.m-btn.outline {
+  border-color: var(--input);
+}
+.m-btn.outline:hover,
+.m-btn.ghost:hover {
+  background: var(--muted);
+}
+.m-btn.destructive {
+  background: var(--destructive);
+  color: #fff;
+}
+.m-btn.link {
+  color: var(--primary);
+  padding: 0;
+}
+.m-btn[disabled] {
+  opacity: 0.5;
+  cursor: default;
+}
+.m-input {
+  font: inherit;
+  height: var(--control-height);
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--foreground);
+  padding: 0 10px;
+}
+.m-input::placeholder {
+  color: var(--muted-foreground);
+}
+.m-input:focus-visible {
+  outline: 2px solid var(--ring);
+}
+textarea.m-input {
+  height: auto;
+  padding: 6px 10px;
+  resize: none;
+}
+.m-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+.m-section-label {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--muted-foreground);
+}
+.m-muted {
+  color: var(--muted-foreground);
+}
+.m-small {
+  font-size: 12px;
+  line-height: 16px;
+}
+.m-view-header {
+  height: var(--view-header-height);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+}
+.m-view-header h2 {
+  margin: 0;
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.m-panel {
+  background: var(--sidebar);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.m-panel-header {
+  height: var(--panel-header-height);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+}
+.m-panel-header h2 {
+  margin: 0;
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+}
+.m-list-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+}
+.m-list-row:hover {
+  background: var(--muted);
+}
+.m-list-row.current {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+.m-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+}
+.m-chip.tag {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border: 1px solid color-mix(in oklch, var(--primary) 30%, transparent);
+}
+.m-chip.doing {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+.m-chip.waiting {
+  background: color-mix(in oklch, var(--warning) 25%, transparent);
+  color: var(--foreground);
+}
+.m-chip.dropped {
+  background: var(--muted);
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+.m-chip.fact {
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.m-chip.filter {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+}
+.m-chip.filter.on {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+}
+.m-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.m-dialog {
+  box-shadow: var(--shadow-dialog);
+  max-width: 420px;
+  position: relative;
+}
+.m-dialog h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.m-dialog .close {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  color: var(--muted-foreground);
+}
+.m-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.m-menu {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  box-shadow: var(--shadow-menu);
+  width: 224px;
+}
+.m-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+}
+.m-menu-item.hl {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+.m-menu-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px -4px;
+}
+.m-kbd {
+  margin-left: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 4px;
+  font-size: 10px;
+  line-height: 16px;
+  color: var(--muted-foreground);
+}
+.m-toast {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  box-shadow: var(--shadow-menu);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 320px;
+}
+.m-toast.success {
+  border-color: color-mix(in oklch, var(--success) 60%, transparent);
+}
+.m-toast.error {
+  border-color: color-mix(in oklch, var(--destructive) 60%, transparent);
+}
+.m-toast button {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--foreground);
+  padding: 0 8px;
+}
+.m-rail {
+  width: var(--rail-width);
+  background: var(--sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+}
+.m-rail span {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+}
+.m-rail span.on {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+.m-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 2px solid var(--muted-foreground);
+  box-sizing: border-box;
+  flex: none;
+  background: var(--card);
+}
+.m-check.on {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.m-row-actions {
+  display: flex;
+  gap: 4px;
+}
+.m-row-actions span {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+  box-sizing: border-box;
+}
+.m-widget {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.m-widget.edit {
+  border-style: dashed;
+  border-color: color-mix(in oklch, var(--primary) 60%, transparent);
+  background: color-mix(in oklch, var(--accent) 30%, var(--card));
+}
+.m-seg {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  font-size: 12px;
+}
+.m-seg span {
+  padding: 2px 8px;
+}
+.m-seg span + span {
+  border-left: 1px solid var(--border);
+}
+.m-seg span.on {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+svg.i {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}

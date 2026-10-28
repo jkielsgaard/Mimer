@@ -1,7 +1,6 @@
 import { FileText, Link2, Pencil, Plus, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { Task } from "@/bindings/Task";
-import type { TemplateInfo } from "@/bindings/TemplateInfo";
 import { LinkNoteDialog } from "@/features/editor/LinkNoteDialog";
 import { allFolders } from "@/features/fileTree/treeUtils";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { api } from "@/lib/api";
 import { inEpicFolder } from "@/lib/taskLogic";
 import { dirname } from "@/lib/utils";
 import { useTaskStore } from "@/stores/taskStore";
@@ -80,23 +78,14 @@ function MakeNoteDialog({
   const newNoteFolder = useVaultStore((s) => s.vault?.config.newNoteFolder) ?? "";
   const [name, setName] = useState(first);
   const [folder, setFolder] = useState("");
-  const [template, setTemplate] = useState("");
-  const [templates, setTemplates] = useState<TemplateInfo[]>([]);
   const [busy, setBusy] = useState(false);
   const folders = useMemo(() => allFolders(tree), [tree]);
 
   useEffect(() => {
     if (!open) return;
     setName(first);
-    setTemplate("");
     // The folder of the note the task is in; a task in an epic note uses the folder for new notes.
     setFolder(inEpicFolder(task.path) ? newNoteFolder : dirname(task.path));
-    Promise.resolve()
-      .then(() => api.listTemplates())
-      .then(setTemplates)
-      .catch(() => {
-        setTemplates([]);
-      });
   }, [open, first, task.path, newNoteFolder]);
 
   const make = (): void => {
@@ -105,7 +94,7 @@ function MakeNoteDialog({
     setBusy(true);
     void useTaskStore
       .getState()
-      .makeNote(task, { name: trimmed, folder, template: template === "" ? null : template })
+      .makeNote(task, { name: trimmed, folder, template: null })
       .then((path) => {
         setBusy(false);
         if (path !== null) onClose();
@@ -152,22 +141,6 @@ function MakeNoteDialog({
             {folders.map((f) => (
               <option key={f} value={f}>
                 {f}
-              </option>
-            ))}
-          </Select>
-        </label>
-        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
-          Start from
-          <Select
-            value={template}
-            onChange={(e) => {
-              setTemplate(e.target.value);
-            }}
-          >
-            <option value="">An empty note</option>
-            {templates.map((t) => (
-              <option key={t.path} value={t.path}>
-                {t.name}
               </option>
             ))}
           </Select>

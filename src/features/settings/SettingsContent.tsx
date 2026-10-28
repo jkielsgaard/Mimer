@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { effectiveLocation } from "@/lib/providers";
+import { resolveTimeFormat, type TimeFormat } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
@@ -70,6 +71,8 @@ function Section({
 
 export function SettingsContent({ stored, onClose }: { stored: Settings; onClose: () => void }) {
   const save = useSettingsStore((s) => s.save);
+  const startOnLaunch = useUiStore((s) => s.startOnLaunch);
+  const timeFormat = useUiStore((s) => s.timeFormat);
   const [draft, setDraft] = useState<Settings>(() => structuredClone(stored));
   const [tab, setTab] = useState<Tab>(() => {
     return useUiStore.getState().settingsTab === "builtin" ? "ai" : "general";
@@ -197,6 +200,30 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                   }}
                 />
               </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor="set-time">Time format</Label>
+                <Select
+                  id="set-time"
+                  value={timeFormat}
+                  onChange={(e) => {
+                    useUiStore.getState().setTimeFormat(e.target.value as TimeFormat);
+                  }}
+                >
+                  <option value="system">System ({resolveTimeFormat("system")}-hour)</option>
+                  <option value="24">24-hour (14:30)</option>
+                  <option value="12">12-hour (2:30 PM)</option>
+                </Select>
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={startOnLaunch}
+                  onChange={(e) => {
+                    useUiStore.getState().setStartOnLaunch(e.target.checked);
+                  }}
+                />
+                Open the start page when Mimer starts
+              </label>
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"

@@ -206,8 +206,6 @@ export const api = {
   createStandardNote: (kind: StandardKind, title?: string) =>
     call<string>("create_standard_note", { kind, title: title ?? null }),
   seedStandardTemplates: () => call<SeedReport>("seed_standard_templates"),
-  saveTemplateFromNote: (notePath: string, name: string) =>
-    call<TemplateInfo>("save_template_from_note", { notePath, name }),
   updateVaultConfig: (config: VaultConfig) => call<VaultConfig>("update_vault_config", { config }),
 
   // Export
@@ -261,6 +259,7 @@ export const api = {
   noteTags: (path: string) => call<string[]>("note_tags", { path }),
   noteSetTag: (path: string, tag: string, on: boolean) =>
     call<string[]>("note_set_tag", { path, tag, on }),
+  taggedNotes: (tag: string) => call<NoteContent[]>("tagged_notes", { tag }),
   epicAdopt: (path: string) => call<Epic>("epic_adopt", { path }),
   epicCreate: (title: string) => call<Epic>("epic_create", { title }),
   epicForNote: (note: string) => call<Epic>("epic_for_note_cmd", { note }),
@@ -284,6 +283,7 @@ export const api = {
   taskAddToNote: (path: string, texts: string[]) =>
     call<Task[]>("task_add_to_note", { path, texts }),
   foundrySetupHardware: () => call<undefined>("foundry_setup_hardware"),
+  foundryUseCpuOnly: () => call<undefined>("foundry_use_cpu_only"),
   foundryCancelInstall: () => call<undefined>("foundry_cancel_install"),
   foundryWake: () => call<undefined>("foundry_wake"),
   foundrySleep: () => call<undefined>("foundry_sleep"),

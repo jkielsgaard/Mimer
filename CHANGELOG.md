@@ -6,6 +6,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-10-28
+
+### Added
+
+- **A start page you build yourself.** The house at the top of the left edge opens it, and it shows when no note is open; the side panels are hidden while it is shown. It starts with **Continue** (the last note, with its first lines), **Recent** (with filters for notes, meetings and epics) and **Pinned**. **Customize** adds, removes, moves (arrows) and widens (Half or Full) widgets, and **Reset** goes back. Twelve widgets: Continue, Recent, Pinned, Write it down, Search and ask (Ask AI only when an AI is on), Next meeting, Today's meetings, Working on, To sort, Areas, Changed since yesterday and Epic progress. **New** is a menu: Note, Meeting, Quick note, Task and Idea. The layout is kept per computer, and **Settings → General → Open the start page when Mimer starts** is off by default.
+- **Pin a note** from its **···** menu (**Pin to the start page**); it gets the tag `pinned` and is listed under Pinned.
+- **A Meetings area**, next to Tasks (the calendar clock at the left edge): a calendar with a dot on the days with a meeting, then Today, Upcoming, Past and No date; a day picked in the calendar shows only that day. The chosen meeting is shown in the middle with its agenda (ticking an item writes it in the note), the tasks from the note and what was written under each item, and **Start meeting**, **Prepare next…**, **Change…** (day, time and people), **Delete** and **Open the note**. A meeting is a note with the tag Meeting, so nothing new is stored. The Landing meeting line follows the tag and the date too.
+- **One box per kind of thing written down.** New → Quick note, Task and Idea (start page, File, the command palette) open only that box, named **Quick note**, **New task** or **New idea**, with its own save button; a task chooses its epic under **Into**. **Ctrl/Cmd+Shift+N** (**File → Write it down…**) asks first, with the letters T, I and N. In a meeting, in Focus and on the start page there are three buttons, **+ Task**, **+ Idea** and **+ Quick note**, and the box stays open for the next one. After saving, the message has **Open**.
+- **Tab and Shift+Tab** move a list item (bullet, numbered or task) one level in or out, and every line of a selection; with the caret after text on a plain line, Tab puts a tab there. **Enter** on an empty nested item takes it out one level. The same keys work in the boxes where notes are written outside the editor (the meeting screen, the notes of tasks, epics and ideas, the write-it-down boxes).
+- **Status on a task row**: Doing, Waiting or Dropped as a small label at the right end of the row. Setting the status is unchanged.
+- **Time format** in **Settings → General**: System, 24-hour (`14:30`) or 12-hour (`2:30 PM`), per computer. A meeting's time is typed that way (`14:30`, `1430` and `2:30 pm` are all understood), and a time that cannot be read is not saved.
+- **A UX guide** in `docs/UX-GUIDE.md` with the design system in `docs/design-system/`: the rules, colours, type, spacing and components every screen follows.
+
+### Changed
+
+- **Foundry Local asks before downloading the hardware parts.** The first time, no model list is shown: **Download and find my hardware** fetches the parts from Microsoft and then lists what the graphics card or neural processor can run; **Use only the processor** downloads nothing and lists the processor's models. Downloading a model or waking it no longer fetches the hardware parts by itself. The choice is kept on the computer; **Remove all** asks again.
+- The month calendar is one component, shared by the daily notes in Files and by Meetings.
+
+### Fixed
+
+- **A new meeting is for today** unless another day is picked (before, a meeting made without picking a day had no date and was listed under No date).
+- **Mermaid:** a fenced block with no language whose first line starts a diagram (`graph TD`, `sequenceDiagram`, …) is drawn too.
+
+### Removed
+
+- **The button "Make the notes in Tasks epics"** (it was only for the upgrade to 0.18.0). **Make an epic** on each note stays.
+- **Your own templates:** **From a template…**, **File → Save the note as a template…** and **Start from** in **Make a note for this task**, with the command that saved a template. Meeting, quick and daily notes still start from their templates in `.vault/templates/`, and the daily template can still be chosen in Settings → Vault.
+
 ## [0.18.0] - 2026-10-27
 
 ### Added

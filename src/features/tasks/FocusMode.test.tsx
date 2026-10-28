@@ -187,9 +187,11 @@ describe("FocusMode", () => {
     expect(useUiStore.getState().focusOpen).toBe(true);
   });
 
-  it("writes down an idea by default", async () => {
+  it("writes down an idea from + Idea", async () => {
     render(<FocusMode />);
     const user = userEvent.setup();
+    expect(screen.queryByLabelText("Write an idea")).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Idea" }));
     await user.type(screen.getByLabelText("Write an idea"), "A cheat sheet{Enter}");
     expect(apiMock.ideaAdd.mock.calls[0]?.[1]).toBe("A cheat sheet");
   });

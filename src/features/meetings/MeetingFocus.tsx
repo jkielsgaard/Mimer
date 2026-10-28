@@ -1,11 +1,13 @@
 import { Check } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CaptureBox } from "@/features/capture/CaptureBox";
+import { CapturePicker } from "@/features/capture/CapturePicker";
 import { api } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
 import { addItem, GENERAL, itemNotes, markItem, parseMeeting, setItemNotes } from "@/lib/meeting";
+import { indentKey } from "@/lib/indentText";
 import { cn } from "@/lib/utils";
+import { useMeetingStore } from "@/stores/meetingStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 
 /**
@@ -87,6 +89,8 @@ export function MeetingFocus() {
   const leave = useCallback((): void => {
     void save().then(() => {
       useUiStore.getState().setMeetingFocus(null);
+      // What was written in the meeting shows in the Meetings area.
+      void useMeetingStore.getState().load();
     });
   }, [save]);
 
@@ -241,6 +245,7 @@ export function MeetingFocus() {
             aria-label={`Notes for ${current}`}
             value={draft}
             placeholder="Write while you talk."
+            onKeyDown={indentKey}
             onChange={(e) => {
               write(e.target.value);
             }}
@@ -259,7 +264,7 @@ export function MeetingFocus() {
 
         <div className="flex min-w-0 flex-col gap-1.5">
           <span className="section-label">Something popped into your head?</span>
-          <CaptureBox
+          <CapturePicker
             aroundNote={{ path, title: meeting.title }}
             onSaved={() => {
               setParked((n) => n + 1);

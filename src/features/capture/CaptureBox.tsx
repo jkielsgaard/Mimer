@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { openFile } from "@/lib/actions";
 import { api } from "@/lib/api";
 import { noteName, taskText } from "@/lib/taskLogic";
-import { cn } from "@/lib/utils";
 import { fileNameFrom } from "@/lib/noteTitle";
 import { useIdeaStore } from "@/stores/ideaStore";
 import { useTaskStore } from "@/stores/taskStore";
@@ -13,25 +13,25 @@ import { useVaultStore } from "@/stores/vaultStore";
 
 export type CaptureKind = "task" | "idea" | "note";
 
-const KINDS: { id: CaptureKind; label: string; help: string }[] = [
-  {
-    id: "task",
-    label: "Task",
-    help: "Goes into the epic you choose below, in your task list.",
+/** The name of each box, what it does and its save button. */
+export const CAPTURE_KINDS: Record<CaptureKind, { title: string; help: string; save: string }> = {
+  task: {
+    title: "New task",
+    help: "Goes into the epic you choose, in your task list.",
+    save: "Save task",
   },
-  {
-    id: "idea",
-    label: "Idea",
-    help: "Goes to your Ideas. You look at it later, when you have time.",
+  idea: {
+    title: "New idea",
+    help: "Goes to your Ideas, to look at later.",
+    save: "Save idea",
   },
-  {
-    id: "note",
-    label: "Quick note",
-    help: "Becomes a real note in the Quick notes folder. You can keep writing in it.",
+  note: {
+    title: "Quick note",
+    help: "Becomes a note in the Quick notes folder. You can keep writing in it.",
+    save: "Save note",
   },
-];
+};
 
-const KEY = "mimer.captureKind";
 const EPIC_KEY = "mimer.captureEpic";
 /** The choices that are not an epic yet. */
 const NEW_EPIC = "::new";
@@ -45,45 +45,34 @@ function lastEpic(): string | null {
   }
 }
 
-function lastKind(): CaptureKind {
-  try {
-    const v = localStorage.getItem(KEY);
-    return v === "task" || v === "idea" || v === "note" ? v : "idea";
-  } catch {
-    return "idea";
-  }
-}
-
 /**
- * The write-it-down box: choose Task, Idea or Quick note and write. It is used in Focus and in the box
- * that opens from anywhere (Ctrl/Cmd+Shift+N). Nothing else on the screen changes.
+ * One box to write one kind of thing down: a task, an idea or a quick note. The person has already
+ * said which, so there is nothing to choose but, for a task, the epic it goes into. It is used in
+ * the window that opens from New and Ctrl/Cmd+Shift+N, in Ideas, in a meeting, in Focus and on the
+ * start page. Nothing else on the screen changes.
  */
 export function CaptureBox({
-  initialKind,
-  kinds,
+  kind,
   onSaved,
   autoFocus = false,
+  withNote = false,
   epic: epicPath,
   aroundNote,
 }: {
-  initialKind?: CaptureKind;
-  /** Offer only these kinds (default: all three). With one kind there is nothing to choose. */
-  kinds?: CaptureKind[];
-  /** Called after something was saved, with a short description. */
-  onSaved?: (what: string) => void;
+  kind: CaptureKind;
+  /** Called after something was saved, with a short description and a way to open it. */
+  onSaved?: (what: string, open: () => void) => void;
   autoFocus?: boolean;
+  /** Show the box for a small note from the start (task and idea). */
+  withNote?: boolean;
   /** The epic a task goes into at first (the one in Focus). Else the one used last. */
   epic?: string;
   /** A note (a meeting) whose epic is the first choice; it is made when a task is saved. */
   aroundNote?: { path: string; title: string };
 }) {
-  const offered = KINDS.filter((k) => kinds === undefined || kinds.includes(k.id));
-  const [kind, setKind] = useState<CaptureKind>(
-    kinds?.length === 1 ? (kinds[0] ?? "idea") : (initialKind ?? lastKind()),
-  );
   const [text, setText] = useState("");
   const [note, setNote] = useState("");
-  const [noteOpen, setNoteOpen] = useState(kinds?.length === 1);
+  const [noteOpen, setNoteOpen] = useState(withNote);
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const input = useRef<HTMLInputElement>(null);
@@ -96,6 +85,7 @@ export function CaptureBox({
   const [epic, setEpic] = useState<string | null>(null);
   const [epicName, setEpicName] = useState("");
   const quickFolder = useVaultStore((s) => s.vault?.config.quickNotesFolder) ?? "";
+  const info = CAPTURE_KINDS[kind];
 
   useEffect(() => {
     if (autoFocus) input.current?.focus();
@@ -114,26 +104,20 @@ export function CaptureBox({
         ? epicPath
         : (epics.find((e) => e.path === lastEpic())?.path ?? epics[0]?.path ?? NEW_EPIC));
 
-  const choose = (k: CaptureKind): void => {
-    setKind(k);
-    try {
-      localStorage.setItem(KEY, k);
-    } catch {
-      /* only a convenience */
-    }
-  };
+  const empty =
+    kind === "note"
+      ? title.trim() === "" && text.trim() === ""
+      : text.trim() === "" || (kind === "task" && chosen === NEW_EPIC && epicName.trim() === "");
 
   const save = async (): Promise<void> => {
     const value = text.trim();
-    if (kind !== "note" && value === "") return;
-    if (kind === "note" && title.trim() === "" && value === "") return;
+    if (empty || busy) return;
     setBusy(true);
     try {
       if (kind === "task") {
         const tasks = useTaskStore.getState();
         let target: string | null;
         if (chosen === NEW_EPIC) {
-          if (epicName.trim() === "") return;
           target = await tasks.createEpic(epicName.trim(), false);
         } else if (chosen === THIS_NOTE && aroundNote) {
           target = await tasks.epicFor(aroundNote.path);
@@ -149,16 +133,26 @@ export function CaptureBox({
         } catch {
           /* only a convenience */
         }
-        onSaved?.("a task");
+        const into = useTaskStore.getState().epics.find((e) => e.path === target)?.title;
+        const path = target;
+        onSaved?.(into ? `the task in ${into}` : "a task", () => {
+          useTaskStore.getState().openEpic(path);
+        });
       } else if (kind === "idea") {
-        if (await useIdeaStore.getState().add(value, note)) onSaved?.("an idea");
+        if (await useIdeaStore.getState().add(value, note)) {
+          onSaved?.("an idea", () => {
+            useUiStore.getState().openArea("ideas");
+          });
+        }
       } else {
         const name =
           title.trim() === "" ? (value.split("\n")[0]?.slice(0, 60) ?? "Note") : title.trim();
         const path = await api.createNote(quickFolder, fileNameFrom(name));
         await api.writeNote(path, `# ${name}\n\n${value}\n`);
         await useVaultStore.getState().refreshTree();
-        onSaved?.(`the note “${name}”`);
+        onSaved?.(`the note “${name}”`, () => {
+          void openFile(path);
+        });
       }
       setText("");
       setTitle("");
@@ -171,178 +165,151 @@ export function CaptureBox({
     }
   };
 
-  const current = KINDS.find((k) => k.id === kind);
-  const noteLabel = kind === "task" ? "Note for the task" : "Note for the idea";
+  const saveButton = (
+    <Button
+      size="sm"
+      type="submit"
+      disabled={busy || empty}
+      onClick={(e) => {
+        e.preventDefault();
+        void save();
+      }}
+    >
+      {info.save}
+    </Button>
+  );
+
+  if (kind === "note") {
+    return (
+      <div className="flex w-full flex-col gap-2">
+        <Input
+          ref={input}
+          aria-label="Title of the note"
+          placeholder="Title (optional)"
+          value={title}
+          onChange={(e) => {
+            setTitle(e.target.value);
+          }}
+        />
+        <Textarea
+          aria-label="Write the note"
+          indent
+          rows={4}
+          className="min-h-0 resize-none"
+          placeholder="Write it here…"
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault();
+              void save();
+            }
+          }}
+        />
+        <div className="flex items-center gap-2">
+          <span className="flex-1 text-xs text-muted-foreground">
+            {info.help} Ctrl+Enter saves.
+          </span>
+          {saveButton}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex w-full flex-col gap-2">
-      {offered.length > 1 && (
-        <div
-          role="group"
-          aria-label="What is it?"
-          className="flex overflow-hidden rounded-lg border text-sm"
-        >
-          {offered.map((k, i) => (
-            <button
-              key={k.id}
-              type="button"
-              aria-pressed={kind === k.id}
-              className={cn(
-                "flex-1 px-3 py-2 text-center focus-visible:ring-2 focus-visible:ring-ring",
-                i > 0 && "border-l",
-                kind === k.id ? "bg-accent font-semibold text-accent-foreground" : "hover:bg-muted",
-              )}
-              onClick={() => {
-                choose(k.id);
+    <form
+      className="flex w-full flex-col gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void save();
+      }}
+    >
+      <Input
+        ref={input}
+        aria-label={kind === "task" ? "Write a task" : "Write an idea"}
+        placeholder={kind === "task" ? "What needs doing?" : "The idea…"}
+        value={text}
+        onChange={(e) => {
+          setText(e.target.value);
+        }}
+      />
+      {kind === "task" && (
+        <div className="flex flex-col gap-1.5">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            Into
+            <select
+              aria-label="Epic for the task"
+              value={chosen}
+              className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onChange={(e) => {
+                setEpic(e.target.value);
               }}
             >
-              {k.label}
-            </button>
-          ))}
+              {aroundNote && <option value={THIS_NOTE}>{aroundNote.title} · this meeting</option>}
+              {epics.map((e) => (
+                <option key={e.path} value={e.path}>
+                  {e.title}
+                </option>
+              ))}
+              <option value={NEW_EPIC}>+ New epic…</option>
+            </select>
+          </label>
+          {chosen === NEW_EPIC && (
+            <Input
+              aria-label="Name of the new epic"
+              placeholder="Name of the new epic"
+              value={epicName}
+              onChange={(e) => {
+                setEpicName(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                // With two fields, Enter in the second would not send the form by itself.
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void save();
+                }
+              }}
+            />
+          )}
         </div>
       )}
-      {kind === "note" ? (
-        <div className="flex flex-col gap-2">
-          <Input
-            ref={input}
-            aria-label="Title of the note"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-            }}
-          />
-          <Textarea
-            aria-label="Write the note"
-            rows={3}
-            className="min-h-0 resize-none"
-            placeholder="Write it here. Press Ctrl+Enter to save."
-            value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-                e.preventDefault();
-                void save();
-              }
-            }}
-          />
-          <Button
-            size="sm"
-            className="self-end"
-            disabled={busy || (title.trim() === "" && text.trim() === "")}
-            onClick={() => {
+      {noteOpen && (
+        <Textarea
+          aria-label={kind === "task" ? "Note for the task" : "Note for the idea"}
+          indent
+          rows={3}
+          className="min-h-0 resize-none"
+          placeholder="A small note. Press Ctrl+Enter to save."
+          value={note}
+          onChange={(e) => {
+            setNote(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault();
               void save();
+            }
+          }}
+        />
+      )}
+      <div className="flex items-center gap-2">
+        {!noteOpen && (
+          <button
+            type="button"
+            className="rounded text-xs text-muted-foreground underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={() => {
+              setNoteOpen(true);
             }}
           >
-            Save the quick note
-          </Button>
-        </div>
-      ) : (
-        <form
-          className="flex flex-col gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void save();
-          }}
-        >
-          <Input
-            ref={input}
-            aria-label={kind === "task" ? "Write a task" : "Write an idea"}
-            placeholder={noteOpen ? "Title" : "Write it here. Press Enter to save it."}
-            value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-            }}
-          />
-          {kind === "task" && (
-            <div className="flex flex-col gap-1.5">
-              <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                Into
-                <select
-                  aria-label="Epic for the task"
-                  value={chosen}
-                  className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  onChange={(e) => {
-                    setEpic(e.target.value);
-                  }}
-                >
-                  {aroundNote && (
-                    <option value={THIS_NOTE}>{aroundNote.title} · this meeting</option>
-                  )}
-                  {epics.map((e) => (
-                    <option key={e.path} value={e.path}>
-                      {e.title}
-                    </option>
-                  ))}
-                  <option value={NEW_EPIC}>+ New epic…</option>
-                </select>
-              </label>
-              {chosen === NEW_EPIC && (
-                <Input
-                  aria-label="Name of the new epic"
-                  placeholder="Name of the new epic"
-                  value={epicName}
-                  onChange={(e) => {
-                    setEpicName(e.target.value);
-                  }}
-                  onKeyDown={(e) => {
-                    // With two fields and no button, Enter would not send the form.
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      void save();
-                    }
-                  }}
-                />
-              )}
-            </div>
-          )}
-          {noteOpen ? (
-            <>
-              <Textarea
-                aria-label={noteLabel}
-                rows={3}
-                className="min-h-0 resize-none"
-                placeholder="A small note. Press Ctrl+Enter to save."
-                value={note}
-                onChange={(e) => {
-                  setNote(e.target.value);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    void save();
-                  }
-                }}
-              />
-              <Button
-                size="sm"
-                type="submit"
-                className="self-end"
-                disabled={
-                  busy ||
-                  text.trim() === "" ||
-                  (kind === "task" && chosen === NEW_EPIC && epicName.trim() === "")
-                }
-              >
-                Save
-              </Button>
-            </>
-          ) : (
-            <button
-              type="button"
-              className="self-start rounded text-xs text-muted-foreground underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring"
-              onClick={() => {
-                setNoteOpen(true);
-              }}
-            >
-              Add a note
-            </button>
-          )}
-        </form>
-      )}
-      <p className="text-xs text-muted-foreground">{current?.help}</p>
-    </div>
+            + Add a note
+          </button>
+        )}
+        <span className="flex-1 text-xs text-muted-foreground">{info.help}</span>
+        {saveButton}
+      </div>
+    </form>
   );
 }
 

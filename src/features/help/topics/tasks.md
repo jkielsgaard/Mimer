@@ -20,7 +20,7 @@ There are no due dates, no Today and no Later: a task is there to keep track of 
 
 ### One task
 
-Press a task to open it. On the left is what you write (the note, the steps and what has happened); the card on the right has the **status** (To do, Doing, Waiting), the day it was **made**, and buttons to its epic and its note. The way back at the top goes to its epic.
+A task with a status shows it as a small label at the right end of its row in the lists (Doing, Waiting or Dropped); a task without one shows nothing. Press a task to open it. On the left is what you write (the note, the steps and what has happened); the card on the right has the **status** (To do, Doing, Waiting), the day it was **made**, and buttons to its epic and its note. The way back at the top goes to its epic.
 
 - **Note** is a few lines about the task that are not part of the log: what it is about, who to ask. It is saved when you leave the box. An epic has a note too.
 - **Steps** are small tasks under the task. The next step is marked. Click a step's text to change it (Enter saves, Esc puts it back), and use the arrows to move it. Press **Break it down** and the AI suggests steps; you choose which ones stay, and nothing is written until you press Add. It needs a local AI that is running.
@@ -54,7 +54,7 @@ Open a note and press **Find tasks in a note** in the task list (or use the comm
 
 ### Write it down from anywhere
 
-**Ctrl/Cmd+Shift+N** (also **File → Capture a task, idea or note…**, **New → Quick note**, and the command palette) opens a small box. Choose **Task**, **Idea** or **Quick note** and write. A task goes into the epic you choose; a quick note gets a title and goes to the Quick notes folder. The note you are writing is not changed.
+Each kind has its own box. **New → Quick note**, **New → Task** and **New → Idea** (on the start page, in **File**, and in the command palette) open only that box: **Quick note**, **New task** or **New idea**. A task goes into the epic you choose under **Into**; a quick note gets a title and goes to the Quick notes folder. **Ctrl/Cmd+Shift+N** (**File → Write it down…**) asks first: press **T**, **I** or **N**. In a meeting, in Focus and on the start page there are three buttons, **+ Task**, **+ Idea** and **+ Quick note**; the box stays open after saving, so you can write the next one. The note you are writing is not changed.
 
 ### Focus
 
