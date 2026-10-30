@@ -22,6 +22,7 @@ import { reportError, type ProjectDialogState, useUiStore } from "@/stores/uiSto
 import { useTreeStore } from "@/stores/treeStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { InfoHint } from "@/components/InfoHint";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const GLOBAL = "__global__";
 
@@ -265,8 +266,7 @@ export function ProjectForm({
               </Select>
             </div>
             <label className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
+              <Checkbox
                 className="mt-1"
                 checked={localOnly}
                 onChange={(e) => {

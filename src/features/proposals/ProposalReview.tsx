@@ -14,6 +14,7 @@ import { canApply, useProposalStore } from "@/stores/proposalStore";
 import { badgeFor, ProposalDetail } from "./ProposalDetail";
 import { countByKind, groupProposals, type KindFilter } from "./proposalGroups";
 import { AiMistakesNote } from "@/components/AiMistakesNote";
+import { PlainButton } from "@/components/ui/plain-button";
 
 const KINDS: { id: KindFilter; label: string }[] = [
   { id: "all", label: "All" },
@@ -69,7 +70,7 @@ export function ProposalReview() {
           {KINDS.filter((k) => k.id === "all" || counts[k.id] > 0).map((k) => {
             const count = k.id === "all" ? items.length : counts[k.id];
             return (
-              <button
+              <PlainButton
                 key={k.id}
                 type="button"
                 aria-pressed={filter === k.id}
@@ -84,7 +85,7 @@ export function ProposalReview() {
                 }}
               >
                 {k.label} {count}
-              </button>
+              </PlainButton>
             );
           })}
         </div>
@@ -99,7 +100,7 @@ export function ProposalReview() {
                     <h3 className="min-w-0 flex-1 truncate section-label">
                       {g.label} · {g.items.length}
                     </h3>
-                    <button
+                    <PlainButton
                       type="button"
                       className="rounded border px-2 py-0.5 text-[11px] hover:bg-muted"
                       onClick={() => {
@@ -107,7 +108,7 @@ export function ProposalReview() {
                       }}
                     >
                       {all ? "Reject group" : "Accept group"}
-                    </button>
+                    </PlainButton>
                   </div>
                   <ul>
                     {g.items.map((v) => {
@@ -115,7 +116,7 @@ export function ProposalReview() {
                       const on = accepted.has(p.id);
                       return (
                         <li key={p.id}>
-                          <button
+                          <PlainButton
                             type="button"
                             aria-current={current?.proposal.id === p.id}
                             className={cn(
@@ -155,7 +156,7 @@ export function ProposalReview() {
                             >
                               {badgeFor(p.action).label}
                             </span>
-                          </button>
+                          </PlainButton>
                         </li>
                       );
                     })}

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { fuzzyFilter } from "@/lib/fuzzy";
 import { basename, cn, dirname, isMarkdown } from "@/lib/utils";
 import { useVaultStore } from "@/stores/vaultStore";
+import { PlainButton } from "@/components/ui/plain-button";
 
 interface Props {
   open: boolean;
@@ -88,7 +89,7 @@ export function LinkNoteDialog({ open, initialQuery, onPick, onClose }: Props) {
         <ul className="max-h-80 overflow-auto" role="listbox" aria-label="Notes">
           {rows.map((row, i) => (
             <li key={row.path ?? "__new"} role="option" aria-selected={i === index}>
-              <button
+              <PlainButton
                 type="button"
                 className={cn(
                   "flex w-full items-baseline gap-2 rounded px-2 py-1.5 text-left",
@@ -116,7 +117,7 @@ export function LinkNoteDialog({ open, initialQuery, onPick, onClose }: Props) {
                     </span>
                   </>
                 )}
-              </button>
+              </PlainButton>
             </li>
           ))}
           {rows.length === 0 && (

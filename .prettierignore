@@ -4,4 +4,4 @@ src-tauri
 src/bindings
 pnpm-lock.yaml
 CHANGELOG.md
-CLAUDE.md
+docs/history/SPEC-v1.md

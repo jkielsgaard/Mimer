@@ -26,6 +26,22 @@ export default tseslint.config(
     },
   },
   {
+    // One look everywhere: a screen uses the shared components, so a change to how a button, a
+    // field or a box looks is made once in src/components/ui (docs/UX-GUIDE.md).
+    files: ["src/**/*.tsx"],
+    ignores: ["src/components/**", "**/*.test.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXOpeningElement[name.name=/^(button|input|textarea|select)$/]",
+          message:
+            "Use the shared component from src/components/ui (Button or PlainButton, Input, InlineInput, Checkbox, Radio, Textarea, Select), so the look is the same everywhere.",
+        },
+      ],
+    },
+  },
+  {
     files: ["**/*.test.{ts,tsx}", "src/test/**"],
     rules: {
       "@typescript-eslint/no-unsafe-assignment": "off",

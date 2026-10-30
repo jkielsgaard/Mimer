@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /**
  * "Send your notes to a cloud AI?": what leaves the computer, whose terms apply, and a box the
@@ -57,8 +58,7 @@ export function CloudConsentDialog({
           use it.
         </p>
         <label className="flex items-start gap-2.5 rounded-md bg-warning/15 p-3 text-sm">
-          <input
-            type="checkbox"
+          <Checkbox
             className="mt-1"
             checked={agreed}
             onChange={(e) => {

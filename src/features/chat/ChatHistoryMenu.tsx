@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { relativeTime } from "@/lib/utils";
 import { useChatStore } from "@/stores/chatStore";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** Lists saved chats of this vault; pick one to continue it, or delete. */
 export function ChatHistoryMenu() {
@@ -46,7 +47,7 @@ export function ChatHistoryMenu() {
                   {relativeTime(Date.parse(c.updatedAt) / 1000)} · {c.messageCount} messages
                 </span>
               </span>
-              <button
+              <PlainButton
                 type="button"
                 aria-label="Delete chat"
                 className="rounded p-1 text-muted-foreground hover:text-destructive"
@@ -57,7 +58,7 @@ export function ChatHistoryMenu() {
                 }}
               >
                 <Trash2 className="size-3.5" />
-              </button>
+              </PlainButton>
             </DropdownMenuItem>
           ))}
           {chats.length > 0 && <DropdownMenuSeparator />}

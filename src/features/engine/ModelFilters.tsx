@@ -1,6 +1,9 @@
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { Device, GoodFor, ModelFilter, Size, Sort } from "./foundryModels";
+import { PlainButton } from "@/components/ui/plain-button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select } from "@/components/ui/select";
 
 const GOOD: { id: "all" | GoodFor; label: string }[] = [
   { id: "all", label: "All" },
@@ -36,7 +39,7 @@ export function ModelFilters({
         />
         <div role="group" aria-label="Good for" className="flex gap-1">
           {GOOD.map((g) => (
-            <button
+            <PlainButton
               key={g.id}
               type="button"
               aria-pressed={filter.good === g.id}
@@ -49,14 +52,13 @@ export function ModelFilters({
               }}
             >
               {g.label}
-            </button>
+            </PlainButton>
           ))}
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-foreground/80">
         <label className="flex items-center gap-1.5">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={filter.tools}
             onChange={(e) => {
               set({ tools: e.target.checked });
@@ -65,8 +67,7 @@ export function ModelFilters({
           Can use tools
         </label>
         <label className="flex items-center gap-1.5">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={filter.downloaded}
             onChange={(e) => {
               set({ downloaded: e.target.checked });
@@ -76,7 +77,7 @@ export function ModelFilters({
         </label>
         <label className="flex items-center gap-1.5">
           Runs on
-          <select
+          <Select
             className={select}
             value={filter.device}
             onChange={(e) => {
@@ -87,11 +88,11 @@ export function ModelFilters({
             <option value="NPU">NPU</option>
             <option value="GPU">GPU</option>
             <option value="CPU">CPU</option>
-          </select>
+          </Select>
         </label>
         <label className="flex items-center gap-1.5">
           Size
-          <select
+          <Select
             className={select}
             value={filter.size}
             onChange={(e) => {
@@ -102,12 +103,12 @@ export function ModelFilters({
             <option value="small">Small (under 2 GB)</option>
             <option value="medium">Medium (2–6 GB)</option>
             <option value="large">Large</option>
-          </select>
+          </Select>
         </label>
         <span className="grow" />
         <label className="flex items-center gap-1.5">
           Sort
-          <select
+          <Select
             className={select}
             value={filter.sort}
             onChange={(e) => {
@@ -117,7 +118,7 @@ export function ModelFilters({
             <option value="recommended">Recommended</option>
             <option value="smallest">Smallest</option>
             <option value="name">Name</option>
-          </select>
+          </Select>
         </label>
       </div>
     </div>

@@ -10,6 +10,8 @@ import { useIdeaStore } from "@/stores/ideaStore";
 import { useTaskStore } from "@/stores/taskStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { PlainButton } from "@/components/ui/plain-button";
+import { Select } from "@/components/ui/select";
 
 export type CaptureKind = "task" | "idea" | "note";
 
@@ -239,7 +241,7 @@ export function CaptureBox({
         <div className="flex flex-col gap-1.5">
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             Into
-            <select
+            <Select
               aria-label="Epic for the task"
               value={chosen}
               className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -254,7 +256,7 @@ export function CaptureBox({
                 </option>
               ))}
               <option value={NEW_EPIC}>+ New epic…</option>
-            </select>
+            </Select>
           </label>
           {chosen === NEW_EPIC && (
             <Input
@@ -296,7 +298,7 @@ export function CaptureBox({
       )}
       <div className="flex items-center gap-2">
         {!noteOpen && (
-          <button
+          <PlainButton
             type="button"
             className="rounded text-xs text-muted-foreground underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-ring"
             onClick={() => {
@@ -304,7 +306,7 @@ export function CaptureBox({
             }}
           >
             + Add a note
-          </button>
+          </PlainButton>
         )}
         <span className="flex-1 text-xs text-muted-foreground">{info.help}</span>
         {saveButton}

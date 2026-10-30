@@ -30,6 +30,7 @@ import { droppedPaths, moveMany } from "./treeMoves";
 import { SidebarSection } from "./SidebarSection";
 import { countNotes, filterTree, findFolder, withoutImages, type Action } from "./treeUtils";
 import { reportError } from "@/stores/uiStore";
+import { PlainButton } from "@/components/ui/plain-button";
 
 const small = "rounded p-1 text-muted-foreground hover:bg-background hover:text-foreground";
 
@@ -76,7 +77,7 @@ function ProjectTree({ project, onAction }: { project: Project; onAction: (a: Ac
                 .catch(reportError);
             }}
           >
-            <button
+            <PlainButton
               type="button"
               title={project.folder}
               aria-expanded={shown}
@@ -96,8 +97,8 @@ function ProjectTree({ project, onAction }: { project: Project; onAction: (a: Ac
               <span className="ml-auto shrink-0 pl-2 text-[11px] tabular-nums text-muted-foreground">
                 {folder ? countNotes(folder) : 0}
               </span>
-            </button>
-            <button
+            </PlainButton>
+            <PlainButton
               type="button"
               className={small}
               aria-label={`New note in ${project.name}`}
@@ -108,8 +109,8 @@ function ProjectTree({ project, onAction }: { project: Project; onAction: (a: Ac
               }}
             >
               <FilePlus className="size-3.5" />
-            </button>
-            <button
+            </PlainButton>
+            <PlainButton
               type="button"
               className={small}
               aria-label={`Settings for ${project.name}`}
@@ -119,7 +120,7 @@ function ProjectTree({ project, onAction }: { project: Project; onAction: (a: Ac
               }}
             >
               <Settings2 className="size-3.5" />
-            </button>
+            </PlainButton>
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>

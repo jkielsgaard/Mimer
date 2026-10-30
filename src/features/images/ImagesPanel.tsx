@@ -10,6 +10,8 @@ import { insertPictureIntoNote } from "@/lib/insertPicture";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { InfoHint } from "@/components/InfoHint";
+import { PlainButton } from "@/components/ui/plain-button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /** Every picture in the vault with the notes that show it, and a way to remove unused ones. */
 export function ImagesPanel() {
@@ -46,8 +48,7 @@ export function ImagesPanel() {
           topic="images"
         />
         <label className="flex items-center gap-1.5">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={unusedOnly}
             onChange={(e) => {
               setUnusedOnly(e.target.checked);
@@ -69,7 +70,7 @@ export function ImagesPanel() {
         <ul className="grid grid-cols-2 gap-2">
           {shown.map((img) => (
             <li key={img.path} className="flex flex-col gap-1 rounded-md border p-1.5">
-              <button
+              <PlainButton
                 type="button"
                 title="Click to enlarge, or drag it into a note"
                 aria-label={`Enlarge ${basename(img.path)}`}
@@ -89,8 +90,8 @@ export function ImagesPanel() {
                   loading="lazy"
                   className="h-24 w-full rounded object-cover hover:opacity-80"
                 />
-              </button>
-              <button
+              </PlainButton>
+              <PlainButton
                 type="button"
                 className="truncate text-left text-xs font-medium hover:underline"
                 title={img.path}
@@ -99,7 +100,7 @@ export function ImagesPanel() {
                 }}
               >
                 {basename(img.path)}
-              </button>
+              </PlainButton>
               <div className="text-[11px] text-muted-foreground">
                 {img.sizeKb} KB ·{" "}
                 {img.usedIn.length === 0
@@ -110,7 +111,7 @@ export function ImagesPanel() {
                 <ul className="flex flex-col text-[11px]">
                   {img.usedIn.slice(0, 3).map((n) => (
                     <li key={n}>
-                      <button
+                      <PlainButton
                         type="button"
                         className="truncate text-left text-primary hover:underline"
                         onClick={() => {
@@ -118,7 +119,7 @@ export function ImagesPanel() {
                         }}
                       >
                         {basename(n).replace(/\.md$/i, "")}
-                      </button>
+                      </PlainButton>
                     </li>
                   ))}
                   {img.usedIn.length > 3 && (

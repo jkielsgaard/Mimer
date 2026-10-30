@@ -39,6 +39,7 @@ import {
   useWidgetData,
   WorkingOnWidget,
 } from "./widgets";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** Below this width the page is one column. */
 const NARROW = 640;
@@ -306,7 +307,7 @@ export function StartPage() {
                             { label: "Half", wide: false },
                             { label: "Full", wide: true },
                           ].map((o, n) => (
-                            <button
+                            <PlainButton
                               key={o.label}
                               type="button"
                               aria-pressed={p.wide === o.wide}
@@ -322,7 +323,7 @@ export function StartPage() {
                               }}
                             >
                               {o.label}
-                            </button>
+                            </PlainButton>
                           ))}
                         </div>
                         <Button

@@ -2,6 +2,7 @@ import { Plus, X } from "lucide-react";
 import { BetaBadge } from "@/components/BetaBadge";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** The top of the chat: its own buttons (the chat history, then New chat), and × in the window. */
 export function ChatHeader({
@@ -25,14 +26,14 @@ export function ChatHeader({
         <Plus /> New chat
       </Button>
       {onClose && (
-        <button
+        <PlainButton
           type="button"
           aria-label="Close the chat"
           className="rounded p-1 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
           onClick={onClose}
         >
           <X className="size-4" />
-        </button>
+        </PlainButton>
       )}
     </div>
   );

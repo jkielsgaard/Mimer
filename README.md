@@ -114,7 +114,7 @@ Step-by-step instructions for Linux and Windows are in [docs/START-GUIDE.md](doc
 - [docs/MSIX.md](docs/MSIX.md) and [docs/STORE-LISTING.md](docs/STORE-LISTING.md): the Microsoft Store package
 - [PRIVACY.md](PRIVACY.md): what Mimer does with your data (nothing leaves your computer unless you choose it)
 - [CHANGELOG.md](CHANGELOG.md): what changed in each version
-- [CLAUDE.md](CLAUDE.md): the original v1 specification; later changes are recorded in DECISIONS.md
+- [CLAUDE.md](CLAUDE.md): how the app is built and changed; [docs/AREAS.md](docs/AREAS.md): its areas; [docs/history/SPEC-v1.md](docs/history/SPEC-v1.md): the original v1 specification, with later changes in DECISIONS.md
 
 ## Licence and your own version
 

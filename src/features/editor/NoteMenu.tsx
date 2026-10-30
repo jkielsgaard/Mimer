@@ -23,6 +23,8 @@ import { useNoteTags } from "@/lib/useNoteTags";
 import { dirname, joinPath } from "@/lib/utils";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { PlainButton } from "@/components/ui/plain-button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /** The file name of a note without the folder and `.md`. */
 function stem(path: string): string {
@@ -48,14 +50,14 @@ export function NoteMenu({ path }: { path: string | null }) {
           className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-accent py-0.5 pl-2.5 pr-1 text-xs font-semibold text-accent-foreground"
         >
           {t.label}
-          <button
+          <PlainButton
             type="button"
             aria-label={`Take the tag ${t.label} off`}
             className="rounded-full p-0.5 hover:bg-background/60 focus-visible:ring-2 focus-visible:ring-ring"
             onClick={() => void setTag(t.tag, false)}
           >
             <X className="size-3" aria-hidden />
-          </button>
+          </PlainButton>
         </span>
       ))}
       <DropdownMenu>
@@ -150,8 +152,7 @@ export function NoteMenu({ path }: { path: string | null }) {
             {NOTE_TAGS.map((t) => (
               <li key={t.tag}>
                 <label className="flex cursor-pointer items-start gap-3 rounded-md px-2 py-2 hover:bg-muted">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     className="mt-1 size-4"
                     checked={tags.includes(t.tag)}
                     onChange={(e) => void setTag(t.tag, e.target.checked)}

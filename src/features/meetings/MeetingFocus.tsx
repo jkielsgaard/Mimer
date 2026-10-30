@@ -1,14 +1,16 @@
 import { Check } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { CapturePicker } from "@/features/capture/CapturePicker";
 import { api } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
 import { addItem, GENERAL, itemNotes, markItem, parseMeeting, setItemNotes } from "@/lib/meeting";
-import { indentKey } from "@/lib/indentText";
 import { cn } from "@/lib/utils";
 import { useMeetingStore } from "@/stores/meetingStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
+import { PlainButton } from "@/components/ui/plain-button";
+import { InlineInput } from "@/components/ui/inline-input";
 
 /**
  * A running meeting: the agenda on the left (one item at a time), the notes for that item in the
@@ -184,7 +186,7 @@ export function MeetingFocus() {
                 a.text === current && "bg-accent",
               )}
             >
-              <button
+              <PlainButton
                 type="button"
                 role="checkbox"
                 aria-checked={a.done}
@@ -198,8 +200,8 @@ export function MeetingFocus() {
                 }}
               >
                 {a.done && <Check className="size-3" aria-hidden />}
-              </button>
-              <button
+              </PlainButton>
+              <PlainButton
                 type="button"
                 aria-current={a.text === current ? "step" : undefined}
                 className={cn(
@@ -212,7 +214,7 @@ export function MeetingFocus() {
                 }}
               >
                 {a.text}
-              </button>
+              </PlainButton>
               {a.text === current && (
                 <span className="text-[11px] font-bold uppercase tracking-wider text-primary">
                   Now
@@ -226,7 +228,7 @@ export function MeetingFocus() {
               add();
             }}
           >
-            <input
+            <InlineInput
               aria-label="Add an item to the agenda"
               value={adding}
               placeholder="+ Add an item. Enter adds it."
@@ -240,12 +242,12 @@ export function MeetingFocus() {
 
         <div className="flex min-w-0 flex-col gap-3">
           <h3 className="text-xl font-semibold">{current}</h3>
-          <textarea
+          <Textarea
+            indent
             ref={area}
             aria-label={`Notes for ${current}`}
             value={draft}
             placeholder="Write while you talk."
-            onKeyDown={indentKey}
             onChange={(e) => {
               write(e.target.value);
             }}

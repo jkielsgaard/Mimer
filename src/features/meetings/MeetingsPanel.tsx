@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useMeetingStore } from "@/stores/meetingStore";
 import { useMeetingsLoaded, useShownMeeting } from "./useMeetings";
 import { useUiStore } from "@/stores/uiStore";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** How many past meetings are listed before "Show more". */
 const PAST_SHOWN = 10;
@@ -23,7 +24,7 @@ function MeetingRow({ m, today, shown }: { m: MeetingNote; today: string; shown:
   const format = useUiStore((s) => s.timeFormat);
   return (
     <li>
-      <button
+      <PlainButton
         type="button"
         aria-current={shown}
         title={m.path}
@@ -40,7 +41,7 @@ function MeetingRow({ m, today, shown }: { m: MeetingNote; today: string; shown:
           {whenLabel(m.meeting, today, format)}
         </span>
         <span className="min-w-0 flex-1 truncate">{m.meeting.title}</span>
-      </button>
+      </PlainButton>
     </li>
   );
 }
@@ -137,7 +138,7 @@ export function MeetingsPanel() {
                   {heading("Past")}
                   <ul className="text-muted-foreground">{rows(past)}</ul>
                   {groups.past.length > PAST_SHOWN && (
-                    <button
+                    <PlainButton
                       type="button"
                       className="w-full rounded-md px-2 py-1 text-left text-xs text-muted-foreground hover:bg-muted"
                       onClick={() => {
@@ -145,7 +146,7 @@ export function MeetingsPanel() {
                       }}
                     >
                       {allPast ? "Show fewer" : `Show all ${String(groups.past.length)}`}
-                    </button>
+                    </PlainButton>
                   )}
                 </>
               )}

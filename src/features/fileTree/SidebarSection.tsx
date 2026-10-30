@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { savedSectionOpen, useTreeStore } from "@/stores/treeStore";
+import { PlainButton } from "@/components/ui/plain-button";
 
 interface Props {
   title: string;
@@ -20,7 +21,7 @@ export function SidebarSection({ title, storageKey, count, hint, children }: Pro
   return (
     <section aria-label={title} className="border-b pb-1">
       <div className="flex items-center gap-1.5 px-2 py-1 section-label">
-        <button
+        <PlainButton
           type="button"
           aria-expanded={open}
           className="flex min-w-0 flex-1 items-center gap-1 text-left section-label hover:text-foreground"
@@ -31,7 +32,7 @@ export function SidebarSection({ title, storageKey, count, hint, children }: Pro
           {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
           <span className="truncate">{title}</span>
           {count !== undefined && <span className="ml-auto tabular-nums">{count}</span>}
-        </button>
+        </PlainButton>
         {hint}
       </div>
       {open && children}

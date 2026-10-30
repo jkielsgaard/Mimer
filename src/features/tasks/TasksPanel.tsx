@@ -4,6 +4,7 @@ import { epicGroups } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /**
  * The left panel of the Tasks area: the epics, so they are one click away. Done epics are
@@ -29,7 +30,7 @@ export function TasksPanel() {
   const done = groups.filter((g) => g.allDone);
   const row = (g: (typeof groups)[number]) => (
     <li key={g.path}>
-      <button
+      <PlainButton
         type="button"
         aria-current={centerView === "epic" && epicPath === g.path}
         className={cn(
@@ -45,7 +46,7 @@ export function TasksPanel() {
         <span className="text-xs text-muted-foreground tabular-nums">
           {g.done}/{g.total}
         </span>
-      </button>
+      </PlainButton>
     </li>
   );
 
@@ -66,7 +67,7 @@ export function TasksPanel() {
             <ul>{done.map(row)}</ul>
           </>
         )}
-        <button
+        <PlainButton
           type="button"
           className="mt-3 w-full rounded-md px-2 py-1.5 text-left text-xs text-muted-foreground hover:bg-muted"
           onClick={() => {
@@ -74,7 +75,7 @@ export function TasksPanel() {
           }}
         >
           Show all tasks
-        </button>
+        </PlainButton>
       </div>
     </div>
   );

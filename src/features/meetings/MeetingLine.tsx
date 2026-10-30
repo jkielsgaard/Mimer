@@ -6,6 +6,7 @@ import { openFile } from "@/lib/actions";
 import { useMeetingStore } from "@/stores/meetingStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useMeetingsLoaded } from "./useMeetings";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** How long a meeting stays on the line after it has started. */
 const STAYS_MS = 2 * 60 * 60 * 1000;
@@ -72,7 +73,7 @@ export function MeetingLine() {
       <span className="w-16 shrink-0 text-xs text-muted-foreground">
         {when(p.meeting, now, format)}
       </span>
-      <button
+      <PlainButton
         type="button"
         title={`Open ${p.meeting.title}`}
         className={`min-w-0 flex-1 truncate text-left text-[13px] ${strong ? "font-semibold" : ""}`}
@@ -81,9 +82,9 @@ export function MeetingLine() {
         }}
       >
         {p.meeting.title}
-      </button>
+      </PlainButton>
       {strong && others.length > 0 && (
-        <button
+        <PlainButton
           type="button"
           aria-expanded={more}
           aria-label={`${String(others.length)} more meetings`}
@@ -93,7 +94,7 @@ export function MeetingLine() {
           }}
         >
           +{others.length}
-        </button>
+        </PlainButton>
       )}
       <Button
         size="sm"

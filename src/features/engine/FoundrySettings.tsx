@@ -16,6 +16,9 @@ import {
 } from "./foundryModels";
 import { ModelFilters } from "./ModelFilters";
 import { ProblemPanel } from "./ProblemPanel";
+import { PlainButton } from "@/components/ui/plain-button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Radio } from "@/components/ui/radio";
 
 interface Props {
   draft: Settings;
@@ -188,7 +191,7 @@ export function FoundrySettings({ draft, onChange }: Props) {
               </Button>
             )}
             <span className="grow" />
-            <button
+            <PlainButton
               type="button"
               className="text-xs text-primary underline-offset-2 hover:underline"
               onClick={() => {
@@ -196,7 +199,7 @@ export function FoundrySettings({ draft, onChange }: Props) {
               }}
             >
               All Foundry Local models at Microsoft ↗
-            </button>
+            </PlainButton>
           </div>
           <p className="text-xs text-muted-foreground">
             Every chat model Foundry Local can run on this computer. Models for speech or images are
@@ -248,7 +251,7 @@ export function FoundrySettings({ draft, onChange }: Props) {
                 ].filter((x) => x !== null && x !== "");
                 return (
                   <li key={m.alias}>
-                    <button
+                    <PlainButton
                       type="button"
                       role="radio"
                       aria-checked={alias === m.alias}
@@ -282,7 +285,7 @@ export function FoundrySettings({ draft, onChange }: Props) {
                       <span className="text-xs text-muted-foreground tabular-nums">
                         {facts.join(" · ")}
                       </span>
-                    </button>
+                    </PlainButton>
                   </li>
                 );
               })}
@@ -316,8 +319,7 @@ export function FoundrySettings({ draft, onChange }: Props) {
             </p>
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={useForMimer}
               onChange={(e) => {
                 setUseForMimer(e.target.checked);
@@ -381,8 +383,7 @@ export function FoundrySettings({ draft, onChange }: Props) {
             {status.installed.map((m) => (
               <li key={m.alias} className="flex items-center gap-2 text-sm">
                 <label className="flex min-w-0 flex-1 items-center gap-2">
-                  <input
-                    type="radio"
+                  <Radio
                     name="foundry-model"
                     checked={draft.ai.foundry.model === m.alias}
                     disabled={busy}

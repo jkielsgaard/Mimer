@@ -16,6 +16,7 @@ import { useSettingsStore } from "@/stores/settingsStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { firstRunDone, markFirstRunDone, needsAiSetup } from "./firstRun";
+import { PlainButton } from "@/components/ui/plain-button";
 
 type Choice = "builtin" | "lmstudio" | "skip";
 
@@ -115,7 +116,7 @@ export function FirstRunDialog() {
             <div className="section-label">2 · Choose an AI</div>
             <div role="radiogroup" aria-label="AI" className="mt-2 flex flex-col gap-1.5">
               {options.map((o) => (
-                <button
+                <PlainButton
                   key={o.id}
                   type="button"
                   role="radio"
@@ -132,7 +133,7 @@ export function FirstRunDialog() {
                 >
                   <span className="font-semibold">{o.title}</span>
                   <span className="text-xs text-muted-foreground">{o.text}</span>
-                </button>
+                </PlainButton>
               ))}
             </div>
           </section>

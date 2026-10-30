@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/uiStore";
 import { findTopic, searchTopics } from "./helpTopics";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** The how-to guide: a list of topics on the left and the text of the chosen one on the right. */
 export function HelpDialog() {
@@ -46,7 +47,7 @@ export function HelpDialog() {
             <ul className="min-h-0 flex-1 overflow-auto px-1 pb-2">
               {topics.map((t) => (
                 <li key={t.id}>
-                  <button
+                  <PlainButton
                     type="button"
                     aria-current={t.id === topic.id}
                     className={cn(
@@ -59,7 +60,7 @@ export function HelpDialog() {
                   >
                     <div className="text-[13px] font-medium">{t.title}</div>
                     <div className="truncate text-[11px] text-muted-foreground">{t.summary}</div>
-                  </button>
+                  </PlainButton>
                 </li>
               ))}
               {topics.length === 0 && (

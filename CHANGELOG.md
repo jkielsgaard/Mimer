@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **How the app is built and changed** (no change to what it does): the areas of the app are mapped in `docs/AREAS.md`, each area has its rules in a `CLAUDE.md`, a change starts from a brief (`docs/BRIEF.md`) with a change plan and ends with a change report (`pnpm areas report`), and every button, field, box and choice on a screen comes from the shared components (lint checks it). The four selects and the settings text box that had their own look now look like every other one.
+
 ## [0.19.0] - 2026-10-28
 
 ### Added

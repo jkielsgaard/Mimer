@@ -10,6 +10,7 @@ import { effectiveLocation } from "@/lib/providers";
 import { useEmbeddingStore } from "@/stores/embeddingStore";
 import { reportError } from "@/stores/uiStore";
 import { InfoHint } from "@/components/InfoHint";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Props {
   draft: Settings;
@@ -56,8 +57,7 @@ export function SemanticSearchSettings({ draft, onChange, persist }: Props) {
         nomic-embed-text).
       </p>
       <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={emb.enabled}
           onChange={(e) => {
             set({ enabled: e.target.checked });

@@ -6,6 +6,7 @@ import { useSettingsStore } from "@/stores/settingsStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { SidebarSection } from "./SidebarSection";
 import { isManagedNote } from "./treeUtils";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** The notes opened last, newest first. Hidden until there is one. */
 export function RecentSection() {
@@ -19,7 +20,7 @@ export function RecentSection() {
       <ul>
         {paths.map((p) => (
           <li key={p}>
-            <button
+            <PlainButton
               type="button"
               title={p}
               aria-current={activePath === p}
@@ -35,7 +36,7 @@ export function RecentSection() {
                   {basename(dirname(p))}
                 </span>
               )}
-            </button>
+            </PlainButton>
           </li>
         ))}
       </ul>

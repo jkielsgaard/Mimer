@@ -8,11 +8,13 @@ import { TaskNoteChip } from "@/features/tasks/TaskNote";
 import { cn } from "@/lib/utils";
 import { noteName, shortDate } from "@/lib/taskLogic";
 import { useTaskStore } from "@/stores/taskStore";
+import { PlainButton } from "@/components/ui/plain-button";
+import { InlineInput } from "@/components/ui/inline-input";
 
 /** A checkbox for a task or a step. */
 function Tick({ done, label, onToggle }: { done: boolean; label: string; onToggle: () => void }) {
   return (
-    <button
+    <PlainButton
       type="button"
       role="checkbox"
       aria-checked={done}
@@ -24,7 +26,7 @@ function Tick({ done, label, onToggle }: { done: boolean; label: string; onToggl
       onClick={onToggle}
     >
       {done && <Check className="size-3" aria-hidden />}
-    </button>
+    </PlainButton>
   );
 }
 
@@ -96,7 +98,7 @@ export function TaskRow({
         }}
       >
         {task.steps.length > 0 ? (
-          <button
+          <PlainButton
             type="button"
             aria-expanded={stepsOpen}
             aria-label={`${stepsOpen ? "Hide" : "Show"} the steps of ${task.title}`}
@@ -106,7 +108,7 @@ export function TaskRow({
             }}
           >
             {stepsOpen ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-          </button>
+          </PlainButton>
         ) : (
           <span className="w-5 shrink-0" aria-hidden />
         )}
@@ -132,7 +134,7 @@ export function TaskRow({
           />
         ) : (
           <>
-            <button
+            <PlainButton
               type="button"
               className={cn(
                 "min-w-0 truncate text-left text-sm font-semibold focus-visible:ring-2 focus-visible:ring-ring",
@@ -143,7 +145,7 @@ export function TaskRow({
               }}
             >
               {task.title}
-            </button>
+            </PlainButton>
             <RowActions
               what={`the task ${task.title}`}
               onEdit={() => {
@@ -232,7 +234,7 @@ export function TaskRow({
                 void addStep(task, text);
               }}
             >
-              <input
+              <InlineInput
                 aria-label={`Add a step to ${task.title}`}
                 placeholder="+ Add a step"
                 value={step}

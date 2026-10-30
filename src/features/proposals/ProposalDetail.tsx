@@ -8,6 +8,8 @@ import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useProposalStore } from "@/stores/proposalStore";
 import { firstLines } from "./proposalGroups";
+import { PlainButton } from "@/components/ui/plain-button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /** Label and colour of the action badge. A switch keeps it exhaustive over `ProposalAction`. */
 export function badgeFor(action: ProposalAction): { label: string; cls: string } {
@@ -79,7 +81,7 @@ export function ProposalDetail({ item }: { item: ProposalView }) {
           aria-label={`Decision for ${p.path}`}
           className="flex shrink-0 overflow-hidden rounded-md border text-xs"
         >
-          <button
+          <PlainButton
             type="button"
             aria-pressed={on}
             className={cn("px-3 py-1.5", on ? "bg-success/25 font-semibold" : "hover:bg-muted")}
@@ -88,8 +90,8 @@ export function ProposalDetail({ item }: { item: ProposalView }) {
             }}
           >
             Accept
-          </button>
-          <button
+          </PlainButton>
+          <PlainButton
             type="button"
             aria-pressed={!on}
             className={cn(
@@ -101,7 +103,7 @@ export function ProposalDetail({ item }: { item: ProposalView }) {
             }}
           >
             Reject
-          </button>
+          </PlainButton>
         </div>
       </div>
       {p.reason !== "" && (
@@ -116,8 +118,7 @@ export function ProposalDetail({ item }: { item: ProposalView }) {
           <TriangleAlert className="size-3.5" />
           <span className="flex-1">Changed since proposal. Re-confirm to apply this file.</span>
           <label className="flex items-center gap-1">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={confirmed.has(p.id)}
               onChange={() => {
                 confirm(p.id);

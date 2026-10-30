@@ -1,5 +1,7 @@
 import { Search, X } from "lucide-react";
 import { useTreeStore } from "@/stores/treeStore";
+import { PlainButton } from "@/components/ui/plain-button";
+import { InlineInput } from "@/components/ui/inline-input";
 
 /** Narrows the tree to the notes and folders whose name contains the typed text. */
 export function TreeFilter() {
@@ -11,7 +13,7 @@ export function TreeFilter() {
         className="pointer-events-none absolute left-4 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
         aria-hidden
       />
-      <input
+      <InlineInput
         data-no-ai
         type="text"
         aria-label="Filter the file tree"
@@ -26,7 +28,7 @@ export function TreeFilter() {
         }}
       />
       {filter !== "" && (
-        <button
+        <PlainButton
           type="button"
           aria-label="Clear the filter"
           className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
@@ -35,7 +37,7 @@ export function TreeFilter() {
           }}
         >
           <X className="size-3.5" />
-        </button>
+        </PlainButton>
       )}
     </div>
   );
