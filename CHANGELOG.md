@@ -6,9 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-10-30
+
 ### Added
 
-- **Two editions: Preview and Stable.** The Mimer you have now is **Mimer Preview** (versions 0.x, and later `1.x.y-preview.N`): the newest features, changing often. **Mimer Stable** (v1.0.0 and later) is the finished release and the only one in the Microsoft Store; it is not released yet. They can be installed side by side (Preview is called "Mimer Preview" and keeps its own settings; the first time it starts it takes a copy of the Stable settings if there are any). The status bar, About and the welcome screen show which edition you run.
+- **Two editions: Preview and Stable.** Mimer is now **Preview** (versions 0.x, and later `1.x.y-preview.N`): the newest features, changing often. **Mimer Stable** (v1.0.0 and later) is the finished release; it is not released yet. Until it is, the 0.x releases are still the ones in the Microsoft Store. From the first `-preview` release Preview is called "Mimer Preview", keeps its own settings (it copies the Stable ones once on its first start) and can be installed next to Stable. The status bar, About and the welcome screen show which edition you run.
 - **Help → Check for new version…** opens the page of releases in your browser, and About has the same link. Mimer never looks for updates by itself and sends nothing.
 - **A website** in `site/`, published with GitHub Pages: what Mimer is, the two editions and where to download them.
 

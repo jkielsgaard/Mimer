@@ -6,8 +6,10 @@ on:
       - "v*"
 
 # Two editions share this workflow (see docs/DECISIONS.md, "Stable and Preview"):
-#   Preview: a tag like v0.20.0 or v1.1.0-preview.2. Builds as "Mimer Preview" (its own app
-#            identity, so it can stand next to Stable) and makes no Microsoft Store package.
+#   Preview: a tag like v0.20.0 or v1.1.0-preview.2 (no approval needed). A tag with a "-" builds
+#            as "Mimer Preview" (its own app identity, so it can stand next to Stable) and makes no
+#            Microsoft Store package. Until v1.0.0 exists the Store has no Stable to show, so a
+#            0.x tag still builds as "Mimer" with the Store package, and the Store keeps its settings.
 #   Stable:  a plain tag like v1.0.0. Builds as "Mimer" and makes the Store package. The job waits
 #            for the owner's approval (the GitHub environment "stable" has a required reviewer), so
 #            a tag pushed by mistake cannot build a Stable release.
@@ -41,10 +43,19 @@ jobs:
           fi
           if [[ "$tag" == v0.* || "$tag" == *-* ]]; then
             echo "name=preview" >> "$GITHUB_OUTPUT"
-            echo "args=--config src-tauri/tauri.preview.conf.json" >> "$GITHUB_OUTPUT"
           else
             echo "name=stable" >> "$GITHUB_OUTPUT"
+          fi
+          # Only a pre-release tag gets its own identity. A 0.x tag keeps "Mimer" for now.
+          if [[ "$tag" == *-* ]]; then
+            echo "args=--config src-tauri/tauri.preview.conf.json" >> "$GITHUB_OUTPUT"
+            echo "store=false" >> "$GITHUB_OUTPUT"
+          elif [[ "$tag" == v0.* ]]; then
             echo "args=" >> "$GITHUB_OUTPUT"
+            echo "store=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "args=" >> "$GITHUB_OUTPUT"
+            echo "store=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Install Linux dependencies
@@ -98,7 +109,7 @@ jobs:
       # The Microsoft Store package (see docs/MSIX.md). It must never fail the release, so any
       # problem here only shows up as a failed step.
       - name: Build the Microsoft Store package (MSIX)
-        if: matrix.platform == 'windows-latest' && steps.edition.outputs.name == 'stable'
+        if: matrix.platform == 'windows-latest' && steps.edition.outputs.store == 'true'
         continue-on-error: true
         shell: pwsh
         run: |
@@ -116,7 +127,7 @@ jobs:
       # The test copy is installed by hand, so it carries the Windows App SDK runtime the Store
       # would otherwise install (taken from Microsoft's NuGet package of the same version).
       - name: Add the Windows App SDK runtime to the test copy
-        if: matrix.platform == 'windows-latest' && steps.edition.outputs.name == 'stable'
+        if: matrix.platform == 'windows-latest' && steps.edition.outputs.store == 'true'
         continue-on-error: true
         shell: pwsh
         run: |
@@ -126,7 +137,7 @@ jobs:
           Copy-Item "winappsdk-runtime/tools/MSIX/win10-x64/Microsoft.WindowsAppRuntime.2.msix" msix-out/
 
       - name: Keep the Microsoft Store package
-        if: matrix.platform == 'windows-latest' && steps.edition.outputs.name == 'stable'
+        if: matrix.platform == 'windows-latest' && steps.edition.outputs.store == 'true'
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
@@ -138,7 +149,7 @@ jobs:
       # The copy for trying the package on a test Windows (Sandbox or a virtual machine), signed
       # with a throw-away certificate that is NOT valid in the Store. See docs/MSIX.md.
       - name: Keep the test copy of the Microsoft Store package
-        if: matrix.platform == 'windows-latest' && steps.edition.outputs.name == 'stable'
+        if: matrix.platform == 'windows-latest' && steps.edition.outputs.store == 'true'
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
