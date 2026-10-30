@@ -659,6 +659,22 @@ pub fn load(path: &Path) -> AppResult<Settings> {
     Ok(s)
 }
 
+/// The first time Mimer Preview starts it has no settings of its own (it has its own folder, so it
+/// can stand next to Stable). It then takes a copy of the settings of the edition that was there
+/// first (`from`), once. Nothing is ever overwritten or deleted, and a missing or unreadable source
+/// is just ignored. Returns whether a copy was made.
+pub fn copy_first_settings(to: &Path, from: &Path) -> bool {
+    if to.exists() || !from.is_file() {
+        return false;
+    }
+    if let Some(dir) = to.parent() {
+        if std::fs::create_dir_all(dir).is_err() {
+            return false;
+        }
+    }
+    std::fs::copy(from, to).is_ok()
+}
+
 /// Saves settings atomically.
 pub fn save(path: &Path, settings: &Settings) -> AppResult<()> {
     if let Some(dir) = path.parent() {
@@ -687,6 +703,27 @@ mod tests {
         ];
         s.normalize();
         assert_eq!(s.editor.own_words, ["Mimer", "Bazzite"]);
+    }
+
+    #[test]
+    fn preview_copies_the_first_settings_once_and_never_overwrites() {
+        let dir = tempfile::tempdir().unwrap();
+        let from = dir.path().join("stable").join("settings.json");
+        let to = dir.path().join("preview").join("settings.json");
+        assert!(
+            !copy_first_settings(&to, &from),
+            "no source: nothing happens"
+        );
+        std::fs::create_dir_all(from.parent().unwrap()).unwrap();
+        std::fs::write(&from, r#"{"schemaVersion":1}"#).unwrap();
+        assert!(copy_first_settings(&to, &from));
+        assert_eq!(
+            std::fs::read_to_string(&to).unwrap(),
+            r#"{"schemaVersion":1}"#
+        );
+        std::fs::write(&to, "mine").unwrap();
+        assert!(!copy_first_settings(&to, &from));
+        assert_eq!(std::fs::read_to_string(&to).unwrap(), "mine");
     }
 
     #[test]

@@ -10,10 +10,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { setWindowTitle } from "@/lib/window";
-import { releaseStage } from "@/lib/version";
+import { RELEASES_URL, releaseStage } from "@/lib/version";
 import { newNoteInCurrentFolder, openDailyNote } from "@/lib/actions";
 import { formatShortcut } from "@/lib/shortcuts";
 import { reportAi } from "@/lib/reportAi";
+import { openLink } from "@/lib/openLink";
 import { reportIssue } from "@/lib/reportIssue";
 import { VaultSwitcher } from "@/features/vaults/VaultSwitcher";
 import { useProposalStore } from "@/stores/proposalStore";
@@ -159,6 +160,9 @@ export function Header() {
           <DropdownMenuSeparator />
           {item("About the AI beta…", null, () => {
             ui.setBetaNoticeOpen(true);
+          })}
+          {item("Check for new version…", null, () => {
+            void openLink(RELEASES_URL);
           })}
           {item("About Mimer…", null, () => {
             ui.setAboutOpen(true);

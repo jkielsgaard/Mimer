@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { appVersion, buildDateLabel, formatVersion } from "./version";
+import { appVersion, buildDateLabel, channelOf, formatVersion } from "./version";
 
 const root = path.resolve(import.meta.dirname, "../..");
 const read = (file: string): string => readFileSync(path.join(root, file), "utf8");
@@ -14,6 +14,17 @@ describe("formatVersion", () => {
 
   it("shows the plain version when the build is unknown", () => {
     expect(formatVersion("0.2.0", "")).toBe("0.2.0");
+  });
+});
+
+describe("channelOf", () => {
+  it("calls 0.x and pre-release versions Preview, and a plain 1.0.0 or later Stable", () => {
+    expect(channelOf("0.19.0")).toBe("preview");
+    expect(channelOf("1.1.0-preview.2")).toBe("preview");
+    expect(channelOf("1.0.0-rc1")).toBe("preview");
+    expect(channelOf("1.0.0")).toBe("stable");
+    expect(channelOf("1.2.3")).toBe("stable");
+    expect(channelOf("10.0.0")).toBe("stable");
   });
 });
 

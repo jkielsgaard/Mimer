@@ -2,7 +2,7 @@
 
 Microsoft signs an MSIX package itself when it is published in the Microsoft Store, so there is no certificate to buy and Windows does not show the "unknown publisher" warning. This page is how to build the package, try it, and send it in.
 
-The package is built by `scripts/msix/Build-Msix.ps1` on Windows. The release workflow also builds it (as an artifact called `mimer-msix`) for every tag, without failing the release if the step has a problem.
+The package is built by `scripts/msix/Build-Msix.ps1` on Windows. The release workflow also builds it (as an artifact called `mimer-msix`) for every **Stable** tag (a plain `v1.0.0` or later), without failing the release if the step has a problem. A Preview tag (`v0.x.y` or one with a `-`) makes no Store package: only Stable goes in the Store.
 
 ## 1. Reserve the name and read the identity (once)
 

@@ -11,8 +11,23 @@ export function formatVersion(version: string, build: string): string {
 /** Version of the running app, with build metadata when known. */
 export const appVersion = formatVersion(__APP_VERSION__, __APP_BUILD__);
 
-/** Mimer is in beta: shown next to the version so nobody mistakes it for a finished release. */
-export const releaseStage = "beta";
+/** The two editions: Preview is the newest work and changes often, Stable is the finished release. */
+export type Channel = "preview" | "stable";
+
+/**
+ * Which edition a version belongs to. A 0.x version, or one with a pre-release part such as
+ * `1.1.0-preview.2`, is Preview; a plain 1.0.0 or later is Stable. The release workflow uses the
+ * same rule on the tag, so the app and the build always agree.
+ */
+export function channelOf(version: string): Channel {
+  return version.startsWith("0.") || version.includes("-") ? "preview" : "stable";
+}
+
+/** The edition of the running app, shown next to the version. */
+export const releaseStage: Channel = channelOf(__APP_VERSION__);
+
+/** Where a newer version is announced. Mimer never checks by itself: the person follows this link. */
+export const RELEASES_URL = "https://github.com/jkielsgaard/Mimer/releases";
 
 /** Build time of the running app as a readable local date and time. */
 export function buildDateLabel(iso: string = __APP_BUILD_DATE__): string {

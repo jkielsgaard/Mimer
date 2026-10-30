@@ -6,7 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Two editions: Preview and Stable.** The Mimer you have now is **Mimer Preview** (versions 0.x, and later `1.x.y-preview.N`): the newest features, changing often. **Mimer Stable** (v1.0.0 and later) is the finished release and the only one in the Microsoft Store; it is not released yet. They can be installed side by side (Preview is called "Mimer Preview" and keeps its own settings; the first time it starts it takes a copy of the Stable settings if there are any). The status bar, About and the welcome screen show which edition you run.
+- **Help → Check for new version…** opens the page of releases in your browser, and About has the same link. Mimer never looks for updates by itself and sends nothing.
+- **A website** in `site/`, published with GitHub Pages: what Mimer is, the two editions and where to download them.
+
 ### Changed
+
+- A Stable release needs the owner's approval before the release workflow builds it (GitHub environment `stable`), and the tag must match the version in `package.json`.
 
 - **Meetings** lists the time on every meeting: `Thu 29 Oct 11:00` for another day, only the time for today (the time follows the time format setting).
 - **Next meeting** on the start page lists today's and tomorrow's meetings that are still to come, each with Start. The widget **Today's meetings** is gone (Next meeting does the same).

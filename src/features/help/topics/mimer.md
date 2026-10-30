@@ -47,6 +47,10 @@ Mimer uses an AI that runs on your own computer: the **built-in AI** (Phi Silica
 
 **Add provider** asks which kind you want (LM Studio or another server on this computer). The model is chosen in the settings. A built-in AI that is asleep is woken by itself when you ask it something.
 
+## Preview and Stable
+
+Mimer comes in two editions. **Preview** has the newest features and changes often; it is the edition you run if the status bar says `preview`. **Stable** is the finished release. They can be installed side by side and open the same vaults. Mimer never looks for updates by itself: **Help → Check for new version…** opens the page of releases in your browser.
+
 ## More
 
 - **Settings → AI** has **About me and my notes** (read by the chat and the skills, not by the fixed commands), **Language of the AI's answers** (Same as the text, or a language you choose) and **Let the AI check its own answer** (off by default): the AI is asked once more whether its answer to a text command is right, which is slower but helps with small models.
