@@ -41,7 +41,7 @@ const stored: Settings = {
     cloudConsent: null,
     builtin: DEFAULT_BUILTIN,
     foundry: { model: "", tools: true },
-    baseInstruction: "",
+    answerLanguage: "",
     globalInstructions: "",
     embeddings: { enabled: false, providerId: "lm", model: "" },
     providers: [
@@ -119,6 +119,16 @@ describe("Settings → AI: which AI Mimer uses", () => {
     expect(built).toHaveAttribute("aria-expanded", "false");
     await user.click(built);
     expect(built).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("has About me and my notes and a language for the AI's answers, and no base instruction", async () => {
+    await openAiTab();
+    expect(screen.getByLabelText("About me and my notes")).toBeInTheDocument();
+    const language = screen.getByLabelText("Language of the AI's answers");
+    expect(language).toHaveValue("");
+    expect([...language.querySelectorAll("option")].map((o) => o.textContent)).toContain("Danish");
+    expect(screen.queryByText(/Mimer's instruction/)).toBeNull();
+    expect(screen.queryByText("Global instructions")).toBeNull();
   });
 
   it("has no Raven setting and no own-knowledge setting any more", async () => {

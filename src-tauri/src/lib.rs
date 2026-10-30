@@ -155,7 +155,6 @@ pub fn run() {
             commands::projects::delete_project,
             commands::settings::get_settings,
             commands::settings::update_settings,
-            commands::settings::get_default_base_instruction,
             commands::settings::set_api_key,
             commands::settings::has_api_key,
             commands::settings::delete_api_key,

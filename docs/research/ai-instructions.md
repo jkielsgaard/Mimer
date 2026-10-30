@@ -1,6 +1,6 @@
 # Research: AI instructions (global, project, base)
 
-Status: report only, nothing is changed. Question: do the instructions still make sense now that Mimer's AI commands are fixed commands?
+Status: option 1 was chosen and built (see CHANGELOG and docs/DECISIONS.md). Question: do the instructions still make sense now that Mimer's AI commands are fixed commands?
 
 ## What exists today
 

@@ -156,8 +156,8 @@ pub async fn run_chat(
             max: u32::try_from(MAX_ITERATIONS).unwrap_or(u32::MAX),
         });
         let input = prompt::PromptInput {
-            base_instruction: &settings.ai.base_instruction,
             global_instructions: &settings.ai.global_instructions,
+            answer_language: &settings.ai.answer_language,
             project: project.as_ref(),
             scope: scope.as_deref(),
             note: note.as_ref().map(|(p, c)| (p.as_str(), c.as_str())),

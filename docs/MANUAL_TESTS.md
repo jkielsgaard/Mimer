@@ -160,7 +160,7 @@ Check with `git log --oneline` in the vault folder.
 - [ ] Ask "Summarize this note": the answer streams and uses the note; untick **Include the open note** and it no longer knows it. **Stop** stops at once.
 - [ ] Type `/` or press the paperclip: notes and folders can be attached as chips (× removes one; a sixth is refused). In a project only its notes are offered.
 - [ ] The chat answers but never changes a note.
-- [ ] Ask "who are you?": Mimer, briefly; in Danish when asked in Danish. Settings → AI base instruction: a change shows in the answers; **Reset to default** restores it.
+- [ ] Ask "who are you?": Mimer, briefly; in Danish when asked in Danish. Settings → AI has no base instruction any more. **Language of the AI's answers** set to Danish: the chat, the fixed commands and skills answer in Danish; Same as the text: in the language of the text; a Custom command that asks for a translation still translates.
 - [ ] **History** reopens earlier chats after a restart; **New chat** starts over; delete one and **Delete all history…** work. `.vault/chats/` is not committed.
 - [ ] Stop the AI server and send a message: a clear error, not an endless spinner. A slow model shows a counting timer.
 
@@ -179,10 +179,10 @@ Check with `git log --oneline` in the vault folder.
 
 ### 15. Projects
 
-- [ ] **New → Project…**: Name, Instructions and AI provider (local only). Save: a new folder in the **vault root** (also with another folder selected), under Projects, with `.vault/projects/<id>.json` committed.
+- [ ] **New → Project…**: Name, About this project and AI provider (local only). Save: a new folder in the **vault root** (also with another folder selected), under Projects, with `.vault/projects/<id>.json` committed.
 - [ ] A name already used in the root (folder or note, any case) is refused while you type. There is no **Make project** on a folder; a project cannot go inside a folder or another project.
 - [ ] Drag notes onto the project: they move in (one `Rename` commit, links updated). Drag one back to All files.
-- [ ] **(AI)** An instruction like "Always answer in French" changes the answers for notes in the project only. **Ask AI to change the instructions** shows a diff; nothing is saved until **Save**.
+- [ ] **(AI)** A sentence in **About this project** or **About me and my notes** (for example what "Wave 1" means) is known to the chat and to skills, and does not change what Fix, Rewrite or Shorten return. There is no "Ask AI to change the instructions" box.
 - [ ] Rename the project folder: the project follows.
 
 ### 16. Templates, import, export and index pages

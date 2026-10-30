@@ -150,8 +150,6 @@ pub enum InlineCommand {
     Expand,
     RestructureList,
     Custom,
-    /// Used by the project dialog's "Ask AI" button.
-    RefineInstructions,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]

@@ -14,7 +14,8 @@ pub const DEFAULT_RECENT_NOTES: u32 = 4;
 pub const MAX_RECENT_NOTES: u32 = 20;
 
 /// Longest base instruction kept (characters).
-pub const MAX_BASE_INSTRUCTION_CHARS: usize = 4_000;
+/// The longest name of an answer language.
+pub const MAX_ANSWER_LANGUAGE_CHARS: usize = 40;
 
 /// Current settings schema version.
 pub const SCHEMA_VERSION: u32 = 1;
@@ -322,10 +323,11 @@ impl Default for EmbeddingSettings {
 pub struct AiSettings {
     /// The local provider used by Mimer (the notes AI), inline commands and project help.
     pub default_provider_id: String,
-    /// Who Mimer is. Empty means the built-in default (`ai::prompt::DEFAULT_BASE_INSTRUCTION`).
-    /// The safety rules are not part of it and cannot be edited.
-    pub base_instruction: String,
+    /// "About me and my notes": background the chat and the skills read (who the person is, what
+    /// their terms mean). The fixed commands do not read it.
     pub global_instructions: String,
+    /// The language of the AI's answers, such as `Danish`. Empty means the language of the text.
+    pub answer_language: String,
     pub providers: Vec<ProviderConfig>,
     pub embeddings: EmbeddingSettings,
     /// The AI that Mimer runs itself, without LM Studio.
@@ -368,8 +370,8 @@ impl Default for AiSettings {
     fn default() -> Self {
         Self {
             default_provider_id: preferred_default_provider().into(),
-            base_instruction: String::new(),
             global_instructions: String::new(),
+            answer_language: String::new(),
             embeddings: EmbeddingSettings::default(),
             builtin: BuiltInSettings::default(),
             foundry: FoundrySettings::default(),
@@ -448,12 +450,12 @@ impl Settings {
                 p.context_tokens = 1000;
             }
         }
-        self.ai.base_instruction = self
+        self.ai.answer_language = self
             .ai
-            .base_instruction
+            .answer_language
             .trim()
             .chars()
-            .take(MAX_BASE_INSTRUCTION_CHARS)
+            .take(MAX_ANSWER_LANGUAGE_CHARS)
             .collect();
         self.separate_local_and_cloud();
         // Embeddings read the notes, so they need a local OpenAI-compatible endpoint. The built-in
@@ -747,20 +749,22 @@ mod tests {
     }
 
     #[test]
-    fn base_instruction_defaults_to_empty_trims_and_is_capped() {
-        let old: Settings = serde_json::from_str(r#"{"schemaVersion":1}"#).unwrap();
-        assert_eq!(old.ai.base_instruction, "");
+    fn answer_language_defaults_to_empty_trims_and_is_capped_and_old_files_load() {
+        let old: Settings =
+            serde_json::from_str(r#"{"schemaVersion":1,"ai":{"baseInstruction":"old text"}}"#)
+                .unwrap();
+        assert_eq!(old.ai.answer_language, "");
 
         let mut s = Settings::default();
-        s.ai.base_instruction = format!("  {}  ", "x".repeat(MAX_BASE_INSTRUCTION_CHARS + 50));
+        s.ai.answer_language = format!("  {}  ", "x".repeat(MAX_ANSWER_LANGUAGE_CHARS + 20));
         s.normalize();
         assert_eq!(
-            s.ai.base_instruction.chars().count(),
-            MAX_BASE_INSTRUCTION_CHARS
+            s.ai.answer_language.chars().count(),
+            MAX_ANSWER_LANGUAGE_CHARS
         );
-        s.ai.base_instruction = "  keep me  ".into();
+        s.ai.answer_language = "  Danish  ".into();
         s.normalize();
-        assert_eq!(s.ai.base_instruction, "keep me");
+        assert_eq!(s.ai.answer_language, "Danish");
     }
 
     #[test]

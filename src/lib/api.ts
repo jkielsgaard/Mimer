@@ -172,7 +172,6 @@ export const api = {
   // Settings / providers
   getSettings: () => call<Settings>("get_settings"),
   updateSettings: (settings: Settings) => call<undefined>("update_settings", { settings }),
-  getDefaultBaseInstruction: () => call<string>("get_default_base_instruction"),
   setApiKey: (providerId: string, key: string) =>
     call<undefined>("set_api_key", { providerId, key }),
   hasApiKey: (providerId: string) => call<boolean>("has_api_key", { providerId }),

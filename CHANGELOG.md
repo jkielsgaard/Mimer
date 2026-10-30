@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Focus: a timer you can turn off, any length, and Ultra focus.** The **Timer** box at the top of Focus turns the timer on and off (remembered). The length is chosen from 15, 25, 45 and 60 minutes or **Custom…** (1 to 180) and the last one used is kept. **Ultra focus** shows only the task you work on, with its steps, its log and a box for the log (and the timer when it is on); **Back to the epic** goes back.
 
+- **AI instructions made clear.** **Settings → AI** now has **About me and my notes** (read by the chat and the skills) and **Language of the AI's answers**. A project has **About this project**. The fixed commands (Fix, Rewrite, Shorten…) no longer read any of the texts, so a sentence there cannot add words around an answer. Removed: Mimer's base instruction and the "Ask AI to change the instructions" box in projects. Old texts are kept and shown in the new fields.
+
 ### Fixed
 
 - **The AI no longer leaves "Here’s the revised version:" in front of its answer.** The clean-up knew the line with a straight apostrophe only, and a skill that rewrites whole notes did not clean at all. Both now remove such an opening (also after "Sure!", and in Danish), a closing line such as "Let me know if you want changes", reasoning and a code fence, and the instruction to the model says it plainly. A note that itself begins like that keeps its first line.

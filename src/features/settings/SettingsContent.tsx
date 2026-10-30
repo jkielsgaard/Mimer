@@ -24,7 +24,6 @@ import { AiChoice } from "./AiChoice";
 import { BuiltInAiTab } from "@/features/engine/BuiltInAiTab";
 import { BetaBadge } from "@/components/BetaBadge";
 import { VaultSettingsTab } from "./VaultSettingsTab";
-import { MimerInstructionSettings } from "./MimerInstructionSettings";
 import { SemanticSearchSettings } from "./SemanticSearchSettings";
 import { appVersion, buildDateLabel, releaseStage } from "@/lib/version";
 import { InfoHint } from "@/components/InfoHint";
@@ -70,6 +69,17 @@ function Section({
     </section>
   );
 }
+
+/** The languages offered for the AI's answers. */
+const ANSWER_LANGUAGES = [
+  "Danish",
+  "English",
+  "German",
+  "Swedish",
+  "Norwegian",
+  "French",
+  "Spanish",
+];
 
 export function SettingsContent({ stored, onClose }: { stored: Settings; onClose: () => void }) {
   const save = useSettingsStore((s) => s.save);
@@ -459,25 +469,52 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                   </span>
                 </span>
               </label>
-              <MimerInstructionSettings draft={draft} onChange={setDraft} />
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1.5">
-                  <Label htmlFor="set-instr">Global instructions</Label>
+                  <Label htmlFor="set-instr">About me and my notes</Label>
                   <InfoHint
-                    label="Global instructions"
-                    text="Your own wishes for every vault and project, for example: Answer in Danish. Who Mimer is, is set in the box above."
+                    label="About me and my notes"
+                    text="Optional. Mimer's chat and skills read this so they know who you are and what your terms mean. The fixed commands (Fix, Rewrite, Shorten…) do not read it, because they do one thing."
                     topic="mimer"
                   />
                 </div>
                 <Textarea
                   id="set-instr"
-                  rows={10}
-                  placeholder="Extra instructions Mimer follows in every vault and project…"
+                  rows={5}
+                  placeholder="For example: I work in IT security. “Wave 1” is the first group of users."
                   value={draft.ai.globalInstructions}
                   onChange={(e) => {
                     update({ ai: { ...draft.ai, globalInstructions: e.target.value } });
                   }}
                 />
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor="set-answer-language">Language of the AI's answers</Label>
+                  <InfoHint
+                    label="Language of the AI's answers"
+                    text="Used by the chat, the fixed commands and the skills. “Same as the text” answers in the language of what you wrote. A Custom command that asks for a translation still decides its own language."
+                    topic="mimer"
+                  />
+                </div>
+                <Select
+                  id="set-answer-language"
+                  value={draft.ai.answerLanguage}
+                  onChange={(e) => {
+                    update({ ai: { ...draft.ai, answerLanguage: e.target.value } });
+                  }}
+                >
+                  <option value="">Same as the text</option>
+                  {ANSWER_LANGUAGES.map((l) => (
+                    <option key={l} value={l}>
+                      {l}
+                    </option>
+                  ))}
+                  {draft.ai.answerLanguage !== "" &&
+                    !ANSWER_LANGUAGES.includes(draft.ai.answerLanguage) && (
+                      <option value={draft.ai.answerLanguage}>{draft.ai.answerLanguage}</option>
+                    )}
+                </Select>
               </div>
               <SemanticSearchSettings draft={draft} onChange={setDraft} persist={persist} />
             </div>

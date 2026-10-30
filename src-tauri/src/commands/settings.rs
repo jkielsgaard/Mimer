@@ -32,12 +32,6 @@ pub async fn update_settings(
     Ok(())
 }
 
-/// The built-in base instruction, so the settings screen can show and reset to it.
-#[tauri::command]
-pub async fn get_default_base_instruction() -> Result<String, AppError> {
-    Ok(crate::ai::prompt::DEFAULT_BASE_INSTRUCTION.to_string())
-}
-
 #[tauri::command]
 pub async fn set_api_key(provider_id: String, key: String) -> Result<(), AppError> {
     keychain::set_key(&provider_id, &key)

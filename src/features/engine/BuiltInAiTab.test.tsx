@@ -38,7 +38,7 @@ function settings(defaultProviderId = "lm", foundryModel = ""): Settings {
       cloudConsent: null,
       builtin: { ...DEFAULT_BUILTIN },
       foundry: { model: foundryModel, tools: true },
-      baseInstruction: "",
+      answerLanguage: "",
       globalInstructions: "",
       embeddings: { enabled: false, providerId: "lm", model: "" },
       providers: [],

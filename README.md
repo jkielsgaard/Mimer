@@ -37,7 +37,7 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
 - Full-text search, plus search by meaning with a local embedding model
 - Version history per note: compare, restore, recover deleted notes
 - AI on selected text in a note **and in every text box** (fix spelling, rewrite, shorten, translate …), AI commands for a whole note or folder, and a chat that searches and reads your notes to answer
-- Projects: a folder with its own AI instructions and its own tree
+- Projects: a folder with its own tree, its own AI and a note for the AI about the project
 - Import from a folder (for example a OneNote export) and export to HTML, Word and PDF
 
 <table>

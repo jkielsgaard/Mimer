@@ -25,7 +25,7 @@ const settings: Settings = {
     cloudConsent: null,
     builtin: DEFAULT_BUILTIN,
     foundry: { model: "", tools: true },
-    baseInstruction: "",
+    answerLanguage: "",
     globalInstructions: "",
     embeddings: { enabled: false, providerId: "lmstudio-default", model: "" },
     providers: [

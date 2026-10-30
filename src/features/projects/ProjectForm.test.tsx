@@ -29,7 +29,7 @@ const settings: Settings = {
     cloudConsent: null,
     builtin: DEFAULT_BUILTIN,
     foundry: { model: "", tools: true },
-    baseInstruction: "",
+    answerLanguage: "",
     globalInstructions: "",
     embeddings: { enabled: false, providerId: "lm", model: "" },
     providers: [
@@ -66,6 +66,12 @@ describe("ProjectForm", () => {
       "Use global default (LM Studio)",
       "LM Studio",
     ]);
+  });
+
+  it("has About this project and no Ask AI box for the text", () => {
+    render(<ProjectForm state={{ folder: "Work", project: null }} settings={settings} />);
+    expect(screen.getByLabelText("About this project")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Ask AI to change the instructions")).toBeNull();
   });
 
   it("falls back to the default when an old project points at a cloud provider", () => {
