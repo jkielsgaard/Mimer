@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Next meeting** on the start page lists today's and tomorrow's meetings that are still to come, each with Start. The widget **Today's meetings** is gone (Next meeting does the same).
 - **With no note open, Files shows a Notes page**: the recent notes and every note, newest first, with a box that narrows the list by name. The house still shows the start page.
 
+- **Focus: a timer you can turn off, any length, and Ultra focus.** The **Timer** box at the top of Focus turns the timer on and off (remembered). The length is chosen from 15, 25, 45 and 60 minutes or **Custom…** (1 to 180) and the last one used is kept. **Ultra focus** shows only the task you work on, with its steps, its log and a box for the log (and the timer when it is on); **Back to the epic** goes back.
+
 ### Fixed
 
 - **The AI no longer leaves "Here’s the revised version:" in front of its answer.** The clean-up knew the line with a straight apostrophe only, and a skill that rewrites whole notes did not clean at all. Both now remove such an opening (also after "Sure!", and in Danish), a closing line such as "Let me know if you want changes", reasoning and a code fence, and the instruction to the model says it plainly. A note that itself begins like that keeps its first line.

@@ -1,18 +1,21 @@
-import { Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useAiBlocked } from "@/lib/useAiBlocked";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Task } from "@/bindings/Task";
 import { epicGroups, isOpen } from "@/lib/taskLogic";
 import { EpicProgress } from "./TasksView";
 import { FocusTask } from "./FocusTask";
+import { FocusLength } from "./FocusLength";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { CapturePicker } from "@/features/capture/CapturePicker";
 import { askAi, type AiAnswer } from "@/lib/askAi";
+import { clampMinutes } from "@/lib/focusTime";
 import { useNow } from "@/features/chat/useNow";
+import { cn } from "@/lib/utils";
 import { findTask, useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 
-const LENGTHS = [15, 25, 45];
 const RING = 2 * Math.PI * 88;
 
 /** `18:30` from milliseconds. */
@@ -39,9 +42,12 @@ export function FocusMode() {
   const open = useUiStore((s) => s.focusOpen);
   const tasks = useTaskStore((s) => s.tasks);
   const selected = useTaskStore((s) => s.selected);
-  const [minutes, setMinutes] = useState(25);
+  const minutes = useUiStore((s) => s.focusMinutes);
+  const timerOn = useUiStore((s) => s.focusTimer);
+  // One task only, with its timer and log: nothing else of the epic (not remembered).
+  const [ultra, setUltra] = useState(false);
   const [endAt, setEndAt] = useState<number | null>(null);
-  const [left, setLeft] = useState(25 * 60_000);
+  const [left, setLeft] = useState(() => useUiStore.getState().focusMinutes * 60_000);
   const [parked, setParked] = useState(0);
   const aiOff = useAiBlocked();
   const [stuck, setStuck] = useState<{ text: string | null; error: string | null } | null>(null);
@@ -73,6 +79,7 @@ export function FocusMode() {
     setOpened({});
     setAskTick(false);
     setEpicDone(false);
+    setUltra(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- starts fresh each time it opens
   }, [open]);
 
@@ -165,9 +172,13 @@ export function FocusMode() {
     setEndAt(null);
   };
   const setLength = (m: number): void => {
-    setMinutes(m);
-    setLeft(m * 60_000);
+    useUiStore.getState().setFocusMinutes(m);
+    setLeft(clampMinutes(m) * 60_000);
     setEndAt(null);
+  };
+  const setTimer = (on: boolean): void => {
+    useUiStore.getState().setFocusTimer(on);
+    if (!on) setEndAt(null);
   };
 
   /** Marks a task as the one worked on: it opens, and its status becomes Doing. */
@@ -218,6 +229,242 @@ export function FocusMode() {
   };
 
   const tasksOfEpic = group?.tasks ?? [task];
+
+  // The timer: the ring, the length and the message when the time is up.
+  const timerBlock = timerOn ? (
+    <>
+      <div className="relative flex size-52 items-center justify-center">
+        <svg
+          viewBox="0 0 200 200"
+          className="absolute inset-0"
+          role="img"
+          aria-label={`${clock(remaining)} left of ${String(minutes)} minutes`}
+        >
+          <circle cx="100" cy="100" r="88" fill="none" stroke="var(--border)" strokeWidth="12" />
+          <circle
+            cx="100"
+            cy="100"
+            r="88"
+            fill="none"
+            stroke="var(--primary)"
+            strokeWidth="12"
+            strokeLinecap="round"
+            strokeDasharray={RING}
+            strokeDashoffset={RING * Math.min(1, Math.max(0, progress))}
+            transform="rotate(-90 100 100)"
+          />
+        </svg>
+        <div className="flex flex-col items-center">
+          <span className="text-4xl font-semibold tabular-nums" role="timer" aria-live="off">
+            {clock(remaining)}
+          </span>
+          <span className="text-xs text-muted-foreground">of {minutes} min</span>
+        </div>
+      </div>
+
+      <FocusLength minutes={minutes} disabled={running} onChange={setLength} />
+      {over && (
+        <p role="status" className="rounded-lg bg-accent px-4 py-2 text-sm text-accent-foreground">
+          Time is up. Take a short break, then come back.
+        </p>
+      )}
+    </>
+  ) : null;
+
+  // What to do now, the buttons, and the AI's smaller step.
+  const nowBlock = (
+    <>
+      <div className="w-full rounded-xl border border-primary bg-card p-4">
+        <span className="section-label">{allDone ? "Nicely done" : "Do this now"}</span>
+        <p className="mt-1 text-lg leading-snug">
+          {allDone ? "Every step is done. Mark the task as done when you are ready." : current}
+        </p>
+        {!allDone && (
+          <p className="mt-1 text-xs text-muted-foreground">Only this. The rest is waiting.</p>
+        )}
+      </div>
+
+      {/* The right column is narrow: the main button has its own line, so nothing runs out
+              of the window. */}
+      <div className="flex w-full flex-col gap-2">
+        {allDone ? (
+          <Button className="h-10 w-full" onClick={() => void tickTask()}>
+            Mark the task as done
+          </Button>
+        ) : (
+          <Button className="h-10 w-full" onClick={done}>
+            {step ? "Done, next step" : "Done"}
+          </Button>
+        )}
+        <div className={cn("grid gap-2", timerOn ? "grid-cols-2" : "grid-cols-1")}>
+          {timerOn && (
+            <Button variant="outline" className="h-10" onClick={running ? pause : start}>
+              {running
+                ? "Pause timer"
+                : over || left < minutes * 60_000
+                  ? "Continue timer"
+                  : "Start timer"}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            className="h-10"
+            disabled={
+              aiOff !== null || (stuck !== null && stuck.text === null && stuck.error === null)
+            }
+            title={
+              aiOff ??
+              "Cannot get started? The AI suggests one tiny first step, under five minutes."
+            }
+            onClick={askStuck}
+          >
+            Help me start
+          </Button>
+        </div>
+      </div>
+
+      {askTick && (
+        <div
+          role="alert"
+          className="flex w-full flex-col gap-2 rounded-lg border bg-accent/40 p-3 text-sm"
+        >
+          <p>All steps are done. Tick the task too?</p>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => void tickTask()}>
+              Tick the task
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setAskTick(false);
+              }}
+            >
+              Not yet
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {stuck !== null && (
+        <div className="w-full rounded-lg border bg-muted/40 p-3 text-sm" aria-live="polite">
+          {stuck.text === null && stuck.error === null && (
+            <p className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden />
+              Looking for a smaller step…
+            </p>
+          )}
+          {stuck.error !== null && <p className="text-destructive">{stuck.error}</p>}
+          {stuck.text !== null && (
+            <>
+              <p className="section-label">A smaller step</p>
+              <p className="mt-1">{stuck.text}</p>
+              <div className="mt-2 flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    void store.addStep(task, stuck.text ?? "");
+                    setStuck(null);
+                  }}
+                >
+                  Add it as a step
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setStuck(null);
+                  }}
+                >
+                  No thanks
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </>
+  );
+
+  const timerSwitch = (
+    <label className="flex items-center gap-1.5 text-sm">
+      <Checkbox
+        checked={timerOn}
+        onChange={(e) => {
+          setTimer(e.target.checked);
+        }}
+      />
+      Timer
+    </label>
+  );
+
+  if (ultra) {
+    return (
+      <div
+        role="dialog"
+        aria-modal
+        aria-label="Ultra focus"
+        className="fixed inset-0 z-50 flex flex-col bg-background"
+      >
+        <div className="flex shrink-0 items-center gap-3 border-b bg-card px-6 py-3">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setUltra(false);
+            }}
+          >
+            <ArrowLeft /> Back to the epic
+          </Button>
+          <span className="flex-1" />
+          {timerSwitch}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              useUiStore.getState().setFocusOpen(false);
+            }}
+          >
+            Leave focus <kbd className="text-[10px] opacity-60">Esc</kbd>
+          </Button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto px-6 py-6">
+          <div className="mx-auto flex max-w-2xl flex-col gap-4">
+            <h2 className="text-xl font-semibold">{task.title}</h2>
+            {timerOn && (
+              <div className="flex items-center gap-3">
+                <span className="text-3xl font-semibold tabular-nums" role="timer" aria-live="off">
+                  {clock(remaining)}
+                </span>
+                <Button size="sm" variant="outline" onClick={running ? pause : start}>
+                  {running ? "Pause" : over || left < minutes * 60_000 ? "Continue" : "Start"}
+                </Button>
+                <FocusLength minutes={minutes} disabled={running} onChange={setLength} />
+              </div>
+            )}
+            {over && timerOn && (
+              <p
+                role="status"
+                className="rounded-lg bg-accent px-4 py-2 text-sm text-accent-foreground"
+              >
+                Time is up. Take a short break, then come back.
+              </p>
+            )}
+            <div className="flex flex-col gap-3">{nowBlock}</div>
+            <FocusTask
+              task={task}
+              marked
+              open
+              canMove={{ up: false, down: false }}
+              onToggle={() => undefined}
+              onWork={() => undefined}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       role="dialog"
@@ -230,6 +477,16 @@ export function FocusMode() {
         <h2 className="min-w-0 truncate text-base font-semibold">{group?.title ?? task.title}</h2>
         {group && <EpicProgress group={group} />}
         <span className="flex-1" />
+        {timerSwitch}
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setUltra(true);
+          }}
+        >
+          Ultra focus
+        </Button>
         <Button
           size="sm"
           variant="outline"
@@ -272,176 +529,8 @@ export function FocusMode() {
           ))}
         </div>
         <div className="flex min-w-0 flex-col items-center gap-5">
-          <div className="relative flex size-52 items-center justify-center">
-            <svg
-              viewBox="0 0 200 200"
-              className="absolute inset-0"
-              role="img"
-              aria-label={`${clock(remaining)} left of ${String(minutes)} minutes`}
-            >
-              <circle
-                cx="100"
-                cy="100"
-                r="88"
-                fill="none"
-                stroke="var(--border)"
-                strokeWidth="12"
-              />
-              <circle
-                cx="100"
-                cy="100"
-                r="88"
-                fill="none"
-                stroke="var(--primary)"
-                strokeWidth="12"
-                strokeLinecap="round"
-                strokeDasharray={RING}
-                strokeDashoffset={RING * Math.min(1, Math.max(0, progress))}
-                transform="rotate(-90 100 100)"
-              />
-            </svg>
-            <div className="flex flex-col items-center">
-              <span className="text-4xl font-semibold tabular-nums" role="timer" aria-live="off">
-                {clock(remaining)}
-              </span>
-              <span className="text-xs text-muted-foreground">of {minutes} min</span>
-            </div>
-          </div>
-
-          <div role="group" aria-label="How long" className="flex gap-1">
-            {LENGTHS.map((m) => (
-              <Button
-                key={m}
-                size="sm"
-                variant={minutes === m ? "default" : "outline"}
-                aria-pressed={minutes === m}
-                disabled={running}
-                onClick={() => {
-                  setLength(m);
-                }}
-              >
-                {m} min
-              </Button>
-            ))}
-          </div>
-
-          {over && (
-            <p
-              role="status"
-              className="rounded-lg bg-accent px-4 py-2 text-sm text-accent-foreground"
-            >
-              Time is up. Take a short break, then come back.
-            </p>
-          )}
-
-          <div className="w-full rounded-xl border border-primary bg-card p-4">
-            <span className="section-label">{allDone ? "Nicely done" : "Do this now"}</span>
-            <p className="mt-1 text-lg leading-snug">
-              {allDone ? "Every step is done. Mark the task as done when you are ready." : current}
-            </p>
-            {!allDone && (
-              <p className="mt-1 text-xs text-muted-foreground">Only this. The rest is waiting.</p>
-            )}
-          </div>
-
-          {/* The right column is narrow: the main button has its own line, so nothing runs out
-              of the window. */}
-          <div className="flex w-full flex-col gap-2">
-            {allDone ? (
-              <Button className="h-10 w-full" onClick={() => void tickTask()}>
-                Mark the task as done
-              </Button>
-            ) : (
-              <Button className="h-10 w-full" onClick={done}>
-                {step ? "Done, next step" : "Done"}
-              </Button>
-            )}
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" className="h-10" onClick={running ? pause : start}>
-                {running
-                  ? "Pause timer"
-                  : over || left < minutes * 60_000
-                    ? "Continue timer"
-                    : "Start timer"}
-              </Button>
-              <Button
-                variant="outline"
-                className="h-10"
-                disabled={
-                  aiOff !== null || (stuck !== null && stuck.text === null && stuck.error === null)
-                }
-                title={
-                  aiOff ??
-                  "Cannot get started? The AI suggests one tiny first step, under five minutes."
-                }
-                onClick={askStuck}
-              >
-                Help me start
-              </Button>
-            </div>
-          </div>
-
-          {askTick && (
-            <div
-              role="alert"
-              className="flex w-full flex-col gap-2 rounded-lg border bg-accent/40 p-3 text-sm"
-            >
-              <p>All steps are done. Tick the task too?</p>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => void tickTask()}>
-                  Tick the task
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    setAskTick(false);
-                  }}
-                >
-                  Not yet
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {stuck !== null && (
-            <div className="w-full rounded-lg border bg-muted/40 p-3 text-sm" aria-live="polite">
-              {stuck.text === null && stuck.error === null && (
-                <p className="flex items-center gap-2 text-muted-foreground">
-                  <Loader2 className="size-4 animate-spin motion-reduce:animate-none" aria-hidden />
-                  Looking for a smaller step…
-                </p>
-              )}
-              {stuck.error !== null && <p className="text-destructive">{stuck.error}</p>}
-              {stuck.text !== null && (
-                <>
-                  <p className="section-label">A smaller step</p>
-                  <p className="mt-1">{stuck.text}</p>
-                  <div className="mt-2 flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        void store.addStep(task, stuck.text ?? "");
-                        setStuck(null);
-                      }}
-                    >
-                      Add it as a step
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setStuck(null);
-                      }}
-                    >
-                      No thanks
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
+          {timerBlock}
+          {nowBlock}
           <div className="mt-2 flex w-full flex-col gap-1.5">
             <span className="section-label">Something popped into your head?</span>
             <CapturePicker

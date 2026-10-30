@@ -3,6 +3,7 @@ import type { MeetingSeed } from "@/lib/meeting";
 import type { Project } from "@/bindings/Project";
 import type { RenamePreview } from "@/bindings/RenamePreview";
 import { toApiError } from "@/lib/api";
+import { clampMinutes, FOCUS_DEFAULT } from "@/lib/focusTime";
 import type { TimeFormat } from "@/lib/timeFormat";
 
 export type LeftTab = "files" | "search" | "tasks" | "ideas" | "meetings";
@@ -34,6 +35,27 @@ function readTimeFormat(): TimeFormat {
     return v === "24" || v === "12" ? v : "system";
   } catch {
     return "system";
+  }
+}
+
+const FOCUS_TIMER_KEY = "mimer.focusTimer";
+const FOCUS_MINUTES_KEY = "mimer.focusMinutes";
+
+/** Whether the Focus timer is shown (remembered between runs; on unless it was turned off). */
+function readFocusTimer(): boolean {
+  try {
+    return localStorage.getItem(FOCUS_TIMER_KEY) !== "0";
+  } catch {
+    return true;
+  }
+}
+
+/** The length of the Focus timer that was used last, in minutes. */
+function readFocusMinutes(): number {
+  try {
+    return clampMinutes(Number(localStorage.getItem(FOCUS_MINUTES_KEY) ?? FOCUS_DEFAULT));
+  } catch {
+    return FOCUS_DEFAULT;
   }
 }
 
@@ -88,6 +110,12 @@ interface UiState {
   /** How times are written: the computer's own way, 24-hour or 12-hour. */
   timeFormat: TimeFormat;
   setTimeFormat: (f: TimeFormat) => void;
+  /** The timer in Focus is shown. */
+  focusTimer: boolean;
+  setFocusTimer: (on: boolean) => void;
+  /** How long the Focus timer runs, in minutes. */
+  focusMinutes: number;
+  setFocusMinutes: (minutes: number) => void;
   /** Open the start page when Mimer starts, instead of the last note. */
   startOnLaunch: boolean;
   setStartOnLaunch: (on: boolean) => void;
@@ -210,6 +238,25 @@ export const useUiStore = create<UiState>((set, get) => ({
       /* the choice just is not remembered */
     }
     set({ timeFormat });
+  },
+  focusTimer: readFocusTimer(),
+  setFocusTimer: (focusTimer) => {
+    try {
+      localStorage.setItem(FOCUS_TIMER_KEY, focusTimer ? "1" : "0");
+    } catch {
+      /* the choice just is not remembered */
+    }
+    set({ focusTimer });
+  },
+  focusMinutes: readFocusMinutes(),
+  setFocusMinutes: (minutes) => {
+    const focusMinutes = clampMinutes(minutes);
+    try {
+      localStorage.setItem(FOCUS_MINUTES_KEY, String(focusMinutes));
+    } catch {
+      /* the choice just is not remembered */
+    }
+    set({ focusMinutes });
   },
   startOnLaunch: readStartOnLaunch(),
   setStartOnLaunch: (startOnLaunch) => {
