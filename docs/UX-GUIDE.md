@@ -57,7 +57,7 @@ Every control comes from `src/components/ui`, so a change to how one looks is ma
 
 - `Button`: anything that looks like a button. `PlainButton`: a button whose look belongs to the row, chip, tab or rail icon it is.
 - `Input` (a field in a form), `InlineInput` (a field inside a row or list: + Add a step, renaming in place, the file filter), `TimeInput`.
-- `Textarea` (with `indent` where notes are written), `Select`, `Checkbox`, `Radio`, `Label`.
+- `MarkdownField` (several lines, written as Markdown, with live preview) and `MarkdownText` (shows saved Markdown formatted): every text of more than one line that is a note, a log or a meeting's notes. One line (a title, a task, a step, a name) is `Input` and is never Markdown. `Textarea` is for plain text that is not a note (instructions for the AI, a list of words); `Select`, `Checkbox`, `Radio`, `Label`.
 - `Dialog`, `ConfirmDialog`, `PromptDialog`, the menus (`menuStyles`), `ViewHeader`, `PanelHeader`, `RowActions`, `MoveButtons`, `InfoHint`, `MonthCalendar`.
 
 ## Interaction patterns

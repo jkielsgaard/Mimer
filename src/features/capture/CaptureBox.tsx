@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { MarkdownField } from "@/features/editor/MarkdownField";
 import { openFile } from "@/lib/actions";
 import { api } from "@/lib/api";
 import { noteName, taskText } from "@/lib/taskLogic";
@@ -193,21 +193,15 @@ export function CaptureBox({
             setTitle(e.target.value);
           }}
         />
-        <Textarea
-          aria-label="Write the note"
-          indent
+        <MarkdownField
+          label="Write the note"
           rows={4}
-          className="min-h-0 resize-none"
           placeholder="Write it here…"
           value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-              e.preventDefault();
-              void save();
-            }
+          onChange={setText}
+          submitKey="mod-enter"
+          onSubmit={() => {
+            void save();
           }}
         />
         <div className="flex items-center gap-2">
@@ -278,21 +272,15 @@ export function CaptureBox({
         </div>
       )}
       {noteOpen && (
-        <Textarea
-          aria-label={kind === "task" ? "Note for the task" : "Note for the idea"}
-          indent
+        <MarkdownField
+          label={kind === "task" ? "Note for the task" : "Note for the idea"}
           rows={3}
-          className="min-h-0 resize-none"
           placeholder="A small note. Press Ctrl+Enter to save."
           value={note}
-          onChange={(e) => {
-            setNote(e.target.value);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-              e.preventDefault();
-              void save();
-            }
+          onChange={setNote}
+          submitKey="mod-enter"
+          onSubmit={() => {
+            void save();
           }}
         />
       )}

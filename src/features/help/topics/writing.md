@@ -45,3 +45,7 @@ flowchart LR
   B -- yes --> C[Epic]
 ```
 ````
+
+## Markdown in other boxes
+
+The boxes where you write more than one line (the note of a task, an epic or an idea, the log of a task, the notes in a meeting, a quick note) work like a small note: `**bold**` shows as bold when the cursor leaves the line, lists continue with Enter, **Tab** and **Shift+Tab** indent, and **Ctrl+B** and **Ctrl+I** make the selection bold or italic. A log line stays one line. Boxes for one line (a title, a task, a step) are plain text.

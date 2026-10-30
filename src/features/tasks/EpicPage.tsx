@@ -1,7 +1,7 @@
 import { FileText, Link2, Plus, Sparkles, Target } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { NoteBox } from "@/components/NoteBox";
+import { NoteBox } from "./NoteBox";
 import { InlineEdit, RowActions } from "@/components/RowActions";
 import { ViewHeader } from "@/components/ViewHeader";
 import { Button } from "@/components/ui/button";

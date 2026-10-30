@@ -117,6 +117,11 @@ body {
   border: 2px solid transparent;
 }
 
+.chat-markdown.md-text p,
+.chat-markdown.md-text li {
+  /* Text written in a box keeps its line breaks. */
+  white-space: pre-line;
+}
 .chat-markdown p {
   margin: 0.4em 0;
 }

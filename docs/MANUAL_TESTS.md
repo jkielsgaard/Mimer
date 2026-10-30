@@ -242,6 +242,12 @@ Check with `git log --oneline` in the vault folder.
 - [ ] Rename the linked note in the tree: the link in the task line follows. Delete it: the chip is dimmed and says "Note missing"; on the task page **Make the note** makes it again.
 - [ ] Rename the task title: the link stays. The link is not in the title anywhere.
 
+## Markdown in text boxes
+
+- [ ] Task page → Note, epic page → Note, idea → Note, the meeting screen's notes, Quick note: type `**bold**` and move to another line: it shows bold; `- one` and Enter continue the list; Tab and Shift+Tab indent; Ctrl+B and Ctrl+I wrap the selection. A note box saves when you click away; Ctrl+Enter saves a quick note, an idea's note and the small note of a new task.
+- [ ] Task page → "Write what happened": bold works, Enter adds the line, Shift+Enter writes nothing. Pencil on a log line: the same box; Esc cancels. The log, Focus and the meeting page show bold as bold.
+- [ ] Titles, tasks, steps, names, the chat and the AI instructions are still plain one-line or plain text boxes.
+
 ## Tab, status, Meetings and the start page
 
 - [ ] In a bullet list, **Tab** moves the item one level in, **Shift+Tab** out; a selection over several items moves them all; a numbered and a task item work too. **Enter** on an empty nested item takes it out one level; on an empty item at the left edge the list ends. A plain line with the caret at its start moves two spaces in and out; with the caret after some text, Tab puts a tab there and Shift+Tab takes it back; in a table cell Tab still moves between cells. The same in the meeting screen, the note box of a task, an epic and an idea, and the write-it-down box (there Tab no longer leaves the box: click away).

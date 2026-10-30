@@ -1,7 +1,7 @@
 import { Check } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { MarkdownField } from "@/features/editor/MarkdownField";
 import { CapturePicker } from "@/features/capture/CapturePicker";
 import { api } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
@@ -25,7 +25,6 @@ export function MeetingFocus() {
   const [adding, setAdding] = useState("");
   const [parked, setParked] = useState(0);
   const [last, setLast] = useState(false);
-  const area = useRef<HTMLTextAreaElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef<{ path: string; content: string } | null>(null);
 
@@ -77,7 +76,6 @@ export function MeetingFocus() {
         setContent(n.content);
         setCurrent(start);
         setDraft(itemNotes(n.content, start));
-        setTimeout(() => area.current?.focus(), 0);
       })
       .catch((e: unknown) => {
         reportError(e);
@@ -117,7 +115,6 @@ export function MeetingFocus() {
     setCurrent(item);
     setDraft(itemNotes(text, item));
     setLast(false);
-    setTimeout(() => area.current?.focus(), 0);
   };
 
   const write = (text: string): void => {
@@ -242,16 +239,17 @@ export function MeetingFocus() {
 
         <div className="flex min-w-0 flex-col gap-3">
           <h3 className="text-xl font-semibold">{current}</h3>
-          <Textarea
-            indent
-            ref={area}
-            aria-label={`Notes for ${current}`}
+          <MarkdownField
+            // A new field for each item: it is empty of the old item's undo and has the focus.
+            key={current}
+            label={`Notes for ${current}`}
             value={draft}
+            autoFocus
+            rows={12}
+            maxRows={40}
             placeholder="Write while you talk."
-            onChange={(e) => {
-              write(e.target.value);
-            }}
-            className="min-h-64 flex-1 resize-none rounded-lg border bg-card px-4 py-3 text-[15px] leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onChange={write}
+            className="min-h-64 flex-1 rounded-lg bg-card text-[15px]"
           />
           <div className="flex flex-wrap items-center gap-2">
             <span className="flex-1" />

@@ -31,6 +31,7 @@ import { statusFacts, statusLogLines, TaskPage } from "./TaskPage";
 import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { pressEnter, setField, typeInField } from "@/test/markdownField";
 
 const task = makeTask({
   title: "Renew the Acme licence",
@@ -83,7 +84,11 @@ describe("TaskPage", () => {
     expect(apiMock.taskSetDone).toHaveBeenCalledWith(task.path, 7, "s2", true);
     await user.type(screen.getByLabelText("Add a step"), "Send the quote{Enter}");
     expect(apiMock.taskAddStep).toHaveBeenCalledWith(task.path, 5, "key-1", "Send the quote");
-    await user.type(screen.getByLabelText("Write what happened"), "Peter answered.{Enter}");
+    typeInField("Write what happened", "Peter answered.");
+    pressEnter("Write what happened");
+    await waitFor(() => {
+      expect(apiMock.taskAddLog).toHaveBeenCalled();
+    });
     expect(apiMock.taskAddLog.mock.calls[0]?.[4]).toBe("Peter answered.");
     expect(apiMock.taskAddLog.mock.calls[0]?.[3]).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
@@ -232,9 +237,7 @@ describe("TaskPage", () => {
     render(<TaskPage />);
     const user = userEvent.setup();
     await user.click(screen.getAllByRole("button", { name: "Change this line" })[0] as HTMLElement);
-    const box = screen.getByRole("textbox", { name: "Text of the log line" });
-    await user.clear(box);
-    await user.type(box, "Peter said yes.");
+    setField("Text of the log line", "Peter said yes.");
     await user.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => {
       expect(apiMock.taskEditLog).toHaveBeenCalledWith(

@@ -33,6 +33,7 @@ import { comingMeetings, MeetingLine } from "./MeetingLine";
 import { StartMeetingButton } from "./StartMeetingButton";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { typeInField } from "@/test/markdownField";
 
 const PATH = "Meetings/2026-10-27 Weekly with Mette.md";
 const note = buildMeetingNote({
@@ -91,9 +92,9 @@ describe("MeetingFocus", () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     useUiStore.setState({ meetingFocus: PATH });
     render(<MeetingFocus />);
-    const area = await screen.findByLabelText("Notes for Budget");
+    await screen.findByLabelText("Notes for Budget");
     expect(screen.getByText("with Mette, Peter")).toBeInTheDocument();
-    fireEvent.change(area, { target: { value: "Budget is on track." } });
+    typeInField("Notes for Budget", "Budget is on track.");
     await vi.advanceTimersByTimeAsync(700);
     const written = apiMock.writeNote.mock.calls.at(-1);
     expect(written?.[0]).toBe(PATH);

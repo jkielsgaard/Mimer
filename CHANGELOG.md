@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Markdown in the boxes where you write more than a line.** The note of a task, an epic and an idea, the log of a task, the notes in a meeting and the text of a quick note are now the note editor in a small box: `**bold**` shows as bold when the cursor leaves the line, lists, Tab and Ctrl+B / Ctrl+I work as in a note. What was saved is shown formatted (the task and its log in Focus, the notes on the meeting page). A log line stays one line, because that is how it is kept in the file.
+
 ### Changed
 
 - **How the app is built and changed** (no change to what it does): the areas of the app are mapped in `docs/AREAS.md`, each area has its rules in a `CLAUDE.md`, a change starts from a brief (`docs/BRIEF.md`) with a change plan and ends with a change report (`pnpm areas report`), and every button, field, box and choice on a screen comes from the shared components (lint checks it). The four selects and the settings text box that had their own look now look like every other one.
