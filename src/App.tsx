@@ -46,6 +46,7 @@ import { NoticeDialog } from "@/components/NoticeDialog";
 import { NewNoteDialog } from "@/features/fileTree/NewNoteDialog";
 import { useEmbeddingStore } from "@/stores/embeddingStore";
 import { flushPendingWrites } from "@/lib/flush";
+import { applyTheme } from "@/lib/themes";
 import { useShortcuts } from "@/lib/shortcuts";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { isTasksView, useUiStore } from "@/stores/uiStore";
@@ -143,7 +144,7 @@ export function App() {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = (): void => {
       const s = useSettingsStore.getState().settings;
-      if (s?.theme === "system") document.documentElement.classList.toggle("dark", mq.matches);
+      if (s?.theme === "system") applyTheme("system");
     };
     mq.addEventListener("change", handler);
     return () => {

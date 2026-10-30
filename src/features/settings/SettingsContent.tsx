@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { ProviderEditor } from "./ProviderEditor";
+import { ThemePicker } from "./ThemePicker";
 import { AddProviderDialog } from "./AddProviderDialog";
 import { AiChoice } from "./AiChoice";
 import { BuiltInAiTab } from "@/features/engine/BuiltInAiTab";
@@ -138,20 +139,12 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
         <div className="min-h-0 flex-1 overflow-auto pr-1">
           {tab === "general" && (
             <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="set-theme">Theme</Label>
-                <Select
-                  id="set-theme"
-                  value={draft.theme}
-                  onChange={(e) => {
-                    update({ theme: e.target.value as Settings["theme"] });
-                  }}
-                >
-                  <option value="system">System</option>
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                </Select>
-              </div>
+              <ThemePicker
+                value={draft.theme}
+                onChange={(theme) => {
+                  update({ theme });
+                }}
+              />
               <div className="flex flex-col gap-1">
                 <Label htmlFor="set-font">Editor font size (px)</Label>
                 <Input

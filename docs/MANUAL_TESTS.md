@@ -197,7 +197,8 @@ Check with `git log --oneline` in the vault folder.
 - [ ] **File → Settings…** (`Ctrl/Cmd+,`): General, AI (marked Beta), Version history, Vault. The AI tab has the beta note, the list of AIs, then the folded sections **Built-in AI: set up** and **More: LM Studio and other providers**.
 - [ ] **First start** (clear `mimer.betaNoticeSeen`): "Welcome to Mimer" says it is a first version and that the AI is beta; **Got it** is remembered; **Help → About the AI beta…** shows it again. **Beta** marks sit by the editor AI button, the chat title and the AI tab.
 - [ ] **Right-click on selected text**: Cut, Copy, Paste, Select all, then **AI ›**, Add as a task, Add as an idea. Without a selection the system's own menu shows.
-- [ ] General: theme switches after Save; font size, line width, spellcheck, recent notes, spelling help, Trace my work and your own words take effect.
+- [ ] General → Theme: eight cards (Light, Dark, Slate, Paper, Mint, Midnight, Graphite, Ember); a click changes Mimer at once, Save keeps it, closing Settings without saving puts the old theme back. **Follow my computer** follows the computer's Light or Dark; unticking it keeps the theme on screen. Look at the editor, a dialog, the Tasks page and the start page in every theme: text readable, panels, the writing area and raised boxes still apart.
+- [ ] General: font size, line width, spellcheck, recent notes, spelling help, Trace my work and your own words take effect.
 - [ ] Vault: daily notes folder and template, meetings and quick notes folders, image style; a folder like `../outside` is refused. **Add standard folders and templates** does not overwrite your edits.
 - [ ] Edit `settings.json` and set `"schemaVersion": 99`: "Settings could not be loaded" and the file is not overwritten (restore it afterwards).
 

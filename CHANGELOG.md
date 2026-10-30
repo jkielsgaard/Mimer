@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **AI instructions made clear.** **Settings → AI** now has **About me and my notes** (read by the chat and the skills) and **Language of the AI's answers**. A project has **About this project**. The fixed commands (Fix, Rewrite, Shorten…) no longer read any of the texts, so a sentence there cannot add words around an answer. Removed: Mimer's base instruction and the "Ask AI to change the instructions" box in projects. Old texts are kept and shown in the new fields.
 
+- **Eight themes.** **Settings → General → Theme** has cards for Light, Dark and six new ones: Slate, Paper, Mint (light) and Midnight, Graphite, Ember (dark). A click changes Mimer at once; Save keeps it. **Follow my computer** still follows the computer's Light or Dark. Every theme keeps the writing area, the panels and the raised boxes apart, and its text and buttons meet the contrast rules (a test checks every theme).
+
 ### Fixed
 
 - **The AI no longer leaves "Here’s the revised version:" in front of its answer.** The clean-up knew the line with a straight apostrophe only, and a skill that rewrites whole notes did not clean at all. Both now remove such an opening (also after "Sure!", and in Danish), a closing line such as "Let me know if you want changes", reasoning and a code fence, and the instruction to the model says it plainly. A note that itself begins like that keeps its first line.

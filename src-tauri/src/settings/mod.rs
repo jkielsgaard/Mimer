@@ -24,9 +24,16 @@ pub const SCHEMA_VERSION: u32 = 1;
 #[serde(rename_all = "lowercase")]
 #[ts(export)]
 pub enum Theme {
+    /// Light or Dark, by the computer's own setting.
     System,
     Light,
     Dark,
+    Slate,
+    Paper,
+    Mint,
+    Midnight,
+    Graphite,
+    Ember,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
