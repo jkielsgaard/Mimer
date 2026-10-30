@@ -242,6 +242,12 @@ Check with `git log --oneline` in the vault folder.
 - [ ] Rename the linked note in the tree: the link in the task line follows. Delete it: the chip is dimmed and says "Note missing"; on the task page **Make the note** makes it again.
 - [ ] Rename the task title: the link stays. The link is not in the title anywhere.
 
+## Meetings, Next meeting and Notes page
+
+- [ ] Meetings: Upcoming and Past rows show date and time (`Thu 29 Oct 11:00`); today's rows show the time; a meeting without a time shows the date only. The time follows Settings → Time format.
+- [ ] Start page → Next meeting lists today's and tomorrow's meetings to come with Start; none: "No meetings today or tomorrow." "Today's meetings" is not in Add widget.
+- [ ] Close every note, then press Files: the Notes page with Recent and All notes shows; typing in Find a note narrows the list; a click opens the note. The house still opens the start page.
+
 ## Markdown in text boxes
 
 - [ ] Task page → Note, epic page → Note, idea → Note, the meeting screen's notes, Quick note: type `**bold**` and move to another line: it shows bold; `- one` and Enter continue the list; Tab and Shift+Tab indent; Ctrl+B and Ctrl+I wrap the selection. A note box saves when you click away; Ctrl+Enter saves a quick note, an idea's note and the small note of a new task.

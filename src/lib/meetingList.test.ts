@@ -68,7 +68,12 @@ describe("whenLabel", () => {
   it("says the time today, the date on other days and No date", () => {
     const [b, c, f] = [list[1], list[2], list[5]];
     expect(whenLabel(b?.meeting ?? ({} as never), "2026-10-28")).toBe("10:00");
+    // Another day shows the date and, when the meeting has one, the time.
     expect(whenLabel(c?.meeting ?? ({} as never), "2026-10-28")).toBe("Thu 29 Oct");
+    expect(whenLabel(list[3]?.meeting ?? ({} as never), "2026-10-28")).toBe("Tue 27 Oct 09:00");
+    expect(whenLabel(list[3]?.meeting ?? ({} as never), "2026-10-28", "12")).toBe(
+      "Tue 27 Oct 9:00 AM",
+    );
     expect(whenLabel(f?.meeting ?? ({} as never), "2026-10-28")).toBe("No date");
   });
 });

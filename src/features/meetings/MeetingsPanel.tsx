@@ -37,7 +37,7 @@ function MeetingRow({ m, today, shown }: { m: MeetingNote; today: string; shown:
           useUiStore.getState().setCenterView("meetings");
         }}
       >
-        <span className="w-16 shrink-0 text-xs text-muted-foreground tabular-nums">
+        <span className="min-w-16 shrink-0 whitespace-nowrap text-xs text-muted-foreground tabular-nums">
           {whenLabel(m.meeting, today, format)}
         </span>
         <span className="min-w-0 flex-1 truncate">{m.meeting.title}</span>

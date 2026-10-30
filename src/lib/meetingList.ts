@@ -67,11 +67,15 @@ export function defaultMeeting(g: MeetingGroups, now: Date): MeetingNote | null 
   return next ?? g.today[0] ?? g.upcoming[0] ?? g.past[0] ?? g.undated[0] ?? null;
 }
 
-/** `14:30` for a meeting today, `Thu 29 Oct` for another day, `No date` without one. */
+/**
+ * `14:30` for a meeting today, `Thu 29 Oct 11:00` for another day (the time left out when the
+ * meeting has none), `No date` without one.
+ */
 export function whenLabel(m: Meeting, today: string, format: TimeFormat = "24"): string {
   if (m.date === null) return "No date";
-  if (m.date === today) return m.time === null ? "Today" : formatTime(m.time, format);
-  return shortDate(m.date);
+  const time = m.time === null ? null : formatTime(m.time, format);
+  if (m.date === today) return time ?? "Today";
+  return [shortDate(m.date), time].filter((x) => x !== null).join(" ");
 }
 
 /** What was written under the agenda items (and under Notes itself), the empty parts left out. */

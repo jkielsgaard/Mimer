@@ -6,7 +6,6 @@ export type WidgetId =
   | "capture"
   | "search"
   | "nextMeeting"
-  | "todayMeetings"
   | "workingOn"
   | "inbox"
   | "areas"
@@ -37,9 +36,8 @@ export const WIDGETS: readonly WidgetInfo[] = [
   {
     id: "nextMeeting",
     title: "Next meeting",
-    does: "The next meeting from Meetings, with a Start button.",
+    does: "Today's and tomorrow's meetings, each with a Start button.",
   },
-  { id: "todayMeetings", title: "Today's meetings", does: "Today's meetings in Mimer, in order." },
   {
     id: "workingOn",
     title: "Working on",
