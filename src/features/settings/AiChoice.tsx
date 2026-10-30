@@ -17,6 +17,7 @@ import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useEngineStore } from "@/stores/engineStore";
 import { CloudConsentDialog } from "./CloudConsentDialog";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** Where Mimer runs; `null` while it is asked (or outside the app, in tests). */
 function usePlatform(): AppPlatform | null {
@@ -174,7 +175,7 @@ export function AiChoice({
           const offText = o === "phi" && phi?.device.state === "warn" ? phi.device.text : null;
           const off = offText !== null;
           return (
-            <button
+            <PlainButton
               key={o}
               type="button"
               role="radio"
@@ -225,7 +226,7 @@ export function AiChoice({
               >
                 {state(o)}
               </span>
-            </button>
+            </PlainButton>
           );
         })}
       </div>

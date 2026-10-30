@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useTaskStore } from "@/stores/taskStore";
+import { Select } from "@/components/ui/select";
 
 const NEW_EPIC = "::new";
 
@@ -61,7 +62,7 @@ export function ChooseEpicDialog({
             void go();
           }}
         >
-          <select
+          <Select
             aria-label="Epic for the task"
             value={chosen}
             className="rounded-md border bg-background px-2 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -75,7 +76,7 @@ export function ChooseEpicDialog({
               </option>
             ))}
             <option value={NEW_EPIC}>+ New epic…</option>
-          </select>
+          </Select>
           {chosen === NEW_EPIC && (
             <Input
               autoFocus

@@ -15,6 +15,7 @@ import { noteName, stepsFromAnswer, taskText } from "@/lib/taskLogic";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useTaskStore } from "@/stores/taskStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const STEPS_INSTRUCTION =
   "Read the note below (and the note it came from, if it is given). Suggest the next tasks that are still missing to get the work done. Write each as one short line that starts with '- ' and a verb. Do not repeat tasks that are already in it, and do not invent facts. Put the very first one first. If nothing is missing, answer exactly NONE. Write in the language of the note.";
@@ -145,8 +146,7 @@ function Finder({ path, mode }: { path: string; mode: "tasks" | "steps" }) {
               {found.map((t, i) => (
                 <li key={`${String(i)}-${t}`}>
                   <label className="flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       className="mt-1"
                       checked={chosen.has(i)}
                       onChange={() => {

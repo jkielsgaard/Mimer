@@ -27,6 +27,7 @@ import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { useExcerpt, usePinned, useRecentNotes } from "./useStartData";
+import { PlainButton } from "@/components/ui/plain-button";
 
 const FILTERS: { id: RecentFilter; label: string }[] = [
   { id: "all", label: "All" },
@@ -93,7 +94,7 @@ export function RecentWidget({ narrow }: { narrow: boolean }) {
       {!narrow && (
         <div className="flex flex-wrap items-center gap-1 pb-1">
           {FILTERS.map((f) => (
-            <button
+            <PlainButton
               key={f.id}
               type="button"
               aria-pressed={filter === f.id}
@@ -108,7 +109,7 @@ export function RecentWidget({ narrow }: { narrow: boolean }) {
               }}
             >
               {f.label}
-            </button>
+            </PlainButton>
           ))}
         </div>
       )}
@@ -120,7 +121,7 @@ export function RecentWidget({ narrow }: { narrow: boolean }) {
       <ul>
         {list.slice(0, limit).map((p) => (
           <li key={p}>
-            <button
+            <PlainButton
               type="button"
               title={p}
               className={ROW}
@@ -140,12 +141,12 @@ export function RecentWidget({ narrow }: { narrow: boolean }) {
               <span className="w-20 shrink-0 text-right text-xs text-muted-foreground">
                 {whenChanged(modified.get(p) ?? 0, new Date(), timeFormat)}
               </span>
-            </button>
+            </PlainButton>
           </li>
         ))}
       </ul>
       {list.length > limit && (
-        <button
+        <PlainButton
           type="button"
           className="rounded-md px-2 py-1 text-left text-xs font-semibold text-primary hover:bg-muted"
           onClick={() => {
@@ -153,7 +154,7 @@ export function RecentWidget({ narrow }: { narrow: boolean }) {
           }}
         >
           Show more
-        </button>
+        </PlainButton>
       )}
     </div>
   );
@@ -166,7 +167,7 @@ export function PinnedWidget() {
     <div className="flex flex-col gap-1.5">
       {paths.map((p) => (
         <div key={p} className="group flex items-center rounded-md border hover:bg-muted">
-          <button
+          <PlainButton
             type="button"
             title={p}
             className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-left text-sm focus-visible:ring-2 focus-visible:ring-ring"
@@ -176,7 +177,7 @@ export function PinnedWidget() {
           >
             <Star className="size-3.5 shrink-0 fill-primary text-primary" aria-hidden />
             <span className="truncate">{noteTitle(p)}</span>
-          </button>
+          </PlainButton>
           <Button
             size="icon"
             variant="ghost"
@@ -275,7 +276,7 @@ export function TodayMeetingsWidget() {
     <ul>
       {today.map((m) => (
         <li key={m.path}>
-          <button
+          <PlainButton
             type="button"
             className={ROW}
             onClick={() => {
@@ -287,7 +288,7 @@ export function TodayMeetingsWidget() {
               {m.meeting.time === null ? "Today" : formatTime(m.meeting.time, format)}
             </span>
             <span className="min-w-0 flex-1 truncate">{m.meeting.title}</span>
-          </button>
+          </PlainButton>
         </li>
       ))}
     </ul>
@@ -303,7 +304,7 @@ export function WorkingOnWidget() {
     <ul>
       {shown.slice(0, 8).map((t) => (
         <li key={`${t.path}:${String(t.line)}`}>
-          <button
+          <PlainButton
             type="button"
             className={ROW}
             onClick={() => {
@@ -312,7 +313,7 @@ export function WorkingOnWidget() {
           >
             <span className="min-w-0 flex-1 truncate">{t.title}</span>
             <StatusChip status={t.status} />
-          </button>
+          </PlainButton>
         </li>
       ))}
     </ul>
@@ -338,7 +339,7 @@ export function InboxWidget() {
     <ul>
       {quick.map((p) => (
         <li key={p}>
-          <button
+          <PlainButton
             type="button"
             className={ROW}
             onClick={() => {
@@ -347,12 +348,12 @@ export function InboxWidget() {
           >
             <span className="w-14 shrink-0 text-xs text-muted-foreground">Note</span>
             <span className="min-w-0 flex-1 truncate">{noteTitle(p)}</span>
-          </button>
+          </PlainButton>
         </li>
       ))}
       {open.map((i) => (
         <li key={i.line}>
-          <button
+          <PlainButton
             type="button"
             className={ROW}
             onClick={() => {
@@ -362,7 +363,7 @@ export function InboxWidget() {
           >
             <span className="w-14 shrink-0 text-xs text-muted-foreground">Idea</span>
             <span className="min-w-0 flex-1 truncate">{i.text}</span>
-          </button>
+          </PlainButton>
         </li>
       ))}
     </ul>
@@ -377,7 +378,7 @@ export function AreasWidget() {
   const files = useVaultStore((s) => s.files);
   const ideas = useIdeaStore((s) => s.ideas);
   const tile = (label: string, text: string, run: () => void) => (
-    <button
+    <PlainButton
       key={label}
       type="button"
       className="flex flex-col items-start gap-0.5 rounded-lg border px-3 py-2 text-left hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
@@ -385,7 +386,7 @@ export function AreasWidget() {
     >
       <span className="text-sm font-semibold">{label}</span>
       <span className="text-xs text-muted-foreground">{text}</span>
-    </button>
+    </PlainButton>
   );
   const openTasks = tasks.filter((t) => !t.done && t.status !== "dropped").length;
   return (
@@ -425,7 +426,7 @@ export function ChangedWidget() {
     <ul>
       {rows.map(([p, ms]) => (
         <li key={p}>
-          <button
+          <PlainButton
             type="button"
             title={p}
             className={ROW}
@@ -437,7 +438,7 @@ export function ChangedWidget() {
             <span className="w-20 shrink-0 text-right text-xs text-muted-foreground">
               {whenChanged(ms, new Date(), timeFormat)}
             </span>
-          </button>
+          </PlainButton>
         </li>
       ))}
     </ul>
@@ -458,7 +459,7 @@ export function EpicsWidget() {
     <ul>
       {groups.slice(0, 8).map((g) => (
         <li key={g.path}>
-          <button
+          <PlainButton
             type="button"
             className={ROW}
             onClick={() => {
@@ -469,7 +470,7 @@ export function EpicsWidget() {
             <span className="text-xs text-muted-foreground tabular-nums">
               {g.done} of {g.total}
             </span>
-          </button>
+          </PlainButton>
         </li>
       ))}
     </ul>

@@ -17,6 +17,7 @@ import {
   type PaletteTarget,
 } from "./paletteItems";
 import { findFolder, isManagedNote } from "@/features/fileTree/treeUtils";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** Ctrl+Shift+P: notes, AI commands and actions in one search. */
 export function CommandPalette() {
@@ -216,7 +217,7 @@ export function CommandPalette() {
                     {h === "Skills" ? skillHeading : h}
                   </div>
                 )}
-                <button
+                <PlainButton
                   type="button"
                   role="option"
                   aria-selected={i === index}
@@ -237,7 +238,7 @@ export function CommandPalette() {
                       {it.hint}
                     </span>
                   )}
-                </button>
+                </PlainButton>
               </li>
             );
           })}

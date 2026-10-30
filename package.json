@@ -18,7 +18,8 @@
     "rust:lint": "cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings",
     "rust:format": "cargo fmt --manifest-path src-tauri/Cargo.toml --check",
     "bindings": "cargo test --manifest-path src-tauri/Cargo.toml export_bindings",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm rust:format && pnpm rust:lint && pnpm rust:test"
+    "areas": "node scripts/areas.mjs",
+    "check": "pnpm format:check && pnpm areas check && pnpm lint && pnpm typecheck && pnpm test && pnpm rust:format && pnpm rust:lint && pnpm rust:test"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.3",

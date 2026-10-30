@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { askAi, type AiAnswer } from "@/lib/askAi";
 import { questionWords } from "@/lib/question";
 import { noteTitle } from "@/lib/utils";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** The most notes the answer is made from, and the most of each that is read. */
 const MAX_NOTES = 4;
@@ -121,14 +122,14 @@ export function AnswerCard({ question, semantic }: { question: string; semantic:
           {state.used.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
               {state.used.map((p) => (
-                <button
+                <PlainButton
                   key={p}
                   type="button"
                   className="rounded-full border px-2 py-0.5 text-[11px] hover:bg-muted"
                   onClick={() => void openFile(p)}
                 >
                   {noteTitle(p)}
-                </button>
+                </PlainButton>
               ))}
             </div>
           )}

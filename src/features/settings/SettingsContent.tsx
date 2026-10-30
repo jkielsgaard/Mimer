@@ -28,6 +28,8 @@ import { MimerInstructionSettings } from "./MimerInstructionSettings";
 import { SemanticSearchSettings } from "./SemanticSearchSettings";
 import { appVersion, buildDateLabel, releaseStage } from "@/lib/version";
 import { InfoHint } from "@/components/InfoHint";
+import { PlainButton } from "@/components/ui/plain-button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /** The one entry in the provider list that stands for both built-in engines. */
 const BUILTIN_ROW = "__builtin__";
@@ -55,7 +57,7 @@ function Section({
 }) {
   return (
     <section className="rounded-md border">
-      <button
+      <PlainButton
         type="button"
         aria-expanded={open}
         className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium hover:bg-muted"
@@ -63,7 +65,7 @@ function Section({
       >
         {open ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
         {title}
-      </button>
+      </PlainButton>
       {open && <div className="border-t p-3">{children}</div>}
     </section>
   );
@@ -106,7 +108,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
       <div className="flex min-h-0 flex-1 gap-4">
         <nav className="flex w-40 shrink-0 flex-col gap-0.5" aria-label="Settings sections">
           {TABS.map((t) => (
-            <button
+            <PlainButton
               key={t.id}
               type="button"
               aria-current={tab === t.id}
@@ -120,7 +122,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
             >
               {t.label}
               {t.id === "ai" && <BetaBadge className="ml-1.5" />}
-            </button>
+            </PlainButton>
           ))}
         </nav>
         <div className="min-h-0 flex-1 overflow-auto pr-1">
@@ -215,8 +217,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                 </Select>
               </div>
               <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={startOnLaunch}
                   onChange={(e) => {
                     useUiStore.getState().setStartOnLaunch(e.target.checked);
@@ -225,8 +226,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                 Open the start page when Mimer starts
               </label>
               <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={draft.editor.spellcheck}
                   onChange={(e) => {
                     update({ editor: { ...draft.editor, spellcheck: e.target.checked } });
@@ -235,8 +235,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                 Spellcheck (the system's own, works without AI)
               </label>
               <label className="flex items-start gap-2 text-sm">
-                <input
-                  type="checkbox"
+                <Checkbox
                   className="mt-1"
                   checked={draft.editor.aiSpelling}
                   onChange={(e) => {
@@ -253,8 +252,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                 </span>
               </label>
               <label className="flex items-start gap-2 text-sm">
-                <input
-                  type="checkbox"
+                <Checkbox
                   className="mt-1"
                   checked={draft.editor.traceWork}
                   onChange={(e) => {
@@ -274,7 +272,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                 <label htmlFor="own-words" className="text-sm">
                   My words (never marked), one per line
                 </label>
-                <textarea
+                <Textarea
                   id="own-words"
                   rows={3}
                   className="rounded-md border bg-transparent px-2 py-1 text-sm"
@@ -326,7 +324,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
               >
                 <div className="flex gap-4">
                   <div className="flex w-44 shrink-0 flex-col gap-1">
-                    <button
+                    <PlainButton
                       type="button"
                       className={cn(
                         "truncate rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
@@ -338,7 +336,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                     >
                       Built-in AI
                       <span className="block text-[11px] text-muted-foreground">local · Mimer</span>
-                    </button>
+                    </PlainButton>
                     {draft.ai.providers
                       .filter(
                         (p) =>
@@ -347,7 +345,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                           p.kind !== "phi_silica",
                       )
                       .map((p) => (
-                        <button
+                        <PlainButton
                           key={p.id}
                           type="button"
                           className={cn(
@@ -366,7 +364,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                                 ? "cloud · not used"
                                 : "cloud · needs your OK"}
                           </span>
-                        </button>
+                        </PlainButton>
                       ))}
                     <Button
                       variant="outline"
@@ -443,8 +441,7 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                 </div>
               </Section>
               <label className="flex items-start gap-2 text-sm">
-                <input
-                  type="checkbox"
+                <Checkbox
                   className="mt-1"
                   checked={draft.ai.checkAnswers}
                   onChange={(e) => {

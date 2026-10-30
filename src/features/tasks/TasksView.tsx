@@ -14,6 +14,8 @@ import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { TaskRow } from "./TaskRow";
 import { firstOpenTask, focusEpic } from "./focusEpic";
+import { PlainButton } from "@/components/ui/plain-button";
+import { InlineInput } from "@/components/ui/inline-input";
 
 /** How far an epic has come: a thin bar and "2 of 4". */
 export function EpicProgress({ group }: { group: EpicGroup }) {
@@ -54,7 +56,7 @@ function AddTask({ group }: { group: EpicGroup }) {
         void useTaskStore.getState().add(value, undefined, undefined, group.path);
       }}
     >
-      <input
+      <InlineInput
         aria-label={`Add a task to ${group.title}`}
         placeholder={`+ Add a task to ${group.title}`}
         value={text}
@@ -122,7 +124,7 @@ export function TasksView() {
             if (at !== -1) moveKey(e, g.title, can, moveUp, moveDown);
           }}
         >
-          <button
+          <PlainButton
             type="button"
             aria-expanded={!shut}
             aria-label={`${shut ? "Unfold" : "Fold"} ${g.title}`}
@@ -132,7 +134,7 @@ export function TasksView() {
             }}
           >
             {shut ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
-          </button>
+          </PlainButton>
           {editing === g.path ? (
             <InlineEdit
               value={g.title}
@@ -148,7 +150,7 @@ export function TasksView() {
             />
           ) : (
             <>
-              <button
+              <PlainButton
                 type="button"
                 title={`Open ${g.title}`}
                 className={cn(
@@ -166,7 +168,7 @@ export function TasksView() {
                     · made {shortDate(g.made).replace(/^\S+ /, "")}
                   </span>
                 )}
-              </button>
+              </PlainButton>
               {g.native && g.adopted && (
                 <RowActions
                   what={`the epic ${g.title}`}
@@ -314,7 +316,7 @@ export function TasksView() {
         {open.map(box)}
         {done.length > 0 && (
           <>
-            <button
+            <PlainButton
               type="button"
               aria-expanded={showDone}
               className="flex items-center gap-1 px-1 pt-2 section-label hover:text-foreground"
@@ -324,13 +326,13 @@ export function TasksView() {
             >
               {showDone ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
               Done · {done.length}
-            </button>
+            </PlainButton>
             {showDone && done.map(box)}
           </>
         )}
         {loose.length > 0 && (
           <>
-            <button
+            <PlainButton
               type="button"
               aria-expanded={showLoose}
               className="flex items-center gap-1 px-1 pt-2 section-label hover:text-foreground"
@@ -340,7 +342,7 @@ export function TasksView() {
             >
               {showLoose ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
               Tasks in other notes · {loose.length}
-            </button>
+            </PlainButton>
             {showLoose && (
               <>
                 <p className="px-1 text-xs text-muted-foreground">

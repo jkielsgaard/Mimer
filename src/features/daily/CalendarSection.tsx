@@ -6,6 +6,7 @@ import { sameDayLastMonth } from "@/lib/calendar";
 import { InfoHint } from "@/components/InfoHint";
 import { shortDate, todayIso } from "@/lib/taskLogic";
 import { useVaultStore } from "@/stores/vaultStore";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** The dates that have a daily note, read again when the files change. */
 export function useDailyDates(): Set<string> {
@@ -52,7 +53,7 @@ export function CalendarSection() {
     >
       <MonthCalendar dots={dates} dotLabel="has a note" onPick={open} todayTitle="Today's note">
         {dates.has(lastMonth) && (
-          <button
+          <PlainButton
             type="button"
             className="mt-1 w-full rounded-md px-2 py-1 text-left text-xs hover:bg-muted"
             onClick={() => {
@@ -60,7 +61,7 @@ export function CalendarSection() {
             }}
           >
             This day last month: {shortDate(lastMonth)}
-          </button>
+          </PlainButton>
         )}
       </MonthCalendar>
     </SidebarSection>

@@ -10,6 +10,7 @@ import { noteTitle } from "@/lib/utils";
 import { useVaultStore } from "@/stores/vaultStore";
 import { useNoteText } from "./useNoteText";
 import { MANAGED_NOTES } from "@/features/fileTree/treeUtils";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** The name a wiki-link uses for a note: its file name without `.md`. */
 function linkName(path: string): string {
@@ -111,13 +112,13 @@ export function LinksPanel() {
   const heading = (label: string) => <h3 className="px-3 pb-1 pt-3 section-label">{label}</h3>;
   const row = (p: string, key: string, extra?: React.ReactNode) => (
     <li key={key} className="flex items-center gap-1 px-1">
-      <button
+      <PlainButton
         type="button"
         className="min-w-0 flex-1 truncate rounded-md px-2 py-1 text-left text-sm hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
         onClick={() => void openFile(p)}
       >
         {noteTitle(p)}
-      </button>
+      </PlainButton>
       {extra}
     </li>
   );

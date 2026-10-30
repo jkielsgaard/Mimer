@@ -17,6 +17,8 @@ import { basename, cn, isInside, isMarkdown } from "@/lib/utils";
 import { usePrintStore } from "@/stores/printStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Radio } from "@/components/ui/radio";
 
 const FORMATS: { id: ExportFormat; label: string; ext: string; filter: string }[] = [
   { id: "html", label: "HTML (one file, works offline)", ext: "html", filter: "HTML" },
@@ -107,8 +109,7 @@ export function ExportDialog() {
               key={f.id}
               className={cn("flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-muted")}
             >
-              <input
-                type="radio"
+              <Radio
                 name="export-format"
                 value={f.id}
                 checked={format === f.id}
@@ -122,8 +123,7 @@ export function ExportDialog() {
         </fieldset>
         {target.isFolder && (
           <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={toc}
               onChange={(e) => {
                 setToc(e.target.checked);
@@ -133,8 +133,7 @@ export function ExportDialog() {
           </label>
         )}
         <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={properties}
             onChange={(e) => {
               setProperties(e.target.checked);

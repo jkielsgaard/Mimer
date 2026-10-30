@@ -5,6 +5,7 @@ import { useEngineStore } from "@/stores/engineStore";
 import { BuiltInAiSettings } from "./BuiltInAiSettings";
 import { FoundrySettings } from "./FoundrySettings";
 import { PHI_ID, PhiSilicaSettings, usePhiStatus } from "./PhiSilicaSettings";
+import { PlainButton } from "@/components/ui/plain-button";
 
 type Engine = "phi" | "llama" | "foundry";
 
@@ -57,7 +58,7 @@ export function BuiltInAiTab({
         className={cn("grid gap-2", store ? "sm:grid-cols-3" : "grid-cols-2")}
       >
         {store && (
-          <button
+          <PlainButton
             type="button"
             role="radio"
             aria-checked={engine === "phi"}
@@ -80,13 +81,13 @@ export function BuiltInAiTab({
             <span className="block text-xs text-muted-foreground">
               {phi.device.state === "warn" ? phi.device.text : PHI_CHOICE.text}
             </span>
-          </button>
+          </PlainButton>
         )}
         {CHOICES.map((c) => {
           // The Store version has no llama.cpp.
           const off = store && c.id === "llama";
           return (
-            <button
+            <PlainButton
               key={c.id}
               type="button"
               role="radio"
@@ -106,7 +107,7 @@ export function BuiltInAiTab({
                   ? "Not in the Microsoft Store version. Use the installer from the Mimer website for it."
                   : c.text}
               </span>
-            </button>
+            </PlainButton>
           );
         })}
       </div>

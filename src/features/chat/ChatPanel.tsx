@@ -16,6 +16,7 @@ import { ChatHeader } from "./ChatHeader";
 import { MentionChips } from "./MentionChips";
 import { MentionPicker } from "./MentionPicker";
 import { AiMistakesNote } from "@/components/AiMistakesNote";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /**
  * "Ask about my notes": a plain chat with the local AI. It reads the open note, and the notes and
@@ -209,8 +210,7 @@ export function ChatPanel({ onClose }: { onClose?: () => void } = {}) {
           }
         >
           <label className="flex items-center gap-1.5 px-1 text-xs text-muted-foreground">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={includeNote}
               disabled={activePath === null}
               onChange={(e) => {

@@ -21,6 +21,7 @@ import { LinkedNote } from "@/features/tasks/TaskNote";
 import type { Task } from "@/bindings/Task";
 import type { TaskLog } from "@/bindings/TaskLog";
 import { useAiBlocked } from "@/lib/useAiBlocked";
+import { PlainButton } from "@/components/ui/plain-button";
 
 const STATUSES: { id: string; label: string }[] = [
   { id: "", label: "To do" },
@@ -279,7 +280,7 @@ export function TaskPage() {
         <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,1fr)_280px]">
           <div className="flex min-w-0 flex-col gap-6">
             <div className="flex items-start gap-3">
-              <button
+              <PlainButton
                 type="button"
                 role="checkbox"
                 aria-checked={task.done}
@@ -293,7 +294,7 @@ export function TaskPage() {
                 }}
               >
                 {task.done && <Check className="size-3.5" aria-hidden />}
-              </button>
+              </PlainButton>
               <div className="min-w-0 flex-1">
                 {editTitle ? (
                   <InlineEdit
@@ -381,7 +382,7 @@ export function TaskPage() {
                       );
                     }}
                   >
-                    <button
+                    <PlainButton
                       type="button"
                       role="checkbox"
                       aria-checked={s.done}
@@ -395,7 +396,7 @@ export function TaskPage() {
                       }}
                     >
                       {s.done && <Check className="size-3" aria-hidden />}
-                    </button>
+                    </PlainButton>
                     {editStep === s.line ? (
                       <InlineEdit
                         value={s.text}
@@ -568,7 +569,7 @@ export function TaskPage() {
                 className="grid grid-cols-3 overflow-hidden rounded-md border bg-background text-sm"
               >
                 {STATUSES.map((s, i) => (
-                  <button
+                  <PlainButton
                     key={s.id}
                     type="button"
                     aria-pressed={status === s.id}
@@ -582,7 +583,7 @@ export function TaskPage() {
                     }}
                   >
                     {s.label}
-                  </button>
+                  </PlainButton>
                 ))}
               </div>
             </div>

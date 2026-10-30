@@ -29,6 +29,7 @@ import { nameError } from "@/lib/nameConflict";
 import { useTreeStore } from "@/stores/treeStore";
 import { useUiStore } from "@/stores/uiStore";
 import { currentFolder, useVaultStore } from "@/stores/vaultStore";
+import { PlainButton } from "@/components/ui/plain-button";
 
 const iconButton = "rounded p-1 hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent";
 
@@ -75,14 +76,14 @@ export function TreeToolbar() {
       <h2 className="flex-1 truncate text-xs font-semibold text-foreground">Files</h2>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button
+          <PlainButton
             type="button"
             className="inline-flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
             aria-label="New"
             title="Create a note, folder or project"
           >
             <Plus className="size-3.5" /> New
-          </button>
+          </PlainButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-60">
           <DropdownMenuItem
@@ -149,9 +150,9 @@ export function TreeToolbar() {
       {narrow ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button type="button" className={iconButton} aria-label="More" title="More">
+            <PlainButton type="button" className={iconButton} aria-label="More" title="More">
               <MoreHorizontal className="size-4" />
-            </button>
+            </PlainButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
@@ -186,7 +187,7 @@ export function TreeToolbar() {
       ) : (
         <>
           <span className="mx-0.5 h-4 w-px bg-border" aria-hidden />
-          <button
+          <PlainButton
             type="button"
             className={iconButton}
             aria-label="Collapse all folders"
@@ -196,8 +197,8 @@ export function TreeToolbar() {
             }}
           >
             <ChevronsDownUp className="size-4" />
-          </button>
-          <button
+          </PlainButton>
+          <PlainButton
             type="button"
             className={iconButton}
             aria-label="Show the open note in the tree"
@@ -208,12 +209,17 @@ export function TreeToolbar() {
             }}
           >
             <Crosshair className="size-4" />
-          </button>
+          </PlainButton>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className={iconButton} aria-label="Sort" title="Sort the notes">
+              <PlainButton
+                type="button"
+                className={iconButton}
+                aria-label="Sort"
+                title="Sort the notes"
+              >
                 <ArrowDownUp className="size-4" />
-              </button>
+              </PlainButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
               <DropdownMenuItem

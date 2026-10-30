@@ -16,6 +16,7 @@ import {
   type InlineAction,
   type InlineActionId,
 } from "./inlineActions";
+import { PlainButton } from "@/components/ui/plain-button";
 
 export interface InlineSelection {
   from: number;
@@ -189,14 +190,14 @@ export function InlineAiPopup({
         <div className="flex max-h-[70vh] flex-col overflow-auto">
           <div className="flex items-center px-2 pt-0.5">
             <span className="flex-1 text-xs font-semibold">AI</span>
-            <button
+            <PlainButton
               type="button"
               aria-label="Close the menu"
               className="rounded p-1 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
               onClick={close}
             >
               <X className="size-3.5" />
-            </button>
+            </PlainButton>
           </div>
           {aiOff !== null && <AiOffNote reason={aiOff} />}
           {error !== null && <p className="px-2 py-1 text-xs text-destructive">{error}</p>}
@@ -208,7 +209,7 @@ export function InlineAiPopup({
                 .filter((a): a is InlineAction => a !== undefined)
                 .filter((a) => allowFindTasks || a.id !== "findTasks")
                 .map((a) => (
-                  <button
+                  <PlainButton
                     key={a.id}
                     type="button"
                     disabled={aiOff !== null}
@@ -217,7 +218,7 @@ export function InlineAiPopup({
                   >
                     <span className="font-medium">{a.label}</span>
                     <span className="truncate text-[11px] text-muted-foreground">{a.hint}</span>
-                  </button>
+                  </PlainButton>
                 ))}
             </div>
           ))}

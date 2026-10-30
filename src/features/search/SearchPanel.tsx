@@ -16,6 +16,7 @@ import { looksLikeQuestion } from "@/lib/question";
 import { useAiBlocked } from "@/lib/useAiBlocked";
 import { AnswerCard } from "./AnswerCard";
 import { isManagedNote } from "@/features/fileTree/treeUtils";
+import { PlainButton } from "@/components/ui/plain-button";
 
 type Mode = "keyword" | "meaning" | "both";
 const MODES: { id: Mode; label: string }[] = [
@@ -137,7 +138,7 @@ export function SearchPanel() {
             className="flex flex-1 overflow-hidden rounded-md border text-xs"
           >
             {MODES.map((m) => (
-              <button
+              <PlainButton
                 key={m.id}
                 type="button"
                 role="radio"
@@ -151,7 +152,7 @@ export function SearchPanel() {
                 }}
               >
                 {m.label}
-              </button>
+              </PlainButton>
             ))}
           </div>
           <InfoHint
@@ -177,7 +178,7 @@ export function SearchPanel() {
             <p className="px-1 pb-1 text-xs font-medium text-muted-foreground">Tags</p>
             <div className="flex flex-wrap gap-1">
               {tags.map((t) => (
-                <button
+                <PlainButton
                   key={t.tag}
                   type="button"
                   className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground hover:opacity-80"
@@ -186,7 +187,7 @@ export function SearchPanel() {
                   }}
                 >
                   #{t.tag} <span className="opacity-60">{t.count}</span>
-                </button>
+                </PlainButton>
               ))}
             </div>
           </div>
@@ -205,7 +206,7 @@ export function SearchPanel() {
             .filter((h) => !isManagedNote(h.path))
             .map((h) => (
               <li key={h.path}>
-                <button
+                <PlainButton
                   type="button"
                   className="w-full rounded px-2 py-1.5 text-left hover:bg-muted"
                   onClick={() => {
@@ -219,7 +220,7 @@ export function SearchPanel() {
                       {renderSnippet(h.snippet)}
                     </div>
                   )}
-                </button>
+                </PlainButton>
               </li>
             ))}
         </ul>

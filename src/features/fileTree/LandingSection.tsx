@@ -9,6 +9,7 @@ import { MeetingLine } from "@/features/meetings/MeetingLine";
 import { FileTree } from "./FileTree";
 import { SidebarSection } from "./SidebarSection";
 import { landingNodes, newNotesIn, type Action } from "./treeUtils";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /**
  * The place new notes land: the folders for meetings, quick notes and epics, kept together
@@ -40,7 +41,7 @@ export function LandingSection({
               <span className="rounded bg-primary px-1 text-[9px] font-bold text-primary-foreground">
                 NEW
               </span>
-              <button
+              <PlainButton
                 type="button"
                 title={n.path}
                 className="min-w-0 flex-1 truncate text-left text-[13px]"
@@ -49,7 +50,7 @@ export function LandingSection({
                 }}
               >
                 {noteTitle(n.path)}
-              </button>
+              </PlainButton>
               <Button
                 size="icon"
                 variant="ghost"

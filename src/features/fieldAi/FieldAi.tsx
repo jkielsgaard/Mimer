@@ -9,6 +9,7 @@ import { useAiBlocked } from "@/lib/useAiBlocked";
 import { formatShortcut } from "@/lib/shortcuts";
 import { useVaultStore } from "@/stores/vaultStore";
 import { aiField, fieldRange, replaceInField, type TextField } from "./fieldText";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** The least text that is worth offering the AI for (a stray double click is not). */
 const MIN_CHARS = 3;
@@ -137,7 +138,7 @@ export function FieldAi() {
         >
           <Sparkles className="mx-1.5 size-3.5 text-primary" aria-hidden />
           {QUICK.map((a) => (
-            <button
+            <PlainButton
               key={a.label}
               type="button"
               disabled={aiOff !== null}
@@ -148,9 +149,9 @@ export function FieldAi() {
               }}
             >
               {a.label}
-            </button>
+            </PlainButton>
           ))}
-          <button
+          <PlainButton
             type="button"
             aria-label="More AI commands"
             title={aiOff ?? "More AI commands: rewrite, translate, explain"}
@@ -160,7 +161,7 @@ export function FieldAi() {
             }}
           >
             AI <ChevronDown className="size-3" aria-hidden />
-          </button>
+          </PlainButton>
           <kbd className="mx-1 rounded border px-1 text-[10px] text-muted-foreground">
             {formatShortcut("Mod+K")}
           </kbd>

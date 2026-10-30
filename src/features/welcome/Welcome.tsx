@@ -10,6 +10,7 @@ import { useVaultStore } from "@/stores/vaultStore";
 import { NewVaultDialog } from "@/features/vaults/NewVaultDialog";
 import backdrop from "@/assets/Image_wo_logo.png";
 import { appVersion, releaseStage } from "@/lib/version";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** One shared empty list: a selector must not return a new array every time. */
 const NO_VAULTS: string[] = [];
@@ -102,7 +103,7 @@ export function Welcome() {
                 const gone = missing.includes(p);
                 return (
                   <li key={p} className="group flex items-center gap-1 rounded hover:bg-muted">
-                    <button
+                    <PlainButton
                       type="button"
                       className="min-w-0 flex-1 rounded px-2 py-1.5 text-left"
                       onClick={() => {
@@ -118,7 +119,7 @@ export function Welcome() {
                         )}
                       </div>
                       <div className="truncate text-xs text-muted-foreground">{p}</div>
-                    </button>
+                    </PlainButton>
                     {gone && (
                       <Button
                         variant="ghost"
@@ -153,7 +154,7 @@ export function Welcome() {
           <span>
             Mimer {appVersion} {releaseStage}
           </span>
-          <button
+          <PlainButton
             type="button"
             className="underline-offset-2 hover:underline"
             onClick={() => {
@@ -161,8 +162,8 @@ export function Welcome() {
             }}
           >
             How to use Mimer
-          </button>
-          <button
+          </PlainButton>
+          <PlainButton
             type="button"
             className="underline-offset-2 hover:underline"
             onClick={() => {
@@ -170,7 +171,7 @@ export function Welcome() {
             }}
           >
             About
-          </button>
+          </PlainButton>
         </p>
       </div>
       <NewVaultDialog

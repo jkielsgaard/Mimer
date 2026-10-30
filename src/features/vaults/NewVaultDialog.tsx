@@ -4,6 +4,7 @@ import { nameProblem } from "@/lib/nameConflict";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { reportError } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Props {
   /** The folder the new vault is made in, or null when the dialog is closed. */
@@ -49,8 +50,7 @@ export function NewVaultDialog({ parent, onClose }: Props) {
       }}
     >
       <label className="flex items-start gap-2 text-sm">
-        <input
-          type="checkbox"
+        <Checkbox
           className="mt-1"
           checked={trace}
           onChange={(e) => {

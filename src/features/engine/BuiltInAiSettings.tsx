@@ -16,6 +16,8 @@ import { pickModelFile } from "@/lib/dialogs";
 import { useEngineStore } from "@/stores/engineStore";
 import { reportError } from "@/stores/uiStore";
 import { ProblemPanel } from "./ProblemPanel";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Radio } from "@/components/ui/radio";
 
 interface Props {
   draft: Settings;
@@ -243,8 +245,7 @@ export function BuiltInAiSettings({ draft, onChange }: Props) {
               key={m.id}
               className="flex cursor-pointer items-start gap-2 rounded-md border p-2 text-sm has-[:checked]:border-primary has-[:checked]:bg-accent/40"
             >
-              <input
-                type="radio"
+              <Radio
                 name="bi-model"
                 className="mt-1"
                 checked={b.modelId === m.id}
@@ -270,8 +271,7 @@ export function BuiltInAiSettings({ draft, onChange }: Props) {
                 key={m.id}
                 className="flex cursor-pointer items-start gap-2 rounded-md border p-2 text-sm has-[:checked]:border-primary has-[:checked]:bg-accent/40"
               >
-                <input
-                  type="radio"
+                <Radio
                   name="bi-model"
                   className="mt-1"
                   checked={b.modelId === m.id}
@@ -344,8 +344,7 @@ export function BuiltInAiSettings({ draft, onChange }: Props) {
           </p>
         </div>
         <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={useForMimer}
             onChange={(e) => {
               setUseForMimer(e.target.checked);
@@ -501,8 +500,7 @@ export function BuiltInAiSettings({ draft, onChange }: Props) {
           )}
         </div>
         <label className="flex items-start gap-2 text-sm">
-          <input
-            type="checkbox"
+          <Checkbox
             className="mt-1"
             checked={b.thinking}
             onChange={(e) => {

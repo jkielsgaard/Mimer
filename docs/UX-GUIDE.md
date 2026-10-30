@@ -51,6 +51,15 @@ Header (`sidebar`) on top, status bar at the bottom. Left edge: the icon rail (`
 
 Icons are `lucide-react`, 16px (`icon`), stroke style, in `currentColor`, before the label in a button. Reused meanings: House = Start, Files, Search, Lightbulb = Ideas, ListChecks = Tasks, CalendarClock = Meetings, Plus = new/add, Pencil = edit, Trash2 = delete, X = close/remove, ChevronUp/Down = move, MoreHorizontal (···) = more for this thing, Star = pinned, Target = Focus, Sparkles = AI, Presentation = Start meeting. No emoji.
 
+## The parts a screen is built from
+
+Every control comes from `src/components/ui`, so a change to how one looks is made once and reaches every screen (lint refuses a raw `<button>`, `<input>`, `<textarea>` or `<select>` in a feature):
+
+- `Button`: anything that looks like a button. `PlainButton`: a button whose look belongs to the row, chip, tab or rail icon it is.
+- `Input` (a field in a form), `InlineInput` (a field inside a row or list: + Add a step, renaming in place, the file filter), `TimeInput`.
+- `Textarea` (with `indent` where notes are written), `Select`, `Checkbox`, `Radio`, `Label`.
+- `Dialog`, `ConfirmDialog`, `PromptDialog`, the menus (`menuStyles`), `ViewHeader`, `PanelHeader`, `RowActions`, `MoveButtons`, `InfoHint`, `MonthCalendar`.
+
 ## Interaction patterns
 
 - **Rows**: the pencil and the bin show on hover or focus (`RowActions`); the arrows to move show the same way (`MoveButtons`, also Alt+Up/Down), and always while a page is being arranged.

@@ -9,6 +9,7 @@ import { flushPendingWrites } from "@/lib/flush";
 import { cn, relativeTime } from "@/lib/utils";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** Commits that touched the current note, with a diff (old version → current) and restore. */
 export function HistoryPanel() {
@@ -113,7 +114,7 @@ export function HistoryPanel() {
         )}
         {entries.map((e) => (
           <li key={e.sha}>
-            <button
+            <PlainButton
               type="button"
               className={cn(
                 "w-full px-3 py-1.5 text-left hover:bg-muted",
@@ -128,7 +129,7 @@ export function HistoryPanel() {
                 <span>{relativeTime(e.time)}</span>
                 <code>{e.shortSha}</code>
               </div>
-            </button>
+            </PlainButton>
           </li>
         ))}
       </ul>

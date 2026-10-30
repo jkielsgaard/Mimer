@@ -18,6 +18,7 @@ import { inEpicFolder } from "@/lib/taskLogic";
 import { dirname } from "@/lib/utils";
 import { useTaskStore } from "@/stores/taskStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** The note a task points at, if it exists: its path. */
 function useLinkedPath(task: Task): string | null {
@@ -39,7 +40,7 @@ export function TaskNoteChip({ task }: { task: Task }) {
   if (task.link === null) return null;
   const name = shownName(task.link);
   return (
-    <button
+    <PlainButton
       type="button"
       aria-label={path === null ? `Note missing: ${name}` : `Open the note ${name}`}
       title={
@@ -58,7 +59,7 @@ export function TaskNoteChip({ task }: { task: Task }) {
     >
       <FileText className="size-3 shrink-0" aria-hidden />
       <span className="truncate">{path === null ? "Note missing" : name}</span>
-    </button>
+    </PlainButton>
   );
 }
 

@@ -1,6 +1,7 @@
 import { FileText, Folder, X } from "lucide-react";
 import { isFolderMention } from "@/lib/mentionQuery";
 import { basename } from "@/lib/utils";
+import { PlainButton } from "@/components/ui/plain-button";
 
 interface Props {
   /** Vault-relative note paths. */
@@ -29,7 +30,7 @@ export function MentionChips({ paths, onRemove }: Props) {
             )}
             <span className="truncate">{name}</span>
             {onRemove && (
-              <button
+              <PlainButton
                 type="button"
                 aria-label={`Remove ${name}`}
                 className="rounded-full p-0.5 hover:bg-background/60"
@@ -38,7 +39,7 @@ export function MentionChips({ paths, onRemove }: Props) {
                 }}
               >
                 <X className="size-3" />
-              </button>
+              </PlainButton>
             )}
           </li>
         );

@@ -18,6 +18,7 @@ import { reportError, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { MeetingWhenDialog } from "./MeetingWhenDialog";
 import { useMeetingsLoaded, useShownMeeting } from "./useMeetings";
+import { Checkbox } from "@/components/ui/checkbox";
 
 /** `Today · 10:00 · with Mette, Peter`. */
 function whenLine(m: MeetingNote, today: string, format: TimeFormat): string {
@@ -198,8 +199,7 @@ export function MeetingsView() {
             <ul className="flex flex-col gap-1">
               {m.meeting.agenda.map((a) => (
                 <li key={a.text} className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     className="size-4"
                     checked={a.done}
                     aria-label={`${a.done ? "Not done" : "Done"}: ${a.text}`}

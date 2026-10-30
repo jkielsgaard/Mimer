@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/select";
 import { api, toApiError } from "@/lib/api";
 import { effectiveLocation as locationOf, isLoopbackUrl } from "@/lib/providers";
 import { PROVIDER_HELP } from "./providerHelp";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const KIND_DEFAULTS: Record<
   ProviderKind,
@@ -245,8 +246,7 @@ export function ProviderEditor({ provider, onChange, onRemove, persist }: Props)
       </p>
       <div className="flex items-center gap-4">
         <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={provider.supportsTools}
             onChange={(e) => {
               set({ supportsTools: e.target.checked });

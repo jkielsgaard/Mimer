@@ -9,11 +9,13 @@ import { TaskNoteChip } from "@/features/tasks/TaskNote";
 import { shortDate, todayIso } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { useTaskStore } from "@/stores/taskStore";
+import { PlainButton } from "@/components/ui/plain-button";
+import { InlineInput } from "@/components/ui/inline-input";
 
 /** A checkbox for a task or a step in Focus. */
 function Tick({ done, label, onToggle }: { done: boolean; label: string; onToggle: () => void }) {
   return (
-    <button
+    <PlainButton
       type="button"
       role="checkbox"
       aria-checked={done}
@@ -25,7 +27,7 @@ function Tick({ done, label, onToggle }: { done: boolean; label: string; onToggl
       onClick={onToggle}
     >
       {done && <Check className="size-3" aria-hidden />}
-    </button>
+    </PlainButton>
   );
 }
 
@@ -72,7 +74,7 @@ export function FocusTask({
       )}
     >
       <div className="group flex items-center gap-2.5">
-        <button
+        <PlainButton
           type="button"
           aria-expanded={shown}
           aria-label={`${shown ? "Fold" : "Unfold"} ${task.title}`}
@@ -80,7 +82,7 @@ export function FocusTask({
           onClick={onToggle}
         >
           {shown ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-        </button>
+        </PlainButton>
         <Tick
           done={task.done}
           label={task.title}
@@ -234,7 +236,7 @@ export function FocusTask({
                 void store.addStep(task, text);
               }}
             >
-              <input
+              <InlineInput
                 aria-label={`Add a step to ${task.title}`}
                 value={step}
                 placeholder="+ Add a step. Enter adds it."
@@ -261,7 +263,7 @@ export function FocusTask({
             >
               What has happened
             </label>
-            <input
+            <InlineInput
               id={`happened-${String(task.line)}`}
               value={log}
               placeholder="Write it as you go. Enter adds it with today's date."

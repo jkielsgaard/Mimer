@@ -14,6 +14,7 @@ import { api } from "@/lib/api";
 import { askAi, type AiAnswer } from "@/lib/askAi";
 import { stepsFromAnswer } from "@/lib/taskLogic";
 import { useTaskStore } from "@/stores/taskStore";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const INSTRUCTION =
   "Break the task into 3 to 6 small, concrete steps. Use what the note says, so the steps fit it. Each step starts with a verb and can be done in 5 to 50 minutes. Put the very first step first. Answer with one step per line, starting with '- ', and nothing else. Write in the language of the task.";
@@ -144,8 +145,7 @@ export function BreakDownDialog({ task, onClose }: { task: Task; onClose: () => 
               {steps.map((s, i) => (
                 <li key={`${String(i)}-${s}`}>
                   <label className="flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       className="mt-1"
                       checked={chosen.has(i)}
                       onChange={() => {

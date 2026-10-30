@@ -1,6 +1,7 @@
 import type { EditorView } from "@codemirror/view";
 import { useEffect } from "react";
 import { reportError } from "@/stores/uiStore";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** One line of the menu: the shortcut stays on the right. */
 function Item({
@@ -15,7 +16,7 @@ function Item({
   onClick: () => void;
 }) {
   return (
-    <button
+    <PlainButton
       type="button"
       role="menuitem"
       disabled={disabled}
@@ -24,7 +25,7 @@ function Item({
     >
       <span>{label}</span>
       {keys && <span className="ml-auto text-xs text-muted-foreground">{keys}</span>}
-    </button>
+    </PlainButton>
   );
 }
 

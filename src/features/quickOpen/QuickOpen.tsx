@@ -7,6 +7,7 @@ import { basename, cn, isMarkdown } from "@/lib/utils";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { isManagedNote } from "@/features/fileTree/treeUtils";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** Mod+P: fuzzy file-name match over the tree. */
 export function QuickOpen() {
@@ -65,7 +66,7 @@ export function QuickOpen() {
         <ul className="max-h-80 overflow-auto" role="listbox">
           {results.map((f, i) => (
             <li key={f} role="option" aria-selected={i === index}>
-              <button
+              <PlainButton
                 type="button"
                 className={cn(
                   "flex w-full items-baseline gap-2 rounded px-2 py-1.5 text-left",
@@ -80,7 +81,7 @@ export function QuickOpen() {
               >
                 <span className="truncate text-sm">{basename(f).replace(/\.md$/i, "")}</span>
                 <span className="truncate text-xs text-muted-foreground">{f}</span>
-              </button>
+              </PlainButton>
             </li>
           ))}
           {results.length === 0 && (

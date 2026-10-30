@@ -4,6 +4,7 @@ import { outlineOf, tagsOf } from "@/lib/outline";
 import { searchForTag } from "@/lib/actions";
 import { startTag } from "@/lib/editorViews";
 import { useNoteText } from "./useNoteText";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** The headings of the open note. Click one to go there. */
 export function OutlinePanel() {
@@ -16,7 +17,7 @@ export function OutlinePanel() {
       {path !== null && (
         <div className="flex flex-wrap items-center gap-1 border-b px-3 py-2">
           {tags.map((t) => (
-            <button
+            <PlainButton
               key={t}
               type="button"
               title={`Search for #${t}`}
@@ -26,9 +27,9 @@ export function OutlinePanel() {
               }}
             >
               #{t}
-            </button>
+            </PlainButton>
           ))}
-          <button
+          <PlainButton
             type="button"
             aria-label="Add a tag"
             title="Add a tag: type # and pick one you already use"
@@ -36,7 +37,7 @@ export function OutlinePanel() {
             onClick={startTag}
           >
             + tag
-          </button>
+          </PlainButton>
         </div>
       )}
       <div className="min-h-0 flex-1 overflow-auto px-2 py-2">
@@ -49,7 +50,7 @@ export function OutlinePanel() {
         <ul>
           {headings.map((h) => (
             <li key={h.line}>
-              <button
+              <PlainButton
                 type="button"
                 className="w-full truncate rounded-md py-1 pr-2 text-left text-sm hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
                 style={{ paddingLeft: `${String(8 + (h.level - top) * 14)}px` }}
@@ -58,7 +59,7 @@ export function OutlinePanel() {
                 }}
               >
                 {h.text}
-              </button>
+              </PlainButton>
             </li>
           ))}
         </ul>

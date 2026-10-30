@@ -3,6 +3,7 @@ import { ChevronDown, Sparkles } from "lucide-react";
 import { useEffect, useState, type RefObject } from "react";
 import type { InlineStart } from "@/features/inlineAi/InlineAiPopup";
 import { formatShortcut } from "@/lib/shortcuts";
+import { PlainButton } from "@/components/ui/plain-button";
 
 const ACTIONS: { label: string; title: string; start: InlineStart }[] = [
   { label: "Fix", title: "Fix spelling and grammar", start: { id: "fix" } },
@@ -83,7 +84,7 @@ export function SelectionBubble({
     >
       <Sparkles className="mx-1.5 size-3.5 text-primary" aria-hidden />
       {ACTIONS.map((a) => (
-        <button
+        <PlainButton
           key={a.label}
           type="button"
           disabled={aiOff !== null}
@@ -95,9 +96,9 @@ export function SelectionBubble({
           }}
         >
           {a.label}
-        </button>
+        </PlainButton>
       ))}
-      <button
+      <PlainButton
         type="button"
         aria-label="More AI commands"
         title={aiOff ?? "More AI commands: rewrite, translate, explain, find tasks"}
@@ -108,12 +109,12 @@ export function SelectionBubble({
         }}
       >
         AI <ChevronDown className="size-3" aria-hidden />
-      </button>
+      </PlainButton>
       {onCapture && (
         <>
           <span className="mx-1 h-4 w-px bg-border" aria-hidden />
           {(["task", "idea"] as const).map((k) => (
-            <button
+            <PlainButton
               key={k}
               type="button"
               className="rounded px-2 py-1 text-xs hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
@@ -123,7 +124,7 @@ export function SelectionBubble({
               }}
             >
               {k === "task" ? "As a task" : "As an idea"}
-            </button>
+            </PlainButton>
           ))}
         </>
       )}

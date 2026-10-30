@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { newProvider } from "./ProviderEditor";
+import { PlainButton } from "@/components/ui/plain-button";
 
 interface Choice {
   id: string;
@@ -81,7 +82,7 @@ export function AddProviderDialog({ open, onCancel, onAdd }: Props) {
         </div>
         <div role="radiogroup" aria-label="Kind of AI" className="flex flex-col gap-2">
           {PROVIDER_CHOICES.map((c) => (
-            <button
+            <PlainButton
               key={c.id}
               type="button"
               role="radio"
@@ -108,7 +109,7 @@ export function AddProviderDialog({ open, onCancel, onAdd }: Props) {
                 </span>
               </span>
               <span className="block text-xs text-muted-foreground">{c.text}</span>
-            </button>
+            </PlainButton>
           ))}
         </div>
         <p className="text-xs text-muted-foreground">

@@ -6,6 +6,7 @@ import { isInside, noteTitle } from "@/lib/utils";
 import { useEditorStore } from "@/stores/editorStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import type { PaneId } from "@/stores/workspaceStore";
+import { PlainButton } from "@/components/ui/plain-button";
 
 /** The number of words in a note, not counting the front matter. */
 export function countWords(text: string): number {
@@ -56,7 +57,7 @@ export function Breadcrumb({ path, paneId }: { path: string | null; paneId?: Pan
     >
       {crumbs.map((c) => (
         <span key={c.path} className="flex min-w-0 items-center gap-0.5">
-          <button
+          <PlainButton
             type="button"
             title={`Show ${c.path} in the file tree`}
             className={`truncate rounded px-1 hover:bg-muted hover:text-foreground ${c.isProject ? "font-medium text-primary" : ""}`}
@@ -65,7 +66,7 @@ export function Breadcrumb({ path, paneId }: { path: string | null; paneId?: Pan
             }}
           >
             {c.label}
-          </button>
+          </PlainButton>
           <ChevronRight className="size-3 shrink-0" aria-hidden />
         </span>
       ))}

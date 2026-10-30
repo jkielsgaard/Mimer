@@ -13,6 +13,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { PlainButton } from "@/components/ui/plain-button";
 
 const TAB_MIME = "application/x-mimer-tab";
 
@@ -140,7 +141,7 @@ export function TabBar({ paneId }: Props) {
                     ●
                   </span>
                 )}
-                <button
+                <PlainButton
                   type="button"
                   aria-label={`Close ${name}`}
                   className="rounded p-0.5 opacity-60 hover:bg-muted hover:opacity-100"
@@ -150,7 +151,7 @@ export function TabBar({ paneId }: Props) {
                   }}
                 >
                   <X className="size-3" />
-                </button>
+                </PlainButton>
               </div>
             </ContextMenuTrigger>
             <ContextMenuContent>

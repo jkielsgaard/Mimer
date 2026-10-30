@@ -6,6 +6,7 @@ import { shortDate, todayIso } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { useIdeaStore, type IdeaFilter } from "@/stores/ideaStore";
 import { useUiStore } from "@/stores/uiStore";
+import { PlainButton } from "@/components/ui/plain-button";
 
 const FILTERS: { id: IdeaFilter; label: string }[] = [
   { id: "open", label: "Open" },
@@ -59,7 +60,7 @@ export function IdeasPanel() {
         className="mx-3 mt-2 flex overflow-hidden rounded-md border text-xs"
       >
         {FILTERS.map((f, i) => (
-          <button
+          <PlainButton
             key={f.id}
             type="button"
             aria-pressed={filter === f.id}
@@ -73,7 +74,7 @@ export function IdeasPanel() {
             }}
           >
             {f.label} {count(f.id)}
-          </button>
+          </PlainButton>
         ))}
       </div>
       <div className="min-h-0 flex-1 overflow-auto px-2 pb-3 pt-2">
@@ -85,7 +86,7 @@ export function IdeasPanel() {
         <ul>
           {shown.map((i) => (
             <li key={i.line}>
-              <button
+              <PlainButton
                 type="button"
                 aria-current={selected === i.line}
                 className={cn(
@@ -110,7 +111,7 @@ export function IdeasPanel() {
                   {i.date === today ? "Today" : shortDate(i.date)}
                   {i.tags.map((t) => ` · #${t}`).join("")}
                 </span>
-              </button>
+              </PlainButton>
             </li>
           ))}
         </ul>
