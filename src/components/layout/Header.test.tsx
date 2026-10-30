@@ -49,6 +49,21 @@ describe("Header", () => {
   });
 });
 
+describe("Header: new version", () => {
+  it("has Check for new version in the Help menu, and it opens the releases page", async () => {
+    open.mockResolvedValue(undefined);
+    render(<Header />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Help menu" }));
+    const item = await screen.findByRole("menuitem", { name: /Check for new version/ });
+    item.focus();
+    await user.keyboard("{Enter}");
+    await vi.waitFor(() => {
+      expect(open).toHaveBeenCalledWith("https://github.com/jkielsgaard/Mimer/releases");
+    });
+  });
+});
+
 describe("Header menus", () => {
   it("keeps File for notes and the vault, Go for places and Help for help", async () => {
     render(<Header />);

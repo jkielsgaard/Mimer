@@ -50,7 +50,7 @@ describe("FocusMode", () => {
       tasks: [task],
       selected: { path: task.path, line: task.line, title: task.title },
     });
-    useUiStore.setState({ focusOpen: true });
+    useUiStore.setState({ focusOpen: true, focusTimer: true, focusMinutes: 25 });
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -171,8 +171,61 @@ describe("FocusMode", () => {
       await vi.advanceTimersByTimeAsync(10_000);
     });
     expect(screen.getByRole("timer").textContent).toBe(paused);
-    await user.click(screen.getByRole("button", { name: "15 min" }));
+    await user.click(screen.getByRole("button", { name: "How long" }));
+    await user.click(await screen.findByRole("menuitem", { name: /^15 min/ }));
     expect(screen.getByRole("timer")).toHaveTextContent("15:00");
+    // The length is remembered for next time.
+    expect(useUiStore.getState().focusMinutes).toBe(15);
+    expect(localStorage.getItem("mimer.focusMinutes")).toBe("15");
+  });
+
+  it("takes any length with Custom…, from 1 to 180 minutes", async () => {
+    render(<FocusMode />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "How long" }));
+    await user.click(await screen.findByRole("menuitem", { name: /Custom/ }));
+    const box = await screen.findByRole("textbox");
+    await user.clear(box);
+    await user.type(box, "500");
+    expect(screen.getByRole("button", { name: "Use it" })).toBeDisabled();
+    await user.clear(box);
+    await user.type(box, "35");
+    await user.click(screen.getByRole("button", { name: "Use it" }));
+    expect(screen.getByRole("timer")).toHaveTextContent("35:00");
+  });
+
+  it("hides the timer when it is turned off, remembers that, and brings it back", async () => {
+    const { unmount } = render(<FocusMode />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("checkbox", { name: "Timer" }));
+    expect(screen.queryByRole("timer")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Start timer" })).toBeNull();
+    // What to do now is still there.
+    expect(screen.getByRole("button", { name: "Done, next step" })).toBeInTheDocument();
+    expect(localStorage.getItem("mimer.focusTimer")).toBe("0");
+    unmount();
+    render(<FocusMode />);
+    expect(screen.queryByRole("timer")).toBeNull();
+    await userEvent.setup().click(screen.getByRole("checkbox", { name: "Timer" }));
+    expect(screen.getByRole("timer")).toBeInTheDocument();
+  });
+
+  it("ultra focus shows only the one task, with its timer, steps and log, and goes back", async () => {
+    const other = makeTask({ title: "Another task in the epic", line: 20, key: "k2" });
+    useTaskStore.setState({ tasks: [task, other] });
+    render(<FocusMode />);
+    const user = userEvent.setup();
+    expect(screen.getByText("Another task in the epic")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Ultra focus" }));
+    expect(screen.queryByText("Another task in the epic")).toBeNull();
+    expect(screen.getByRole("timer")).toBeInTheDocument();
+    expect(screen.getAllByText("Write the steps for version 5").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("What has happened")).toBeInTheDocument();
+    // The timer switch works here too.
+    await user.click(screen.getByRole("checkbox", { name: "Timer" }));
+    expect(screen.queryByRole("timer")).toBeNull();
+    await user.click(screen.getByRole("button", { name: /Back to the epic/ }));
+    expect(screen.getByText("Another task in the epic")).toBeInTheDocument();
   });
 
   it("writes down a thing that popped up, as a task, without leaving the focus", async () => {

@@ -2,12 +2,13 @@ import { Search, Star, X } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PlainButton } from "@/components/ui/plain-button";
 import { CapturePicker } from "@/features/capture/CapturePicker";
-import { MeetingLine } from "@/features/meetings/MeetingLine";
+import { useComingMeetings, type PlannedMeeting } from "@/features/meetings/MeetingLine";
 import { StatusChip } from "@/features/tasks/TaskRow";
 import { isManagedNote } from "@/features/fileTree/treeUtils";
 import { openFile } from "@/lib/actions";
-import { groupMeetings } from "@/lib/meetingList";
+import { todayAndTomorrow } from "@/lib/meeting";
 import {
   KIND_LABEL,
   matchesFilter,
@@ -15,7 +16,7 @@ import {
   whenChanged,
   type RecentFilter,
 } from "@/lib/startPage";
-import { epicGroups, todayIso } from "@/lib/taskLogic";
+import { epicGroups } from "@/lib/taskLogic";
 import { formatTime } from "@/lib/timeFormat";
 import { useAiBlocked } from "@/lib/useAiBlocked";
 import { cn, dirname, noteTitle } from "@/lib/utils";
@@ -27,7 +28,6 @@ import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { useExcerpt, usePinned, useRecentNotes } from "./useStartData";
-import { PlainButton } from "@/components/ui/plain-button";
 
 const FILTERS: { id: RecentFilter; label: string }[] = [
   { id: "all", label: "All" },
@@ -256,42 +256,60 @@ export function SearchWidget() {
   );
 }
 
-/** The next meeting with a Start button (the line from Landing). */
+/** Today's and tomorrow's meetings that are still to come, each with a Start button. */
 export function NextMeetingWidget() {
-  return (
-    <div>
-      <MeetingLine />
-      <p className="text-xs text-muted-foreground">Today's and tomorrow's meetings show here.</p>
-    </div>
-  );
-}
-
-/** Today's meetings, in order. */
-export function TodayMeetingsWidget() {
-  const meetings = useMeetingStore((s) => s.meetings);
+  const { coming, now } = useComingMeetings();
   const format = useUiStore((s) => s.timeFormat);
-  const today = groupMeetings(meetings, todayIso()).today;
-  if (today.length === 0) return <Empty>No meetings today.</Empty>;
+  if (coming.length === 0) return <Empty>No meetings today or tomorrow.</Empty>;
+  const today = todayAndTomorrow(now)[0];
+  const day = (m: PlannedMeeting): "Today" | "Tomorrow" =>
+    m.meeting.date === today ? "Today" : "Tomorrow";
   return (
-    <ul>
-      {today.map((m) => (
-        <li key={m.path}>
-          <PlainButton
-            type="button"
-            className={ROW}
-            onClick={() => {
-              useMeetingStore.getState().select(m.path);
-              useUiStore.getState().openArea("meetings");
-            }}
-          >
-            <span className="w-20 shrink-0 text-xs text-muted-foreground tabular-nums">
-              {m.meeting.time === null ? "Today" : formatTime(m.meeting.time, format)}
-            </span>
-            <span className="min-w-0 flex-1 truncate">{m.meeting.title}</span>
-          </PlainButton>
-        </li>
-      ))}
-    </ul>
+    <div className="flex flex-col gap-1">
+      {(["Today", "Tomorrow"] as const).map((d) => {
+        const list = coming.filter((m) => day(m) === d);
+        if (list.length === 0) return null;
+        return (
+          <div key={d} className="flex flex-col">
+            <h4 className="px-2 pb-0.5 pt-1 text-xs text-muted-foreground">{d}</h4>
+            <ul>
+              {list.map((m, i) => (
+                <li
+                  key={m.path}
+                  className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-muted"
+                >
+                  <span className="w-16 shrink-0 whitespace-nowrap text-xs text-muted-foreground tabular-nums">
+                    {m.meeting.time === null ? "" : formatTime(m.meeting.time, format)}
+                  </span>
+                  <PlainButton
+                    title={`Open ${m.meeting.title}`}
+                    className={cn(
+                      "min-w-0 flex-1 truncate text-left text-sm",
+                      d === "Today" && i === 0 && "font-semibold",
+                    )}
+                    onClick={() => {
+                      void openFile(m.path);
+                    }}
+                  >
+                    {m.meeting.title}
+                  </PlainButton>
+                  <Button
+                    size="sm"
+                    variant={d === "Today" && i === 0 ? "default" : "outline"}
+                    aria-label={`Start ${m.meeting.title}`}
+                    onClick={() => {
+                      useUiStore.getState().setMeetingFocus(m.path);
+                    }}
+                  >
+                    Start
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

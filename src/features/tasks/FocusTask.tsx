@@ -2,6 +2,7 @@ import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import type { Task } from "@/bindings/Task";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { MarkdownText } from "@/components/MarkdownText";
 import { MoveButtons } from "@/components/MoveButtons";
 import { InlineEdit, RowActions } from "@/components/RowActions";
 import { Button } from "@/components/ui/button";
@@ -156,9 +157,7 @@ export function FocusTask({
 
       {shown && (
         <div className="ml-10 flex flex-col gap-3">
-          {task.note !== "" && (
-            <p className="whitespace-pre-line text-sm text-muted-foreground">{task.note}</p>
-          )}
+          {task.note !== "" && <MarkdownText text={task.note} className="text-muted-foreground" />}
           {task.steps.length > 0 && (
             <ul aria-label={`Steps of ${task.title}`} className="flex flex-col gap-1">
               {task.steps.map((s, i) => (
@@ -279,8 +278,9 @@ export function FocusTask({
                 .reverse()
                 .slice(0, 3)
                 .map((l) => (
-                  <li key={l.line} className="text-sm">
-                    <span className="text-muted-foreground">{logDay(l.date)}</span> · {l.text}
+                  <li key={l.line} className="flex gap-1.5 text-sm">
+                    <span className="shrink-0 text-muted-foreground">{logDay(l.date)} ·</span>
+                    <MarkdownText text={l.text} />
                   </li>
                 ))}
             </ul>

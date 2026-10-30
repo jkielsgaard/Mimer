@@ -10,6 +10,7 @@ import { IdeasPanel } from "@/features/capture/IdeasPanel";
 import { IdeasView } from "@/features/capture/IdeasView";
 import { MeetingsPanel } from "@/features/meetings/MeetingsPanel";
 import { MeetingsView } from "@/features/meetings/MeetingsView";
+import { NotesPage } from "@/features/start/NotesPage";
 import { StartPage } from "@/features/start/StartPage";
 import { EpicPage } from "@/features/tasks/EpicPage";
 import { TaskPage } from "@/features/tasks/TaskPage";
@@ -52,8 +53,10 @@ export function AppShell() {
   const right = useRef<ImperativePanelHandle>(null);
 
   // With no note open the middle shows the start page instead of an empty editor.
-  const showStart = ui.centerView === "start" || (ui.centerView === "notes" && activePath === null);
-  const showNotes = ui.centerView === "notes" && !showStart;
+  const showStart = ui.centerView === "start";
+  // With no note open the notes show a list of notes instead of an empty editor.
+  const showNoteList = ui.centerView === "notes" && activePath === null;
+  const showNotes = ui.centerView === "notes" && !showNoteList;
 
   // The house opens the start page on its own: both side panels go while it is shown (and come
   // back as they were). With no note open they stay.
@@ -122,6 +125,7 @@ export function AppShell() {
               {ui.centerView === "ideas" && <IdeasView />}
               {ui.centerView === "meetings" && <MeetingsView />}
               {showStart && <StartPage />}
+              {showNoteList && <NotesPage />}
             </main>
           </Panel>
           <PanelResizeHandle className="w-px bg-border transition-colors hover:bg-primary data-[resize-handle-active]:bg-primary" />

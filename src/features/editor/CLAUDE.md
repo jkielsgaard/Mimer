@@ -4,4 +4,5 @@ The note editor (CodeMirror 6): live preview (`extensions/livePreview.ts`, marke
 
 - Edits are written to disk after 1 s (`useNoteSession`); commits happen elsewhere (History). Flush pending writes (`flushPendingWrites`) before anything else reads or writes the note.
 - The editor shows Markdown; it never changes a note's text on its own except what the person types or a command they chose.
+- `MarkdownField` (`MarkdownField.tsx`) is the editor in a small box, used by every multi-line note field in the other areas; it is the one deliberate public part of this area. A change to how notes are written in boxes is made there.
 - Indent rules are shared with every text box for notes (`src/lib/indentText.ts`); change both together.

@@ -6,7 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { appVersion, buildDateLabel, releaseStage } from "@/lib/version";
+import { PlainButton } from "@/components/ui/plain-button";
+import { openLink } from "@/lib/openLink";
+import { RELEASES_URL, appVersion, buildDateLabel, releaseStage } from "@/lib/version";
 import { useUiStore } from "@/stores/uiStore";
 
 /** About Mimer: the picture, the version, what the app is for, and who made it. */
@@ -48,6 +50,19 @@ export function AboutDialog() {
           <p>
             <strong>The name.</strong> Mimer comes from Mímir in Norse mythology, the keeper of the
             well of wisdom beneath the world tree Yggdrasil.
+          </p>
+          <p>
+            <strong>Editions.</strong> This is Mimer{" "}
+            {releaseStage === "preview" ? "Preview" : "Stable"}. Preview has the newest features and
+            changes often; Stable is the finished release. Mimer never looks for updates by itself.{" "}
+            <PlainButton
+              className="underline"
+              onClick={() => {
+                void openLink(RELEASES_URL);
+              }}
+            >
+              Check for a new version
+            </PlainButton>
           </p>
           <p className="border-t pt-3 text-muted-foreground">
             Developed by <strong className="text-foreground">Jesper Ahasverusen Kielsgaard</strong>

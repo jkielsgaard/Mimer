@@ -60,6 +60,8 @@ Each kind has its own box. **New → Quick note**, **New → Task** and **New �
 
 Press **Focus** on an epic (in its heading in the list, or at the top of its page). Everything else is hidden. You see the whole epic as one outline: every task is open, and the one you work on is marked **Working on it** (its status becomes Doing), with its note, its steps (the next one marked **Now**) and what has happened. Nothing is locked: fold or unfold any task, press **Work on this** to move the mark, move a task or a step up or down with the arrows that show when the mouse is over it (or Alt+Up and Alt+Down), and add a step under a task without leaving Focus. **Fold the rest** folds every task but the marked one.
 
+The **Timer** box at the top turns the timer on and off; it is remembered, and with the timer off Focus is just the epic and what to do now. The length of the timer is chosen from a short list (15, 25, 45 and 60 minutes) or **Custom…** (1 to 180 minutes); the one you used last is kept. **Ultra focus** shows only the task you are working on, with its steps, its log and a box to write in the log, and the timer if it is on. **Back to the epic** returns to the whole epic.
+
 - **What has happened** under the marked task: write a line and press Enter. It is added to the log with today's date, and you stay in Focus.
 - **Done, next step** on the right ticks the Now step. After the last step it asks if the task is done too; then the next open task in the epic is marked. When every task is done, Focus says so and takes you back to the task list.
 - The timer (15, 25 or 45 minutes) is for you; nothing happens when it ends except a message.

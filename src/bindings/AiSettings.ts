@@ -11,10 +11,14 @@ export type AiSettings = {
  */
 defaultProviderId: string, 
 /**
- * Who Mimer is. Empty means the built-in default (`ai::prompt::DEFAULT_BASE_INSTRUCTION`).
- * The safety rules are not part of it and cannot be edited.
+ * "About me and my notes": background the chat and the skills read (who the person is, what
+ * their terms mean). The fixed commands do not read it.
  */
-baseInstruction: string, globalInstructions: string, providers: Array<ProviderConfig>, embeddings: EmbeddingSettings, 
+globalInstructions: string, 
+/**
+ * The language of the AI's answers, such as `Danish`. Empty means the language of the text.
+ */
+answerLanguage: string, providers: Array<ProviderConfig>, embeddings: EmbeddingSettings, 
 /**
  * The AI that Mimer runs itself, without LM Studio.
  */

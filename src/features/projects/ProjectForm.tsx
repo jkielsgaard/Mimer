@@ -1,8 +1,6 @@
-import { Sparkles } from "lucide-react";
 import type { Settings } from "@/bindings/Settings";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { DiffView } from "@/components/DiffView";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { api, toApiError } from "@/lib/api";
+import { api } from "@/lib/api";
 import { nameError, projectNameError } from "@/lib/nameConflict";
 import { reportError, type ProjectDialogState, useUiStore } from "@/stores/uiStore";
 import { useTreeStore } from "@/stores/treeStore";
@@ -45,12 +43,7 @@ export function ProjectForm({
     localProviders.some((p) => p.id === p0?.providerId) ? (p0?.providerId ?? GLOBAL) : GLOBAL,
   );
   const [localOnly, setLocalOnly] = useState(p0?.localOnly ?? false);
-  const [askText, setAskText] = useState("");
-  const [proposal, setProposal] = useState<string | null>(null);
-  const [asking, setAsking] = useState(false);
-  const [askError, setAskError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const raw = useRef("");
 
   const isNew = state.project === null;
   const allProjects = useVaultStore((s) => s.projects);
@@ -89,39 +82,6 @@ export function ProjectForm({
       close();
     } catch (e) {
       reportError(e);
-    }
-  };
-
-  const askAi = async (): Promise<void> => {
-    if (askText.trim() === "") return;
-    setAsking(true);
-    setAskError(null);
-    setProposal(null);
-    raw.current = "";
-    try {
-      await api.aiInline(
-        {
-          command: "refineInstructions",
-          instruction: askText.trim(),
-          text: instructions,
-          notePath: null,
-          providerId: providerId === GLOBAL ? null : providerId,
-        },
-        (e) => {
-          if (e.type === "textDelta") {
-            raw.current += e.text;
-          } else if (e.type === "error") {
-            setAskError(e.error.message);
-            setAsking(false);
-          } else {
-            setProposal(raw.current.trim());
-            setAsking(false);
-          }
-        },
-      );
-    } catch (e) {
-      setAskError(toApiError(e).message);
-      setAsking(false);
     }
   };
 
@@ -172,10 +132,10 @@ export function ProjectForm({
             </div>
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1.5">
-                <Label htmlFor="proj-instr">Instructions (Markdown)</Label>
+                <Label htmlFor="proj-instr">About this project</Label>
                 <InfoHint
-                  label="Project instructions"
-                  text="What Mimer should know and how to write in this project. Mimer follows these in every chat inside the project."
+                  label="About this project"
+                  text="What Mimer should know about this project, for example what the notes are for and what its terms mean. The chat and the skills read it; the fixed commands (Fix, Rewrite, Shorten…) do not."
                   topic="projects"
                 />
               </div>
@@ -183,70 +143,11 @@ export function ProjectForm({
                 id="proj-instr"
                 rows={6}
                 value={instructions}
-                placeholder="You help write ISO 27001 documentation…"
+                placeholder="ISO 27001 documents for the first rollout wave…"
                 onChange={(e) => {
                   setInstructions(e.target.value);
                 }}
               />
-            </div>
-            <div className="flex flex-col gap-1 rounded-md border p-2">
-              <Label htmlFor="proj-ask">Ask AI to change the instructions</Label>
-              <div className="flex gap-2">
-                <Input
-                  data-no-ai
-                  id="proj-ask"
-                  value={askText}
-                  placeholder="Make these instructions stricter about formatting"
-                  onChange={(e) => {
-                    setAskText(e.target.value);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      void askAi();
-                    }
-                  }}
-                />
-                <Button
-                  variant="outline"
-                  disabled={asking || askText.trim() === ""}
-                  onClick={() => void askAi()}
-                >
-                  <Sparkles /> {asking ? "Asking…" : "Ask AI"}
-                </Button>
-              </div>
-              {askError && (
-                <p role="alert" className="text-xs text-destructive">
-                  {askError}
-                </p>
-              )}
-              {proposal !== null && (
-                <div className="mt-1 flex flex-col gap-2">
-                  <div className="max-h-48 overflow-auto rounded border">
-                    <DiffView original={instructions} modified={proposal} />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setProposal(null);
-                      }}
-                    >
-                      Reject
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setInstructions(proposal);
-                        setProposal(null);
-                      }}
-                    >
-                      Accept
-                    </Button>
-                  </div>
-                </div>
-              )}
             </div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="proj-provider">AI provider</Label>

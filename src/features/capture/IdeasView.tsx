@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type { Idea } from "@/bindings/Idea";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { MarkdownField } from "@/features/editor/MarkdownField";
 import { api } from "@/lib/api";
 import { fileNameFrom } from "@/lib/noteTitle";
 import { shortDate, stepsFromAnswer, todayIso } from "@/lib/taskLogic";
@@ -103,24 +103,19 @@ function IdeaEditor({ idea }: { idea: Idea }) {
           void save();
         }}
       />
-      <Textarea
-        aria-label="Note for the idea"
-        indent
+      <MarkdownField
+        label="Note for the idea"
         rows={10}
-        className="resize-y"
+        maxRows={40}
         placeholder="A note for the idea. Write what you were thinking, links, next steps… It is saved when you click away."
         value={note}
-        onChange={(e) => {
-          setNote(e.target.value);
-        }}
+        onChange={setNote}
         onBlur={() => {
           void save();
         }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            void save();
-          }
+        submitKey="mod-enter"
+        onSubmit={() => {
+          void save();
         }}
       />
       <div className="flex flex-wrap items-center gap-2">

@@ -35,7 +35,6 @@ import {
   PinnedWidget,
   RecentWidget,
   SearchWidget,
-  TodayMeetingsWidget,
   useWidgetData,
   WorkingOnWidget,
 } from "./widgets";
@@ -58,8 +57,6 @@ function renderWidget(id: WidgetId, narrow: boolean): ReactNode {
       return <SearchWidget />;
     case "nextMeeting":
       return <NextMeetingWidget />;
-    case "todayMeetings":
-      return <TodayMeetingsWidget />;
     case "workingOn":
       return <WorkingOnWidget />;
     case "inbox":

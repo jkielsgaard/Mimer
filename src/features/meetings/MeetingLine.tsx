@@ -34,14 +34,9 @@ function when(m: Meeting, now: Date, format: TimeFormat): string {
   return [day, time].filter((x) => x !== "").join(" ");
 }
 
-/**
- * One line at the top of Landing: the next meeting, with a Start button. "+2" shows the others.
- * Nothing is shown when no meeting is today or tomorrow.
- */
-export function MeetingLine() {
+/** Today's and tomorrow's meetings still to come, in the order they happen, and the time now. */
+export function useComingMeetings(): { coming: PlannedMeeting[]; now: Date } {
   const meetings = useMeetingStore((s) => s.meetings);
-  const format = useUiStore((s) => s.timeFormat);
-  const [more, setMore] = useState(false);
   const [now, setNow] = useState(() => new Date());
   useMeetingsLoaded();
 
@@ -64,6 +59,17 @@ export function MeetingLine() {
   }, [meetings, now]);
 
   const coming = useMemo(() => comingMeetings(planned, now), [planned, now]);
+  return { coming, now };
+}
+
+/**
+ * One line at the top of Landing: the next meeting, with a Start button. "+2" shows the others.
+ * Nothing is shown when no meeting is today or tomorrow.
+ */
+export function MeetingLine() {
+  const { coming, now } = useComingMeetings();
+  const format = useUiStore((s) => s.timeFormat);
+  const [more, setMore] = useState(false);
   const first = coming[0];
   if (!first) return null;
   const others = coming.slice(1);

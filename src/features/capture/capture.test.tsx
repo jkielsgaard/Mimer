@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Idea } from "@/bindings/Idea";
@@ -35,6 +35,7 @@ import { useIdeaStore } from "@/stores/ideaStore";
 import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { fieldView, setField, typeInField } from "@/test/markdownField";
 
 const idea = (patch: Partial<Idea>): Idea => ({
   line: 2,
@@ -89,7 +90,7 @@ describe("CaptureBox", () => {
 
     render(<CaptureBox kind="note" onSaved={onSaved} />);
     await user.type(screen.getByLabelText("Title of the note"), "Cheat sheet");
-    await user.type(screen.getByLabelText("Write the note"), "VLAN 10 is the office");
+    typeInField("Write the note", "VLAN 10 is the office");
     await user.click(screen.getByRole("button", { name: "Save note" }));
     await waitFor(() => {
       expect(apiMock.writeNote).toHaveBeenCalled();
@@ -148,7 +149,7 @@ describe("CaptureBox", () => {
     const idea = render(<CaptureBox kind="idea" />);
     await user.type(screen.getByLabelText("Write an idea"), "An idea");
     await user.click(screen.getByRole("button", { name: "+ Add a note" }));
-    await user.type(screen.getByLabelText("Note for the idea"), "Because of the VPN");
+    typeInField("Note for the idea", "Because of the VPN");
     await user.click(screen.getByRole("button", { name: "Save idea" }));
     await waitFor(() => {
       expect(apiMock.ideaAdd).toHaveBeenCalled();
@@ -159,7 +160,7 @@ describe("CaptureBox", () => {
     render(<CaptureBox kind="task" />);
     await user.type(screen.getByLabelText("Write a task"), "Call Mette");
     await user.click(screen.getByRole("button", { name: "+ Add a note" }));
-    await user.type(screen.getByLabelText("Note for the task"), "About the licence");
+    typeInField("Note for the task", "About the licence");
     await user.click(screen.getByRole("button", { name: "Save task" }));
     await waitFor(() => {
       expect(apiMock.taskAdd).toHaveBeenCalled();
@@ -272,13 +273,10 @@ describe("Ideas", () => {
   it("shows the picked idea with its note and saves a change when you leave the box", async () => {
     useIdeaStore.setState({ selectedLine: 4 });
     render(<IdeasView />);
-    const user = userEvent.setup();
     expect(await screen.findByLabelText("The idea")).toHaveValue("Newest idea");
-    const note = screen.getByLabelText("Note for the idea");
-    expect(note).toHaveValue("Why it matters");
-    await user.clear(note);
-    await user.type(note, "A better reason");
-    await user.click(document.body); // Tab indents in a note box, so click away
+    expect(fieldView("Note for the idea").state.doc.toString()).toBe("Why it matters");
+    setField("Note for the idea", "A better reason");
+    fireEvent.blur(fieldView("Note for the idea").contentDOM);
     await waitFor(() => {
       expect(apiMock.ideaEdit).toHaveBeenCalledWith(4, "k", "Newest idea", "A better reason");
     });
@@ -289,7 +287,7 @@ describe("Ideas", () => {
     render(<IdeasView />);
     const user = userEvent.setup();
     await user.type(await screen.findByLabelText("Write an idea"), "Fresh");
-    await user.type(screen.getByLabelText("Note for the idea"), "Details");
+    typeInField("Note for the idea", "Details");
     await user.click(screen.getByRole("button", { name: "Save idea" }));
     await waitFor(() => {
       expect(apiMock.ideaAdd).toHaveBeenCalled();

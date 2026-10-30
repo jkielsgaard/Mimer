@@ -37,7 +37,7 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
 - Full-text search, plus search by meaning with a local embedding model
 - Version history per note: compare, restore, recover deleted notes
 - AI on selected text in a note **and in every text box** (fix spelling, rewrite, shorten, translate …), AI commands for a whole note or folder, and a chat that searches and reads your notes to answer
-- Projects: a folder with its own AI instructions and its own tree
+- Projects: a folder with its own tree, its own AI and a note for the AI about the project
 - Import from a folder (for example a OneNote export) and export to HTML, Word and PDF
 
 <table>
@@ -73,7 +73,7 @@ The app itself (menus, buttons, help and documentation) is in **English**. The A
 
 ## Install
 
-Download the build for your system from the **Releases** page. There are builds for Windows and Linux. A macOS build is not made for now, because it cannot be tested.
+Download the build for your system from the **Releases** page. Mimer comes in two editions: **Mimer Preview** (versions 0.x for now, the newest features, changing often; available now) and **Mimer Stable** (v1.0.0 and later, not released yet; it will also be in the Microsoft Store). They can be installed side by side. Mimer does not check for updates by itself: use **Help → Check for new version…**. There are builds for Windows and Linux. A macOS build is not made for now, because it cannot be tested.
 
 - **Windows 10/11:** run `Mimer_<version>_x64-setup.exe` (there is also a Microsoft Store package; see [docs/MSIX.md](docs/MSIX.md)). It installs for the current user and does not need administrator rights. The installer is not signed, so Windows SmartScreen may warn you: choose **More info → Run anyway**.
 - **Linux:** run the `.AppImage` (`chmod +x Mimer_*.AppImage && ./Mimer_*.AppImage`), or install the `.rpm`.

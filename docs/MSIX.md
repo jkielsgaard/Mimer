@@ -2,7 +2,7 @@
 
 Microsoft signs an MSIX package itself when it is published in the Microsoft Store, so there is no certificate to buy and Windows does not show the "unknown publisher" warning. This page is how to build the package, try it, and send it in.
 
-The package is built by `scripts/msix/Build-Msix.ps1` on Windows. The release workflow also builds it (as an artifact called `mimer-msix`) for every tag, without failing the release if the step has a problem.
+The package is built by `scripts/msix/Build-Msix.ps1` on Windows. The release workflow also builds it (as an artifact called `mimer-msix`) for every Stable tag (a plain `v1.0.0` or later) and, until v1.0.0 exists, for every `v0.x.y` tag, without failing the release if the step has a problem. A tag with a `-` (`v1.1.0-preview.1`) makes no Store package: once Stable is out, only Stable goes in the Store.
 
 ## 1. Reserve the name and read the identity (once)
 
@@ -30,10 +30,10 @@ On a Windows computer with the Windows SDK, Node, Rust and pnpm:
 ```powershell
 pnpm install
 pnpm tauri build
-./scripts/msix/Build-Msix.ps1 -Version 0.19.0 -TestSign -DisplayName "Mimer: Markdown Notes"
+./scripts/msix/Build-Msix.ps1 -Version 0.20.0 -TestSign -DisplayName "Mimer: Markdown Notes"
 ```
 
-This makes the folder `msix-out` with, among other files, `Mimer_0.19.0.0_x64.msix` (unsigned, for the Store), `Mimer_0.19.0.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
+This makes the folder `msix-out` with, among other files, `Mimer_0.20.0.0_x64.msix` (unsigned, for the Store), `Mimer_0.20.0.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
 
 **Windows Sandbox** (Windows 11 Pro, feature "Windows Sandbox" turned on): edit `scripts/msix/mimer-sandbox.wsb` so that `HostFolder` is the full path of `msix-out`, and double-click it. The sandbox installs Mimer; start it from the Start menu. Everything is gone when you close the sandbox.
 

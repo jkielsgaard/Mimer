@@ -77,6 +77,15 @@ pub fn run() {
             app.manage(guard);
             let config_dir = app.path().app_config_dir()?;
             let settings_path = config_dir.join("settings.json");
+            // Preview has its own folder; its first start takes a copy of the Stable settings.
+            if app.config().identifier.ends_with(".preview") {
+                if let Some(first) = config_dir
+                    .parent()
+                    .map(|p| p.join("dk.mdvault.app").join("settings.json"))
+                {
+                    settings::copy_first_settings(&settings_path, &first);
+                }
+            }
             let (loaded, error) = match settings::load(&settings_path) {
                 Ok(s) => (s, None),
                 Err(e) => {
@@ -155,7 +164,6 @@ pub fn run() {
             commands::projects::delete_project,
             commands::settings::get_settings,
             commands::settings::update_settings,
-            commands::settings::get_default_base_instruction,
             commands::settings::set_api_key,
             commands::settings::has_api_key,
             commands::settings::delete_api_key,

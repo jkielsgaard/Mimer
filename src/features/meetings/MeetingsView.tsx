@@ -1,6 +1,7 @@
 import { CalendarPlus, FileText, Pencil, Plus, Presentation, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { MarkdownText } from "@/components/MarkdownText";
 import { ViewHeader } from "@/components/ViewHeader";
 import { Button } from "@/components/ui/button";
 import { TaskRow } from "@/features/tasks/TaskRow";
@@ -240,9 +241,7 @@ export function MeetingsView() {
               {notes.map((n) => (
                 <div key={n.item} className="rounded-lg border bg-card px-3 py-2">
                   {n.item !== GENERAL && <p className="pb-1 text-xs font-semibold">{n.item}</p>}
-                  <p className="line-clamp-6 whitespace-pre-wrap text-sm text-muted-foreground">
-                    {n.text}
-                  </p>
+                  <MarkdownText text={n.text} className="text-muted-foreground" />
                 </div>
               ))}
             </div>

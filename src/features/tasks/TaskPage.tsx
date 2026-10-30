@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { noteName, shortDate, todayIso } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { findTask, useTaskStore } from "@/stores/taskStore";
@@ -16,7 +15,9 @@ import { MoveButtons, moveKey } from "@/components/MoveButtons";
 import { InlineEdit, RowActions } from "@/components/RowActions";
 import { ViewHeader } from "@/components/ViewHeader";
 import { AiAsk } from "@/components/AiAsk";
-import { NoteBox } from "@/components/NoteBox";
+import { NoteBox } from "./NoteBox";
+import { MarkdownField } from "@/features/editor/MarkdownField";
+import { MarkdownText } from "@/components/MarkdownText";
 import { LinkedNote } from "@/features/tasks/TaskNote";
 import type { Task } from "@/bindings/Task";
 import type { TaskLog } from "@/bindings/TaskLog";
@@ -122,25 +123,19 @@ function LogItem({ task, entry, today }: { task: Task; entry: TaskLog; today: st
               setDate(e.target.value);
             }}
           />
-          <Textarea
-            aria-label="Text of the log line"
-            rows={2}
-            className="min-h-0 resize-y"
+          <MarkdownField
+            label="Text of the log line"
             value={text}
             autoFocus
-            onChange={(e) => {
-              setText(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                save();
-              }
-              if (e.key === "Escape") {
-                setText(entry.text);
-                setDate(entry.date);
-                setEditing(false);
-              }
+            singleLine
+            rows={1}
+            onChange={setText}
+            submitKey="enter"
+            onSubmit={save}
+            onEscape={() => {
+              setText(entry.text);
+              setDate(entry.date);
+              setEditing(false);
             }}
           />
           <div className="flex gap-2">
@@ -193,7 +188,7 @@ function LogItem({ task, entry, today }: { task: Task; entry: TaskLog; today: st
               </Button>
             </span>
           </span>
-          <p className="text-sm">{entry.text}</p>
+          <MarkdownText text={entry.text} />
         </>
       )}
       <ConfirmDialog
@@ -493,24 +488,22 @@ export function TaskPage() {
                   void store.addLog(task, text);
                 }}
               >
-                <Textarea
-                  aria-label="Write what happened"
-                  rows={2}
-                  className="min-h-0 flex-1 resize-none"
-                  placeholder="Write what happened. It gets today's date."
-                  value={log}
-                  onChange={(e) => {
-                    setLog(e.target.value);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey && log.trim() !== "") {
-                      e.preventDefault();
-                      const text = log;
+                <div className="min-w-0 flex-1">
+                  <MarkdownField
+                    label="Write what happened"
+                    placeholder="Write what happened. It gets today's date."
+                    value={log}
+                    singleLine
+                    rows={1}
+                    onChange={setLog}
+                    submitKey="enter"
+                    onSubmit={(text) => {
+                      if (text.trim() === "") return;
                       setLog("");
                       void store.addLog(task, text);
-                    }
-                  }}
-                />
+                    }}
+                  />
+                </div>
                 <Button type="submit" size="sm" disabled={log.trim() === ""}>
                   Add to the log
                 </Button>

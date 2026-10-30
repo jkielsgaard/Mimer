@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { ProviderConfig } from "@/bindings/ProviderConfig";
 import type { Settings } from "@/bindings/Settings";
 import { api, toApiError } from "@/lib/api";
+import { applyTheme } from "@/lib/themes";
 
 interface SettingsState {
   settings: Settings | null;
@@ -18,10 +19,7 @@ interface SettingsState {
 /** Applies theme and editor CSS variables to the document. */
 export function applySettings(s: Settings): void {
   const root = document.documentElement;
-  const dark =
-    s.theme === "dark" ||
-    (s.theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  root.classList.toggle("dark", dark);
+  applyTheme(s.theme);
   root.style.setProperty("--editor-font-size", `${s.editor.fontSize}px`);
   root.style.setProperty("--editor-line-width", `${s.editor.lineWidth}px`);
 }

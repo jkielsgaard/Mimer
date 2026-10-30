@@ -114,6 +114,7 @@ Check with `git log --oneline` in the vault folder.
 - [ ] `Ctrl/Cmd+Shift+N` from inside a note asks first (T, I, N or the buttons) and then shows only that box; each saves and closes with a message that has **Open**; the note you were writing is unchanged. **New → Task**, **New → Idea** and **Quick note** (start page, File, palette) show only that box, with no choice of kind. In a meeting, Focus and the start-page widget: **+ Task**, **+ Idea**, **+ Quick note** open one box, which stays open after saving; the cross closes it.
 - [ ] **Focus** is only on an epic: in its heading in the task list and at the top of the epic page (not in the left panel, not on task rows, not on the task page). It shows the whole epic as an outline, every task open, the task marked **Working on it** (its status is Doing), its next step marked **Now**. Fold any task (also the marked one), **Work on this** moves the mark, **Fold the rest** folds all but the marked one. Move tasks and steps with the arrows (or Alt+Up/Down), and add a step under a task with Enter.
 - [ ] In Focus, write in **What has happened** and press Enter: the line is in the task's log with today's date and you stay in Focus. **Done, next step** on the last step asks "Tick the task too?"; yes marks the next open task. When the epic is done: "Epic done" and **Back to the task list**. The timer can be paused; the write-it-down box keeps you in Focus; Esc leaves.
+- [ ] Focus → **Timer** box: off hides the ring, the length and Start timer, and "Do this now" with Done stays; close Focus and open it again: still off; on brings the timer back. **How long** lists 15, 25, 45, 60 and Custom… (1–180, a wrong number is refused); the length is kept next time and cannot be changed while the timer runs. **Ultra focus** shows only the marked task with timer (if on), steps, a box for the log and the log; **Back to the epic** and Esc work.
 - [ ] **(AI)** **Help me start** in Focus, **Think it through** and **Suggest first steps** on an idea: nothing is added until you press the button.
 
 ### 9. Daily notes and Trace my work
@@ -159,7 +160,7 @@ Check with `git log --oneline` in the vault folder.
 - [ ] Ask "Summarize this note": the answer streams and uses the note; untick **Include the open note** and it no longer knows it. **Stop** stops at once.
 - [ ] Type `/` or press the paperclip: notes and folders can be attached as chips (× removes one; a sixth is refused). In a project only its notes are offered.
 - [ ] The chat answers but never changes a note.
-- [ ] Ask "who are you?": Mimer, briefly; in Danish when asked in Danish. Settings → AI base instruction: a change shows in the answers; **Reset to default** restores it.
+- [ ] Ask "who are you?": Mimer, briefly; in Danish when asked in Danish. Settings → AI has no base instruction any more. **Language of the AI's answers** set to Danish: the chat, the fixed commands and skills answer in Danish; Same as the text: in the language of the text; a Custom command that asks for a translation still translates.
 - [ ] **History** reopens earlier chats after a restart; **New chat** starts over; delete one and **Delete all history…** work. `.vault/chats/` is not committed.
 - [ ] Stop the AI server and send a message: a clear error, not an endless spinner. A slow model shows a counting timer.
 
@@ -178,10 +179,10 @@ Check with `git log --oneline` in the vault folder.
 
 ### 15. Projects
 
-- [ ] **New → Project…**: Name, Instructions and AI provider (local only). Save: a new folder in the **vault root** (also with another folder selected), under Projects, with `.vault/projects/<id>.json` committed.
+- [ ] **New → Project…**: Name, About this project and AI provider (local only). Save: a new folder in the **vault root** (also with another folder selected), under Projects, with `.vault/projects/<id>.json` committed.
 - [ ] A name already used in the root (folder or note, any case) is refused while you type. There is no **Make project** on a folder; a project cannot go inside a folder or another project.
 - [ ] Drag notes onto the project: they move in (one `Rename` commit, links updated). Drag one back to All files.
-- [ ] **(AI)** An instruction like "Always answer in French" changes the answers for notes in the project only. **Ask AI to change the instructions** shows a diff; nothing is saved until **Save**.
+- [ ] **(AI)** A sentence in **About this project** or **About me and my notes** (for example what "Wave 1" means) is known to the chat and to skills, and does not change what Fix, Rewrite or Shorten return. There is no "Ask AI to change the instructions" box.
 - [ ] Rename the project folder: the project follows.
 
 ### 16. Templates, import, export and index pages
@@ -196,7 +197,8 @@ Check with `git log --oneline` in the vault folder.
 - [ ] **File → Settings…** (`Ctrl/Cmd+,`): General, AI (marked Beta), Version history, Vault. The AI tab has the beta note, the list of AIs, then the folded sections **Built-in AI: set up** and **More: LM Studio and other providers**.
 - [ ] **First start** (clear `mimer.betaNoticeSeen`): "Welcome to Mimer" says it is a first version and that the AI is beta; **Got it** is remembered; **Help → About the AI beta…** shows it again. **Beta** marks sit by the editor AI button, the chat title and the AI tab.
 - [ ] **Right-click on selected text**: Cut, Copy, Paste, Select all, then **AI ›**, Add as a task, Add as an idea. Without a selection the system's own menu shows.
-- [ ] General: theme switches after Save; font size, line width, spellcheck, recent notes, spelling help, Trace my work and your own words take effect.
+- [ ] General → Theme: eight cards (Light, Dark, Slate, Paper, Mint, Midnight, Graphite, Ember); a click changes Mimer at once, Save keeps it, closing Settings without saving puts the old theme back. **Follow my computer** follows the computer's Light or Dark; unticking it keeps the theme on screen. Look at the editor, a dialog, the Tasks page and the start page in every theme: text readable, panels, the writing area and raised boxes still apart.
+- [ ] General: font size, line width, spellcheck, recent notes, spelling help, Trace my work and your own words take effect.
 - [ ] Vault: daily notes folder and template, meetings and quick notes folders, image style; a folder like `../outside` is refused. **Add standard folders and templates** does not overwrite your edits.
 - [ ] Edit `settings.json` and set `"schemaVersion": 99`: "Settings could not be loaded" and the file is not overwritten (restore it afterwards).
 
@@ -242,6 +244,18 @@ Check with `git log --oneline` in the vault folder.
 - [ ] Rename the linked note in the tree: the link in the task line follows. Delete it: the chip is dimmed and says "Note missing"; on the task page **Make the note** makes it again.
 - [ ] Rename the task title: the link stays. The link is not in the title anywhere.
 
+## Meetings, Next meeting and Notes page
+
+- [ ] Meetings: Upcoming and Past rows show date and time (`Thu 29 Oct 11:00`); today's rows show the time; a meeting without a time shows the date only. The time follows Settings → Time format.
+- [ ] Start page → Next meeting lists today's and tomorrow's meetings to come with Start; none: "No meetings today or tomorrow." "Today's meetings" is not in Add widget.
+- [ ] Close every note, then press Files: the Notes page with Recent and All notes shows; typing in Find a note narrows the list; a click opens the note. The house still opens the start page.
+
+## Markdown in text boxes
+
+- [ ] Task page → Note, epic page → Note, idea → Note, the meeting screen's notes, Quick note: type `**bold**` and move to another line: it shows bold; `- one` and Enter continue the list; Tab and Shift+Tab indent; Ctrl+B and Ctrl+I wrap the selection. A note box saves when you click away; Ctrl+Enter saves a quick note, an idea's note and the small note of a new task.
+- [ ] Task page → "Write what happened": bold works, Enter adds the line, Shift+Enter writes nothing. Pencil on a log line: the same box; Esc cancels. The log, Focus and the meeting page show bold as bold.
+- [ ] Titles, tasks, steps, names, the chat and the AI instructions are still plain one-line or plain text boxes.
+
 ## Tab, status, Meetings and the start page
 
 - [ ] In a bullet list, **Tab** moves the item one level in, **Shift+Tab** out; a selection over several items moves them all; a numbered and a task item work too. **Enter** on an empty nested item takes it out one level; on an empty item at the left edge the list ends. A plain line with the caret at its start moves two spaces in and out; with the caret after some text, Tab puts a tab there and Shift+Tab takes it back; in a table cell Tab still moves between cells. The same in the meeting screen, the note box of a task, an epic and an idea, and the write-it-down box (there Tab no longer leaves the box: click away).
@@ -255,3 +269,11 @@ Check with `git log --oneline` in the vault folder.
 - [ ] A fenced block with no language whose first line is `graph TD` (or `sequenceDiagram`, …) is drawn as a diagram; a ```mermaid block still is; other code is not.
 - [ ] The house: the start page fills the window: the left panel (whatever it showed), the right panel and its icon bar are gone and no icon is marked; pressing Files (or opening a note) brings them back as they were. **Delete** on a meeting asks, then removes the note (find it again in History / Recover deleted notes) and the list updates.
 - [ ] Start page → **Customize**: each widget has up/down arrows, Half/Full and a cross; **Add widget** lists the widgets that are not on the page (each can be added once); **Reset** brings back Continue, Recent and Pinned; **Done** leaves. Restart: the layout is the same. Each widget works: Write it down saves a note, task or idea; Search and ask searches (Ask AI is off with a message when no AI is on); Next meeting starts a meeting; Working on opens a task; Areas opens each area; Epic progress opens an epic. A narrow window is one column.
+- [ ] AI commands and skills that rewrite text: the answer or the proposed note starts with the text itself, never "Here’s the revised version:", and has no "Let me know…" at the end (try a small model).
+
+## Preview, Stable and the website
+
+- [ ] **Help → Check for new version…** opens the releases page in the browser, and **Help → About Mimer…** has the same link and says which edition this is. The status bar says `preview` after the version. Nothing is sent by Mimer (no network use at start).
+- [ ] Preview: after installing a build made from a `-preview` tag the program is called **Mimer Preview**, and it can stand next to an installed Mimer. The first time it starts it has the same settings (vaults, theme) as the Stable one if there was one; changing a setting in Preview does not change Stable.
+- [ ] A tag `v0.x.y` makes a pre-release (draft) with the installer, Linux packages and, until v1.0.0, the Store package; a tag such as `v1.1.0-preview.1` makes the "Mimer Preview" build with **no** Store package; neither needs approval. A tag `v1.0.0` waits for approval (GitHub → Actions → the run → **Review deployments**), then makes the release and the Store package. A tag that does not match `package.json` stops at the first step.
+- [ ] The website (`https://jkielsgaard.github.io/Mimer/`) opens in light and dark and on a phone with no sideways scroll; the Preview card links to the releases page and the Stable card says it is not released yet.

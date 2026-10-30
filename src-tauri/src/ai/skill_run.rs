@@ -144,7 +144,7 @@ pub fn strip_fence(text: &str) -> String {
 
 /// Checks a rewritten note and returns the text to propose, or the reason it is not used.
 pub fn accept_rewrite(original: &str, answer: &str) -> Result<String, &'static str> {
-    let new = strip_fence(answer);
+    let new = super::clean::clean_note_answer(original, answer);
     if new.trim().is_empty() {
         return Err("the model gave no text");
     }
@@ -229,11 +229,13 @@ pub fn title_of(text: &str) -> String {
     }
 }
 
-/// Instructions plus the user's global and project instructions.
+/// The task plus what the person told Mimer about themselves and the project, and the language
+/// the answers are to be in.
 fn system_for(
     task: &str,
     extra: &str,
     global: &str,
+    answer_language: &str,
     project: Option<&projects::Project>,
 ) -> String {
     let mut s = String::from(task);
@@ -243,15 +245,21 @@ fn system_for(
             extra.trim()
         ));
     }
+    if !answer_language.trim().is_empty() {
+        s.push_str(&format!(
+            "\n\nWrite the result in {}.",
+            answer_language.trim()
+        ));
+    }
     if !global.trim().is_empty() {
         s.push_str(&format!(
-            "\n\n## User's global instructions\n{}",
+            "\n\n## About the user and their notes\n{}",
             global.trim()
         ));
     }
     if let Some(p) = project.filter(|p| !p.instructions.trim().is_empty()) {
         s.push_str(&format!(
-            "\n\n## Project instructions ({})\n{}",
+            "\n\n## About this project ({})\n{}",
             p.name,
             p.instructions.trim()
         ));
@@ -270,7 +278,7 @@ fn tool_call(name: &str, args: serde_json::Value) -> ToolCall {
 /// The instruction for rewriting one note.
 fn rewrite_task(instruction: &str) -> String {
     format!(
-        "You are the editing assistant inside Mimer, a Markdown note-taking app.\nTask: {}\nYou receive ONE note. Return the COMPLETE new note and nothing else: no explanation, no preamble, no code fences. Keep the front matter, the [[wiki-links]] and the #tags unless the task says otherwise. Never invent facts. Write in the language the task asks for; if it names none, keep the language of the note.",
+        "You are the editing assistant inside Mimer, a Markdown note-taking app.\nTask: {}\nYou receive ONE note. Return the COMPLETE new note and nothing else: no explanation, no preamble such as \"Here is the revised version:\", no closing remark, no code fences. Start with the first line of the note. Keep the front matter, the [[wiki-links]] and the #tags unless the task says otherwise. Never invent facts. Write in the language the task asks for; if it names none, keep the language of the note.",
         instruction.trim()
     )
 }
@@ -459,6 +467,7 @@ struct Run<'a> {
     vault: std::sync::Arc<OpenVault>,
     scope: Option<String>,
     global: String,
+    answer_language: String,
     project: Option<projects::Project>,
     skill: Skill,
     extra: String,
@@ -480,7 +489,13 @@ impl Run<'_> {
     }
 
     fn system(&self, task: &str) -> String {
-        system_for(task, &self.extra, &self.global, self.project.as_ref())
+        system_for(
+            task,
+            &self.extra,
+            &self.global,
+            &self.answer_language,
+            self.project.as_ref(),
+        )
     }
 
     fn step(&self, i: usize, n: usize, detail: String) {
@@ -871,6 +886,7 @@ pub async fn run_skill<R: Runtime>(
         vault: vault.clone(),
         scope,
         global: settings.ai.global_instructions.clone(),
+        answer_language: settings.ai.answer_language.clone(),
         project,
         extra: continued
             .and_then(|c| c.skill_input.clone())
@@ -1081,7 +1097,7 @@ mod tests {
 
     #[test]
     fn instructions_are_added_in_order() {
-        let s = system_for("Task.", "Be brief.", "Global.", None);
+        let s = system_for("Task.", "Be brief.", "Global.", "", None);
         assert!(s.starts_with("Task."));
         assert!(s.find("Be brief.").unwrap() < s.find("Global.").unwrap());
     }

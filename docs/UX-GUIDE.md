@@ -51,13 +51,21 @@ Header (`sidebar`) on top, status bar at the bottom. Left edge: the icon rail (`
 
 Icons are `lucide-react`, 16px (`icon`), stroke style, in `currentColor`, before the label in a button. Reused meanings: House = Start, Files, Search, Lightbulb = Ideas, ListChecks = Tasks, CalendarClock = Meetings, Plus = new/add, Pencil = edit, Trash2 = delete, X = close/remove, ChevronUp/Down = move, MoreHorizontal (···) = more for this thing, Star = pinned, Target = Focus, Sparkles = AI, Presentation = Start meeting. No emoji.
 
+## Themes
+
+Mimer has eight themes (Light, Dark, Slate, Paper, Mint, Midnight, Graphite, Ember). A theme is a full set of the 16 colour tokens, set on the page as `data-theme` (and the class `dark` for the dark ones); the values are in `src/index.css` and `docs/design-system/themes.json`. A screen uses the tokens and never a colour, so it works in every theme.
+
+- A new theme is a new block in `index.css`, an entry in `src/lib/themes.ts` and in `themes.json`. `themes.test.ts` checks it: text 4.5:1 on every surface (foreground, muted-foreground, primary-foreground, accent-foreground), primary and the focus ring 3:1.
+- Keep the roles apart in every theme: the writing area (`background`), panels and bars (`sidebar`), raised things (`card`), hover (`muted`), selected (`accent`).
+- Do not use `warning` as text colour; it is for grounds and borders.
+
 ## The parts a screen is built from
 
 Every control comes from `src/components/ui`, so a change to how one looks is made once and reaches every screen (lint refuses a raw `<button>`, `<input>`, `<textarea>` or `<select>` in a feature):
 
 - `Button`: anything that looks like a button. `PlainButton`: a button whose look belongs to the row, chip, tab or rail icon it is.
 - `Input` (a field in a form), `InlineInput` (a field inside a row or list: + Add a step, renaming in place, the file filter), `TimeInput`.
-- `Textarea` (with `indent` where notes are written), `Select`, `Checkbox`, `Radio`, `Label`.
+- `MarkdownField` (several lines, written as Markdown, with live preview) and `MarkdownText` (shows saved Markdown formatted): every text of more than one line that is a note, a log or a meeting's notes. One line (a title, a task, a step, a name) is `Input` and is never Markdown. `Textarea` is for plain text that is not a note (instructions for the AI, a list of words); `Select`, `Checkbox`, `Radio`, `Label`.
 - `Dialog`, `ConfirmDialog`, `PromptDialog`, the menus (`menuStyles`), `ViewHeader`, `PanelHeader`, `RowActions`, `MoveButtons`, `InfoHint`, `MonthCalendar`.
 
 ## Interaction patterns

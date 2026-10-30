@@ -6,6 +6,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-10-30
+
+### Added
+
+- **Two editions: Preview and Stable.** Mimer is now **Preview** (versions 0.x, and later `1.x.y-preview.N`): the newest features, changing often. **Mimer Stable** (v1.0.0 and later) is the finished release; it is not released yet. Until it is, the 0.x releases are still the ones in the Microsoft Store. From the first `-preview` release Preview is called "Mimer Preview", keeps its own settings (it copies the Stable ones once on its first start) and can be installed next to Stable. The status bar, About and the welcome screen show which edition you run.
+- **Help → Check for new version…** opens the page of releases in your browser, and About has the same link. Mimer never looks for updates by itself and sends nothing.
+- **A website** in `site/`, published with GitHub Pages: what Mimer is, the two editions and where to download them.
+
+### Changed
+
+- A Stable release needs the owner's approval before the release workflow builds it (GitHub environment `stable`), and the tag must match the version in `package.json`.
+
+- **Meetings** lists the time on every meeting: `Thu 29 Oct 11:00` for another day, only the time for today (the time follows the time format setting).
+- **Next meeting** on the start page lists today's and tomorrow's meetings that are still to come, each with Start. The widget **Today's meetings** is gone (Next meeting does the same).
+- **With no note open, Files shows a Notes page**: the recent notes and every note, newest first, with a box that narrows the list by name. The house still shows the start page.
+
+- **Focus: a timer you can turn off, any length, and Ultra focus.** The **Timer** box at the top of Focus turns the timer on and off (remembered). The length is chosen from 15, 25, 45 and 60 minutes or **Custom…** (1 to 180) and the last one used is kept. **Ultra focus** shows only the task you work on, with its steps, its log and a box for the log (and the timer when it is on); **Back to the epic** goes back.
+
+- **AI instructions made clear.** **Settings → AI** now has **About me and my notes** (read by the chat and the skills) and **Language of the AI's answers**. A project has **About this project**. The fixed commands (Fix, Rewrite, Shorten…) no longer read any of the texts, so a sentence there cannot add words around an answer. Removed: Mimer's base instruction and the "Ask AI to change the instructions" box in projects. Old texts are kept and shown in the new fields.
+
+- **Eight themes.** **Settings → General → Theme** has cards for Light, Dark and six new ones: Slate, Paper, Mint (light) and Midnight, Graphite, Ember (dark). A click changes Mimer at once; Save keeps it. **Follow my computer** still follows the computer's Light or Dark. Every theme keeps the writing area, the panels and the raised boxes apart, and its text and buttons meet the contrast rules (a test checks every theme).
+
+### Fixed
+
+- **The AI no longer leaves "Here’s the revised version:" in front of its answer.** The clean-up knew the line with a straight apostrophe only, and a skill that rewrites whole notes did not clean at all. Both now remove such an opening (also after "Sure!", and in Danish), a closing line such as "Let me know if you want changes", reasoning and a code fence, and the instruction to the model says it plainly. A note that itself begins like that keeps its first line.
+
+### Added
+
+- **Markdown in the boxes where you write more than a line.** The note of a task, an epic and an idea, the log of a task, the notes in a meeting and the text of a quick note are now the note editor in a small box: `**bold**` shows as bold when the cursor leaves the line, lists, Tab and Ctrl+B / Ctrl+I work as in a note. What was saved is shown formatted (the task and its log in Focus, the notes on the meeting page). A log line stays one line, because that is how it is kept in the file.
+
 ### Changed
 
 - **How the app is built and changed** (no change to what it does): the areas of the app are mapped in `docs/AREAS.md`, each area has its rules in a `CLAUDE.md`, a change starts from a brief (`docs/BRIEF.md`) with a change plan and ends with a change report (`pnpm areas report`), and every button, field, box and choice on a screen comes from the shared components (lint checks it). The four selects and the settings text box that had their own look now look like every other one.
@@ -14,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **A start page you build yourself.** The house at the top of the left edge opens it, and it shows when no note is open; the side panels are hidden while it is shown. It starts with **Continue** (the last note, with its first lines), **Recent** (with filters for notes, meetings and epics) and **Pinned**. **Customize** adds, removes, moves (arrows) and widens (Half or Full) widgets, and **Reset** goes back. Twelve widgets: Continue, Recent, Pinned, Write it down, Search and ask (Ask AI only when an AI is on), Next meeting, Today's meetings, Working on, To sort, Areas, Changed since yesterday and Epic progress. **New** is a menu: Note, Meeting, Quick note, Task and Idea. The layout is kept per computer, and **Settings → General → Open the start page when Mimer starts** is off by default.
+- **A start page you build yourself.** The house at the top of the left edge opens it, and it shows when no note is open; the side panels are hidden while it is shown. It starts with **Continue** (the last note, with its first lines), **Recent** (with filters for notes, meetings and epics) and **Pinned**. **Customize** adds, removes, moves (arrows) and widens (Half or Full) widgets, and **Reset** goes back. Eleven widgets: Continue, Recent, Pinned, Write it down, Search and ask (Ask AI only when an AI is on), Next meeting, Today's meetings, Working on, To sort, Areas, Changed since yesterday and Epic progress. **New** is a menu: Note, Meeting, Quick note, Task and Idea. The layout is kept per computer, and **Settings → General → Open the start page when Mimer starts** is off by default.
 - **Pin a note** from its **···** menu (**Pin to the start page**); it gets the tag `pinned` and is listed under Pinned.
 - **A Meetings area**, next to Tasks (the calendar clock at the left edge): a calendar with a dot on the days with a meeting, then Today, Upcoming, Past and No date; a day picked in the calendar shows only that day. The chosen meeting is shown in the middle with its agenda (ticking an item writes it in the note), the tasks from the note and what was written under each item, and **Start meeting**, **Prepare next…**, **Change…** (day, time and people), **Delete** and **Open the note**. A meeting is a note with the tag Meeting, so nothing new is stored. The Landing meeting line follows the tag and the date too.
 - **One box per kind of thing written down.** New → Quick note, Task and Idea (start page, File, the command palette) open only that box, named **Quick note**, **New task** or **New idea**, with its own save button; a task chooses its epic under **Into**. **Ctrl/Cmd+Shift+N** (**File → Write it down…**) asks first, with the letters T, I and N. In a meeting, in Focus and on the start page there are three buttons, **+ Task**, **+ Idea** and **+ Quick note**, and the box stays open for the next one. After saving, the message has **Open**.

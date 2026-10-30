@@ -12,7 +12,7 @@
 - **Search:** a search that reads like a question ("what is the service desk number?") shows **Answer from my notes**. Press **Get an answer**: the AI reads the notes that fit and answers, with the notes it used.
 - **A task:** Break it down, **Write a status line from the log**, and in Focus **Help me start**.
 - **An idea:** **Think it through** (three questions) and **Suggest first steps** (they become one task with those steps).
-- **Any text box:** select text in a box (a task's note, the log, an idea, a project's instructions) and the same small bar appears, or press **Ctrl/Cmd+K** in the box. Name, search and password boxes have no AI.
+- **Any text box:** select text in a box (a task's note, the log, an idea, a project's text) and the same small bar appears, or press **Ctrl/Cmd+K** in the box. Name, search and password boxes have no AI.
 - **Spelling help** (made for dyslexia): turn it on in the status bar or in Settings. A moment after you stop typing, misspelt words get a wavy line. Click a word to fix it, ignore it or add it to your words. Nothing changes by itself.
 
 ## When there is no AI
@@ -47,8 +47,12 @@ Mimer uses an AI that runs on your own computer: the **built-in AI** (Phi Silica
 
 **Add provider** asks which kind you want (LM Studio or another server on this computer). The model is chosen in the settings. A built-in AI that is asleep is woken by itself when you ask it something.
 
+## Preview and Stable
+
+Mimer comes in two editions. **Preview** has the newest features and changes often; it is the edition you run if the status bar says `preview`. **Stable** is the finished release. They can be installed side by side and open the same vaults. Mimer never looks for updates by itself: **Help → Check for new version…** opens the page of releases in your browser.
+
 ## More
 
-- **Settings → AI** has Mimer's base instruction (who Mimer is), your own instructions, and **Let the AI check its own answer** (off by default): the AI is asked once more whether its answer to a text command is right, which is slower but helps with small models.
+- **Settings → AI** has **About me and my notes** (read by the chat and the skills, not by the fixed commands), **Language of the AI's answers** (Same as the text, or a language you choose) and **Let the AI check its own answer** (off by default): the AI is asked once more whether its answer to a text command is right, which is slower but helps with small models.
 - A small model sometimes answers with nothing useful (an empty text, or most of the text gone). Mimer then tries once more and says so instead of offering it.
 - Mimer uses an AI **on your own computer**: LM Studio, or his own **built-in AI** (see the Built-in AI topic). Your notes are only sent to a cloud AI if you turn one on yourself under Settings → AI, after a warning.

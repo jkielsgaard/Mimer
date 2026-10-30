@@ -83,7 +83,7 @@ const settings = (recentNotes: number): Settings => ({
     cloudConsent: null,
     builtin: DEFAULT_BUILTIN,
     foundry: { model: "", tools: true },
-    baseInstruction: "",
+    answerLanguage: "",
     globalInstructions: "",
     embeddings: { enabled: false, providerId: "p1", model: "" },
     providers: [],

@@ -1,6 +1,6 @@
 # Mimer
 
-Mimer is a desktop app (Tauri 2, Rust backend, React 19 + TypeScript frontend) for plain Markdown notes in ordinary folders, with a local AI, Git history of every change, tasks and epics, ideas, meetings and a start page. Version 0.19. The person who owns it does not write code: every change is made by Claude, from a brief, and must be easy to follow and to correct.
+Mimer is a desktop app (Tauri 2, Rust backend, React 19 + TypeScript frontend) for plain Markdown notes in ordinary folders, with a local AI, Git history of every change, tasks and epics, ideas, meetings and a start page. Version 0.20. The person who owns it does not write code: every change is made by Claude, from a brief, and must be easy to follow and to correct.
 
 ## Read first
 
@@ -54,4 +54,4 @@ The skills `/feature` and `/release` in `.claude/skills/` walk through these ste
 
 ## Release
 
-On request only: branch → merge `--no-ff` into `main` → tag `vX.Y.Z` → push `main`, the branch and the tag; GitHub builds a draft release (installer, Store package, Linux) and the owner publishes it. The version is in `package.json`, `src-tauri/Cargo.toml`, the `mimer` entry of `src-tauri/Cargo.lock`, `docs/MSIX.md` and the line at the top of this file, and `CHANGELOG.md` gets a `## [X.Y.Z] - date` section (a test checks they match). After the build, write the "What's new" text for the Store.
+On request only (editions: a `v0.x.y` or `-` tag is **Preview**, a plain `v1.0.0` is **Stable**, which waits for the owner's approval in GitHub and is the only one with a Store package; `docs/DECISIONS.md` has the rules): branch → merge `--no-ff` into `main` → tag `vX.Y.Z` → push `main`, the branch and the tag; GitHub builds a draft release (installer, Store package, Linux) and the owner publishes it. The version is in `package.json`, `src-tauri/Cargo.toml`, the `mimer` entry of `src-tauri/Cargo.lock`, `docs/MSIX.md` and the line at the top of this file, and `CHANGELOG.md` gets a `## [X.Y.Z] - date` section (a test checks they match). After the build, write the "What's new" text for the Store.
