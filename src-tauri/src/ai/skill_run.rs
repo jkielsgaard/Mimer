@@ -144,7 +144,7 @@ pub fn strip_fence(text: &str) -> String {
 
 /// Checks a rewritten note and returns the text to propose, or the reason it is not used.
 pub fn accept_rewrite(original: &str, answer: &str) -> Result<String, &'static str> {
-    let new = strip_fence(answer);
+    let new = super::clean::clean_note_answer(original, answer);
     if new.trim().is_empty() {
         return Err("the model gave no text");
     }
@@ -270,7 +270,7 @@ fn tool_call(name: &str, args: serde_json::Value) -> ToolCall {
 /// The instruction for rewriting one note.
 fn rewrite_task(instruction: &str) -> String {
     format!(
-        "You are the editing assistant inside Mimer, a Markdown note-taking app.\nTask: {}\nYou receive ONE note. Return the COMPLETE new note and nothing else: no explanation, no preamble, no code fences. Keep the front matter, the [[wiki-links]] and the #tags unless the task says otherwise. Never invent facts. Write in the language the task asks for; if it names none, keep the language of the note.",
+        "You are the editing assistant inside Mimer, a Markdown note-taking app.\nTask: {}\nYou receive ONE note. Return the COMPLETE new note and nothing else: no explanation, no preamble such as \"Here is the revised version:\", no closing remark, no code fences. Start with the first line of the note. Keep the front matter, the [[wiki-links]] and the #tags unless the task says otherwise. Never invent facts. Write in the language the task asks for; if it names none, keep the language of the note.",
         instruction.trim()
     )
 }

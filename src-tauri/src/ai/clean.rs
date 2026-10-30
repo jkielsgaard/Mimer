@@ -100,45 +100,112 @@ pub fn strip_think(text: &str) -> String {
     out.trim().to_string()
 }
 
-/// Lead-ins that models put before the replacement text, such as "Revised text:".
-const LEAD_WORDS: [&str; 6] = [
+/// How a lead-in line starts. The apostrophe is normalised first, so `Here’s` and `Here's` are the
+/// same.
+const OPENERS: [&str; 23] = [
+    "here is",
+    "here's",
+    "here are",
+    "here you",
+    "sure",
+    "certainly",
+    "of course",
+    "okay",
+    "ok,",
+    "below is",
+    "below are",
+    "the following",
+    "this is the",
     "revised",
     "rewritten",
     "corrected",
     "improved",
     "shortened",
     "expanded",
+    "her er",
+    "selvfølgelig",
+    "her kommer",
+    "rettet",
 ];
 
-/// Removes a first line like "Revised text:" or "Here is the corrected version:". The text on
-/// the same line after the colon is kept.
+/// How a closing line starts ("Let me know if you want changes.").
+const CLOSERS: [&str; 6] = [
+    "let me know",
+    "i hope",
+    "hope this",
+    "feel free",
+    "i can also",
+    "giv besked",
+];
+
+fn normalize(s: &str) -> String {
+    s.replace(['\u{2019}', '\u{2018}'], "'")
+        .trim()
+        .to_lowercase()
+}
+
+/// Whether a line is the kind of line a model puts in front of its answer.
+pub fn is_lead_in(line: &str) -> bool {
+    let l = normalize(line);
+    OPENERS.iter().any(|o| l.starts_with(o))
+}
+
+/// Removes a first line like "Revised text:" or "Here’s the corrected version:" (also after
+/// "Sure!"). The text on the same line after the colon is kept. Two such lines in a row go.
 pub fn strip_lead_in(text: &str) -> String {
-    let t = text.trim();
-    let (first, rest) = t.split_once('\n').unwrap_or((t, ""));
-    let lower = first.trim().to_lowercase();
-    let short = first.chars().count() <= 60;
-    let by_word = LEAD_WORDS.iter().any(|w| lower.starts_with(w));
-    let by_here = lower.starts_with("here is") || lower.starts_with("here's");
-    if short && (by_word || by_here) {
-        if let Some((head, after)) = first.split_once(':') {
-            if head.split_whitespace().count() <= 6 {
-                let after = after.trim();
-                return if after.is_empty() {
-                    rest.trim().to_string()
-                } else if rest.is_empty() {
-                    after.to_string()
-                } else {
-                    format!("{after}\n{rest}").trim().to_string()
-                };
-            }
+    let mut t = text.trim().to_string();
+    for _ in 0..2 {
+        let (first, rest) = t.split_once('\n').unwrap_or((&t, ""));
+        if first.chars().count() > 90 || !is_lead_in(first) {
+            break;
+        }
+        let Some((head, after)) = first.split_once(':') else {
+            break;
+        };
+        if head.split_whitespace().count() > 9 {
+            break;
+        }
+        let after = after.trim();
+        t = if after.is_empty() {
+            rest.trim().to_string()
+        } else if rest.is_empty() {
+            after.to_string()
+        } else {
+            format!("{after}\n{rest}").trim().to_string()
+        };
+    }
+    t
+}
+
+/// Removes a last paragraph like "Let me know if you want changes." when it is short.
+pub fn strip_closer(text: &str) -> String {
+    let t = text.trim_end();
+    if let Some((body, last)) = t.rsplit_once("\n\n") {
+        let l = normalize(last);
+        if l.chars().count() <= 160 && CLOSERS.iter().any(|c| l.starts_with(c)) {
+            return body.trim_end().to_string();
         }
     }
     t.to_string()
 }
 
-/// The text to offer as a replacement: no reasoning, no lead-in, no code fence.
+/// The text to offer as a replacement: no reasoning, no lead-in or closing line, no code fence.
 pub fn clean_replacement(text: &str) -> String {
-    strip_fence(&strip_lead_in(&strip_think(text)))
+    strip_fence(&strip_lead_in(&strip_closer(&strip_think(text))))
+}
+
+/// A whole rewritten note: cleaned like a replacement, but a lead-in is kept when the note itself
+/// begins that way, so the note's own first line is never cut.
+pub fn clean_note_answer(original: &str, answer: &str) -> String {
+    let first = original
+        .lines()
+        .find(|l| !l.trim().is_empty())
+        .unwrap_or("");
+    let cleaned = strip_closer(&strip_think(answer));
+    if is_lead_in(first) {
+        return strip_fence(&cleaned);
+    }
+    strip_fence(&strip_lead_in(&cleaned))
 }
 
 /// Whether a cleaned answer can be a replacement for `original`. A rewrite that is empty, or
@@ -208,6 +275,50 @@ mod tests {
             "Updated: the plan is ready"
         );
         assert_eq!(strip_lead_in("Hello there"), "Hello there");
+    }
+
+    #[test]
+    fn a_curly_apostrophe_and_a_friendly_opening_are_removed_too() {
+        assert_eq!(
+            strip_lead_in("Here\u{2019}s the revised version:\n\nThe cat sat."),
+            "The cat sat."
+        );
+        assert_eq!(
+            strip_lead_in("Sure! Here's the revised version:\nThe cat sat."),
+            "The cat sat."
+        );
+        assert_eq!(
+            strip_lead_in("Selvfølgelig. Her er den rettede tekst:\nKatten sad."),
+            "Katten sad."
+        );
+    }
+
+    #[test]
+    fn a_closing_line_is_removed_but_a_normal_last_paragraph_is_kept() {
+        assert_eq!(
+            strip_closer("The cat sat.\n\nLet me know if you want it shorter."),
+            "The cat sat."
+        );
+        assert_eq!(
+            strip_closer("The cat sat.\n\nThe dog ran."),
+            "The cat sat.\n\nThe dog ran."
+        );
+    }
+
+    #[test]
+    fn a_rewritten_note_keeps_a_first_line_that_the_note_had_itself() {
+        let own = "Here is the plan:\n\n- one";
+        assert_eq!(
+            clean_note_answer(own, "Here is the plan:\n\n- two"),
+            "Here is the plan:\n\n- two"
+        );
+        assert_eq!(
+            clean_note_answer(
+                "# Plan\n\n- one",
+                "Here\u{2019}s the revised version:\n\n# Plan\n\n- two"
+            ),
+            "# Plan\n\n- two"
+        );
     }
 
     #[test]

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The AI no longer leaves "Here’s the revised version:" in front of its answer.** The clean-up knew the line with a straight apostrophe only, and a skill that rewrites whole notes did not clean at all. Both now remove such an opening (also after "Sure!", and in Danish), a closing line such as "Let me know if you want changes", reasoning and a code fence, and the instruction to the model says it plainly. A note that itself begins like that keeps its first line.
+
 ### Added
 
 - **Markdown in the boxes where you write more than a line.** The note of a task, an epic and an idea, the log of a task, the notes in a meeting and the text of a quick note are now the note editor in a small box: `**bold**` shows as bold when the cursor leaves the line, lists, Tab and Ctrl+B / Ctrl+I work as in a note. What was saved is shown formatted (the task and its log in Focus, the notes on the meeting page). A log line stays one line, because that is how it is kept in the file.
