@@ -31,7 +31,7 @@ There is nothing to assemble: no plugins to find, install or keep in step with e
 - Daily notes in a calendar at the top of the file panel, and **Trace my work**: one line a day under "Worked on" for each note and task you worked on (off by default)
 - Tasks as checklist lines in your notes, with steps, a note, a status and a log of what happened, in an outline of **epics** you can fold; **Focus** shows one task at a time
 - A **start page** you build yourself from widgets (Continue, Recent, Pinned, Next meeting, Working on and more)
-- **Meetings**: an area with a calendar, today's and coming meetings, the agenda, the tasks from each meeting and a meeting screen to write in while you talk
+- **Meetings**: an area with a calendar, today's and coming meetings, notes for the whole meeting, and agenda, decisions and actions as parts you choose, and a meeting screen to write in while you talk
 - Write a quick note, a task or an idea down from anywhere (`Ctrl/Cmd+Shift+N`), each in its own small box
 - Ideas: a list of ideas you turn into a task or a note later
 - Full-text search, plus search by meaning with a local embedding model

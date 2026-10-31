@@ -148,6 +148,41 @@ describe("The Meetings area", () => {
     useUiStore.setState({ timeFormat: "system" });
   });
 
+  it("shows the notes as one text, the decisions and the actions, and only the parts the meeting has", async () => {
+    apiMock.taggedNotes.mockResolvedValue([
+      note(
+        "Møder/Weekly.md",
+        `meeting: ${today} 10:00\nparts: [decisions]`,
+        "# Weekly with Mette\n\n## Agenda\n\n- [ ] Hidden\n\n## Notes\n\nKeep the numbers.\n\n## Decisions\n\n- Rollout starts Monday\n",
+      ),
+    ]);
+    render(<MeetingsView />);
+    expect(await screen.findByText("Rollout starts Monday")).toBeInTheDocument();
+    expect(screen.getByText("Keep the numbers.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Decisions" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /^Agenda/ })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Actions" })).toBeNull();
+  });
+
+  it("changes the parts of a meeting and writes only the property", async () => {
+    const content = `---\ntags: [meeting]\nmeeting: ${today} 10:00\n---\n# W\n\n## Agenda\n\n- [ ] One\n`;
+    apiMock.readNote.mockResolvedValue({ path: "Møder/Weekly.md", mtime: 0, content });
+    render(<MeetingsView />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: /Change…/ }));
+    await user.click(await screen.findByRole("checkbox", { name: "Actions" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => {
+      expect(apiMock.writeNote).toHaveBeenCalledWith(
+        "Møder/Weekly.md",
+        expect.stringContaining("parts: [agenda, decisions]"),
+      );
+    });
+    expect((apiMock.writeNote.mock.calls as unknown as [string, string][]).at(-1)?.[1]).toContain(
+      "- [ ] One",
+    );
+  });
+
   it("does not save a time that cannot be read", async () => {
     render(<MeetingsView />);
     const user = userEvent.setup();

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { buildMeetingNote, markItem, setItemNotes } from "@/lib/meeting";
+import { ALL_PARTS, buildMeetingNote, markItem, setMeetingNotes } from "@/lib/meeting";
 
 const apiMock = vi.hoisted(() => ({
   readNote: vi.fn(),
@@ -33,7 +33,7 @@ import { comingMeetings, MeetingLine } from "./MeetingLine";
 import { StartMeetingButton } from "./StartMeetingButton";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
-import { typeInField } from "@/test/markdownField";
+import { fieldView, typeInField } from "@/test/markdownField";
 
 const PATH = "Meetings/2026-10-27 Weekly with Mette.md";
 const note = buildMeetingNote({
@@ -88,67 +88,155 @@ beforeEach(() => {
 });
 
 describe("MeetingFocus", () => {
-  it("opens on the first item with its notes, and writes what you type into the note", async () => {
+  it("opens with the agenda, the notes of the whole meeting, decisions and actions, and writes what you type", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     useUiStore.setState({ meetingFocus: PATH });
     render(<MeetingFocus />);
-    await screen.findByLabelText("Notes for Budget");
+    await screen.findByLabelText("Notes for the meeting");
     expect(screen.getByText("with Mette, Peter")).toBeInTheDocument();
-    typeInField("Notes for Budget", "Budget is on track.");
+    expect(screen.getByRole("navigation", { name: "Agenda" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Add a decision")).toBeInTheDocument();
+    expect(screen.getByLabelText("Add an action")).toBeInTheDocument();
+    typeInField("Notes for the meeting", "Budget is on track.");
     await vi.advanceTimersByTimeAsync(700);
     const written = apiMock.writeNote.mock.calls.at(-1);
     expect(written?.[0]).toBe(PATH);
-    expect(written?.[1]).toContain("### Budget\n\nBudget is on track.\n");
-    expect(written?.[1]).toContain("### Hiring");
+    expect(written?.[1]).toContain("## Notes\n\nBudget is on track.\n");
+    expect(written?.[1]).toContain("- [ ] Hiring");
     vi.useRealTimers();
   });
 
-  it("goes to the next item, ticking this one, and says when it was the last", async () => {
+  it("keeps the notes when you go to another agenda item: it is only marked Now", async () => {
     useUiStore.setState({ meetingFocus: PATH });
     render(<MeetingFocus />);
-    await screen.findByLabelText("Notes for Budget");
+    await screen.findByLabelText("Notes for the meeting");
+    typeInField("Notes for the meeting", "Written under Budget.");
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Next item →" }));
-    expect(await screen.findByLabelText("Notes for Hiring")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Budget" })).toHaveAttribute("aria-current", "step");
+    await user.click(screen.getByRole("button", { name: "Hiring" }));
+    expect(screen.getByRole("button", { name: "Hiring" })).toHaveAttribute("aria-current", "step");
+    expect(screen.getByRole("button", { name: "Budget" })).not.toHaveAttribute("aria-current");
+    expect(fieldView("Notes for the meeting").state.doc.toString()).toBe("Written under Budget.");
+    await user.click(screen.getByRole("checkbox", { name: "Mark as done: Budget" }));
     expect(screen.getByRole("checkbox", { name: "Mark as not done: Budget" })).toHaveAttribute(
       "aria-checked",
       "true",
     );
-    await user.click(screen.getByRole("button", { name: "Next item →" }));
-    expect(await screen.findByText("That was the last item.")).toBeInTheDocument();
   });
 
-  it("adds an agenda item and goes to it, and leaves with Esc after saving", async () => {
+  it("adds an agenda item and marks it Now, and leaves with Esc after saving", async () => {
     useUiStore.setState({ meetingFocus: PATH });
     render(<MeetingFocus />);
-    await screen.findByLabelText("Notes for Budget");
+    await screen.findByLabelText("Notes for the meeting");
     const user = userEvent.setup();
     await user.type(screen.getByLabelText("Add an item to the agenda"), "Release{Enter}");
-    expect(await screen.findByLabelText("Notes for Release")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Release" })).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
     await user.keyboard("{Escape}");
     await waitFor(() => {
       expect(useUiStore.getState().meetingFocus).toBeNull();
     });
-    expect(apiMock.writeNote.mock.calls.at(-1)?.[1]).toContain("- [ ] Release");
+    const saved = apiMock.writeNote.mock.calls.at(-1)?.[1] as string;
+    expect(saved).toContain("- [ ] Release");
+    expect(saved).not.toContain("### Release");
   });
 
-  it("works for a meeting without an agenda", async () => {
+  it("adds and removes decisions", async () => {
+    useUiStore.setState({ meetingFocus: PATH });
+    render(<MeetingFocus />);
+    await screen.findByLabelText("Notes for the meeting");
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Add a decision"), "Rollout starts Monday{Enter}");
+    expect(await screen.findByText("Rollout starts Monday")).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Add a decision"), "Buy licences{Enter}");
+    await user.click(
+      screen.getByRole("button", { name: "Remove the decision: Rollout starts Monday" }),
+    );
+    expect(screen.queryByText("Rollout starts Monday")).toBeNull();
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(useUiStore.getState().meetingFocus).toBeNull();
+    });
+    const saved = apiMock.writeNote.mock.calls.at(-1)?.[1] as string;
+    expect(saved).toContain("## Decisions\n\n- Buy licences");
+    expect(saved).not.toContain("Rollout starts Monday");
+  });
+
+  it("adds an action as a task with its made date, and ticks it", async () => {
+    useUiStore.setState({ meetingFocus: PATH });
+    render(<MeetingFocus />);
+    await screen.findByLabelText("Notes for the meeting");
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Add an action"), "Order licences{Enter}");
+    await user.click(await screen.findByRole("checkbox", { name: "Mark as done: Order licences" }));
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(useUiStore.getState().meetingFocus).toBeNull();
+    });
+    const saved = apiMock.writeNote.mock.calls.at(-1)?.[1] as string;
+    expect(saved).toMatch(/## Actions\n\n- \[x\] Order licences made:\d{4}-\d{2}-\d{2}/);
+  });
+
+  it("turns a part on during the meeting, and the note gets its section", async () => {
     apiMock.readNote.mockResolvedValue({
       path: PATH,
-      content: "# Lunch\n\nsome text\n",
+      content: buildMeetingNote({
+        title: "Lunch",
+        date: "",
+        time: "",
+        people: [],
+        agenda: [],
+        parts: { agenda: false, decisions: false, actions: false },
+      }),
       mtime: 0,
     });
     useUiStore.setState({ meetingFocus: PATH });
     render(<MeetingFocus />);
-    expect(await screen.findByLabelText("Notes for Notes")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Next item →" })).toBeNull();
+    await screen.findByLabelText("Notes for the meeting");
+    expect(screen.queryByRole("navigation", { name: "Agenda" })).toBeNull();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("checkbox", { name: "Agenda" }));
+    expect(screen.getByRole("navigation", { name: "Agenda" })).toBeInTheDocument();
+    await user.type(screen.getByLabelText("Add an item to the agenda"), "First{Enter}");
+    await user.click(screen.getByRole("checkbox", { name: "Actions" }));
+    expect(screen.getByLabelText("Add an action")).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(useUiStore.getState().meetingFocus).toBeNull();
+    });
+    const saved = apiMock.writeNote.mock.calls.at(-1)?.[1] as string;
+    expect(saved).toContain("parts: [agenda, actions]");
+    expect(saved).toContain("- [ ] First");
   });
 
-  it("lists an item added to a meeting that had no agenda, and writes it in the note", async () => {
+  it("shows only the parts the meeting has: no agenda gives the notes the whole width", async () => {
+    apiMock.readNote.mockResolvedValue({
+      path: PATH,
+      content: buildMeetingNote({
+        title: "Lunch",
+        date: "",
+        time: "",
+        people: [],
+        agenda: [],
+        parts: { agenda: false, decisions: false, actions: true },
+      }),
+      mtime: 0,
+    });
+    useUiStore.setState({ meetingFocus: PATH });
+    render(<MeetingFocus />);
+    await screen.findByLabelText("Notes for the meeting");
+    expect(screen.queryByRole("navigation", { name: "Agenda" })).toBeNull();
+    expect(screen.queryByLabelText("Add a decision")).toBeNull();
+    expect(screen.getByLabelText("Add an action")).toBeInTheDocument();
+  });
+
+  it("works for an old note without properties: all three parts, and an agenda item can be added", async () => {
     apiMock.readNote.mockResolvedValue({ path: PATH, content: "# Lunch\n\nsome text\n", mtime: 0 });
     useUiStore.setState({ meetingFocus: PATH });
     render(<MeetingFocus />);
-    await screen.findByLabelText("Notes for Notes");
+    await screen.findByLabelText("Notes for the meeting");
     const user = userEvent.setup();
     await user.type(screen.getByLabelText("Add an item to the agenda"), "Food{Enter}");
     // The item is in the agenda list now, and the "No agenda" text is gone.
@@ -172,6 +260,9 @@ describe("MeetingForm", () => {
     fireEvent.change(screen.getByLabelText("Day"), { target: { value: "2026-10-27" } });
     fireEvent.change(screen.getByLabelText("Time"), { target: { value: "14:00" } });
     await user.type(screen.getByLabelText("With"), "Mette, Peter");
+    // The agenda box is there only when the Agenda option is ticked.
+    expect(screen.queryByLabelText("Agenda, one item per line")).toBeNull();
+    await user.click(screen.getByRole("checkbox", { name: "Agenda" }));
     await user.type(screen.getByLabelText("Agenda, one item per line"), "Budget{Enter}Hiring");
     await user.click(screen.getByRole("button", { name: "Create and start" }));
     await waitFor(() => {
@@ -187,6 +278,37 @@ describe("MeetingForm", () => {
     expect(text).toContain("with: [Mette, Peter]");
     expect(text).toContain("- [ ] Hiring");
     expect(useUiStore.getState().meetingFormOpen).toBe(false);
+  });
+
+  it("has no part ticked the first time, a ticked part is written in the note and its section made, and the choice is remembered", async () => {
+    window.localStorage.removeItem("mimer.meetingParts");
+    apiMock.createNote.mockResolvedValue("Meetings/p.md");
+    useUiStore.setState({ meetingFormOpen: true });
+    const { unmount } = render(<MeetingForm />);
+    const user = userEvent.setup();
+    const decisions = await screen.findByRole("checkbox", { name: "Decisions" });
+    for (const name of ["Agenda", "Decisions", "Actions"]) {
+      expect(screen.getByRole("checkbox", { name })).not.toBeChecked();
+    }
+    expect(screen.queryByLabelText("Agenda, one item per line")).toBeNull();
+    await user.click(decisions);
+    await user.click(screen.getByRole("button", { name: "Create" }));
+    await waitFor(() => {
+      expect(apiMock.writeNote).toHaveBeenCalled();
+    });
+    const text = apiMock.writeNote.mock.calls.at(-1)?.[1] as string;
+    expect(text).toContain("parts: [decisions]");
+    expect(text).toContain("## Decisions");
+    expect(text).not.toContain("## Agenda");
+    expect(text).not.toContain("## Actions");
+    unmount();
+    // The next new meeting starts from the same choice.
+    useUiStore.setState({ meetingFormOpen: false });
+    useUiStore.setState({ meetingFormOpen: true });
+    render(<MeetingForm />);
+    expect(await screen.findByRole("checkbox", { name: "Decisions" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Agenda" })).not.toBeChecked();
+    window.localStorage.removeItem("mimer.meetingParts");
   });
 
   it("Create keeps you where you are, and everything can be left empty", async () => {
@@ -206,7 +328,7 @@ describe("the next meeting in Landing", () => {
   it("keeps a meeting for two hours after it started, in the order they happen", () => {
     const mk = (date: string, time: string | null, title: string) => ({
       path: title,
-      meeting: { title, date, time, people: [], agenda: [] },
+      meeting: { title, date, time, people: [], agenda: [], parts: ALL_PARTS },
     });
     const list = [
       mk("2026-10-28", "09:00", "Tomorrow"),
@@ -298,7 +420,7 @@ describe("after the meeting", () => {
   it("opens the meeting window filled in for the next meeting, with what was not reached", async () => {
     apiMock.readNote.mockResolvedValue({
       path: PATH,
-      content: setItemNotes(markItem(note, "Budget", true), "Hiring", "Talked about it."),
+      content: setMeetingNotes(markItem(note, "Budget", true), "Talked about it."),
       mtime: 0,
     });
     apiMock.noteTags.mockResolvedValue(["meeting"]);
@@ -314,6 +436,7 @@ describe("after the meeting", () => {
       time: "14:00",
       who: "Mette, Peter",
       agenda: "Hiring",
+      parts: ALL_PARTS,
     });
     render(<MeetingForm />);
     expect(await screen.findByLabelText("Title")).toHaveValue("Weekly with Mette");

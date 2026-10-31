@@ -14,11 +14,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
-import { buildMeetingNote, todayAndTomorrow } from "@/lib/meeting";
+import {
+  NO_PARTS,
+  buildMeetingNote,
+  loadDefaultParts,
+  saveDefaultParts,
+  todayAndTomorrow,
+  type MeetingParts,
+} from "@/lib/meeting";
 import { fileNameFrom } from "@/lib/noteTitle";
 import { useMeetingStore } from "@/stores/meetingStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { PartsChoice } from "./PartsChoice";
 
 /**
  * "Meeting note…": a few optional questions, then a note in the meetings folder. "Create" keeps
@@ -32,6 +40,7 @@ export function MeetingForm() {
   const [time, setTime] = useState("");
   const [who, setWho] = useState("");
   const [agenda, setAgenda] = useState("");
+  const [parts, setParts] = useState<MeetingParts>(NO_PARTS);
   const [busy, setBusy] = useState(false);
   /** The time box holds text that is not a time: nothing is saved until it is fixed. */
   const [timeOk, setTimeOk] = useState(true);
@@ -46,6 +55,8 @@ export function MeetingForm() {
     setTime(seed?.time ?? "");
     setWho(seed?.who ?? "");
     setAgenda(seed?.agenda ?? "");
+    // The parts of the meeting before this one, else the ones the last new meeting was made with.
+    setParts(seed?.parts ?? loadDefaultParts());
     setBusy(false);
     setTimeOk(true);
   }, [open]);
@@ -67,7 +78,9 @@ export function MeetingForm() {
         time,
         people: who.split(","),
         agenda: agenda.split("\n"),
+        parts,
       });
+      saveDefaultParts(parts);
       const name = fileNameFrom(`${day !== "" ? day : today} ${title.trim() || "Meeting"}`);
       await flushPendingWrites();
       const path = await api.createNote(folder, name);
@@ -95,7 +108,7 @@ export function MeetingForm() {
     >
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Meeting note</DialogTitle>
+          <DialogTitle>New meeting</DialogTitle>
           <DialogDescription>
             Everything is optional. The note is saved in {folder === "" ? "the vault" : folder}, and
             you can write in it before, during and after the meeting.
@@ -148,17 +161,26 @@ export function MeetingForm() {
               }}
             />
           </div>
+          {parts.agenda && (
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="meeting-agenda">Agenda, one item per line</Label>
+              <Textarea
+                id="meeting-agenda"
+                rows={4}
+                placeholder={"Budget\nHiring\nNext release"}
+                value={agenda}
+                onChange={(e) => {
+                  setAgenda(e.target.value);
+                }}
+              />
+            </div>
+          )}
           <div className="flex flex-col gap-1">
-            <Label htmlFor="meeting-agenda">Agenda, one item per line</Label>
-            <Textarea
-              id="meeting-agenda"
-              rows={4}
-              placeholder={"Budget\nHiring\nNext release"}
-              value={agenda}
-              onChange={(e) => {
-                setAgenda(e.target.value);
-              }}
-            />
+            <PartsChoice value={parts} onChange={setParts} />
+            <p className="text-xs text-muted-foreground">
+              Each one is an option. Your choice is remembered for the next new meeting, and you can
+              turn a part on or off later in the meeting.
+            </p>
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={close}>

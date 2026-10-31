@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Pick a time from a list.** The time box (new meeting and **Change…**) has a small arrow that opens a list of every quarter of an hour, `00:00` to `23:45`. It opens at the time in the box (or 09:00); a click, or the arrow keys and Enter, picks one. You can still type a time (`14:30`, `1430`, `2:30 pm`), also one that is not on the list.
+
+### Changed
+
+- **Meetings: one text for the notes, and parts you choose.** The notes of a meeting are now one text you write in all through the meeting, whatever agenda item you are on, and you can always read what you wrote. The agenda is a checklist beside it: tick an item, add one, or click an item to mark it **Now**; it no longer decides what the notes show. A meeting has three optional parts, all off until you tick them: **Agenda**, **Decisions** (a list of what was decided) and **Actions** (tasks written in the meeting, listed in Tasks). Tick them under **Use in this meeting** when you make a meeting, in the meeting itself (**Use** at the top), or under **Change…**. The choice is remembered for the next new meeting. Older meetings keep their notes (the `### item` headings stay as text) and have all three parts.
+
 ## [0.20.0] - 2026-10-30
 
 ### Added
