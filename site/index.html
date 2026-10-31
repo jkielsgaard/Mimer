@@ -1096,7 +1096,7 @@
               Mimer keeps your notes as plain Markdown files, with tasks, meetings and an AI that
               runs on your own computer and only ever suggests.
             </p>
-            <span class="pill"><i></i>Preview v0.20 available · Stable v1.0 coming soon</span>
+            <span class="pill"><i></i>Preview v0.21 available · Stable v1.0 coming soon</span>
             <div class="actions">
               <a class="btn primary" href="#download">Download the preview</a>
               <a class="btn" href="#how">See how it works</a>
@@ -1233,25 +1233,29 @@
 
           <div class="feature reveal">
             <div class="text">
-              <span class="eyebrow">03 / Meetings and the start page</span>
-              <h3>From agenda to action</h3>
+              <span class="eyebrow">03 / Meetings</span>
+              <h3>Notes for the whole meeting</h3>
               <p>
-                Prepare a meeting, run it from one calm screen, and turn what was said into tasks.
-                Your start page shows what you need today, built from widgets you choose.
+                Write your notes in one place all through the meeting, whatever you are talking
+                about, and read them again at any time. Add only the parts you want: an agenda, a
+                list of decisions, and actions that become tasks.
               </p>
               <ul>
-                <li>A calendar of meetings and a screen to write in while you talk</li>
-                <li>Next meetings, recent notes and pinned notes at a glance</li>
-                <li>Write down a task, an idea or a quick note from anywhere</li>
+                <li>
+                  Agenda, Decisions and Actions are options you turn on, in the meeting or when you
+                  make it
+                </li>
+                <li>An action is a task in your note, so it shows in Tasks too</li>
+                <li>Pick a time from a list of quarter hours, or just type it</li>
               </ul>
             </div>
             <div class="shot">
               <div class="chrome"><span></span><span></span><span></span></div>
               <img
-                src="img/start-page.png"
-                alt="The start page with the next meetings, what you are working on, recent and pinned notes and epic progress"
+                src="img/meeting.png"
+                alt="A running meeting with the agenda on the left, one text for the notes in the middle with the decisions below, and the actions on the right"
                 width="1500"
-                height="950"
+                height="560"
                 loading="lazy"
               />
             </div>
@@ -1259,16 +1263,18 @@
 
           <div class="feature flip reveal">
             <div class="text">
-              <span class="eyebrow">04 / Your look</span>
-              <h3>Eight themes, one for every desk</h3>
+              <span class="eyebrow">04 / Your start page and your look</span>
+              <h3>A start page, and eight themes</h3>
               <p>
-                Pick the look that is easy on your eyes: light, dark, or one of six calm palettes.
-                The choice is shown live, and Mimer can follow your computer's light or dark
-                setting.
+                Your start page shows what you need today, built from widgets you choose. Pick the
+                look that is easy on your eyes: light, dark, or one of six calm palettes. Mimer can
+                follow your computer's light or dark setting.
               </p>
               <ul>
-                <li>Slate, Paper, Mint, Midnight, Graphite and Ember</li>
-                <li>Readable contrast in every theme</li>
+                <li>Next meetings, recent notes, pinned notes and epic progress at a glance</li>
+                <li>
+                  Slate, Paper, Mint, Midnight, Graphite and Ember, all with readable contrast
+                </li>
                 <li>Your notes never change: the theme is only how Mimer looks</li>
               </ul>
             </div>
@@ -1279,6 +1285,33 @@
                 alt="The start page in the Midnight theme"
                 width="1500"
                 height="950"
+                loading="lazy"
+              />
+            </div>
+          </div>
+
+          <div class="feature reveal">
+            <div class="text">
+              <span class="eyebrow">05 / Tags</span>
+              <h3>Your own tags, kept apart from Mimer's</h3>
+              <p>
+                Tag a note with any word and find it again in search. Mimer's own tags (Meeting,
+                Epic and Pinned) are shown apart, with what each one does, so your words never get
+                mixed up with them.
+              </p>
+              <ul>
+                <li>Reuse a tag you already have with one click</li>
+                <li>Tags are written in the note's properties, so any editor reads them</li>
+                <li>The AI never adds or takes away Mimer's tags</li>
+              </ul>
+            </div>
+            <div class="shot">
+              <div class="chrome"><span></span><span></span><span></span></div>
+              <img
+                src="img/tags.png"
+                alt="The Tags window with Mimer's tags and your own tags"
+                width="448"
+                height="496"
                 loading="lazy"
               />
             </div>
@@ -1320,6 +1353,7 @@
 <span class="k">tags</span>: [meeting]
 <span class="k">meeting</span>: 2026-10-30 10:00
 <span class="k">with</span>: [Mette, Peter]
+<span class="k">parts</span>: [agenda, actions]
 <span class="c">---</span>
 # Weekly with Mette
 
@@ -1439,7 +1473,7 @@
             </div>
             <div class="channel now reveal">
               <span class="tag live"><i></i>Available now</span>
-              <h3>Mimer Preview · v0.20</h3>
+              <h3>Mimer Preview · v0.21</h3>
               <p style="color: var(--muted-foreground)">
                 The newest features, as they are built. It changes often, and it tells you when a
                 new preview is ready.

@@ -1,6 +1,6 @@
 # Mimer
 
-Mimer is a desktop app (Tauri 2, Rust backend, React 19 + TypeScript frontend) for plain Markdown notes in ordinary folders, with a local AI, Git history of every change, tasks and epics, ideas, meetings and a start page. Version 0.20. The person who owns it does not write code: every change is made by Claude, from a brief, and must be easy to follow and to correct.
+Mimer is a desktop app (Tauri 2, Rust backend, React 19 + TypeScript frontend) for plain Markdown notes in ordinary folders, with a local AI, Git history of every change, tasks and epics, ideas, meetings and a start page. Version 0.21. The person who owns it does not write code: every change is made by Claude, from a brief, and must be easy to follow and to correct.
 
 ## Read first
 
