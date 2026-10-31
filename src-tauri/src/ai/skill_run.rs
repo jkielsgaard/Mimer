@@ -155,7 +155,8 @@ pub fn accept_rewrite(original: &str, answer: &str) -> Result<String, &'static s
     if original.chars().count() > 200 && new.chars().count() * 5 < original.chars().count() {
         return Err("the answer was much shorter than the note, so it was not used");
     }
-    let mut text = new;
+    // A rewrite never changes Mimer's own tags (meeting, epic, pinned): that decides what a note is.
+    let mut text = crate::markdown::note_tags::keep_system_tags(original, &new);
     if original.ends_with('\n') {
         text.push('\n');
     }
@@ -1068,6 +1069,13 @@ mod tests {
         let long = "word ".repeat(100);
         assert!(accept_rewrite(&long, "short").is_err());
         assert!(accept_rewrite("hi", "hello").is_ok());
+        // The model may add tags of its own, but not take away or add a tag that Mimer uses.
+        let kept = accept_rewrite(
+            "---\ntags: [meeting]\n---\n# Weekly\n",
+            "---\ntags: [it, epic]\n---\n# Weekly with Mette\n",
+        )
+        .unwrap();
+        assert!(kept.contains("meeting") && kept.contains("it") && !kept.contains("epic"));
     }
 
     #[test]

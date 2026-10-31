@@ -189,7 +189,7 @@ pub fn builtins() -> Vec<Skill> {
             "From the words in the note",
             Rewrite,
             Note,
-            "Give the note a clear first heading (# ...) that says what it is about, and add two to five short tags to the front matter (tags: [a, b]). Keep any tags it already has. Change nothing else in the note.",
+            "Give the note a clear first heading (# ...) that says what it is about, and add two to five short tags of your own to the front matter (tags: [a, b]). Keep any tags it already has, and never add the tags meeting, epic or pinned. Change nothing else in the note.",
         ),
         builtin(
             "email-from-note",

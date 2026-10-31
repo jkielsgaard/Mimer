@@ -290,3 +290,11 @@ Check with `git log --oneline` in the vault folder.
 - [ ] In **New meeting** the Time box has a small arrow. A click on the arrow or in the box opens a list under it, every 15 minutes from 00:00 to 23:45, scrolled to the time in the box (09:00 when it is empty). Click a time: it is written in the box and the list closes. The window stays open.
 - [ ] Arrow down opens the list and moves through it; Enter picks the marked time (without one, Enter creates the meeting as before); Esc closes only the list; a click outside closes it. Type `10:20`: it is kept (the nearest quarter is shaded); `1430` and `2:30 pm` still work; `25:00` is marked red and Create is off.
 - [ ] With 12-hour time chosen in Settings, the list reads `9:15 AM` and the box `2:30 PM`; the note still stores `14:30`. **Change…** on a meeting has the same box.
+
+## Your own tags
+
+- [ ] **···** → **Tags…** on a note: **Mimer uses these** has Meeting, Epic and Pinned with what each does. Under **Your tags** type `VPN` and press Enter: a chip `#vpn` appears, the note's properties say `tags: [vpn]`, and the box is empty again. Two words, or only digits, are refused with a message. Type `epic`: Mimer's Epic is put on above, with a message.
+- [ ] Open Tags… on another note: **Use a tag you already have** lists `#vpn` with a count; a click puts it on. Typing the first letters narrows the list. The cross on a chip takes the tag off.
+- [ ] A note with `#idea` in its text shows `In the text: #idea`. Above the note, Meeting or Epic is a filled chip with a mark and says what it does when you point at it; `#vpn` is an outlined chip. Both have a cross.
+- [ ] **Search** (nothing typed) lists **Your tags** and **Mimer's tags** with counts; a click writes `tag:vpn` and finds the notes. `tag:meeting` finds the meetings.
+- [ ] A note tagged `meeting` and `vpn`: run **Suggest a title and tags**. The proposal keeps `meeting`, adds only tags of its own, and never `epic` or `pinned`.

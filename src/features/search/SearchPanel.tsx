@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { SearchHit } from "@/bindings/SearchHit";
 import type { TagCount } from "@/bindings/TagCount";
+import { isSystemTag, NOTE_TAGS } from "@/lib/noteTags";
 import { Input } from "@/components/ui/input";
 import { api, toApiError } from "@/lib/api";
 import { openFile } from "@/lib/actions";
@@ -174,22 +175,39 @@ export function SearchPanel() {
       )}
       <div className="min-h-0 flex-1 overflow-auto px-2 pb-2">
         {text.trim() === "" && tags.length > 0 && (
-          <div>
-            <p className="px-1 pb-1 text-xs font-medium text-muted-foreground">Tags</p>
-            <div className="flex flex-wrap gap-1">
-              {tags.map((t) => (
-                <PlainButton
-                  key={t.tag}
-                  type="button"
-                  className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground hover:opacity-80"
-                  onClick={() => {
-                    setText(`tag:${t.tag}`);
-                  }}
-                >
-                  #{t.tag} <span className="opacity-60">{t.count}</span>
-                </PlainButton>
+          <div className="flex flex-col gap-3">
+            {[
+              { title: "Your tags", list: tags.filter((t) => !isSystemTag(t.tag)), system: false },
+              { title: "Mimer's tags", list: tags.filter((t) => isSystemTag(t.tag)), system: true },
+            ]
+              .filter((g) => g.list.length > 0)
+              .map((g) => (
+                <div key={g.title}>
+                  <p className="px-1 pb-1 text-xs font-medium text-muted-foreground">{g.title}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {g.list.map((t) => (
+                      <PlainButton
+                        key={t.tag}
+                        type="button"
+                        title={NOTE_TAGS.find((n) => n.tag === t.tag)?.does}
+                        className={
+                          g.system
+                            ? "rounded-full border border-primary/30 bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground hover:opacity-80"
+                            : "rounded-full border bg-background px-2 py-0.5 text-xs hover:bg-accent"
+                        }
+                        onClick={() => {
+                          setText(`tag:${t.tag}`);
+                        }}
+                      >
+                        {g.system
+                          ? (NOTE_TAGS.find((n) => n.tag === t.tag)?.label ?? t.tag)
+                          : `#${t.tag}`}{" "}
+                        <span className="opacity-60">{t.count}</span>
+                      </PlainButton>
+                    ))}
+                  </div>
+                </div>
               ))}
-            </div>
           </div>
         )}
         {aiOff === null && looksLikeQuestion(text) && (

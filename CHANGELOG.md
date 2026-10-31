@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A click in a box in a window opened from the editor toolbar now focuses it.** The toolbar keeps the editor's focus when a tool is pressed, and that also reached the windows it opens (Tags…, Rename…), so you could not click into their text boxes. A window's clicks now stay in the window.
+
+### Added
+
+- **Your own tags.** **···** → **Tags…** on a note has two parts: **Mimer uses these** (Meeting, Epic and Pinned, each with what it does) and **Your tags**, where you add any tag you want (one word: letters, digits, `-` and `_`), take it off again, or click a tag you already use on another note. The `#tags` written in the text are listed too. Above the note, Mimer's tags are filled and show what they do when you point at them; yours are outlined with a `#`. In **Search**, the list of tags is in two groups, **Your tags** and **Mimer's tags**; a click writes `tag:name` in the search box. The AI can no longer add or take away Meeting, Epic or Pinned when it rewrites a note, and **Suggest a title and tags** only suggests tags of its own.
+
 ### Changed
 
 - **Pick a time from a list.** The time box (new meeting and **Change…**) has a small arrow that opens a list of every quarter of an hour, `00:00` to `23:45`. It opens at the time in the box (or 09:00); a click, or the arrow keys and Enter, picks one. You can still type a time (`14:30`, `1430`, `2:30 pm`), also one that is not on the list.

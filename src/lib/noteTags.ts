@@ -27,3 +27,40 @@ export const NOTE_TAGS: readonly NoteTag[] = [
     does: "The note is listed under Pinned on the start page.",
   },
 ];
+
+/** The names of Mimer's own tags: the tags that do something. Every other tag is the person's. */
+export const SYSTEM_TAGS: readonly string[] = NOTE_TAGS.map((t) => t.tag);
+
+/** Whether a tag is one of Mimer's own (`meeting`, `epic`, `pinned`). */
+export function isSystemTag(tag: string): boolean {
+  return SYSTEM_TAGS.includes(tag.toLowerCase());
+}
+
+/** The tags that are not Mimer's own. */
+export function userTags(tags: readonly string[]): string[] {
+  return tags.filter((t) => !isSystemTag(t));
+}
+
+/**
+ * A tag as it is written in a note: lower case, letters, digits, `-` and `_`, and nothing else
+ * (the same as a `#tag` in the text). A leading `#` is dropped. Returns null when it is not a tag.
+ */
+export function cleanTagName(text: string): string | null {
+  const t = text.trim().replace(/^#+/, "").toLowerCase();
+  if (t === "" || !/^[\p{L}\p{N}_-]+$/u.test(t) || /^\d+$/.test(t)) return null;
+  return t;
+}
+
+/** The `#tags` written in the text of a note (not in its properties or in code), lower case. */
+export function textTags(content: string): string[] {
+  const body = content
+    .replace(/^---\r?\n[\s\S]*?\r?\n---[ \t]*(\r?\n|$)/, "")
+    .replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, " ")
+    .replace(/`[^`\n]*`/g, " ");
+  const found = new Set<string>();
+  for (const m of body.matchAll(/(^|[\s(])#([\p{L}\p{N}_\-/]+)/gmu)) {
+    const t = (m[2] ?? "").replace(/[/-]+$/, "").toLowerCase();
+    if (t !== "" && !/^\d+$/.test(t)) found.add(t);
+  }
+  return [...found].sort();
+}
