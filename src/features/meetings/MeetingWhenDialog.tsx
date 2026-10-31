@@ -13,10 +13,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
-import { setMeetingWhen } from "@/lib/meeting";
+import { setMeetingParts, setMeetingWhen, type MeetingParts } from "@/lib/meeting";
 import type { MeetingNote } from "@/lib/meetingList";
 import { useMeetingStore } from "@/stores/meetingStore";
 import { reportError } from "@/stores/uiStore";
+import { PartsChoice } from "./PartsChoice";
 
 /**
  * "Change…" on a meeting: the day, the time and who is with. It is the same three fields as the
@@ -36,6 +37,7 @@ export function MeetingWhenDialog({
   const [date, setDate] = useState(meeting.meeting.date ?? "");
   const [time, setTime] = useState(meeting.meeting.time ?? "");
   const [who, setWho] = useState(meeting.meeting.people.join(", "));
+  const [parts, setParts] = useState<MeetingParts>(meeting.meeting.parts);
   const [busy, setBusy] = useState(false);
   const [timeOk, setTimeOk] = useState(true);
 
@@ -45,7 +47,10 @@ export function MeetingWhenDialog({
     try {
       await flushPendingWrites();
       const note = await api.readNote(meeting.path);
-      const next = setMeetingWhen(note.content, { date, time, people: who.split(",") });
+      const next = setMeetingParts(
+        setMeetingWhen(note.content, { date, time, people: who.split(",") }),
+        parts,
+      );
       if (next !== note.content) await api.writeNote(meeting.path, next);
       await useMeetingStore.getState().load();
       onClose();
@@ -66,8 +71,8 @@ export function MeetingWhenDialog({
         <DialogHeader>
           <DialogTitle>Change the meeting</DialogTitle>
           <DialogDescription>
-            Only the day, the time and who is with change in the note. Clear the day for a meeting
-            without a date.
+            Only the day, the time, who is with and the parts change in the note. Clear the day for
+            a meeting without a date. A part you switch off keeps what is written in it.
           </DialogDescription>
         </DialogHeader>
         <form
@@ -105,6 +110,7 @@ export function MeetingWhenDialog({
               }}
             />
           </div>
+          <PartsChoice value={parts} onChange={setParts} />
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={onClose}>
               Cancel

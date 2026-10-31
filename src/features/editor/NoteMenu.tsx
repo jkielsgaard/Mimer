@@ -1,15 +1,7 @@
-import { MoreHorizontal, X } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { PromptDialog } from "@/components/PromptDialog";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,13 +10,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PINNED_TAG } from "@/lib/startPage";
 import { nameError } from "@/lib/nameConflict";
-import { NOTE_TAGS } from "@/lib/noteTags";
+import { isSystemTag, NOTE_TAGS } from "@/lib/noteTags";
 import { useNoteTags } from "@/lib/useNoteTags";
 import { dirname, joinPath } from "@/lib/utils";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
-import { PlainButton } from "@/components/ui/plain-button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { TagChip, TagsDialog } from "./TagsDialog";
 
 /** The file name of a note without the folder and `.md`. */
 function stem(path: string): string {
@@ -41,24 +32,21 @@ export function NoteMenu({ path }: { path: string | null }) {
   const projects = useVaultStore((s) => s.projects);
   const [renaming, setRenaming] = useState(false);
   const [tagging, setTagging] = useState(false);
-  const has = NOTE_TAGS.filter((t) => tags.includes(t.tag));
+  // Mimer's tags first (in the order of the Tags window), then the person's own.
+  const shown = [
+    ...NOTE_TAGS.map((t) => t.tag).filter((t) => tags.includes(t)),
+    ...tags.filter((t) => !isSystemTag(t)),
+  ];
   return (
     <span className="flex items-center gap-1">
-      {has.map((t) => (
-        <span
-          key={t.tag}
-          className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-accent py-0.5 pl-2.5 pr-1 text-xs font-semibold text-accent-foreground"
-        >
-          {t.label}
-          <PlainButton
-            type="button"
-            aria-label={`Take the tag ${t.label} off`}
-            className="rounded-full p-0.5 hover:bg-background/60 focus-visible:ring-2 focus-visible:ring-ring"
-            onClick={() => void setTag(t.tag, false)}
-          >
-            <X className="size-3" aria-hidden />
-          </PlainButton>
-        </span>
+      {shown.map((t) => (
+        <TagChip
+          key={t}
+          tag={t}
+          onTakeOff={() => {
+            void setTag(t, false);
+          }}
+        />
       ))}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -135,47 +123,15 @@ export function NoteMenu({ path }: { path: string | null }) {
         }}
       />
 
-      <Dialog
+      <TagsDialog
         open={tagging}
-        onOpenChange={(o) => {
-          if (!o) setTagging(false);
+        onClose={() => {
+          setTagging(false);
         }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>What is this note?</DialogTitle>
-            <DialogDescription>
-              The note stays where it is. Your own #tags in the text work as before.
-            </DialogDescription>
-          </DialogHeader>
-          <ul className="flex flex-col gap-1">
-            {NOTE_TAGS.map((t) => (
-              <li key={t.tag}>
-                <label className="flex cursor-pointer items-start gap-3 rounded-md px-2 py-2 hover:bg-muted">
-                  <Checkbox
-                    className="mt-1 size-4"
-                    checked={tags.includes(t.tag)}
-                    onChange={(e) => void setTag(t.tag, e.target.checked)}
-                  />
-                  <span className="flex flex-col">
-                    <span className="text-sm font-semibold">{t.label}</span>
-                    <span className="text-xs text-muted-foreground">{t.does}</span>
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
-          <DialogFooter>
-            <Button
-              onClick={() => {
-                setTagging(false);
-              }}
-            >
-              Done
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        path={path}
+        tags={tags}
+        setTag={setTag}
+      />
     </span>
   );
 }

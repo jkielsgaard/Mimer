@@ -3,6 +3,27 @@
 
 use super::frontmatter;
 
+/// Mimer's own tags: the tags that do something (an epic, a meeting, a pinned note). Every other
+/// tag belongs to the person. A rewrite of a note by the AI never adds or takes away one of these.
+pub const SYSTEM_TAGS: [&str; 3] = ["meeting", "epic", "pinned"];
+
+/// The rewritten note with the same Mimer tags as the original: one the model added is taken off
+/// and one it dropped is put back. The person's own tags are left as the model wrote them.
+pub fn keep_system_tags(original: &str, rewritten: &str) -> String {
+    let before = front_matter_tags(original);
+    let mut out = rewritten.to_string();
+    for tag in SYSTEM_TAGS {
+        let had = before.iter().any(|t| t == tag);
+        let has = front_matter_tags(&out).iter().any(|t| t == tag);
+        if had && !has {
+            out = add_tag(&out, tag);
+        } else if has && !had {
+            out = remove_tag(&out, tag);
+        }
+    }
+    out
+}
+
 /// The note with `tag` in the `tags:` of its front matter (the properties are made when missing).
 /// The other lines are kept as they are, and a tag that is already there is not added again.
 pub fn add_tag(content: &str, tag: &str) -> String {
@@ -160,6 +181,24 @@ pub fn front_matter_tags(content: &str) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_rewrite_keeps_mimers_tags_and_leaves_the_persons_own_alone() {
+        let original = "---\ntags: [meeting, vpn]\n---\n# A\n";
+        // The model dropped meeting, added epic and a tag of its own.
+        let rewritten = "---\ntags: [vpn, it, epic]\n---\n# A better title\n";
+        let fixed = keep_system_tags(original, rewritten);
+        let tags = front_matter_tags(&fixed);
+        assert!(tags.contains(&"meeting".to_string()));
+        assert!(!tags.contains(&"epic".to_string()));
+        assert!(tags.contains(&"it".to_string()) && tags.contains(&"vpn".to_string()));
+        assert!(fixed.contains("# A better title"));
+        // Nothing to change: the same text comes back.
+        assert_eq!(keep_system_tags(original, original), original);
+        // A note with no properties that the model gave a Mimer tag.
+        let plain = keep_system_tags("# A\n", "---\ntags: [pinned]\n---\n# A\n");
+        assert!(front_matter_tags(&plain).is_empty());
+    }
 
     #[test]
     fn a_tag_is_added_where_the_tags_are() {

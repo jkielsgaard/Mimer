@@ -25,6 +25,13 @@ export function DialogContent({
           className,
         )}
         {...props}
+        // A dialog is drawn in a portal, but React still passes its mouse events up to the parents
+        // it was written inside. A bar that keeps the focus in the editor (the toolbar) would then
+        // stop every click in the dialog from focusing a box. The events stay in the dialog.
+        onMouseDown={(e) => {
+          props.onMouseDown?.(e);
+          e.stopPropagation();
+        }}
       >
         {children}
         <DialogPrimitive.Close

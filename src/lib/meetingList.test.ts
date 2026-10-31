@@ -79,7 +79,7 @@ describe("whenLabel", () => {
 });
 
 describe("meetingNotes", () => {
-  it("returns the written parts only", () => {
+  it("returns the one text of the meeting, also an older meeting with a part per item", () => {
     const m = toMeetingNotes([
       note(
         "x.md",
@@ -87,6 +87,6 @@ describe("meetingNotes", () => {
         "# X\n\n## Agenda\n\n- [ ] Budget\n- [ ] Hiring\n\n## Notes\n\n### Budget\n\nAgreed.\n\n### Hiring\n\n",
       ),
     ])[0];
-    expect(meetingNotes(m as never)).toEqual([{ item: "Budget", text: "Agreed." }]);
+    expect(meetingNotes(m as never)).toBe("### Budget\n\nAgreed.\n\n### Hiring");
   });
 });

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { TaskRow } from "@/features/tasks/TaskRow";
 import { api } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
-import { GENERAL, markItem, nextMeetingSeed } from "@/lib/meeting";
+import { decisionsOf, markItem, nextMeetingSeed } from "@/lib/meeting";
 import { meetingNotes, type MeetingNote } from "@/lib/meetingList";
 import { shortDate, todayIso } from "@/lib/taskLogic";
 import { formatTime, type TimeFormat } from "@/lib/timeFormat";
@@ -94,6 +94,8 @@ export function MeetingsView() {
 
   const fromMeeting = tasks.filter((t) => t.path === m.path);
   const notes = meetingNotes(m);
+  const decisions = decisionsOf(m.content);
+  const { parts } = m.meeting;
   const done = m.meeting.agenda.filter((a) => a.done).length;
 
   const prepareNext = (): void => {
@@ -186,64 +188,78 @@ export function MeetingsView() {
           />
         )}
 
-        <div>
-          <h3 className="section-label pb-1">
-            Agenda
-            {m.meeting.agenda.length > 0 &&
-              ` · ${String(done)} of ${String(m.meeting.agenda.length)} done`}
-          </h3>
-          {m.meeting.agenda.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No agenda. Start the meeting and write your notes, or add an item there.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-1">
-              {m.meeting.agenda.map((a) => (
-                <li key={a.text} className="flex items-center gap-2 text-sm">
-                  <Checkbox
-                    className="size-4"
-                    checked={a.done}
-                    aria-label={`${a.done ? "Not done" : "Done"}: ${a.text}`}
-                    onChange={(e) => {
-                      void tickAgenda(m.path, a.text, e.target.checked);
-                    }}
-                  />
-                  <span className={cn(a.done && "text-muted-foreground line-through")}>
-                    {a.text}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {parts.agenda && (
+          <div>
+            <h3 className="section-label pb-1">
+              Agenda
+              {m.meeting.agenda.length > 0 &&
+                ` · ${String(done)} of ${String(m.meeting.agenda.length)} done`}
+            </h3>
+            {m.meeting.agenda.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No agenda. Start the meeting and write your notes, or add an item there.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-1">
+                {m.meeting.agenda.map((a) => (
+                  <li key={a.text} className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      className="size-4"
+                      checked={a.done}
+                      aria-label={`${a.done ? "Not done" : "Done"}: ${a.text}`}
+                      onChange={(e) => {
+                        void tickAgenda(m.path, a.text, e.target.checked);
+                      }}
+                    />
+                    <span className={cn(a.done && "text-muted-foreground line-through")}>
+                      {a.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
-        <div>
-          <h3 className="section-label pb-1">Tasks from this meeting</h3>
-          {fromMeeting.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              None. A task you write in the note shows here.
-            </p>
-          ) : (
-            <ul>
-              {fromMeeting.map((t) => (
-                <TaskRow key={`${t.path}:${String(t.line)}`} task={t} showNote={false} />
-              ))}
-            </ul>
-          )}
-        </div>
+        {parts.actions && (
+          <div>
+            <h3 className="section-label pb-1">Actions</h3>
+            {fromMeeting.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                None. A task you write in the note shows here.
+              </p>
+            ) : (
+              <ul>
+                {fromMeeting.map((t) => (
+                  <TaskRow key={`${t.path}:${String(t.line)}`} task={t} showNote={false} />
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {parts.decisions && (
+          <div>
+            <h3 className="section-label pb-1">Decisions</h3>
+            {decisions.length === 0 ? (
+              <p className="text-sm text-muted-foreground">None written yet.</p>
+            ) : (
+              <ul className="flex flex-col gap-1 text-sm">
+                {decisions.map((d) => (
+                  <li key={d}>{d}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         <div>
           <h3 className="section-label pb-1">Notes</h3>
-          {notes.length === 0 ? (
+          {notes === "" ? (
             <p className="text-sm text-muted-foreground">Nothing written yet.</p>
           ) : (
-            <div className="flex flex-col gap-2">
-              {notes.map((n) => (
-                <div key={n.item} className="rounded-lg border bg-card px-3 py-2">
-                  {n.item !== GENERAL && <p className="pb-1 text-xs font-semibold">{n.item}</p>}
-                  <MarkdownText text={n.text} className="text-muted-foreground" />
-                </div>
-              ))}
+            <div className="rounded-lg border bg-card px-3 py-2">
+              <MarkdownText text={notes} className="text-muted-foreground" />
             </div>
           )}
         </div>

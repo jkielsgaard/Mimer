@@ -43,6 +43,30 @@ describe("SearchPanel", () => {
     useEmbeddingStore.setState({ status: null });
   });
 
+  it("lists your tags and Mimer's tags in two groups, and a click writes tag: in the box", async () => {
+    api.allTags.mockResolvedValue([
+      { tag: "vpn", count: 4 },
+      { tag: "meeting", count: 5 },
+      { tag: "epic", count: 2 },
+    ]);
+    render(<SearchPanel />);
+    expect(await screen.findByText("Your tags")).toBeInTheDocument();
+    expect(screen.getByText("Mimer's tags")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /#vpn/ })).toBeInTheDocument();
+    // Mimer's own tags have their plain name and say what they do.
+    const meeting = screen.getByRole("button", { name: /Meeting/ });
+    expect(meeting).toHaveAttribute("title", expect.stringContaining("Start meeting"));
+    await userEvent.setup().click(meeting);
+    expect(screen.getByLabelText("Search notes")).toHaveValue("tag:meeting");
+  });
+
+  it("shows no group that has no tags", async () => {
+    api.allTags.mockResolvedValue([{ tag: "vpn", count: 1 }]);
+    render(<SearchPanel />);
+    expect(await screen.findByText("Your tags")).toBeInTheDocument();
+    expect(screen.queryByText("Mimer's tags")).toBeNull();
+  });
+
   it("uses keyword search and hides the mode switch when semantic search is off", async () => {
     render(<SearchPanel />);
     expect(screen.queryByRole("radiogroup", { name: "Search mode" })).toBeNull();

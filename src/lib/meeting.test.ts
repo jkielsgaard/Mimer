@@ -1,14 +1,25 @@
 import { describe, expect, it } from "vitest";
 import {
+  ALL_PARTS,
+  NO_PARTS,
+  actionsOf,
+  addAction,
   addDays,
+  addDecision,
   addItem,
   buildMeetingNote,
-  itemNotes,
+  decisionsOf,
+  loadDefaultParts,
+  markAction,
   markItem,
   meetingMoment,
+  meetingNotesText,
   nextMeetingSeed,
   parseMeeting,
-  setItemNotes,
+  removeDecision,
+  saveDefaultParts,
+  setMeetingNotes,
+  setMeetingParts,
   setMeetingWhen,
   todayAndTomorrow,
 } from "./meeting";
@@ -22,13 +33,14 @@ const full = buildMeetingNote({
 });
 
 describe("buildMeetingNote", () => {
-  it("writes the date and people as properties, the agenda as a checklist and a part per item", () => {
+  it("writes the date, people and parts as properties, the agenda as a checklist and a section per part", () => {
     expect(full).toBe(
       [
         "---",
         "tags: [meeting]",
         "meeting: 2026-10-27 14:00",
         "with: [Mette, Peter]",
+        "parts: [agenda, decisions, actions]",
         "---",
         "# Weekly with Mette",
         "",
@@ -39,9 +51,9 @@ describe("buildMeetingNote", () => {
         "",
         "## Notes",
         "",
-        "### Budget",
+        "## Decisions",
         "",
-        "### Hiring",
+        "## Actions",
         "",
       ].join("\n"),
     );
@@ -77,7 +89,27 @@ describe("parseMeeting", () => {
         { text: "Budget", done: true },
         { text: "Hiring", done: false },
       ],
+      parts: ALL_PARTS,
     });
+  });
+
+  it("gives an old meeting without parts all three, and reads the parts that are chosen", () => {
+    expect(parseMeeting("---\ntags: [meeting]\n---\n# Old\n").parts).toEqual(ALL_PARTS);
+    const some = buildMeetingNote({
+      title: "T",
+      date: "",
+      time: "",
+      people: [],
+      agenda: ["Ignored"],
+      parts: { agenda: false, decisions: true, actions: false },
+    });
+    expect(parseMeeting(some).parts).toEqual({ agenda: false, decisions: true, actions: false });
+    expect(some).toContain("parts: [decisions]");
+    expect(some).not.toContain("## Agenda");
+    expect(some).not.toContain("Ignored");
+    expect(some).toContain("## Decisions");
+    expect(some).not.toContain("## Actions");
+    expect(parseMeeting(some).agenda).toEqual([]);
   });
 
   it("reads a plain note without any properties", () => {
@@ -88,37 +120,89 @@ describe("parseMeeting", () => {
   });
 });
 
-describe("notes per agenda item", () => {
-  it("reads and writes the text under one item and leaves the others alone", () => {
-    expect(itemNotes(full, "Budget")).toBe("");
-    const a = setItemNotes(full, "Hiring", "Peter: two people\n**Decision:** one in Q1");
-    expect(itemNotes(a, "Hiring")).toBe("Peter: two people\n**Decision:** one in Q1");
-    expect(itemNotes(a, "Budget")).toBe("");
-    const b = setItemNotes(a, "Hiring", "changed");
-    expect(itemNotes(b, "Hiring")).toBe("changed");
-    expect(b.match(/### Hiring/g)).toHaveLength(1);
-    expect(setItemNotes(b, "Hiring", "")).toBe(setItemNotes(full, "Hiring", ""));
+describe("the notes of the whole meeting", () => {
+  it("reads and writes one text under ## Notes and leaves the other sections alone", () => {
+    expect(meetingNotesText(full)).toBe("");
+    const a = setMeetingNotes(full, "Budget: two people\nPeter: one in Q1");
+    expect(meetingNotesText(a)).toBe("Budget: two people\nPeter: one in Q1");
+    expect(a).toContain("## Decisions");
+    expect(a).toContain("- [ ] Budget");
+    const b = setMeetingNotes(a, "changed");
+    expect(meetingNotesText(b)).toBe("changed");
+    expect(b.match(/## Notes/g)).toHaveLength(1);
+    expect(setMeetingNotes(b, "")).toBe(full);
   });
 
-  it("makes the part when it is missing, and the Notes section when there is none", () => {
-    expect(itemNotes(setItemNotes(full, "Release", "x"), "Release")).toBe("x");
-    const bare = "# T\n\n## Agenda\n\n- [ ] One\n";
-    const made = setItemNotes(bare, "One", "hello");
+  it("keeps the ### parts of an older meeting as text, and makes the section when there is none", () => {
+    const old = "# T\n\n## Agenda\n\n- [ ] One\n\n## Notes\n\n### One\n\nhello\n";
+    expect(meetingNotesText(old)).toBe("### One\n\nhello");
+    const made = setMeetingNotes("# T\n\n## Agenda\n\n- [ ] One\n", "hello");
     expect(made).toContain("## Notes");
-    expect(itemNotes(made, "One")).toBe("hello");
+    expect(meetingNotesText(made)).toBe("hello");
   });
 });
 
-describe("a meeting without an agenda", () => {
-  it("writes under ## Notes without a second heading called Notes", () => {
-    const made = setItemNotes("# Lunch\n\nsome text\n", "Notes", "Talked about food");
-    expect(made).toContain("## Notes\n\nTalked about food");
-    expect(made).not.toContain("### Notes");
-    expect(itemNotes(made, "Notes")).toBe("Talked about food");
-    // A part of an item that is added later does not end up in the general text.
-    const more = setItemNotes(made, "Budget", "x");
-    expect(itemNotes(more, "Notes")).toBe("Talked about food");
-    expect(itemNotes(more, "Budget")).toBe("x");
+describe("decisions", () => {
+  it("adds, reads and removes decisions, and makes the section when it is missing", () => {
+    const a = addDecision(addDecision(full, "Rollout starts Monday"), "Order 20 licences");
+    expect(decisionsOf(a)).toEqual(["Rollout starts Monday", "Order 20 licences"]);
+    expect(a.indexOf("## Decisions")).toBeLessThan(a.indexOf("## Actions"));
+    expect(decisionsOf(removeDecision(a, "Rollout starts Monday"))).toEqual(["Order 20 licences"]);
+    expect(addDecision(full, "  ")).toBe(full);
+    const bare = addDecision("# T\n\n## Notes\n\nx\n", "One");
+    expect(decisionsOf(bare)).toEqual(["One"]);
+    expect(bare.endsWith("\n")).toBe(true);
+  });
+});
+
+describe("actions", () => {
+  it("adds a task under ## Actions with its made date, ticks it and reads it back", () => {
+    const a = addAction(full, "Order licences", "2026-10-31");
+    expect(a).toContain("## Actions\n\n- [ ] Order licences made:2026-10-31");
+    const [one] = actionsOf(a);
+    expect(one).toEqual({
+      raw: "Order licences made:2026-10-31",
+      text: "Order licences",
+      done: false,
+    });
+    const ticked = markAction(a, one?.raw ?? "", true);
+    expect(actionsOf(ticked)[0]?.done).toBe(true);
+    expect(markAction(ticked, one?.raw ?? "", false)).toBe(a);
+    const two = addAction(a, "Write the guide");
+    expect(actionsOf(two).map((x) => x.text)).toEqual(["Order licences", "Write the guide"]);
+    expect(addAction(full, "")).toBe(full);
+  });
+
+  it("is not mixed up with the decisions or the agenda", () => {
+    const a = addAction(addDecision(full, "D"), "A");
+    expect(decisionsOf(a)).toEqual(["D"]);
+    expect(actionsOf(a).map((x) => x.text)).toEqual(["A"]);
+    expect(parseMeeting(a).agenda.map((x) => x.text)).toEqual(["Budget", "Hiring"]);
+  });
+});
+
+describe("the parts of a meeting", () => {
+  it("setMeetingParts changes only the property and keeps what is written in a part that is off", () => {
+    const a = setMeetingNotes(addAction(full, "A"), "text");
+    const off = setMeetingParts(a, { agenda: true, decisions: true, actions: false });
+    expect(parseMeeting(off).parts).toEqual({ agenda: true, decisions: true, actions: false });
+    expect(off).toContain("- [ ] A");
+    expect(setMeetingParts(off, ALL_PARTS)).toBe(a);
+    const old = setMeetingParts("---\ntags: [meeting]\n---\n# Old\n", {
+      agenda: false,
+      decisions: false,
+      actions: false,
+    });
+    expect(old).toContain("parts: []");
+    expect(parseMeeting(old).parts).toEqual({ agenda: false, decisions: false, actions: false });
+  });
+
+  it("remembers the parts of the last new meeting on this computer", () => {
+    window.localStorage.removeItem("mimer.meetingParts");
+    expect(loadDefaultParts()).toEqual(NO_PARTS);
+    saveDefaultParts({ agenda: false, decisions: true, actions: true });
+    expect(loadDefaultParts()).toEqual({ agenda: false, decisions: true, actions: true });
+    window.localStorage.removeItem("mimer.meetingParts");
   });
 });
 
@@ -149,14 +233,14 @@ describe("the agenda", () => {
     expect(markItem(ticked, "Budget", false)).toBe(full);
   });
 
-  it("adds an item with its own part, and uses up the empty first line", () => {
+  it("adds an item, and uses up the empty first line", () => {
     const more = addItem(full, "Next release");
     expect(parseMeeting(more).agenda.map((a) => a.text)).toEqual([
       "Budget",
       "Hiring",
       "Next release",
     ]);
-    expect(more).toContain("### Next release");
+    expect(more).not.toContain("### Next release");
     const empty = buildMeetingNote({ title: "T", date: "", time: "", people: [], agenda: [] });
     expect(parseMeeting(addItem(empty, "First")).agenda).toEqual([{ text: "First", done: false }]);
     expect(addItem(full, "   ")).toBe(full);
@@ -184,13 +268,14 @@ describe("the next meeting", () => {
   });
 
   it("starts from the same title, people and time, a week later, with what is left over", () => {
-    const content = setItemNotes(markItem(full, "Budget", true), "Hiring", "Talked about it.");
+    const content = setMeetingNotes(markItem(full, "Budget", true), "Talked about it.");
     expect(nextMeetingSeed(content)).toEqual({
       title: "Weekly with Mette",
       date: "2026-11-03",
       time: "14:00",
       who: "Mette, Peter",
       agenda: "Hiring",
+      parts: ALL_PARTS,
     });
     const plain = nextMeetingSeed("# Lunch\n");
     expect(plain.date).toBe("");

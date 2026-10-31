@@ -277,3 +277,24 @@ Check with `git log --oneline` in the vault folder.
 - [ ] Preview: after installing a build made from a `-preview` tag the program is called **Mimer Preview**, and it can stand next to an installed Mimer. The first time it starts it has the same settings (vaults, theme) as the Stable one if there was one; changing a setting in Preview does not change Stable.
 - [ ] A tag `v0.x.y` makes a pre-release (draft) with the installer, Linux packages and, until v1.0.0, the Store package; a tag such as `v1.1.0-preview.1` makes the "Mimer Preview" build with **no** Store package; neither needs approval. A tag `v1.0.0` waits for approval (GitHub → Actions → the run → **Review deployments**), then makes the release and the Store package. A tag that does not match `package.json` stops at the first step.
 - [ ] The website (`https://jkielsgaard.github.io/Mimer/`) opens in light and dark and on a phone with no sideways scroll; the Preview card links to the releases page and the Stable card says it is not released yet.
+
+## Meeting notes and parts
+
+- [ ] **New → Meeting note…** has **Use in this meeting** with Agenda, Decisions and Actions all unticked the first time (they are options), and no agenda box. Tick Agenda: the agenda box shows. Tick Decisions and Actions too, untick Agenda, press Create: the note has `parts: [decisions, actions]` and no `## Agenda`. The dialog stays open while you tick and untick. The next new meeting starts with the same choice.
+- [ ] **Start meeting**: at the top, **Use** has Agenda, Decisions and Actions: ticking one shows it at once (the note gets its section) and unticking hides it. The notes are one box in the middle. Click another agenda item: it is marked **Now** and the notes stay as they were. Tick an item, add an item. Add and remove a decision. Add an action: it appears in the note under `## Actions` as a task with a made date, and in **Tasks** (under Tasks in other notes or the epic you made). Tick it.
+- [ ] A meeting without Agenda gives the notes the whole width; without Decisions or Actions those boxes are not shown. **Change…** on a meeting changes the parts; what was written in a part that is off is still in the note.
+- [ ] An older meeting (made before this) opens with all three parts, its `### item` notes shown as text in the one notes box, and nothing lost. The Meetings page shows the parts the meeting has.
+
+## Time picker
+
+- [ ] In **New meeting** the Time box has a small arrow. A click on the arrow or in the box opens a list under it, every 15 minutes from 00:00 to 23:45, scrolled to the time in the box (09:00 when it is empty). Click a time: it is written in the box and the list closes. The window stays open.
+- [ ] Arrow down opens the list and moves through it; Enter picks the marked time (without one, Enter creates the meeting as before); Esc closes only the list; a click outside closes it. Type `10:20`: it is kept (the nearest quarter is shaded); `1430` and `2:30 pm` still work; `25:00` is marked red and Create is off.
+- [ ] With 12-hour time chosen in Settings, the list reads `9:15 AM` and the box `2:30 PM`; the note still stores `14:30`. **Change…** on a meeting has the same box.
+
+## Your own tags
+
+- [ ] **···** → **Tags…** on a note: **Mimer uses these** has Meeting, Epic and Pinned with what each does. Under **Your tags** type `VPN` and press Enter: a chip `#vpn` appears, the note's properties say `tags: [vpn]`, and the box is empty again. Two words, or only digits, are refused with a message. Type `epic`: Mimer's Epic is put on above, with a message.
+- [ ] Open Tags… on another note: **Use a tag you already have** lists `#vpn` with a count; a click puts it on. Typing the first letters narrows the list. The cross on a chip takes the tag off.
+- [ ] A note with `#idea` in its text shows `In the text: #idea`. Above the note, Meeting or Epic is a filled chip with a mark and says what it does when you point at it; `#vpn` is an outlined chip. Both have a cross.
+- [ ] **Search** (nothing typed) lists **Your tags** and **Mimer's tags** with counts; a click writes `tag:vpn` and finds the notes. `tag:meeting` finds the meetings.
+- [ ] A note tagged `meeting` and `vpn`: run **Suggest a title and tags**. The proposal keeps `meeting`, adds only tags of its own, and never `epic` or `pinned`.

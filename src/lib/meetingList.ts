@@ -1,5 +1,5 @@
 import type { NoteContent } from "@/bindings/NoteContent";
-import { GENERAL, itemNotes, meetingMoment, parseMeeting, type Meeting } from "./meeting";
+import { meetingMoment, meetingNotesText, parseMeeting, type Meeting } from "./meeting";
 import { shortDate } from "./taskLogic";
 import { formatTime, type TimeFormat } from "./timeFormat";
 
@@ -78,9 +78,7 @@ export function whenLabel(m: Meeting, today: string, format: TimeFormat = "24"):
   return [shortDate(m.date), time].filter((x) => x !== null).join(" ");
 }
 
-/** What was written under the agenda items (and under Notes itself), the empty parts left out. */
-export function meetingNotes(m: MeetingNote): { item: string; text: string }[] {
-  return [GENERAL, ...m.meeting.agenda.map((a) => a.text)]
-    .map((item) => ({ item, text: itemNotes(m.content, item) }))
-    .filter((n) => n.text !== "");
+/** What was written in the meeting's notes ("" when nothing). */
+export function meetingNotes(m: MeetingNote): string {
+  return meetingNotesText(m.content);
 }
