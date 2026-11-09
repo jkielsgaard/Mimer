@@ -278,7 +278,7 @@ export function FocusTask({
                 .reverse()
                 .slice(0, 3)
                 .map((l) => (
-                  <li key={l.line} className="flex gap-1.5 text-sm">
+                  <li key={l.line} className="flex items-baseline gap-1.5 text-sm">
                     <span className="shrink-0 text-muted-foreground">{logDay(l.date)} ·</span>
                     <MarkdownText text={l.text} />
                   </li>

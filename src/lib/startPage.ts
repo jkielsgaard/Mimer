@@ -77,11 +77,12 @@ export function noteExcerpt(content: string, max = 200): string {
     .split("\n")
     .map((l) => l.trim())
     .filter((l) => l !== "" && !l.startsWith("#"))
+    // A list mark or a task box at the start of a line is not part of what the line says.
+    .map((l) => l.replace(/^([-*+]|\d+[.)])\s+(\[[ xX]\]\s+)?/, ""))
     .join(" ")
     .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, "$2")
     .replace(/\[\[([^\]]+)\]\]/g, "$1")
     .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(/^[-*+]\s+(\[[ xX]\]\s+)?/, "")
     .replace(/[*_`~]/g, "")
     .replace(/\s+/g, " ")
     .trim();

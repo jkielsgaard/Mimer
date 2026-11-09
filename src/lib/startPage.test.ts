@@ -56,6 +56,13 @@ describe("noteExcerpt", () => {
       "---\ntags: [epic]\n---\n# Hiring plan\n\nWe need **two** engineers, see [[Roles]].\n";
     expect(noteExcerpt(text)).toBe("We need two engineers, see Roles.");
   });
+  it("leaves out list marks, numbers and task boxes", () => {
+    const text =
+      "# Plan\n\nBefore the end of November.\n\n- Everyone is on the new client.\n* The old client goes.\n+ Support has a guide.\n1. Install it.\n2) Sign in.\n- [ ] Order licences\n- [x] Pick the group\n";
+    expect(noteExcerpt(text, 400)).toBe(
+      "Before the end of November. Everyone is on the new client. The old client goes. Support has a guide. Install it. Sign in. Order licences Pick the group",
+    );
+  });
   it("cuts a long text", () => {
     expect(noteExcerpt("a".repeat(300), 50)).toHaveLength(50);
   });
