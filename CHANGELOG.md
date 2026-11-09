@@ -15,6 +15,7 @@ This list is kept short: it tells what Mimer can do in each version. A small rel
 
 ### Fixed
 
+- **The privacy policy now describes the optional cloud AI** (it said notes are never sent to a cloud service).
 - The small previews on the theme cards no longer run text into each other.
 
 ## [0.21.0] - 2026-10-31

@@ -38,6 +38,12 @@ describe("the website and the README say the same", () => {
     expect(readme.includes(text), `the README does not say: ${text}`).toBe(true);
   });
 
+  it("the privacy policy says the same about the cloud AI", () => {
+    const fact = facts.find((f) => f.id === "local-ai")?.text ?? "";
+    expect(fact).not.toBe("");
+    expect(readmeText(read("PRIVACY.md")).includes(fact), "PRIVACY.md does not say it").toBe(true);
+  });
+
   it("the website shows the version that is built (0.x as v0.N), so it is updated with a release", () => {
     const [major, minor] = pkg.version.split(".");
     const shown = major === "0" ? `Preview v0.${minor ?? ""}` : `v${major ?? ""}.${minor ?? ""}`;

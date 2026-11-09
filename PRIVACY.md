@@ -1,12 +1,12 @@
 # Mimer privacy policy
 
-_Last updated: 21 October 2026. Mimer is made by Jesper Ahasverusen Kielsgaard (https://github.com/jkielsgaard/Mimer)._
+_Last updated: 9 November 2026. Mimer is made by Jesper Ahasverusen Kielsgaard (https://github.com/jkielsgaard/Mimer)._
 
 Mimer is a notes app that runs on your own computer. This page says what it does with your data.
 
 ## What Mimer collects
 
-**Nothing.** Mimer has no account, no analytics, no telemetry, no advertising and no automatic update check. The author does not receive any data from the app.
+**Nothing.** Mimer has no account, no analytics, no telemetry, no advertising and no automatic update check. The author does not receive any data from the app. **Help → Check for new version…** only opens the releases page in your web browser.
 
 ## Where your data is
 
@@ -18,7 +18,7 @@ Mimer is a notes app that runs on your own computer. This page says what it does
 
 Only when you choose it:
 
-- **The AI ("Mimer")** only talks to an AI that runs on your own computer: the built-in AI, LM Studio or another local server. Your notes are never sent to a cloud service.
+- **The AI ("Mimer")** runs on your own computer by default: the built-in AI, LM Studio or another local server. The AI reads your notes only on your own machine. A cloud AI is possible, but only after you say yes, and never in a project you lock to local. You turn it on yourself in Settings → AI, in a window that says what is sent (the open note and the text you select, the notes the chat searches and reads, your questions and the chat history) and that it is your responsibility; it is used only after you tick "I understand". The status bar shows **Cloud AI** while it is on, and what the cloud company does with the text is governed by its own terms.
 - **The built-in AI download** (when you press Download) fetches, for llama.cpp, the engine from `github.com` and the model from `huggingface.co`; for Foundry Local, the hardware parts and the model from Microsoft's Foundry Local catalog. Those sites see your internet address, as for any download.
 - **Export and import** write and read files on your computer only.
 - **Links** you click in Mimer (for example **Report a bug…**) open in your web browser; Mimer itself sends nothing.

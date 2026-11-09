@@ -52,7 +52,7 @@ If a Build-Msix step fails, `makeappx` says what is wrong with the manifest.
 1. In Partner Center open the app's **Submission**. Upload the **unsigned** `Mimer_<version>_x64.msix` from the workflow artifact or from step 2 (not the `_test` file).
 2. Fill in the **Store listing**: description, at least one screenshot (the pictures in `docs/screenshots/` can be used; the Store text is in `docs/STORE-LISTING.md`), the icon, and the category (Productivity).
 3. **Privacy policy URL**: `https://github.com/jkielsgaard/Mimer/blob/main/PRIVACY.md`.
-4. **Properties → Age rating** questionnaire, and the **notes for certification**: say that the app is open source, that it needs no account, that the AI runs on the user's own computer and nothing is sent to a cloud service, and how to try it (open any folder as a vault).
+4. **Properties → Age rating** questionnaire, and the **notes for certification**: say that the app is open source, that it needs no account, that the AI runs on the user's own computer by default (a cloud AI is only used if the user turns it on, after a warning), and how to try it (open any folder as a vault).
 5. Under **Pricing and availability** choose **Free**. To keep it out of the public search, choose **Hide this product … available by direct link only** (Markets and visibility).
 6. Submit. Certification usually takes some days. Microsoft may ask questions or reject the app: read the message, fix, and send a new package.
 
