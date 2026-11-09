@@ -42,6 +42,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # A shipped dependency with a high or critical known fault fails the build.
+      - run: pnpm audit --prod --audit-level high
+
       # The Rust build embeds the frontend, so it must exist.
       - run: pnpm build
 
