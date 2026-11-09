@@ -92,6 +92,8 @@ import { useSettingsStore } from "./stores/settingsStore";
 import { useVaultStore } from "./stores/vaultStore";
 import { emptyLayout, useWorkspaceStore } from "./stores/workspaceStore";
 import { makeSettings } from "@/test/settings";
+import { appVersion } from "@/lib/version";
+import { minorOf } from "@/lib/whatsNew";
 
 describe("App smoke test", () => {
   beforeEach(() => {
@@ -125,6 +127,7 @@ describe("App smoke test", () => {
     // speed of the tests do not decide which note is open.
     window.localStorage.clear();
     window.localStorage.setItem("mimer.betaNoticeSeen", "1");
+    window.localStorage.setItem("mimer.whatsNewSeen", minorOf(appVersion));
     useWorkspaceStore.setState({ layout: emptyLayout() });
     useVaultStore.setState({
       vault: null,
@@ -209,6 +212,7 @@ describe("editor without a note", () => {
     // Earlier tests save the open tabs of this vault; start without any so no note opens.
     window.localStorage.clear();
     window.localStorage.setItem("mimer.betaNoticeSeen", "1");
+    window.localStorage.setItem("mimer.whatsNewSeen", minorOf(appVersion));
     useWorkspaceStore.setState({ layout: emptyLayout() });
     useVaultStore.setState({
       vault: null,
