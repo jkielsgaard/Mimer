@@ -1,6 +1,7 @@
 //! The open vault: repository, search index, projects and file list.
 
 pub mod attachments;
+pub mod demo;
 pub mod fs_ops;
 pub mod images;
 pub mod ops;

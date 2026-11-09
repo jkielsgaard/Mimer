@@ -298,3 +298,8 @@ Check with `git log --oneline` in the vault folder.
 - [ ] A note with `#idea` in its text shows `In the text: #idea`. Above the note, Meeting or Epic is a filled chip with a mark and says what it does when you point at it; `#vpn` is an outlined chip. Both have a cross.
 - [ ] **Search** (nothing typed) lists **Your tags** and **Mimer's tags** with counts; a click writes `tag:vpn` and finds the notes. `tag:meeting` finds the meetings.
 - [ ] A note tagged `meeting` and `vpn`: run **Suggest a title and tags**. The proposal keeps `meeting`, adds only tags of its own, and never `epic` or `pinned`.
+
+## Demo vault
+
+- [ ] On the welcome screen, **Try the demo vault** opens the folder dialog; choose an empty folder: a folder `Mimer Demo` is made and opens with notes in Work, two epics in Projects (open **Tasks**: VPN rollout has four tasks, steps and a log) and two meetings in Meetings (one today at 10:00, one tomorrow at 13:30; **Start meeting** works). The start page shows Next meeting.
+- [ ] Press **Try the demo vault** again and choose the same folder: the same vault opens, and an edit you made in it is still there. Cancel in the folder dialog does nothing. Delete the `Mimer Demo` folder afterwards: Mimer shows it as "Folder not found" in Recent vaults.

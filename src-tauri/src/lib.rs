@@ -133,6 +133,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::vault::open_vault,
             commands::vault::create_vault,
+            commands::vault::create_demo_vault,
             commands::vault::forget_vault,
             commands::vault::missing_vaults,
             commands::vault::close_vault,
