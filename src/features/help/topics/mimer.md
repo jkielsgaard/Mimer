@@ -49,7 +49,7 @@ Mimer uses an AI that runs on your own computer: the **built-in AI** (Phi Silica
 
 ## Preview and Stable
 
-Mimer comes in two editions. **Preview** has the newest features and changes often; it is the edition you run if the status bar says `preview`. **Stable** is the finished release. They can be installed side by side and open the same vaults. Mimer never looks for updates by itself: **Help → Check for new version…** opens the page of releases in your browser.
+Mimer comes in two editions. **Preview** has the newest features and changes often; it is the edition you run if the status bar says `preview`. **Stable** is the finished release. They can be installed side by side and open the same vaults. The first time a new version starts, **What's new** lists what changed in it (it is also under **Help → What's new**). Mimer never looks for updates by itself: **Help → Check for new version…** opens the page of releases in your browser.
 
 ## More
 

@@ -161,6 +161,9 @@ export function Header() {
           {item("About the AI beta…", null, () => {
             ui.setBetaNoticeOpen(true);
           })}
+          {item("What's new", null, () => {
+            ui.setWhatsNewOpen(true);
+          })}
           {item("Check for new version…", null, () => {
             void openLink(RELEASES_URL);
           })}

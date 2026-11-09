@@ -15,6 +15,7 @@ import { SettingsDialog } from "@/features/settings/SettingsDialog";
 import { Welcome } from "@/features/welcome/Welcome";
 import { ExportDialog } from "@/features/export/ExportDialog";
 import { AboutDialog } from "@/features/about/AboutDialog";
+import { WhatsNewDialog } from "@/features/help/WhatsNewDialog";
 import { BetaNoticeDialog } from "@/features/welcome/BetaNoticeDialog";
 import { MeetingFocus } from "@/features/meetings/MeetingFocus";
 import { MeetingForm } from "@/features/meetings/MeetingForm";
@@ -281,6 +282,7 @@ export function App() {
       <NoticeDialog />
       <NewNoteDialog />
       <AboutDialog />
+      <WhatsNewDialog />
       <HelpDialog />
       <PrintView />
       <ProjectDialog />

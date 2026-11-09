@@ -303,3 +303,8 @@ Check with `git log --oneline` in the vault folder.
 
 - [ ] On the welcome screen, **Try the demo vault** opens the folder dialog; choose an empty folder: a folder `Mimer Demo` is made and opens with notes in Work, two epics in Projects (open **Tasks**: VPN rollout has four tasks, steps and a log) and two meetings in Meetings (one today at 10:00, one tomorrow at 13:30; **Start meeting** works). The start page shows Next meeting.
 - [ ] Press **Try the demo vault** again and choose the same folder: the same vault opens, and an edit you made in it is still there. Cancel in the folder dialog does nothing. Delete the `Mimer Demo` folder afterwards: Mimer shows it as "Folder not found" in Recent vaults.
+
+## What's new
+
+- [ ] Remove the stored choice `mimer.whatsNewSeen` (browser storage), keep `mimer.betaNoticeSeen`, and restart: a window "What's new in Mimer 0.x" lists three to six lines with a bold lead. **Got it** closes it, and it does not come back at the next start.
+- [ ] **Help → What's new** opens it at any time, and **All changes** opens the changelog in the browser. On a computer where Mimer has never run (no stored choices) the window does not come by itself.
