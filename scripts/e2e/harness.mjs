@@ -5,8 +5,8 @@
 // is served by `pnpm dev` (http://localhost:1420); every Tauri command the frontend calls is
 // answered here from a small demo vault kept in memory.
 //
-// Needs the dev dependency `playwright-core` and a Chromium (see the plan for how CI gets one).
-import { chromium } from "playwright-core";
+// Needs the dev dependency `playwright` and a Chromium (see the plan for how CI gets one).
+import { chromium } from "playwright";
 
 /** The moment the pretend app runs at, so "today" is the same in every picture. */
 const NOW = "2026-10-30T09:15:00";

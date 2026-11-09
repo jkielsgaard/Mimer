@@ -19,7 +19,9 @@
     "rust:format": "cargo fmt --manifest-path src-tauri/Cargo.toml --check",
     "bindings": "cargo test --manifest-path src-tauri/Cargo.toml export_bindings",
     "areas": "node scripts/areas.mjs",
-    "check": "pnpm format:check && pnpm areas check && pnpm lint && pnpm typecheck && pnpm test && pnpm rust:format && pnpm rust:lint && pnpm rust:test"
+    "check": "pnpm format:check && pnpm areas check && pnpm lint && pnpm typecheck && pnpm test && pnpm rust:format && pnpm rust:lint && pnpm rust:test",
+    "e2e": "node scripts/e2e/smoke.mjs",
+    "screenshots": "node scripts/e2e/screenshots.mjs"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.3",
@@ -63,6 +65,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",
     "jsdom": "^30.1.2",
+    "playwright": "^1.65.0",
     "prettier": "^3.9.10",
     "tailwindcss": "^4.3.3",
     "typescript": "~5.9.3",

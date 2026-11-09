@@ -53,6 +53,26 @@ jobs:
       - name: Bindings are up to date
         run: git diff --exit-code src/bindings
 
+  # The real frontend in a headless Chromium with a pretend backend (scripts/e2e/). It finds faults
+  # that jsdom cannot: real focus, real mouse presses, real colours.
+  e2e:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - run: pnpm e2e
+
   # The built-in AI has Windows-only code (a job object, PowerShell calls). This only compiles and
   # lints it on Windows, so a mistake there shows up here and not first in a release build.
   windows-check:
