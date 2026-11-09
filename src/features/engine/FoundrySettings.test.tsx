@@ -4,41 +4,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { FoundryModel } from "@/bindings/FoundryModel";
 import type { FoundryStatus } from "@/bindings/FoundryStatus";
 import type { Settings } from "@/bindings/Settings";
-import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 
 vi.mock("@/lib/api", () => ({ api: {}, toApiError: (e: unknown) => ({ message: String(e) }) }));
 
 import { FoundrySettings } from "./FoundrySettings";
 import { useFoundryStore } from "@/stores/foundryStore";
+import { makeSettings } from "@/test/settings";
 
 function settings(model = ""): Settings {
-  return {
-    schemaVersion: 1,
-    recentVaults: [],
-    lastVault: null,
-    theme: "system",
-    editor: {
-      fontSize: 15,
-      lineWidth: 760,
-      spellcheck: true,
-      recentNotes: 4,
-      aiSpelling: false,
-      traceWork: false,
-      ownWords: [],
-    },
-    git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
-    ai: {
-      defaultProviderId: "lm",
-      checkAnswers: false,
-      cloudConsent: null,
-      builtin: { ...DEFAULT_BUILTIN },
-      foundry: { model, tools: true },
-      answerLanguage: "",
-      globalInstructions: "",
-      embeddings: { enabled: false, providerId: "lm", model: "" },
-      providers: [],
-    },
-  };
+  return makeSettings({ ai: { foundry: { model, tools: true } } });
 }
 
 function status(over: Partial<FoundryStatus> = {}): FoundryStatus {

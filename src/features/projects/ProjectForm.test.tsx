@@ -6,32 +6,10 @@ vi.mock("@/lib/api", () => ({ api: {}, toApiError: (e: unknown) => ({ message: S
 
 import { ProjectForm } from "./ProjectForm";
 import { useVaultStore } from "@/stores/vaultStore";
-import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
+import { makeSettings } from "@/test/settings";
 
-const settings: Settings = {
-  schemaVersion: 1,
-  recentVaults: [],
-  lastVault: null,
-  theme: "system",
-  editor: {
-    fontSize: 15,
-    lineWidth: 760,
-    spellcheck: true,
-    recentNotes: 4,
-    aiSpelling: false,
-    traceWork: false,
-    ownWords: [],
-  },
-  git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
+const settings: Settings = makeSettings({
   ai: {
-    defaultProviderId: "lm",
-    checkAnswers: false,
-    cloudConsent: null,
-    builtin: DEFAULT_BUILTIN,
-    foundry: { model: "", tools: true },
-    answerLanguage: "",
-    globalInstructions: "",
-    embeddings: { enabled: false, providerId: "lm", model: "" },
     providers: [
       {
         id: "lm",
@@ -55,7 +33,7 @@ const settings: Settings = {
       },
     ],
   },
-};
+});
 
 describe("ProjectForm", () => {
   it("has a Local AI only choice (off) and offers local providers only", () => {

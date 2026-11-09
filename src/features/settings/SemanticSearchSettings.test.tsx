@@ -10,35 +10,15 @@ vi.mock("@/stores/embeddingStore", () => ({
 }));
 
 import { SemanticSearchSettings } from "./SemanticSearchSettings";
-import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
+import { makeSettings } from "@/test/settings";
 
 function settings(
   providerLocation: "local" | "cloud",
   kind: "lmstudio" | "anthropic" | "openai_compatible" = "lmstudio",
 ): Settings {
-  return {
-    schemaVersion: 1,
-    recentVaults: [],
-    lastVault: null,
-    theme: "system",
-    editor: {
-      fontSize: 15,
-      lineWidth: 760,
-      spellcheck: true,
-      recentNotes: 4,
-      aiSpelling: false,
-      traceWork: false,
-      ownWords: [],
-    },
-    git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
+  return makeSettings({
     ai: {
       defaultProviderId: "p1",
-      checkAnswers: false,
-      cloudConsent: null,
-      builtin: DEFAULT_BUILTIN,
-      foundry: { model: "", tools: true },
-      answerLanguage: "",
-      globalInstructions: "",
       embeddings: { enabled: true, providerId: "p1", model: "" },
       providers: [
         {
@@ -63,7 +43,7 @@ function settings(
         },
       ],
     },
-  };
+  });
 }
 
 describe("SemanticSearchSettings", () => {

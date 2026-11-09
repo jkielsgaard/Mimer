@@ -2,7 +2,6 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Settings } from "@/bindings/Settings";
-import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 import { CATALOG, engineStatus, HARDWARE } from "@/test/engineFixtures";
 
 vi.mock("@/lib/api", () => ({ api: {}, toApiError: (e: unknown) => ({ message: String(e) }) }));
@@ -10,35 +9,10 @@ vi.mock("@/lib/dialogs", () => ({ pickModelFile: vi.fn() }));
 
 import { BuiltInAiSettings } from "./BuiltInAiSettings";
 import { useEngineStore } from "@/stores/engineStore";
+import { makeSettings } from "@/test/settings";
 
 function settings(): Settings {
-  return {
-    schemaVersion: 1,
-    recentVaults: [],
-    lastVault: null,
-    theme: "system",
-    editor: {
-      fontSize: 15,
-      lineWidth: 760,
-      spellcheck: true,
-      recentNotes: 4,
-      aiSpelling: false,
-      traceWork: false,
-      ownWords: [],
-    },
-    git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
-    ai: {
-      defaultProviderId: "lm",
-      checkAnswers: false,
-      cloudConsent: null,
-      builtin: { ...DEFAULT_BUILTIN },
-      foundry: { model: "", tools: true },
-      answerLanguage: "",
-      globalInstructions: "",
-      embeddings: { enabled: false, providerId: "lm", model: "" },
-      providers: [],
-    },
-  };
+  return makeSettings();
 }
 
 describe("Settings → Built-in AI", () => {

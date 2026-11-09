@@ -2,7 +2,6 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Settings } from "@/bindings/Settings";
-import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 import { engineStatus } from "@/test/engineFixtures";
 
 const api = vi.hoisted(() => ({
@@ -20,32 +19,12 @@ import { useChatStore } from "@/stores/chatStore";
 import { useEngineStore } from "@/stores/engineStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { makeSettings } from "@/test/settings";
 
 function settings(defaultProviderId: string): Settings {
-  return {
-    schemaVersion: 1,
-    recentVaults: [],
-    lastVault: null,
-    theme: "system",
-    editor: {
-      fontSize: 15,
-      lineWidth: 760,
-      spellcheck: true,
-      recentNotes: 4,
-      aiSpelling: false,
-      traceWork: false,
-      ownWords: [],
-    },
-    git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
+  return makeSettings({
     ai: {
-      defaultProviderId,
-      checkAnswers: false,
-      cloudConsent: null,
-      builtin: DEFAULT_BUILTIN,
-      foundry: { model: "", tools: true },
-      answerLanguage: "",
-      globalInstructions: "",
-      embeddings: { enabled: false, providerId: "lm", model: "" },
+      defaultProviderId: defaultProviderId,
       providers: [
         {
           id: "lm",
@@ -69,7 +48,7 @@ function settings(defaultProviderId: string): Settings {
         },
       ],
     },
-  };
+  });
 }
 
 describe("the chat with the built-in AI", () => {
