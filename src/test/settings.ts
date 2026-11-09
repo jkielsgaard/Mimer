@@ -61,8 +61,5 @@ function merge(
  * `recentVaults`) replaces the default list.
  */
 export function makeSettings(overrides: DeepPartial<Settings> = {}): Settings {
-  return merge(
-    defaults() as unknown as Record<string, unknown>,
-    overrides as Record<string, unknown>,
-  ) as unknown as Settings;
+  return merge(defaults(), overrides) as unknown as Settings;
 }

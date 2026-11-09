@@ -14,12 +14,15 @@ describe("makeSettings", () => {
     const s = makeSettings({
       recentVaults: ["/a"],
       editor: { recentNotes: 9 },
-      ai: { cloudConsent: "x", embeddings: { enabled: true } },
+      ai: {
+        cloudConsent: { providerId: "p", baseUrl: "https://x", agreedAt: "now" },
+        embeddings: { enabled: true },
+      },
     });
     expect(s.recentVaults).toEqual(["/a"]);
     expect(s.editor.recentNotes).toBe(9);
     expect(s.editor.fontSize).toBe(15);
-    expect(s.ai.cloudConsent).toBe("x");
+    expect(s.ai.cloudConsent?.providerId).toBe("p");
     expect(s.ai.embeddings).toEqual({ enabled: true, providerId: "lm", model: "" });
     expect(s.ai.checkAnswers).toBe(false);
   });
