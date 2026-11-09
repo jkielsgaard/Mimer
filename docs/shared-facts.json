@@ -1,0 +1,49 @@
+{
+  "about": "The sentences that the website (site/index.html) and the README say in the same words. When one of them changes here, change it in both: a test (src/lib/sharedFacts.test.ts) checks that each one is in both. The website is the short, pretty overview; the README goes deeper and is technical.",
+  "facts": [
+    {
+      "id": "tagline",
+      "text": "Mimer keeps your notes as plain Markdown files, with tasks, meetings and an AI that runs on your own computer and only ever suggests."
+    },
+    {
+      "id": "no-tracking",
+      "text": "Mimer does not phone home. There is nothing to sign up for."
+    },
+    {
+      "id": "local-ai",
+      "text": "The AI reads your notes only on your own machine. A cloud AI is possible, but only after you say yes, and never in a project you lock to local."
+    },
+    {
+      "id": "ai-proposes",
+      "text": "The AI never changes a note on its own. Every change is a proposal you review."
+    },
+    {
+      "id": "plain-files",
+      "text": "Open your vault in any other editor, any day. There is no database to export and no format to escape from."
+    },
+    {
+      "id": "git-history",
+      "text": "Every change is saved in a built-in Git history. Bring back any version of a note, or a note you deleted."
+    },
+    {
+      "id": "licence",
+      "text": "Mimer is free and open source (AGPL-3.0)."
+    },
+    {
+      "id": "editions-side-by-side",
+      "text": "They can be installed side by side, and your notes are plain files in both."
+    },
+    {
+      "id": "stable",
+      "text": "The first finished release. Calm, tested and updated less often, so you are not asked to update all the time."
+    },
+    {
+      "id": "preview",
+      "text": "The newest features, as they are built. It changes often."
+    },
+    {
+      "id": "updates",
+      "text": "Mimer never looks for updates by itself and sends nothing. Use Help → Check for new version… in the app to see if a newer version is out."
+    }
+  ]
+}

@@ -25,10 +25,10 @@ function Preview({ id }: { id: ThemeId }) {
         <span className="size-2 rounded-sm bg-accent" />
         <span className="size-2 rounded-sm bg-muted" />
       </div>
-      <div className="flex w-[40px] flex-col gap-0.5 border-r bg-sidebar p-1">
-        <b>Meetings</b>
-        <span className="rounded-sm bg-accent px-0.5 text-accent-foreground">Weekly</span>
-        <span className="px-0.5">Budget</span>
+      <div className="flex w-[50px] flex-col gap-0.5 overflow-hidden border-r bg-sidebar p-1">
+        <b className="truncate">Meetings</b>
+        <span className="truncate rounded-sm bg-accent px-0.5 text-accent-foreground">Weekly</span>
+        <span className="truncate px-0.5">Budget</span>
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1 p-1.5">
         <div className="flex items-center">
