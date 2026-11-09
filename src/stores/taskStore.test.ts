@@ -119,3 +119,39 @@ describe("taskStore", () => {
     expect(apiMock.setEpicOrder).not.toHaveBeenCalled();
   });
 });
+
+describe("taskStore.load", () => {
+  it("shares reads: many asks while one runs get one more read, started after it", async () => {
+    const calls: (() => void)[] = [];
+    const listTasks = vi.fn(
+      () =>
+        new Promise<never[]>((resolve) => {
+          calls.push(() => {
+            resolve([]);
+          });
+        }),
+    );
+    const { api } = await import("@/lib/api");
+    vi.spyOn(api, "listTasks").mockImplementation(listTasks);
+    vi.spyOn(api, "listEpics").mockResolvedValue([]);
+    vi.spyOn(api, "getEpicOrder").mockResolvedValue([]);
+    const { useTaskStore } = await import("./taskStore");
+    const asks = [
+      useTaskStore.getState().load(),
+      useTaskStore.getState().load(),
+      useTaskStore.getState().load(),
+      useTaskStore.getState().load(),
+    ];
+    await vi.waitFor(() => {
+      expect(listTasks).toHaveBeenCalledTimes(1);
+    });
+    calls[0]?.();
+    await vi.waitFor(() => {
+      expect(listTasks).toHaveBeenCalledTimes(2);
+    });
+    calls[1]?.();
+    await Promise.all(asks);
+    expect(listTasks).toHaveBeenCalledTimes(2);
+    vi.restoreAllMocks();
+  });
+});

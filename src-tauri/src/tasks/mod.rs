@@ -7,6 +7,7 @@
 
 pub mod epics;
 pub mod ideas;
+pub mod scan;
 
 use crate::error::{AppError, AppResult};
 use regex::Regex;

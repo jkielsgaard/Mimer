@@ -16,6 +16,7 @@ This list is kept short: it tells what Mimer can do in each version. A small rel
 
 ### Changed
 
+- **The task list is faster in big vaults.** Mimer remembers what each note's tasks were and reads a note again only when it has changed (about six times faster on 2000 notes), and many screens asking for the list at once share one read.
 - Diagrams are drawn with a newer Mermaid that fixes known security faults.
 - **The README is rewritten** as the longer, technical page (what Mimer does, how notes are stored, the two editions, install, AI set-up, build), with new screenshots. The website stays the short overview; the sentences they share are in `docs/shared-facts.json` and a test keeps them the same.
 - **The website no longer says Mimer checks for updates by itself** (it does not): it points to **Help → Check for new version…**.

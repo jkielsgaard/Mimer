@@ -72,24 +72,16 @@ fn trace_worked(state: &AppState, v: &OpenVault, tasks: &[Task], line: u32) {
 
 /// Every task in the vault, from every note.
 pub(crate) fn all_tasks(v: &OpenVault) -> Vec<Task> {
-    let mut out = Vec::new();
-    for f in v.file_list().iter().filter(|f| tree::is_markdown(f)) {
-        let Ok(note) = fs_ops::read_note(&v.root, f) else {
-            continue;
-        };
-        if !(note.content.contains("[ ]")
-            || note.content.contains("[x]")
-            || note.content.contains("[X]"))
-        {
-            continue;
-        }
-        out.extend(tasks::parse(f, &note.content));
-        if out.len() >= MAX_TASKS {
-            out.truncate(MAX_TASKS);
-            break;
-        }
+    let files = v.file_list();
+    match v.task_cache.lock() {
+        Ok(mut cache) => tasks::scan::scan(&v.root, &files, &mut cache, MAX_TASKS),
+        Err(_) => tasks::scan::scan(
+            &v.root,
+            &files,
+            &mut tasks::scan::TaskCache::default(),
+            MAX_TASKS,
+        ),
     }
-    out
 }
 
 /// Every task in the vault, from every note.
@@ -756,6 +748,28 @@ pub async fn idea_set_status(
 mod tests {
     use super::*;
     use crate::vault::open_for_test;
+
+    /// Measures `all_tasks` on a big vault: `cargo test --release task_scan_speed -- --ignored --nocapture`.
+    #[test]
+    #[ignore = "a measurement, not a check"]
+    fn task_scan_speed() {
+        let d = tempfile::tempdir().unwrap();
+        for i in 0..2000 {
+            let dir = d.path().join(format!("Topic {}", i % 25));
+            std::fs::create_dir_all(&dir).unwrap();
+            let body = format!(
+                "---\ntags: [t{}]\n---\n# Note {i}\n\nSome text about policy and backup.\n\n- [ ] A task in {i} made:2026-10-20\n  - [ ] A step\n- [x] Another one\n",
+                i % 7
+            );
+            std::fs::write(dir.join(format!("Note {i}.md")), body).unwrap();
+        }
+        let v = open_for_test(d.path());
+        for round in 0..4 {
+            let t = std::time::Instant::now();
+            let n = all_tasks(&v).len();
+            println!("round {round}: {n} tasks in {:?}", t.elapsed());
+        }
+    }
 
     #[test]
     fn tagged_notes_are_found_by_their_properties_not_by_a_tag_in_the_text() {
