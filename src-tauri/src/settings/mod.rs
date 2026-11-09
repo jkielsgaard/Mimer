@@ -6,6 +6,7 @@ pub mod service;
 use crate::engine::hardware::{Backend, CpuVendor, GpuVendor};
 use crate::error::{AppError, AppResult};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::Path;
 use ts_rs::TS;
 
@@ -413,6 +414,25 @@ pub struct Settings {
     pub editor: EditorSettings,
     pub git: GitSettings,
     pub ai: AiSettings,
+    /// The backup of each vault, by the vault's path. It is kept here and not in the vault's own
+    /// `.vault/config.json`, which is committed: a folder on this computer must not travel with
+    /// the notes.
+    pub backups: HashMap<String, VaultBackup>,
+}
+
+/// The backup chosen for one vault, and how the last one went.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", default)]
+#[ts(export)]
+pub struct VaultBackup {
+    /// The folder the copy is made in ("" = none chosen).
+    pub folder: String,
+    /// Back up when the vault is closed (when Mimer closes).
+    pub on_close: bool,
+    /// When the last backup worked (RFC 3339).
+    pub last_ok: Option<String>,
+    /// Why the last backup failed.
+    pub last_error: Option<String>,
 }
 
 impl Default for Settings {
@@ -425,6 +445,7 @@ impl Default for Settings {
             editor: EditorSettings::default(),
             git: GitSettings::default(),
             ai: AiSettings::default(),
+            backups: HashMap::new(),
         }
     }
 }

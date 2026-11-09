@@ -1,6 +1,7 @@
 //! Local Git repository handling: init, commits, history and restore.
 
 pub mod autosave;
+pub mod backup;
 pub mod history;
 pub mod repo;
 

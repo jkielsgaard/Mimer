@@ -36,6 +36,7 @@ function defaults(): Settings {
       embeddings: { enabled: false, providerId: "lm", model: "" },
       providers: [],
     },
+    backups: {},
   };
 }
 

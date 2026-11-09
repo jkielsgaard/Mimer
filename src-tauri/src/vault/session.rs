@@ -25,6 +25,17 @@ pub fn close_current(state: &AppState) {
         if let Err(e) = v.commit(CommitReason::new(CommitKind::AutosaveOnClose, None), None) {
             tracing::warn!("autosave commit on vault close failed: {e}");
         }
+        // A backup that fails must never stop the vault from closing: the error is only saved.
+        let wants = state
+            .settings_snapshot()
+            .backups
+            .get(v.root.to_string_lossy().as_ref())
+            .is_some_and(|b| b.on_close && !b.folder.trim().is_empty());
+        if wants {
+            if let Err(e) = crate::git::backup::run_and_record(state, &v) {
+                tracing::warn!("backup on close failed: {e}");
+            }
+        }
     }
 }
 

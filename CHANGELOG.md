@@ -10,6 +10,7 @@ This list is kept short: it tells what Mimer can do in each version. A small rel
 
 ### Added
 
+- **Backup of a vault.** **Settings → Vault → Backup** copies your notes and their whole history to a folder you choose (an external disk, or a synced folder): **Back up now**, and optionally when Mimer closes. The status bar warns when the last backup is a week old or failed. Mimer sends nothing anywhere, and the backup never overwrites a folder that holds another history.
 - **What's new.** The first time a new version starts, a small window lists what is new in it (from the changelog that comes with the program, so nothing is fetched); **Help → What's new** opens it again. It never comes the first time Mimer runs on a computer.
 - **A demo vault.** On the welcome screen, **Try the demo vault** makes a small example vault (notes, an epic with tasks and a log, and two meetings dated today and tomorrow) in the folder you choose and opens it. A folder called `Mimer Demo` that is already there is opened as it is and nothing is written to it.
 
