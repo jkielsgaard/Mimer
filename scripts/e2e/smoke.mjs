@@ -7,8 +7,14 @@ const executablePath = process.env.CHROMIUM || undefined;
 const results = [];
 
 /** Runs one check on a fresh page. A page error (`ERR …` in the log) fails it too. */
-async function check(name, steps, { theme = "light" } = {}) {
-  const { browser, page, log } = await launch({ theme, width: 1600, height: 900, executablePath });
+async function check(name, steps, { theme = "light", welcome = false } = {}) {
+  const { browser, page, log } = await launch({
+    theme,
+    welcome,
+    width: 1600,
+    height: 900,
+    executablePath,
+  });
   try {
     await page.goto("http://localhost:1420/");
     await page.waitForTimeout(1200);
@@ -111,6 +117,15 @@ try {
     await page.keyboard.press("Enter");
     await page.getByText("Ship it on Friday").waitFor({ timeout: 3000 });
   });
+
+  await check(
+    "welcome offers the demo vault",
+    async (page) => {
+      await page.getByRole("button", { name: "Try the demo vault" }).waitFor({ timeout: 5000 });
+      await page.getByRole("button", { name: /Create new vault/ }).waitFor({ timeout: 2000 });
+    },
+    { welcome: true },
+  );
 
   await check("tasks", async (page) => {
     await rail(page, "Tasks");

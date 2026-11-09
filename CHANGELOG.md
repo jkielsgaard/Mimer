@@ -8,6 +8,10 @@ This list is kept short: it tells what Mimer can do in each version. A small rel
 
 ## [Unreleased]
 
+### Added
+
+- **A demo vault.** On the welcome screen, **Try the demo vault** makes a small example vault (notes, an epic with tasks and a log, and two meetings dated today and tomorrow) in the folder you choose and opens it. A folder called `Mimer Demo` that is already there is opened as it is and nothing is written to it.
+
 ### Changed
 
 - Diagrams are drawn with a newer Mermaid that fixes known security faults.

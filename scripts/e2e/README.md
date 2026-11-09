@@ -9,7 +9,7 @@ The clock is fixed at 2026-10-30 09:15, so every picture has the same "today".
 
 ```bash
 pnpm exec playwright install chromium   # once
-pnpm e2e                                # eight checks, one line each, exit code 1 on a failure
+pnpm e2e                                # nine checks, one line each, exit code 1 on a failure
 pnpm screenshots                        # rewrites the ten pictures in docs/screenshots/ (1920 x 1080)
 ```
 

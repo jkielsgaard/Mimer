@@ -1,4 +1,4 @@
-import { FolderOpen, FolderPlus, FolderSearch, X } from "lucide-react";
+import { FolderOpen, FolderPlus, FolderSearch, Sparkles, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
@@ -19,6 +19,7 @@ const NO_VAULTS: string[] = [];
 export function Welcome() {
   const recent = useSettingsStore((s) => s.settings?.recentVaults ?? NO_VAULTS);
   const openVault = useVaultStore((s) => s.openVault);
+  const createDemoVault = useVaultStore((s) => s.createDemoVault);
   const [parent, setParent] = useState<string | null>(null);
   const setAboutOpen = useUiStore((s) => s.setAboutOpen);
   const forgetVault = useSettingsStore((s) => s.forgetVault);
@@ -93,6 +94,23 @@ export function Welcome() {
             <FolderPlus /> Create new vault
           </Button>
         </div>
+        <section aria-label="New here?" className="flex flex-col gap-2 border-t pt-4">
+          <p className="text-sm">
+            <b>New here?</b>{" "}
+            <span className="text-muted-foreground">
+              Look around in a small example with notes, an epic with tasks and a meeting.
+            </span>
+          </p>
+          <Button
+            variant="outline"
+            className="h-10 justify-start"
+            onClick={() => {
+              void pick().then((p) => (p ? createDemoVault(p) : undefined));
+            }}
+          >
+            <Sparkles /> Try the demo vault
+          </Button>
+        </section>
         {recent.length > 0 && (
           <section aria-label="Recent vaults">
             <h2 className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">

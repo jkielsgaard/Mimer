@@ -123,6 +123,7 @@ export const api = {
   // Vault
   openVault: (path: string) => call<VaultInfo>("open_vault", { path }),
   createVault: (parent: string, name: string) => call<VaultInfo>("create_vault", { parent, name }),
+  createDemoVault: (parent: string) => call<VaultInfo>("create_demo_vault", { parent }),
   forgetVault: (path: string) => call<undefined>("forget_vault", { path }),
   missingVaults: () => call<string[]>("missing_vaults"),
   closeVault: () => call<undefined>("close_vault"),

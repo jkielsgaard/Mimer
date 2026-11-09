@@ -6,26 +6,38 @@
 // answered here from a small demo vault kept in memory.
 //
 // Needs the dev dependency `playwright` and a Chromium (see the plan for how CI gets one).
+import fs from "node:fs";
+import path from "node:path";
 import { chromium } from "playwright";
 
 /** The moment the pretend app runs at, so "today" is the same in every picture. */
 const NOW = "2026-10-30T09:15:00";
 
-/** The demo vault. Task 6 of the plan moves these into `src-tauri/demo-vault/` and reads them here. */
-export const NOTES = {
-  "Work/VPN rollout plan.md":
-    "---\ntags: [vpn, it, pinned]\n---\n# VPN rollout plan\n\nWe roll out the new VPN client to all laptops before the end of November.\n\n## Goals\n\n- Everyone is on the new client by 30 November.\n- The old client is removed afterwards.\n- Support has a short guide to send to users.\n\n## Risks\n\n| Risk | Answer |\n| --- | --- |\n| Laptops that are rarely online | Offer a drop-in hour |\n| Missing licences | Order 20 extra |\n\nSee [[Weekly with Mette]] for the status. This work is part of #q4.\n",
-  "Work/Support guide.md":
-    "---\ntags: [it]\n---\n# Support guide\n\nA short guide for people who get the new VPN client.\n\n1. Install the client.\n2. Sign in with your work account.\n3. Check that the green dot shows.\n",
-  "Projects/VPN rollout.md":
-    "---\ntags: [epic]\n---\n# VPN rollout\n\n- [ ] Send the offer to Acme status:doing made:2026-10-26 #vpn\n  - [x] Collect the prices\n  - [ ] Write the offer\n  - [ ] Get it approved\n  - 2026-10-28 Called Acme: they want a discount on 50 seats.\n  - 2026-10-27 Asked three suppliers for a price.\n- [ ] Write the user guide made:2026-10-27 [[Support guide]]\n  - [x] Outline\n  - [ ] Screenshots\n- [ ] Order 20 extra licences status:waiting made:2026-10-28\n- [x] Pick the pilot group made:2026-10-20\n",
-  "Projects/Office move.md":
-    "---\ntags: [epic]\n---\n# Office move\n\n- [ ] Book the movers made:2026-10-25\n  - [ ] Get three quotes\n- [ ] Update the address on the website made:2026-10-29\n",
-  "Meetings/Weekly with Mette.md":
-    "---\ntags: [meeting, vpn]\nmeeting: 2026-10-30 10:00\nwith: [Mette]\nparts: [agenda, decisions, actions]\n---\n# Weekly with Mette\n\n## Agenda\n\n- [x] VPN status\n- [ ] Licences\n- [ ] Support guide\n\n## Notes\n\nPilot group is done. Rollout starts Monday.\n\nLicences: we are short of 20. Mette checks the price with the supplier.\n\nSupport guide: the draft is ready and needs screenshots.\n\n## Decisions\n\n- Rollout starts Monday\n\n## Actions\n\n- [ ] Order 20 extra licences made:2026-10-30\n- [ ] Add screenshots to the guide made:2026-10-30\n",
-  "Meetings/Budget review.md":
-    "---\ntags: [meeting]\nmeeting: 2026-10-31 13:30\nwith: [Lars, Nina]\nparts: [agenda]\n---\n# Budget review\n\n## Agenda\n\n- [ ] Q4 numbers\n- [ ] Next year\n\n## Notes\n",
-};
+/** Where the demo vault's notes are: the same files the app writes for "Try the demo vault". */
+const DEMO = new URL("../../src-tauri/demo-vault/", import.meta.url);
+
+/** Fills in `{{today}}`, `{{tomorrow}}` and `{{days_ago:N}}`, as `vault/demo.rs` does. */
+function fillDates(text) {
+  const today = new Date(NOW.slice(0, 10) + "T12:00:00Z");
+  const iso = (days) => new Date(today.getTime() + days * 86400000).toISOString().slice(0, 10);
+  return text.replace(/\{\{(today|tomorrow|days_ago:(\d+))\}\}/g, (_, w, n) =>
+    iso(w === "today" ? 0 : w === "tomorrow" ? 1 : -Number(n)),
+  );
+}
+
+/** Every note of the demo vault, by its path in the vault. */
+export function loadDemoNotes() {
+  const notes = {};
+  const walk = (dir, rel) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const next = rel ? `${rel}/${e.name}` : e.name;
+      if (e.isDirectory()) walk(path.join(dir.pathname ?? dir, e.name), next);
+      else notes[next] = fillDates(fs.readFileSync(path.join(dir.pathname ?? dir, e.name), "utf8"));
+    }
+  };
+  walk(DEMO, "");
+  return notes;
+}
 
 const IDEAS = [
   {
@@ -66,7 +78,8 @@ export async function launch({
   theme = "light",
   width = 1920,
   height = 1080,
-  notes = NOTES,
+  notes = loadDemoNotes(),
+  welcome = false,
   executablePath,
 } = {}) {
   const browser = await chromium.launch(executablePath ? { executablePath } : {});
@@ -79,7 +92,7 @@ export async function launch({
   page.on("pageerror", (e) => log.push("ERR " + e.message));
   await page.exposeFunction("__log", (s) => log.push(s));
   await page.addInitScript(
-    ({ notes, theme, ideas, now }) => {
+    ({ notes, theme, ideas, now, welcome }) => {
       const at = new Date(now).getTime() - 35 * 60000;
       try {
         localStorage.setItem("mimer.betaNoticeSeen", "1");
@@ -180,8 +193,8 @@ export async function launch({
       };
       const settings = {
         schemaVersion: 1,
-        recentVaults: ["/demo/Mimer Demo"],
-        lastVault: "/demo/Mimer Demo",
+        recentVaults: welcome ? [] : ["/demo/Mimer Demo"],
+        lastVault: welcome ? null : "/demo/Mimer Demo",
         theme,
         editor: {
           fontSize: 15,
@@ -320,7 +333,7 @@ export async function launch({
       };
       window.__TAURI_EVENT_PLUGIN_INTERNALS__ = { unregisterListener() {} };
     },
-    { notes, theme, ideas: IDEAS, now: NOW },
+    { notes, theme, ideas: IDEAS, now: NOW, welcome },
   );
   return { browser, page, log };
 }

@@ -107,3 +107,35 @@ describe("Welcome new vault", () => {
     expect(screen.getByRole("button", { name: "Create" })).toBeDisabled();
   });
 });
+
+describe("Welcome demo vault", () => {
+  const createDemoVault = vi.fn().mockResolvedValue(true);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    createDemoVault.mockResolvedValue(true);
+    api.missingVaults.mockResolvedValue([]);
+    dialogs.pickFolder.mockResolvedValue("/here");
+    useVaultStore.setState({ createDemoVault });
+    useSettingsStore.setState({ settings: settings([]) });
+  });
+
+  it("offers a demo vault, and makes it in the folder that is chosen", async () => {
+    render(<Welcome />);
+    expect(screen.getByText("New here?")).toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Try the demo vault" }));
+    await waitFor(() => {
+      expect(createDemoVault).toHaveBeenCalledWith("/here");
+    });
+  });
+
+  it("does nothing when the folder dialog is cancelled", async () => {
+    dialogs.pickFolder.mockResolvedValue(null);
+    render(<Welcome />);
+    await userEvent.setup().click(screen.getByRole("button", { name: "Try the demo vault" }));
+    await waitFor(() => {
+      expect(dialogs.pickFolder).toHaveBeenCalled();
+    });
+    expect(createDemoVault).not.toHaveBeenCalled();
+  });
+});

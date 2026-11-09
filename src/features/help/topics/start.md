@@ -4,7 +4,7 @@ Mimer is a notes app. Your notes are ordinary **Markdown files** (`.md`) in an o
 
 ## Vaults
 
-A **vault** is the folder that holds your notes. When Mimer starts, open a folder as a vault, or create a new one. You can have several vaults and switch between them (see _Several vaults_).
+A **vault** is the folder that holds your notes. When Mimer starts, open a folder as a vault, or create a new one. New here? **Try the demo vault** on the welcome screen makes a small example (notes, an epic with tasks and two meetings) in a folder you choose, called `Mimer Demo`, so you can look around before you use your own notes. You can have several vaults and switch between them (see _Several vaults_).
 
 ## The window
 

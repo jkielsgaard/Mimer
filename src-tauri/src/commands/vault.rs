@@ -4,7 +4,7 @@ use crate::vault::fs_ops::{self, NoteContent};
 use crate::vault::ops::{self, RenamePreview, RenameResult};
 use crate::vault::session;
 use crate::vault::tree::{self, TreeNode};
-use crate::vault::{paths, watcher, VaultInfo};
+use crate::vault::{demo, paths, watcher, VaultInfo};
 use tauri::{AppHandle, Emitter, Manager, State};
 use tauri_plugin_opener::OpenerExt;
 
@@ -85,7 +85,11 @@ pub async fn create_vault(
 ) -> Result<VaultInfo, AppError> {
     let dir = session::create_folder(&parent, &name)?;
     let info = open_inner(&app, &state, &dir.to_string_lossy())?;
-    // A new vault starts with folders and templates for meeting notes and quick notes.
+    Ok(seed_standard(&state, info))
+}
+
+/// A new vault starts with folders and templates for meeting notes and quick notes.
+fn seed_standard(state: &State<'_, AppState>, info: VaultInfo) -> VaultInfo {
     match state.current_vault() {
         Ok(v) => {
             if let Err(e) = crate::templates::standard::seed_defaults(&v) {
@@ -94,7 +98,21 @@ pub async fn create_vault(
         }
         Err(e) => tracing::warn!("no vault to add standard templates to: {e}"),
     }
-    Ok(state.current_vault().map_or(info, |v| v.info()))
+    state.current_vault().map_or(info, |v| v.info())
+}
+
+/// Makes the demo vault (notes, an epic with tasks and two meetings) in the folder `Mimer Demo`
+/// inside `parent` and opens it. A folder with that name that is already there is opened as it is.
+#[tauri::command]
+pub async fn create_demo_vault(
+    app: AppHandle,
+    state: State<'_, AppState>,
+    parent: String,
+) -> Result<VaultInfo, AppError> {
+    let today = chrono::Local::now().date_naive();
+    let dir = demo::write_demo(std::path::Path::new(&parent), today)?;
+    let info = open_inner(&app, &state, &dir.to_string_lossy())?;
+    Ok(seed_standard(&state, info))
 }
 
 #[tauri::command]

@@ -36,6 +36,8 @@ export interface VaultState {
 
   openVault: (path: string) => Promise<boolean>;
   createVault: (parent: string, name: string) => Promise<boolean>;
+  /** Makes the demo vault in `parent` (or opens the one that is there) and opens it. */
+  createDemoVault: (parent: string) => Promise<boolean>;
   closeVault: () => Promise<void>;
   refreshTree: () => Promise<void>;
   refreshProjects: () => Promise<void>;
@@ -125,6 +127,16 @@ export const useVaultStore = create<VaultState>((set, get) => ({
   createVault: async (parent, name) => {
     try {
       const vault = await api.createVault(parent, name);
+      return await get().openVault(vault.path);
+    } catch (e) {
+      reportError(e);
+      return false;
+    }
+  },
+
+  createDemoVault: async (parent) => {
+    try {
+      const vault = await api.createDemoVault(parent);
       return await get().openVault(vault.path);
     } catch (e) {
       reportError(e);
