@@ -150,6 +150,7 @@ pub fn run() {
             commands::vault::reveal_in_file_manager,
             commands::vault::open_attachment,
             commands::git::commit_now,
+            commands::git::backup_now,
             commands::git::file_history,
             commands::git::file_at_commit,
             commands::git::restore_file,

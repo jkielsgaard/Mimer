@@ -65,3 +65,13 @@ pub async fn undo_commit(state: State<'_, AppState>, sha: String) -> Result<Vec<
     let v = state.current_vault()?;
     ops::undo_commit(&v, &sha)
 }
+
+/// Backs the open vault up to the folder chosen for it in the settings (the folder, the time and
+/// any error are in `Settings.backups`).
+#[tauri::command]
+pub async fn backup_now(
+    state: State<'_, AppState>,
+) -> Result<crate::git::backup::BackupReport, AppError> {
+    let v = state.current_vault()?;
+    crate::git::backup::run_and_record(&state, &v)
+}

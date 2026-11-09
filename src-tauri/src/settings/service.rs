@@ -60,6 +60,13 @@ pub fn apply_update(state: &AppState, settings: Settings) -> AppResult<IndexActi
             p.base_url = url;
             p.model = model;
         }
+        // How the last backup went is written by the backup, not by the settings window.
+        for (key, b) in &mut new.backups {
+            if let Some(old) = cur.backups.get(key) {
+                b.last_ok = old.last_ok.clone();
+                b.last_error = old.last_error.clone();
+            }
+        }
         save(&state.settings_path, &new)?;
         *cur = new.clone();
     }
@@ -92,6 +99,31 @@ mod tests {
             ..Default::default()
         };
         AppState::new(s, dir.join("settings.json"), None)
+    }
+
+    #[test]
+    fn saving_the_settings_does_not_overwrite_how_the_last_backup_went() {
+        let tmp = tempfile::tempdir().unwrap();
+        let state = state_at(tmp.path());
+        let mut with_result = state.settings_snapshot();
+        with_result.backups.insert(
+            "/notes".into(),
+            crate::settings::VaultBackup {
+                folder: "/b".into(),
+                last_ok: Some("2026-11-09T09:12:00+01:00".into()),
+                ..Default::default()
+            },
+        );
+        *state.settings.write().unwrap() = with_result;
+        // The settings window saves its own copy, which does not know the result.
+        let mut from_window = state.settings_snapshot();
+        let b = from_window.backups.get_mut("/notes").unwrap();
+        b.last_ok = None;
+        b.on_close = true;
+        apply_update(&state, from_window).unwrap();
+        let kept = state.settings_snapshot().backups["/notes"].clone();
+        assert_eq!(kept.last_ok.as_deref(), Some("2026-11-09T09:12:00+01:00"));
+        assert!(kept.on_close);
     }
 
     #[test]

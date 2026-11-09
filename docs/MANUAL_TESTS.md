@@ -308,3 +308,9 @@ Check with `git log --oneline` in the vault folder.
 
 - [ ] Remove the stored choice `mimer.whatsNewSeen` (browser storage), keep `mimer.betaNoticeSeen`, and restart: a window "What's new in Mimer 0.x" lists three to six lines with a bold lead. **Got it** closes it, and it does not come back at the next start.
 - [ ] **Help → What's new** opens it at any time, and **All changes** opens the changelog in the browser. On a computer where Mimer has never run (no stored choices) the window does not come by itself.
+
+## Backup
+
+- [ ] **Settings → Vault → Backup**: choose an empty folder, press **Back up now**: "Backed up today …" shows, and the folder holds `<vault name>.git`. Change a note, back up again: it works. Run `git clone <folder>/<vault name>.git /some/new/place` and open that folder as a vault: the notes and the history are there.
+- [ ] Choose a folder that holds another backup (of another vault with the same name) and press **Back up now**: "The backup folder holds another history. Choose an empty folder." and nothing in that folder changed.
+- [ ] Tick **Back up when Mimer closes**, change a note and close Mimer: the backup has the change. Disconnect the disk (or rename the folder) and close Mimer: it still closes; start it again and the status bar says "Backup failed" and opens the backup settings when clicked. With a last backup older than seven days the status bar says "Backup is N days old".

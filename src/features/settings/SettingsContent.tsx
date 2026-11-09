@@ -88,7 +88,9 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
   const timeFormat = useUiStore((s) => s.timeFormat);
   const [draft, setDraft] = useState<Settings>(() => structuredClone(stored));
   const [tab, setTab] = useState<Tab>(() => {
-    return useUiStore.getState().settingsTab === "builtin" ? "ai" : "general";
+    const wanted = useUiStore.getState().settingsTab;
+    if (wanted === "builtin") return "ai";
+    return wanted === "vault" ? "vault" : "general";
   });
   /** The AI setup section that is open (the others are folded away). */
   const [section, setSection] = useState<AiSection | null>(() =>
@@ -101,7 +103,9 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
   };
   const persist = async (): Promise<boolean> => {
     try {
-      await save(draft);
+      // The backup is changed in its own part and saved at once; this copy may be older.
+      const backups = useSettingsStore.getState().settings?.backups ?? draft.backups;
+      await save({ ...draft, backups });
       return true;
     } catch (e) {
       reportError(e);

@@ -9,6 +9,7 @@ import { useVaultStore } from "@/stores/vaultStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import type { TemplateInfo } from "@/bindings/TemplateInfo";
 import { InfoHint } from "@/components/InfoHint";
+import { BackupSettings } from "./BackupSettings";
 
 const FORMATS = [
   { value: "%Y-%m-%d", label: "2026-10-13" },
@@ -237,6 +238,7 @@ export function VaultSettingsTab() {
           Save vault settings
         </Button>
       </div>
+      <BackupSettings />
     </div>
   );
 }

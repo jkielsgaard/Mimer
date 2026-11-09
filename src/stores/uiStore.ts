@@ -179,6 +179,8 @@ interface UiState {
   settingsTab: string | null;
   /** Opens Settings on the Built-in AI tab. */
   openBuiltInSettings: () => void;
+  /** Opens Settings on the Vault tab. */
+  openVaultSettings: () => void;
   recoverOpen: boolean;
   vaultSwitcherOpen: boolean;
   setVaultSwitcherOpen: (open: boolean) => void;
@@ -357,6 +359,9 @@ export const useUiStore = create<UiState>((set, get) => ({
   settingsTab: null,
   openBuiltInSettings: () => {
     set({ settingsOpen: true, settingsTab: "builtin" });
+  },
+  openVaultSettings: () => {
+    set({ settingsOpen: true, settingsTab: "vault" });
   },
   recoverOpen: false,
   vaultSwitcherOpen: false,

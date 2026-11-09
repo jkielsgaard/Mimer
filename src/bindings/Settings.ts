@@ -3,5 +3,12 @@ import type { AiSettings } from "./AiSettings";
 import type { EditorSettings } from "./EditorSettings";
 import type { GitSettings } from "./GitSettings";
 import type { Theme } from "./Theme";
+import type { VaultBackup } from "./VaultBackup";
 
-export type Settings = { schemaVersion: number, recentVaults: Array<string>, lastVault: string | null, theme: Theme, editor: EditorSettings, git: GitSettings, ai: AiSettings, };
+export type Settings = { schemaVersion: number, recentVaults: Array<string>, lastVault: string | null, theme: Theme, editor: EditorSettings, git: GitSettings, ai: AiSettings, 
+/**
+ * The backup of each vault, by the vault's path. It is kept here and not in the vault's own
+ * `.vault/config.json`, which is committed: a folder on this computer must not travel with
+ * the notes.
+ */
+backups: { [key in string]: VaultBackup }, };

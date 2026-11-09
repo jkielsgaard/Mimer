@@ -1,5 +1,6 @@
 // Typed wrappers around Tauri `invoke`. Components never call `invoke` directly.
 import { Channel, invoke } from "@tauri-apps/api/core";
+import type { BackupReport } from "@/bindings/BackupReport";
 import type { AppError } from "@/bindings/AppError";
 import type { ApplyResult } from "@/bindings/ApplyResult";
 import type { Backlink } from "@/bindings/Backlink";
@@ -146,6 +147,7 @@ export const api = {
   finishClose: () => call<undefined>("finish_close"),
 
   // Git / history
+  backupNow: () => call<BackupReport>("backup_now"),
   commitNow: (reason: CommitReason, paths?: string[]) =>
     call<string | null>("commit_now", { reason, paths: paths ?? null }),
   fileHistory: (path: string) => call<CommitEntry[]>("file_history", { path }),
