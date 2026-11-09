@@ -10,6 +10,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { chromium } from "playwright";
 
+/** The running version's major.minor, so the "What's new" window has already been seen. */
+const MINOR = JSON.parse(fs.readFileSync(new URL("../../package.json", import.meta.url), "utf8"))
+  .version.split(".")
+  .slice(0, 2)
+  .join(".");
+
 /** The moment the pretend app runs at, so "today" is the same in every picture. */
 const NOW = "2026-10-30T09:15:00";
 
@@ -92,10 +98,11 @@ export async function launch({
   page.on("pageerror", (e) => log.push("ERR " + e.message));
   await page.exposeFunction("__log", (s) => log.push(s));
   await page.addInitScript(
-    ({ notes, theme, ideas, now, welcome }) => {
+    ({ notes, theme, ideas, now, welcome, minor }) => {
       const at = new Date(now).getTime() - 35 * 60000;
       try {
         localStorage.setItem("mimer.betaNoticeSeen", "1");
+        localStorage.setItem("mimer.whatsNewSeen", minor);
         localStorage.setItem(
           "mimer-recent:/demo/Mimer Demo",
           JSON.stringify([
@@ -333,7 +340,7 @@ export async function launch({
       };
       window.__TAURI_EVENT_PLUGIN_INTERNALS__ = { unregisterListener() {} };
     },
-    { notes, theme, ideas: IDEAS, now: NOW, welcome },
+    { notes, theme, ideas: IDEAS, now: NOW, welcome, minor: MINOR },
   );
   return { browser, page, log };
 }

@@ -8,6 +8,8 @@ This list is kept short: it tells what Mimer can do in each version. A small rel
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-11-09
+
 ### Added
 
 - **Backup of a vault.** **Settings → Vault → Backup** copies your notes and their whole history to a folder you choose (an external disk, or a synced folder): **Back up now**, and optionally when Mimer closes. The status bar warns when the last backup is a week old or failed. Mimer sends nothing anywhere, and the backup never overwrites a folder that holds another history.
@@ -18,8 +20,6 @@ This list is kept short: it tells what Mimer can do in each version. A small rel
 
 - **The task list is faster in big vaults.** Mimer remembers what each note's tasks were and reads a note again only when it has changed (about six times faster on 2000 notes), and many screens asking for the list at once share one read.
 - Diagrams are drawn with a newer Mermaid that fixes known security faults.
-- **The README is rewritten** as the longer, technical page (what Mimer does, how notes are stored, the two editions, install, AI set-up, build), with new screenshots. The website stays the short overview; the sentences they share are in `docs/shared-facts.json` and a test keeps them the same.
-- **The website no longer says Mimer checks for updates by itself** (it does not): it points to **Help → Check for new version…**.
 
 ### Fixed
 
@@ -27,6 +27,8 @@ This list is kept short: it tells what Mimer can do in each version. A small rel
 - **The start page** no longer shows list marks (`-`, `1.`, `[ ]`) from the note in "Continue".
 - **The privacy policy now describes the optional cloud AI** (it said notes are never sent to a cloud service).
 - The small previews on the theme cards no longer run text into each other.
+- **The README is rewritten** as the longer, technical page (what Mimer does, how notes are stored, the two editions, install, AI set-up, build), with new screenshots. The website stays the short overview; the sentences they share are in `docs/shared-facts.json` and a test keeps them the same.
+- **The website no longer says Mimer checks for updates by itself** (it does not): it points to **Help → Check for new version…**.
 
 ## [0.21.0] - 2026-10-31
 
