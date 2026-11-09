@@ -27,6 +27,9 @@ pub struct RenamePreview {
 /// Writes a note to disk (no commit) and updates the index.
 pub fn write_note(v: &OpenVault, rel: &str, content: &str) -> AppResult<()> {
     fs_ops::write_note(&v.root, rel, content)?;
+    if let Ok(mut cache) = v.task_cache.lock() {
+        cache.forget(rel);
+    }
     v.reindex(rel)?;
     v.touch();
     Ok(())

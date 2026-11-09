@@ -128,6 +128,10 @@ export function findTask(tasks: readonly Task[], ref: TaskRef | null): Task | nu
   );
 }
 
+/** The read of the task list that is running now, and the one that follows it, if any. */
+let running: Promise<void> | null = null;
+let next: Promise<void> | null = null;
+
 export const useTaskStore = create<TaskState>((set, get) => {
   /** Runs one change of a note: saves the editor first, updates the list, reloads an open note. */
   const mutate = async (path: string, call: () => Promise<Task[]>): Promise<Task[] | null> => {
@@ -259,21 +263,37 @@ export const useTaskStore = create<TaskState>((set, get) => {
         return null;
       }
     },
-    load: async () => {
-      set({ loading: true });
-      try {
-        await flushPendingWrites();
-        const [tasks, epics, epicOrder] = await Promise.all([
-          api.listTasks(),
-          api.listEpics(),
-          api.getEpicOrder().catch(() => [] as string[]),
-        ]);
-        set({ tasks, epics, epicOrder, loaded: true });
-      } catch (e) {
-        reportError(e);
-      } finally {
-        set({ loading: false });
-      }
+    load: () => {
+      // The list is asked for from many places at once. While one read runs, every other ask shares
+      // one more read that starts when it is done, so nobody gets a list older than the ask.
+      const read = async (): Promise<void> => {
+        set({ loading: true });
+        try {
+          await flushPendingWrites();
+          const [tasks, epics, epicOrder] = await Promise.all([
+            api.listTasks(),
+            api.listEpics(),
+            api.getEpicOrder().catch(() => [] as string[]),
+          ]);
+          set({ tasks, epics, epicOrder, loaded: true });
+        } catch (e) {
+          reportError(e);
+        } finally {
+          set({ loading: false });
+        }
+      };
+      const start = (): Promise<void> => {
+        running = read().finally(() => {
+          running = null;
+        });
+        return running;
+      };
+      if (running === null) return start();
+      next ??= running.then(() => {
+        next = null;
+        return start();
+      });
+      return next;
     },
     epicOrder: [],
     moveEpic: async (path, up, shown) => {

@@ -85,6 +85,8 @@ pub struct OpenVault {
     pub resolver: RwLock<Arc<LinkResolver>>,
     pub author: RwLock<(String, String)>,
     pub autosave: Mutex<AutosaveState>,
+    /// What each note's tasks were when last read (see `tasks::scan`).
+    pub task_cache: Mutex<crate::tasks::scan::TaskCache>,
     on_commit: CommitCallback,
 }
 
@@ -129,6 +131,7 @@ impl OpenVault {
             watcher: Mutex::new(None),
             author: RwLock::new(author),
             autosave: Mutex::new(AutosaveState::default()),
+            task_cache: Mutex::new(crate::tasks::scan::TaskCache::default()),
             on_commit,
         };
         let dirty = {
