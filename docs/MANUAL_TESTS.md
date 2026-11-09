@@ -4,6 +4,33 @@ This is the checklist for everything automated tests cannot cover. Run the whole
 
 Keep it up to date: when a feature changes, change its lines here in the same commit.
 
+## Before every release (about 20 checks, 15 minutes)
+
+Run these on the build that is going to be released (the installer or the AppImage from the draft release, not `pnpm tauri dev`). They are what only a person in the real app can check; `pnpm e2e` has already checked the screens in a browser. The full list below is the reference when a part of the app changed.
+
+- [ ] Install the Windows installer (or start the AppImage on Linux): the start screen shows, then the app; the status bar shows the version and `preview`.
+- [ ] Open a folder as a vault with the real folder dialog, and close and start Mimer again: the same vault, tabs and note come back.
+- [ ] **Try the demo vault** (empty folder): notes, epics with tasks and two meetings are there.
+- [ ] Write in a note and watch the status bar: **Saved**. Rename the note and make a link `[[…]]` to it: the link follows.
+- [ ] **···** → **Tags…**: add a tag of your own by typing in the box and pressing Enter; tick **Epic**; the chips above the note change. Search shows the tag in **Your tags**.
+- [ ] Tasks: add a task in the write-it-down box, tick a step, open **Focus** and press **Done, next step**.
+- [ ] Meetings: **New** → pick a time from the list, tick **Agenda** and **Actions**, **Create and start**; type in the notes, add a decision and an action; **Esc** leaves; the meeting page shows what you wrote.
+- [ ] Press **Ctrl+S** or wait: History of the note lists the change; restore the earlier version and then undo it.
+- [ ] Settings → Vault → Backup: choose a folder, **Back up now**: "Backed up today …".
+- [ ] Settings → General → Theme: pick Midnight and Save; restart: the theme stays.
+- [ ] Settings → Built-in AI: the engine you chose can **Download** a small model (Windows and Linux installer), then **Wake**; the status bar chip changes.
+- [ ] One AI command with its review: select a sentence with a spelling mistake → **Fix**; the change is shown beside the original; **Accept** writes it, and **Undo last AI change** brings it back.
+- [ ] With no AI running, an AI button is greyed out and says why; everything else still works.
+- [ ] Help → **What's new** shows the changes of this version; **Help → Check for new version…** opens the releases page in the browser.
+- [ ] **File → Export** a note to HTML and open the file; **Import** a small folder of Markdown.
+- [ ] Resize the window narrow: the panels fold and nothing runs off the screen.
+- [ ] The Microsoft Store package (when there is one, `mimer-msix-test` from the workflow): install it with `Install-TestMsix.ps1`, start it, open a vault, and Foundry Local is the only built-in engine.
+- [ ] Close Mimer with a note just changed; start it again: the change is there, and History has it.
+- [ ] The website (https://jkielsgaard.github.io/Mimer/) shows the new version in its top line, and the README's pictures load.
+- [ ] `PRIVACY.md` and `docs/STORE-LISTING.md` still say what the app does (a cloud AI only after consent, no automatic update check).
+
+## Full list
+
 ### 0. Automated checks (do these first)
 
 - [ ] `pnpm check` finishes with no errors (format, lint, typecheck, frontend tests, `cargo fmt`, `cargo clippy`, Rust tests). On Bazzite/Silverblue, run it inside the development container: the host has no GTK/WebKit libraries for the Rust part.
