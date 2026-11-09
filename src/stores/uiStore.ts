@@ -184,6 +184,9 @@ interface UiState {
   setVaultSwitcherOpen: (open: boolean) => void;
   importOpen: boolean;
   setImportOpen: (open: boolean) => void;
+  /** "What's new in Mimer" is open. */
+  whatsNewOpen: boolean;
+  setWhatsNewOpen: (open: boolean) => void;
   aboutOpen: boolean;
   setAboutOpen: (open: boolean) => void;
   /** The first-start notice (first version, AI is beta) is shown. */
@@ -367,6 +370,10 @@ export const useUiStore = create<UiState>((set, get) => ({
   importOpen: false,
   setImportOpen: (importOpen) => {
     set({ importOpen });
+  },
+  whatsNewOpen: false,
+  setWhatsNewOpen: (whatsNewOpen) => {
+    set({ whatsNewOpen });
   },
   aboutOpen: false,
   setAboutOpen: (aboutOpen) => {

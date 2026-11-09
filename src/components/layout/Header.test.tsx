@@ -64,6 +64,19 @@ describe("Header: new version", () => {
   });
 });
 
+describe("Header: what's new", () => {
+  it("has What's new in the Help menu, and it opens the window", async () => {
+    useUiStore.setState({ whatsNewOpen: false });
+    render(<Header />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Help menu" }));
+    const item = await screen.findByRole("menuitem", { name: "What's new" });
+    item.focus();
+    await user.keyboard("{Enter}");
+    expect(useUiStore.getState().whatsNewOpen).toBe(true);
+  });
+});
+
 describe("Header menus", () => {
   it("keeps File for notes and the vault, Go for places and Help for help", async () => {
     render(<Header />);
