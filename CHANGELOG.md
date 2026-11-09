@@ -8,6 +8,15 @@ This list is kept short: it tells what Mimer can do in each version. A small rel
 
 ## [Unreleased]
 
+### Changed
+
+- **The README is rewritten** as the longer, technical page (what Mimer does, how notes are stored, the two editions, install, AI set-up, build), with new screenshots. The website stays the short overview; the sentences they share are in `docs/shared-facts.json` and a test keeps them the same.
+- **The website no longer says Mimer checks for updates by itself** (it does not): it points to **Help → Check for new version…**.
+
+### Fixed
+
+- The small previews on the theme cards no longer run text into each other.
+
 ## [0.21.0] - 2026-10-31
 
 ### Added
