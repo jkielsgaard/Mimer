@@ -2,31 +2,13 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Settings } from "@/bindings/Settings";
-import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 
-const settings: Settings = {
-  schemaVersion: 1,
+const settings: Settings = makeSettings({
   recentVaults: ["/home/me/Notes"],
-  lastVault: null,
   theme: "light",
-  editor: {
-    fontSize: 15,
-    lineWidth: 760,
-    spellcheck: true,
-    recentNotes: 4,
-    aiSpelling: false,
-    traceWork: false,
-    ownWords: [],
-  },
-  git: { authorName: "Mimer", authorEmail: "mdvault@localhost", idleCommitMinutes: 5 },
+  git: { authorName: "Mimer", authorEmail: "mdvault@localhost" },
   ai: {
     defaultProviderId: "lmstudio-default",
-    checkAnswers: false,
-    cloudConsent: null,
-    builtin: DEFAULT_BUILTIN,
-    foundry: { model: "", tools: true },
-    answerLanguage: "",
-    globalInstructions: "",
     embeddings: { enabled: false, providerId: "lmstudio-default", model: "" },
     providers: [
       {
@@ -41,7 +23,7 @@ const settings: Settings = {
       },
     ],
   },
-};
+});
 
 const tree = [
   {
@@ -109,6 +91,7 @@ import { useEditorStore } from "./stores/editorStore";
 import { useSettingsStore } from "./stores/settingsStore";
 import { useVaultStore } from "./stores/vaultStore";
 import { emptyLayout, useWorkspaceStore } from "./stores/workspaceStore";
+import { makeSettings } from "@/test/settings";
 
 describe("App smoke test", () => {
   beforeEach(() => {

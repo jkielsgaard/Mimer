@@ -23,7 +23,7 @@ import type { Settings } from "@/bindings/Settings";
 import { useUiStore } from "@/stores/uiStore";
 import { useTreeStore } from "@/stores/treeStore";
 import { useVaultStore } from "@/stores/vaultStore";
-import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
+import { makeSettings } from "@/test/settings";
 
 const file = (path: string, modified = 0): TreeNode => ({
   name: path.split("/").pop() ?? path,
@@ -62,33 +62,11 @@ const project: Project = {
   updatedAt: "",
 };
 
-const settings = (recentNotes: number): Settings => ({
-  schemaVersion: 1,
-  recentVaults: [],
-  lastVault: null,
-  theme: "system",
-  editor: {
-    fontSize: 15,
-    lineWidth: 760,
-    spellcheck: true,
-    recentNotes,
-    aiSpelling: false,
-    traceWork: false,
-    ownWords: [],
-  },
-  git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
-  ai: {
-    defaultProviderId: "p1",
-    checkAnswers: false,
-    cloudConsent: null,
-    builtin: DEFAULT_BUILTIN,
-    foundry: { model: "", tools: true },
-    answerLanguage: "",
-    globalInstructions: "",
-    embeddings: { enabled: false, providerId: "p1", model: "" },
-    providers: [],
-  },
-});
+const settings = (recentNotes: number): Settings =>
+  makeSettings({
+    editor: { recentNotes: recentNotes },
+    ai: { defaultProviderId: "p1", embeddings: { enabled: false, providerId: "p1", model: "" } },
+  });
 
 describe("FilesPanel", () => {
   beforeEach(() => {

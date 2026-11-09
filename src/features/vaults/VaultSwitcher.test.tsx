@@ -12,7 +12,7 @@ import { normalizeVaultPath, VaultSwitcher } from "./VaultSwitcher";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
-import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
+import { makeSettings } from "@/test/settings";
 
 const vault: VaultInfo = {
   name: "Work",
@@ -31,33 +31,11 @@ const vault: VaultInfo = {
 };
 
 function settings(recent: string[]): Settings {
-  return {
-    schemaVersion: 1,
+  return makeSettings({
     recentVaults: recent,
     lastVault: recent[0] ?? null,
-    theme: "system",
-    editor: {
-      fontSize: 15,
-      lineWidth: 760,
-      spellcheck: true,
-      recentNotes: 4,
-      aiSpelling: false,
-      traceWork: false,
-      ownWords: [],
-    },
-    git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
-    ai: {
-      defaultProviderId: "p",
-      checkAnswers: false,
-      cloudConsent: null,
-      builtin: DEFAULT_BUILTIN,
-      foundry: { model: "", tools: true },
-      answerLanguage: "",
-      globalInstructions: "",
-      embeddings: { enabled: false, providerId: "p", model: "" },
-      providers: [],
-    },
-  };
+    ai: { defaultProviderId: "p", embeddings: { enabled: false, providerId: "p", model: "" } },
+  });
 }
 
 describe("normalizeVaultPath", () => {

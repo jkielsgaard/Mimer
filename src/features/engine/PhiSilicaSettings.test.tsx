@@ -3,7 +3,6 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PhiStatus } from "@/bindings/PhiStatus";
 import type { Settings } from "@/bindings/Settings";
-import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 
 const apiMock = vi.hoisted(() => ({
   phiStatus: vi.fn(),
@@ -17,6 +16,7 @@ vi.mock("@/lib/api", () => ({
 vi.mock("@/lib/events", () => ({ onPhiProgress: () => Promise.resolve(() => undefined) }));
 
 import { PHI_ID, PhiSilicaSettings, phiReport } from "./PhiSilicaSettings";
+import { makeSettings } from "@/test/settings";
 
 const ok = (text: string, code: string | null = null) => ({ state: "ok" as const, text, code });
 
@@ -29,33 +29,7 @@ const READY: PhiStatus = {
 };
 
 function settings(defaultProviderId = "lm"): Settings {
-  return {
-    schemaVersion: 1,
-    recentVaults: [],
-    lastVault: null,
-    theme: "system",
-    editor: {
-      fontSize: 15,
-      lineWidth: 760,
-      spellcheck: true,
-      recentNotes: 4,
-      aiSpelling: false,
-      traceWork: false,
-      ownWords: [],
-    },
-    git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
-    ai: {
-      defaultProviderId,
-      checkAnswers: false,
-      cloudConsent: null,
-      builtin: { ...DEFAULT_BUILTIN },
-      foundry: { model: "", tools: true },
-      answerLanguage: "",
-      globalInstructions: "",
-      embeddings: { enabled: false, providerId: "lm", model: "" },
-      providers: [],
-    },
-  };
+  return makeSettings({ ai: { defaultProviderId: defaultProviderId } });
 }
 
 describe("Settings → Built-in AI → Phi Silica", () => {

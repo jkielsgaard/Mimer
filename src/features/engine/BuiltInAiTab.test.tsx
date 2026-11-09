@@ -2,7 +2,6 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Settings } from "@/bindings/Settings";
-import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
 import { CATALOG, engineStatus, HARDWARE } from "@/test/engineFixtures";
 
 const apiMock = vi.hoisted(() => ({ phiStatus: vi.fn() }));
@@ -15,35 +14,12 @@ vi.mock("@/lib/dialogs", () => ({ pickModelFile: vi.fn() }));
 import { BuiltInAiTab } from "./BuiltInAiTab";
 import { useEngineStore } from "@/stores/engineStore";
 import { useFoundryStore } from "@/stores/foundryStore";
+import { makeSettings } from "@/test/settings";
 
 function settings(defaultProviderId = "lm", foundryModel = ""): Settings {
-  return {
-    schemaVersion: 1,
-    recentVaults: [],
-    lastVault: null,
-    theme: "system",
-    editor: {
-      fontSize: 15,
-      lineWidth: 760,
-      spellcheck: true,
-      recentNotes: 4,
-      aiSpelling: false,
-      traceWork: false,
-      ownWords: [],
-    },
-    git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
-    ai: {
-      defaultProviderId,
-      checkAnswers: false,
-      cloudConsent: null,
-      builtin: { ...DEFAULT_BUILTIN },
-      foundry: { model: foundryModel, tools: true },
-      answerLanguage: "",
-      globalInstructions: "",
-      embeddings: { enabled: false, providerId: "lm", model: "" },
-      providers: [],
-    },
-  };
+  return makeSettings({
+    ai: { defaultProviderId: defaultProviderId, foundry: { model: foundryModel, tools: true } },
+  });
 }
 
 describe("Settings → Built-in AI: the engine choice", () => {

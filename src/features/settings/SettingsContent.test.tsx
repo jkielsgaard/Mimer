@@ -18,32 +18,10 @@ vi.mock("@/stores/embeddingStore", () => ({
 import { SettingsContent } from "./SettingsContent";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { Dialog } from "@/components/ui/dialog";
-import { DEFAULT_BUILTIN } from "@/test/builtinDefaults";
+import { makeSettings } from "@/test/settings";
 
-const stored: Settings = {
-  schemaVersion: 1,
-  recentVaults: [],
-  lastVault: null,
-  theme: "system",
-  editor: {
-    fontSize: 15,
-    lineWidth: 760,
-    spellcheck: true,
-    recentNotes: 4,
-    aiSpelling: false,
-    traceWork: false,
-    ownWords: [],
-  },
-  git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
+const stored: Settings = makeSettings({
   ai: {
-    defaultProviderId: "lm",
-    checkAnswers: false,
-    cloudConsent: null,
-    builtin: DEFAULT_BUILTIN,
-    foundry: { model: "", tools: true },
-    answerLanguage: "",
-    globalInstructions: "",
-    embeddings: { enabled: false, providerId: "lm", model: "" },
     providers: [
       {
         id: "lm",
@@ -77,7 +55,7 @@ const stored: Settings = {
       },
     ],
   },
-};
+});
 
 describe("Settings → AI: which AI Mimer uses", () => {
   const save = vi.fn().mockResolvedValue(undefined);
