@@ -77,6 +77,23 @@ describe("FocusMode", () => {
     expect(apiMock.taskSetDone).toHaveBeenCalledWith(task.path, 7, "s2", true);
   });
 
+  it("lines a log entry's text up with its date, on the text baseline", async () => {
+    const withLog = makeTask({
+      title: "Send the offer",
+      log: [{ line: 9, date: "2026-10-28", text: "Called Acme", key: "l1" }],
+    });
+    useTaskStore.setState({
+      tasks: [withLog],
+      epics: [],
+      loaded: true,
+      selected: { path: withLog.path, line: withLog.line, title: withLog.title },
+    });
+    render(<FocusMode />);
+    const list = await screen.findByRole("list", { name: "What has happened in Send the offer" });
+    const entry = within(list).getByRole("listitem");
+    expect(entry.className).toContain("items-baseline");
+  });
+
   it("shows the whole epic unfolded: any task can be folded, and the mark can move", async () => {
     const other = makeTask({
       line: 12,
