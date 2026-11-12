@@ -21,14 +21,13 @@ out=""
 # libraries are looked for afterwards; on a miss its own messages are shown and it is tried again.
 for attempt in 1 2 3; do
   FOUNDRY_LOCAL_RUNTIME_VERSION="$version" cargo build --release --manifest-path "$manifest"
-  for d in "$target"/foundry-local-sdk-*/out; do
-    if [ -f "$d/libfoundry_local.so" ] || [ -f "$d/libfoundry_local.dylib" ]; then
-      out="$d"
-    fi
-  done
+  # Cargo has put the build output in `build/foundry-local-sdk-<hash>/out` and, since Rust 1.100, in
+  # `build/foundry-local-sdk/<hash>/out`; both are found by looking for the library itself.
+  found="$(find "$target" \( -name libfoundry_local.so -o -name libfoundry_local.dylib \) -path '*/out/*' | tail -n 1)"
+  [ -n "$found" ] && out="$(dirname "$found")"
   [ -n "$out" ] && break
   echo "Attempt $attempt: the native libraries were not found. The SDK's build said:" >&2
-  cat "$target"/foundry-local-sdk-*/output >&2 || true
+  find "$target" -name output -path '*foundry-local-sdk*' -exec cat {} + >&2 || true
   cargo clean --release -p foundry-local-sdk --manifest-path "$manifest" || true
   sleep 15
 done

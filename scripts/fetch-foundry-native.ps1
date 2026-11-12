@@ -29,16 +29,15 @@ $out = $null
 foreach ($attempt in 1..3) {
   cargo build --release --manifest-path $manifest
   if ($LASTEXITCODE -ne 0) { throw "cargo build failed ($LASTEXITCODE)" }
-  $out = Get-ChildItem -Path $target -Directory -Filter "foundry-local-sdk-*" |
-    ForEach-Object { Join-Path $_.FullName "out" } |
-    Where-Object { Test-Path (Join-Path $_ "foundry_local.dll") } |
-    Select-Object -Last 1
+  # Cargo has put the build output in `build\foundry-local-sdk-<hash>\out` and, since Rust 1.100, in
+  # `build\foundry-local-sdk\<hash>\out`; both are found by looking for the library itself.
+  $found = Get-ChildItem -Path $target -Recurse -Filter "foundry_local.dll" -ErrorAction SilentlyContinue |
+    Where-Object { $_.Directory.Name -eq "out" } | Select-Object -Last 1
+  $out = if ($found) { $found.DirectoryName } else { $null }
   if ($out) { break }
   Write-Host "Attempt ${attempt}: the native libraries were not found. The SDK's build said:"
-  Get-ChildItem -Path $target -Directory -Filter "foundry-local-sdk-*" | ForEach-Object {
-    $o = Join-Path $_.FullName "output"
-    if (Test-Path $o) { Get-Content $o | Write-Host }
-  }
+  Get-ChildItem -Path $target -Recurse -Filter "output" -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.FullName -match "foundry-local-sdk" } | ForEach-Object { Get-Content $_.FullName | Write-Host }
   cargo clean --release -p foundry-local-sdk --manifest-path $manifest
   Start-Sleep -Seconds 15
 }
