@@ -1,6 +1,7 @@
 import exportMd from "./topics/export.md?raw";
 import historyMd from "./topics/history.md?raw";
 import builtinMd from "./topics/builtin.md?raw";
+import helperMd from "./topics/helper.md?raw";
 import imagesMd from "./topics/images.md?raw";
 import importMd from "./topics/import.md?raw";
 import linksMd from "./topics/links.md?raw";
@@ -62,6 +63,12 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     title: "The built-in AI",
     summary: "Mimer without LM Studio: download, wake, sleep",
     body: builtinMd,
+  },
+  {
+    id: "helper",
+    title: "The taskbar helper",
+    summary: "Windows: keys that work in every program",
+    body: helperMd,
   },
   {
     id: "tasks",

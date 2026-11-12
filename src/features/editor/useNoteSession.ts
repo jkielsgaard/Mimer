@@ -32,6 +32,7 @@ import { wikiLinkCompletion } from "./extensions/wikiLinks";
 import { tagCompletion } from "./extensions/tags";
 import { useTagStore } from "@/stores/tagStore";
 import { editorTheme, sourceModeTheme } from "./editorTheme";
+import { followLine } from "./extensions/followLine";
 import { registerView } from "@/lib/editorViews";
 import { aiSpelling, type SpellingConfig } from "./extensions/aiSpelling";
 
@@ -208,6 +209,7 @@ export function useNoteSession({
           sourceModeRef.current ? sourceModeTheme : livePreview({ untilFocused: true }),
         ),
         editorTheme,
+        followLine,
         search({ top: true }),
         autocompletion({
           override: [

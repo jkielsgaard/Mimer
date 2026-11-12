@@ -20,3 +20,23 @@ export function minutesError(text: string): string | null {
   }
   return null;
 }
+
+const ASK_KEY = "mimer.askNextStep";
+
+/** Whether Mimer asks "What is the next step?" when you leave Focus (per computer; on unless off). */
+export function askNextStep(): boolean {
+  try {
+    return localStorage.getItem(ASK_KEY) !== "0";
+  } catch {
+    return true;
+  }
+}
+
+/** Remembers the choice above. The screen works without it when storage is not there. */
+export function setAskNextStep(on: boolean): void {
+  try {
+    localStorage.setItem(ASK_KEY, on ? "1" : "0");
+  } catch {
+    /* the choice just is not remembered */
+  }
+}

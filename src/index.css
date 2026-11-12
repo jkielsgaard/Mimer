@@ -324,3 +324,12 @@ body {
 .help-markdown th {
   background: var(--muted);
 }
+
+/* Reading: the line you are in stays clear and the others are a little dimmer (Settings → General). */
+html[data-follow-line] .cm-content .cm-line {
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+html[data-follow-line] .cm-content .cm-line.cm-follow-active {
+  opacity: 1;
+}

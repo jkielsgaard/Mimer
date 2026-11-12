@@ -30,10 +30,10 @@ On a Windows computer with the Windows SDK, Node, Rust and pnpm:
 ```powershell
 pnpm install
 pnpm tauri build
-./scripts/msix/Build-Msix.ps1 -Version 0.22.0 -TestSign -DisplayName "Mimer: Markdown Notes"
+./scripts/msix/Build-Msix.ps1 -Version 0.23.0 -TestSign -DisplayName "Mimer: Markdown Notes"
 ```
 
-This makes the folder `msix-out` with, among other files, `Mimer_0.22.0.0_x64.msix` (unsigned, for the Store), `Mimer_0.22.0.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
+This makes the folder `msix-out` with, among other files, `Mimer_0.23.0.0_x64.msix` (unsigned, for the Store), `Mimer_0.23.0.0_x64_test.msix` (signed with a test certificate), `mimer-test.cer` and `Install-TestMsix.ps1`.
 
 **Windows Sandbox** (Windows 11 Pro, feature "Windows Sandbox" turned on): edit `scripts/msix/mimer-sandbox.wsb` so that `HostFolder` is the full path of `msix-out`, and double-click it. The sandbox installs Mimer; start it from the Start menu. Everything is gone when you close the sandbox.
 
@@ -44,7 +44,7 @@ If a Build-Msix step fails, `makeappx` says what is wrong with the manifest.
 ## 3. What to check in the Store version
 
 - Mimer starts, opens a folder as a vault and saves a note (`Ctrl+S`), and the version history works.
-- Foundry Local works as the built-in AI (Settings → Built-in AI), and LM Studio works if it is installed. Settings → Built-in AI says that the llama.cpp engine is not available in the Store version.
+- Foundry Local works as the built-in AI (Settings → AI), and LM Studio works if it is installed. Settings → AI says that the llama.cpp engine is not available in the Store version.
 - Settings are kept after closing and starting again. Uninstalling (Settings → Apps) removes the app's own data but not your notes.
 
 ## 4. Send it in
@@ -58,7 +58,7 @@ If a Build-Msix step fails, `makeappx` says what is wrong with the manifest.
 
 ## The built-in AI in the Store package
 
-The Store package **does not run the llama.cpp engine** (`engine::catalog::unavailable_reason`): a downloaded program was blocked from starting on a managed laptop, and the Store's policy 10.2.2 is against apps that extend themselves with downloaded code. Settings → Built-in AI says so for that engine.
+The Store package **does not run the llama.cpp engine** (`engine::catalog::unavailable_reason`): a downloaded program was blocked from starting on a managed laptop, and the Store's policy 10.2.2 is against apps that extend themselves with downloaded code. Settings → AI says so for that engine.
 
 The Store package has **Foundry Local** instead (Microsoft's runtime, MIT-licensed SDK). Its native libraries (`foundry-native\`, about 40 MB, fetched by `scripts/fetch-foundry-native.ps1` and packed by `Build-Msix.ps1`) are inside the package, so they are signed by the Store like the rest. The engine runs in a helper process, which is the same `mimer.exe` started with `--foundry-helper`, so no separate program has to be allowed. Only data is downloaded at the user's request: the hardware parts (execution providers for the NPU or graphics card, from Microsoft) and the model.
 

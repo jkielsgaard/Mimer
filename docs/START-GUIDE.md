@@ -151,7 +151,7 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 ## Use the built-in AI (optional)
 
-Open **Settings → Built-in AI**, choose your hardware and a model, press **Download**, and then **Wake** in the status bar. The help (F1) has a topic called The built-in AI.
+Open **Settings → AI**, choose your hardware and a model, press **Download**, and then **Wake** in the status bar. The help (F1) has a topic called The built-in AI.
 
 ## Start the app (both systems)
 
@@ -200,7 +200,7 @@ pnpm tauri build
 
 1. Install [LM Studio](https://lmstudio.ai) and download a model that supports tool calling (for example a Qwen or Llama _instruct_ model).
 2. In LM Studio open the **Developer** tab and **start the server**. Address: `http://localhost:1234/v1`.
-3. In Mimer: **File → Settings… → AI → More: LM Studio and other providers → LM Studio → Load models**, choose the model, **Test connection**, **Save**.
+3. In Mimer: **File → Settings… → AI → LM Studio, or another AI on this computer → LM Studio → Load models**, choose the model, **Test connection**, **Save**.
 
 ### Semantic search (optional)
 
@@ -275,4 +275,4 @@ Logs are written to the application log folder: Linux `~/.local/share/dk.mdvault
 
 ## Foundry Local in a development build
 
-Foundry Local's native libraries (about 90 MB on Linux) are not kept in git. Fetch them once into `src-tauri/foundry-native` with `scripts/fetch-foundry-native.sh` (Linux) or `scripts/fetch-foundry-native.ps1` (Windows). Without them Mimer works, and Settings → Built-in AI says Foundry Local is not included in this build. The release build fetches them before it builds. The Foundry Local engine runs in a helper process: Mimer started again as `mimer --foundry-helper <command>` (see `src-tauri/src/foundry/helper.rs`).
+Foundry Local's native libraries (about 90 MB on Linux) are not kept in git. Fetch them once into `src-tauri/foundry-native` with `scripts/fetch-foundry-native.sh` (Linux) or `scripts/fetch-foundry-native.ps1` (Windows). Without them Mimer works, and Settings → AI says Foundry Local is not included in this build. The release build fetches them before it builds. The Foundry Local engine runs in a helper process: Mimer started again as `mimer --foundry-helper <command>` (see `src-tauri/src/foundry/helper.rs`).

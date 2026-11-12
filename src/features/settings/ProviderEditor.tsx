@@ -23,15 +23,15 @@ const KIND_DEFAULTS: Record<
   },
   // Only for an Anthropic provider kept in an older settings file; it cannot be chosen.
   anthropic: { baseUrl: "https://api.anthropic.com", name: "Anthropic", contextTokens: 100000 },
-  // Foundry Local is set up under Settings → Built-in AI; it is never made here.
+  // Foundry Local is set up under Settings → AI; it is never made here.
   foundry_local: {
     baseUrl: "http://127.0.0.1:5272/v1",
     name: "Built-in AI · Foundry Local",
     contextTokens: 16000,
   },
-  // Phi Silica is chosen under Settings → Built-in AI; it is never made here.
+  // Phi Silica is chosen under Settings → AI; it is never made here.
   phi_silica: { baseUrl: "", name: "Built-in AI · Phi Silica", contextTokens: 4000 },
-  // The built-in AI is set up under Settings → Built-in AI; it is never made here.
+  // The built-in AI is set up under Settings → AI; it is never made here.
   builtin: {
     baseUrl: "http://127.0.0.1:8080/v1",
     name: "Built-in AI · llama.cpp",

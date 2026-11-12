@@ -19,6 +19,8 @@ const openFile = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/actions", () => ({ openFile, newNoteInCurrentFolder: vi.fn() }));
 
 import { StartPage } from "./StartPage";
+import { useTaskStore } from "@/stores/taskStore";
+import { makeTask } from "@/test/taskFixtures";
 import { useMeetingStore } from "@/stores/meetingStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useRecent } from "@/stores/recentStore";
@@ -81,6 +83,24 @@ describe("StartPage", () => {
     expect(await screen.findByRole("button", { name: "Runbook" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Open" }));
     expect(openFile).toHaveBeenCalledWith("Work/Hiring plan.md");
+  });
+
+  it("shows where you left off in a task, on the Continue card, when it is recent", async () => {
+    const day = new Date().toISOString().slice(0, 10);
+    const task = makeTask({
+      title: "Upgrade the VPN gateway",
+      log: [{ line: 6, date: day, text: "Left off: Take a backup first", key: "l" }],
+    });
+    // The page reads the list again when it opens.
+    apiMock.listTasks.mockResolvedValueOnce([task] as never[]);
+    useTaskStore.setState({ tasks: [task] });
+    render(<StartPage />);
+    const note = await screen.findByRole("note", { name: "Where you left off" });
+    expect(note).toHaveTextContent("Take a backup first");
+    expect(note).toHaveTextContent("Upgrade the VPN gateway");
+    await userEvent.setup().click(await within(note).findByText("Open the task"));
+    expect(useTaskStore.getState().selected?.title).toBe("Upgrade the VPN gateway");
+    expect(useUiStore.getState().centerView).toBe("task");
   });
 
   it("filters the recent notes by what they are", async () => {

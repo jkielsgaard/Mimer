@@ -1,5 +1,6 @@
 use crate::error::AppError;
 use crate::git::{CommitKind, CommitReason};
+use crate::meta;
 use crate::state::AppState;
 use crate::tasks::epics::{self, Epic};
 use crate::tasks::ideas::{self, Idea};
@@ -10,6 +11,9 @@ use tauri::State;
 
 /// The most tasks one list holds.
 const MAX_TASKS: usize = 5_000;
+
+/// The tag whose pins are kept in `.vault/meta.json`.
+const PINNED: &str = "pinned";
 
 /// The most notes `tagged_notes` returns.
 const MAX_TAGGED: usize = 2_000;
@@ -27,7 +31,7 @@ fn check_path(path: &str) -> Result<(), AppError> {
 /// The tasks of one note, or none when it cannot be read.
 fn tasks_of(v: &OpenVault, path: &str) -> Vec<Task> {
     fs_ops::read_note(&v.root, path)
-        .map(|n| tasks::parse(path, &n.content))
+        .map(|n| meta::overlaid(&v.root, tasks::parse(path, &n.content)))
         .unwrap_or_default()
 }
 
@@ -43,7 +47,7 @@ fn edit_note(
     if new != note.content {
         ops::write_note(v, path, &new)?;
     }
-    Ok(tasks::parse(path, &new))
+    Ok(meta::overlaid(&v.root, tasks::parse(path, &new)))
 }
 
 /// The task whose block holds `line` (the task itself or one of its steps and log lines).
@@ -70,8 +74,8 @@ fn trace_worked(state: &AppState, v: &OpenVault, tasks: &[Task], line: u32) {
     }
 }
 
-/// Every task in the vault, from every note.
-pub(crate) fn all_tasks(v: &OpenVault) -> Vec<Task> {
+/// Every task in the vault as the notes say it, without what `.vault/meta.json` keeps.
+pub(crate) fn raw_tasks(v: &OpenVault) -> Vec<Task> {
     let files = v.file_list();
     match v.task_cache.lock() {
         Ok(mut cache) => tasks::scan::scan(&v.root, &files, &mut cache, MAX_TASKS),
@@ -82,6 +86,11 @@ pub(crate) fn all_tasks(v: &OpenVault) -> Vec<Task> {
             MAX_TASKS,
         ),
     }
+}
+
+/// Every task in the vault, from every note, with what `.vault/meta.json` keeps about each.
+pub(crate) fn all_tasks(v: &OpenVault) -> Vec<Task> {
+    meta::overlaid(&v.root, raw_tasks(v))
 }
 
 /// Every task in the vault, from every note.
@@ -262,7 +271,35 @@ pub async fn task_set_meta(
     patch: MetaPatch,
 ) -> Result<Vec<Task>, AppError> {
     let v = state.current_vault()?;
-    let list = edit_note(&v, &path, |c| tasks::set_meta(c, line, &key, &patch))?;
+    // What a task waits for is kept in `.vault/meta.json`, not in its line. The old words are taken
+    // off the line when they are changed.
+    let moves = patch.waiting_for.is_some() || patch.after.is_some();
+    let title = if moves {
+        tasks_of(&v, &path)
+            .into_iter()
+            .find(|t| t.line == line && t.key == key)
+            .map(|t| t.title)
+    } else {
+        None
+    };
+    let line_patch = MetaPatch {
+        waiting_for: patch.waiting_for.as_ref().map(|_| None),
+        after: patch.after.as_ref().map(|_| None),
+        ..patch.clone()
+    };
+    let list = edit_note(&v, &path, |c| tasks::set_meta(c, line, &key, &line_patch))?;
+    if moves {
+        let title =
+            title.ok_or_else(|| AppError::Conflict("The task changed. Try again.".into()))?;
+        meta::set_waiting(
+            &v.root,
+            &path,
+            &title,
+            patch.waiting_for.clone(),
+            patch.after.clone(),
+        )?;
+    }
+    let list = if moves { tasks_of(&v, &path) } else { list };
     if patch.status.is_some() {
         trace_worked(&state, &v, &list, line);
     }
@@ -279,7 +316,31 @@ pub async fn task_set_title(
     title: String,
 ) -> Result<Vec<Task>, AppError> {
     let v = state.current_vault()?;
-    edit_note(&v, &path, |c| tasks::set_title(c, line, &key, &title))
+    let old = tasks_of(&v, &path)
+        .into_iter()
+        .find(|t| t.line == line && t.key == key)
+        .map(|t| t.title);
+    let list = edit_note(&v, &path, |c| tasks::set_title(c, line, &key, &title))?;
+    // What is kept about the task, and the tasks that wait for it, follow the new title.
+    if let (Some(old), Some(now)) = (old, list.iter().find(|t| t.line == line)) {
+        meta::rename_task(&v.root, &path, &old, &now.title)?;
+    }
+    Ok(meta::overlaid(&v.root, list))
+}
+
+/// Writes a line in a task's history ("Status: doing"), kept in `.vault/meta.json`.
+#[tauri::command]
+pub async fn task_history_add(
+    state: State<'_, AppState>,
+    path: String,
+    title: String,
+    date: String,
+    text: String,
+) -> Result<Vec<Task>, AppError> {
+    let v = state.current_vault()?;
+    check_path(&path)?;
+    meta::add_history(&v.root, &path, &title, &date, &text)?;
+    Ok(tasks_of(&v, &path))
 }
 
 /// Points a task at a note, or takes the link off (`link` is `None`).
@@ -429,12 +490,17 @@ pub async fn note_tags(state: State<'_, AppState>, path: String) -> Result<Vec<S
     let v = state.current_vault()?;
     check_path(&path)?;
     let note = fs_ops::read_note(&v.root, &path)?;
-    Ok(crate::markdown::note_tags::front_matter_tags(&note.content))
+    let mut tags = crate::markdown::note_tags::front_matter_tags(&note.content);
+    // A pinned note shows as the tag `pinned`, though the pin is kept in `.vault/meta.json`.
+    if meta::is_pinned(&v.root, &path) && !tags.iter().any(|t| t == PINNED) {
+        tags.push(PINNED.to_string());
+    }
+    Ok(tags)
 }
 
 /// The notes that have `tag` in their properties, with their text. The note itself is asked, so a
 /// tag just written counts before the index has it, and a `#tag` in the text does not.
-fn notes_with_front_tag(v: &OpenVault, tag: &str) -> Vec<fs_ops::NoteContent> {
+pub(crate) fn notes_with_front_tag(v: &OpenVault, tag: &str) -> Vec<fs_ops::NoteContent> {
     let paths = v
         .with_index(|c| crate::search::notes_with_tag(c, tag))
         .unwrap_or_default();
@@ -458,7 +524,19 @@ pub async fn tagged_notes(
     tag: String,
 ) -> Result<Vec<fs_ops::NoteContent>, AppError> {
     let v = state.current_vault()?;
-    Ok(notes_with_front_tag(&v, &tag.trim().to_lowercase()))
+    let tag = tag.trim().to_lowercase();
+    let mut found = notes_with_front_tag(&v, &tag);
+    if tag == PINNED {
+        // The pinned notes are in `.vault/meta.json`; a note that still has the old tag counts too.
+        for path in meta::load(&v.root).pinned {
+            if !found.iter().any(|n| n.path == path) {
+                if let Ok(n) = fs_ops::read_note(&v.root, &path) {
+                    found.push(n);
+                }
+            }
+        }
+    }
+    Ok(found)
 }
 
 /// Puts a tag on a note or takes it off, in the properties. Nothing else in the note changes.
@@ -482,6 +560,20 @@ pub async fn note_set_tag(
         return Err(AppError::InvalidPath(format!("“{tag}” is not a tag")));
     }
     let note = fs_ops::read_note(&v.root, &path)?;
+    if tag == PINNED {
+        // A pin is not written in the note: it is kept in `.vault/meta.json`. The old tag, if the
+        // note still has it, is taken off.
+        meta::set_pinned(&v.root, &path, on)?;
+        let new = note_tags::remove_tag(&note.content, PINNED);
+        if new != note.content {
+            ops::write_note(&v, &path, &new)?;
+        }
+        let mut tags = note_tags::front_matter_tags(&new);
+        if on {
+            tags.push(PINNED.to_string());
+        }
+        return Ok(tags);
+    }
     let new = if on {
         note_tags::add_tag(&note.content, &tag)
     } else {
@@ -781,6 +873,49 @@ mod tests {
         let found = notes_with_front_tag(&v, "meeting");
         assert_eq!(found.len(), 1);
         assert_eq!(found[0].path, "A.md");
+    }
+
+    #[test]
+    fn what_a_task_waits_for_comes_from_the_meta_file_and_not_from_the_note() {
+        let d = tempfile::tempdir().unwrap();
+        let v = open_for_test(d.path());
+        ops::write_note(
+            &v,
+            "Epic.md",
+            "---\ntags: [epic]\n---\n# E\n\n- [ ] Upgrade\n- [ ] Test\n",
+        )
+        .unwrap();
+        v.refresh_files();
+        meta::set_waiting(
+            &v.root,
+            "Epic.md",
+            "Upgrade",
+            Some(Some("the customer".into())),
+            Some(Some("Epic#Test".into())),
+        )
+        .unwrap();
+        let all = all_tasks(&v);
+        let t = all.iter().find(|t| t.title == "Upgrade").unwrap();
+        assert_eq!(t.waiting_for.as_deref(), Some("the customer"));
+        assert_eq!(t.after.as_deref(), Some("Epic#Test"));
+        // The note itself is untouched, and a change of status leaves the line without the words.
+        let note = std::fs::read_to_string(d.path().join("Epic.md")).unwrap();
+        assert!(!note.contains("for:") && !note.contains("after:"), "{note}");
+        let after = edit_note(&v, "Epic.md", |c| {
+            tasks::set_meta(
+                c,
+                t.line,
+                &t.key,
+                &MetaPatch {
+                    status: Some(Some("waiting".into())),
+                    ..MetaPatch::default()
+                },
+            )
+        })
+        .unwrap();
+        let up = after.iter().find(|t| t.title == "Upgrade").unwrap();
+        assert_eq!(up.status.as_deref(), Some("waiting"));
+        assert_eq!(up.waiting_for.as_deref(), Some("the customer"));
     }
 
     #[test]

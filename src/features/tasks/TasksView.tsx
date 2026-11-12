@@ -6,12 +6,23 @@ import { PromptDialog } from "@/components/PromptDialog";
 import { InlineEdit, RowActions } from "@/components/RowActions";
 import { ViewHeader } from "@/components/ViewHeader";
 import { Button } from "@/components/ui/button";
-import { epicGroups, noteName, shortDate, type EpicGroup } from "@/lib/taskLogic";
+import {
+  epicGroups,
+  filterTasks,
+  isQuiet,
+  QUIET_DAYS,
+  noteName,
+  openThenDone,
+  shortDate,
+  type EpicGroup,
+  type TaskFilter,
+} from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { useAiBlocked } from "@/lib/useAiBlocked";
 import { INBOX_PATH, useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
+import { EpicCard } from "./EpicCard";
 import { TaskRow } from "./TaskRow";
 import { firstOpenTask, focusEpic } from "./focusEpic";
 import { PlainButton } from "@/components/ui/plain-button";
@@ -90,6 +101,8 @@ export function TasksView() {
   const [naming, setNaming] = useState(false);
   const [showDone, setShowDone] = useState(false);
   const [showLoose, setShowLoose] = useState(false);
+  const [showQuiet, setShowQuiet] = useState(false);
+  const [filter, setFilter] = useState<TaskFilter>("all");
   const [editing, setEditing] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<EpicGroup | null>(null);
 
@@ -101,13 +114,24 @@ export function TasksView() {
   // Notes that only have a checklist in them are kept apart until the person makes them epics.
   const groups = all.filter((g) => g.adopted);
   const loose = all.filter((g) => !g.adopted);
-  const open = groups.filter((g) => !g.allDone);
-  const done = groups.filter((g) => g.allDone);
+  const filtering = filter !== "all";
+  // A filter shows only the epics that have a task it matches, and only those tasks.
+  const shown = (g: EpicGroup): EpicGroup =>
+    filtering ? { ...g, tasks: filterTasks(g.tasks, filter) } : g;
+  const notDone = groups.filter((g) => !g.allDone);
+  const matching = filtering ? notDone.filter((g) => shown(g).tasks.length > 0) : notDone;
+  // Epics where nothing has happened for a while wait together under their own heading.
+  const quiet = filtering ? [] : matching.filter((g) => g.path !== INBOX_PATH && isQuiet(g));
+  const open = matching.filter((g) => !quiet.includes(g));
+  const done = filtering ? [] : groups.filter((g) => g.allDone);
   // The Inbox stays at the top; the other open epics are moved in the order shown.
   const movable = open.map((g) => g.path).filter((p) => p !== INBOX_PATH);
 
-  const box = (g: EpicGroup) => {
-    const shut = isFolded(g, folded);
+  const box = (group: EpicGroup) => {
+    const g = shown(group);
+    // A filter lists its tasks whether the epic is folded or not.
+    const shut = !filtering && isFolded(g, folded);
+    const parts = openThenDone(g.tasks);
     const at = movable.indexOf(g.path);
     const can = { up: at > 0, down: at !== -1 && at < movable.length - 1 };
     const moveUp = () => useTaskStore.getState().moveEpic(g.path, true, movable);
@@ -116,7 +140,11 @@ export function TasksView() {
       <section
         key={g.path}
         aria-label={g.title}
-        className={cn("rounded-lg border bg-card p-1.5", g.allDone && "bg-sidebar")}
+        className={cn(
+          "rounded-lg border bg-card p-1.5",
+          g.allDone && "bg-sidebar",
+          !shut && "col-span-full",
+        )}
       >
         <div
           className="group flex items-center gap-3 px-2 py-1.5"
@@ -229,7 +257,7 @@ export function TasksView() {
         {!shut && (
           <>
             <ul>
-              {g.tasks.map((t, i, all) => (
+              {parts.open.map((t, i, all) => (
                 <TaskRow
                   key={`${t.path}:${String(t.line)}`}
                   task={t}
@@ -241,7 +269,17 @@ export function TasksView() {
                 <li className="px-8 py-1 text-xs text-muted-foreground">No tasks yet.</li>
               )}
             </ul>
-            {!g.allDone && <AddTask group={g} />}
+            {parts.done.length > 0 && (
+              <>
+                <h4 className="section-label px-8 pb-0.5 pt-2">Done · {parts.done.length}</h4>
+                <ul>
+                  {parts.done.map((t) => (
+                    <TaskRow key={`${t.path}:${String(t.line)}`} task={t} showNote={false} />
+                  ))}
+                </ul>
+              </>
+            )}
+            {!g.allDone && !filtering && <AddTask group={g} />}
           </>
         )}
       </section>
@@ -313,7 +351,59 @@ export function TasksView() {
             </p>
           </div>
         )}
-        {open.map(box)}
+        {loaded && groups.length > 0 && (
+          <div role="group" aria-label="Show" className="flex flex-wrap items-center gap-2">
+            {(
+              [
+                ["all", "All"],
+                ["doing", "Doing"],
+                ["waiting", "Waiting"],
+                ["next", "Next up"],
+              ] as const
+            ).map(([id, label]) => (
+              <PlainButton
+                key={id}
+                type="button"
+                aria-pressed={filter === id}
+                className={cn(
+                  "rounded-full px-3 py-1 text-sm focus-visible:ring-2 focus-visible:ring-ring",
+                  filter === id
+                    ? "bg-accent font-semibold text-accent-foreground"
+                    : "bg-muted text-muted-foreground hover:text-foreground",
+                )}
+                onClick={() => {
+                  setFilter(id);
+                }}
+              >
+                {label}
+              </PlainButton>
+            ))}
+            {filtering && matching.length === 0 && (
+              <span className="text-xs text-muted-foreground">No task matches.</span>
+            )}
+          </div>
+        )}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {open.map((g) =>
+            !filtering && isFolded(g, folded) ? <EpicCard key={g.path} group={g} /> : box(g),
+          )}
+        </div>
+        {quiet.length > 0 && (
+          <>
+            <PlainButton
+              type="button"
+              aria-expanded={showQuiet}
+              className="flex items-center gap-1 px-1 pt-2 section-label hover:text-foreground"
+              onClick={() => {
+                setShowQuiet(!showQuiet);
+              }}
+            >
+              {showQuiet ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+              Quiet for {QUIET_DAYS} days · {quiet.length}
+            </PlainButton>
+            {showQuiet && quiet.map(box)}
+          </>
+        )}
         {done.length > 0 && (
           <>
             <PlainButton
@@ -356,8 +446,8 @@ export function TasksView() {
         )}
         {loaded && groups.length > 0 && (
           <p className="px-1 text-xs text-muted-foreground">
-            Fold an epic to see only its name and how far it is. When every task in it is done, it
-            moves to Done.
+            Fold an epic to see it as a card: how far it is, what is next and what it waits for.
+            When every task in it is done, it moves to Done.
           </p>
         )}
       </div>

@@ -52,7 +52,8 @@ pub struct Task {
     /// The last line of the task's block (steps and log).
     pub end: u32,
     pub key: String,
-    /// The title, without the `#tags` and the `due:` / `plan:` / `status:` / `est:` words.
+    /// The title, without the `#tags` and the `due:` / `plan:` / `status:` / `est:` / `for:` /
+    /// `after:` words.
     pub title: String,
     pub done: bool,
     pub tags: Vec<String>,
@@ -61,6 +62,14 @@ pub struct Task {
     pub plan: Option<String>,
     /// `doing`, `waiting`, `dropped` or another word the user wrote.
     pub status: Option<String>,
+    /// Who or what the task waits for (`for:"the customer: reply on the quote"`), in the person's
+    /// own words. Shown next to the status Waiting.
+    pub waiting_for: Option<String>,
+    /// The task this one waits for, as `note path without .md#title` (`after:"IT/Upgrade#Test"`).
+    pub after: Option<String>,
+    /// What Mimer wrote about the task's changes (status and what it waits for), kept in
+    /// `.vault/meta.json`, not in the note. Put on the task after it is read from the note.
+    pub history: Vec<crate::meta::TaskHistory>,
     pub est_minutes: Option<u32>,
     pub steps: Vec<TaskStep>,
     pub log: Vec<TaskLog>,
@@ -91,6 +100,12 @@ pub struct MetaPatch {
     #[serde(default, with = "double_option")]
     #[ts(type = "number | null", optional)]
     pub est_minutes: Option<Option<u32>>,
+    #[serde(default, with = "double_option")]
+    #[ts(type = "string | null", optional)]
+    pub waiting_for: Option<Option<String>>,
+    #[serde(default, with = "double_option")]
+    #[ts(type = "string | null", optional)]
+    pub after: Option<Option<String>>,
 }
 
 /// Serde for "missing" (`None`) versus "null" (`Some(None)`) versus a value (`Some(Some(v))`).
@@ -126,8 +141,15 @@ static LINK_RE: LazyLock<Regex> =
 static TAG_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(^|\s)#([\p{L}\p{N}_/-]*\p{L}[\p{L}\p{N}_/-]*)").expect("valid tag regex")
 });
+/// What stays in place when a title is changed: a `#tag` or a word with its value (which may be
+/// in double quotes).
+static KEPT_RE: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"(?:^|\s)((?:(?:due|plan|status|est|made|for|after):(?:"[^"]*"|\S+))|#\S+)"#)
+        .expect("valid kept regex")
+});
 static WORD_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?:^|\s)(due|plan|status|est|made):(\S+)").expect("valid word regex")
+    Regex::new(r#"(?:^|\s)(due|plan|status|est|made|for|after):("[^"]*"|\S+)"#)
+        .expect("valid word regex")
 });
 
 /// A fingerprint of a line, to notice that it changed.
@@ -190,9 +212,33 @@ struct Words {
     due: Option<String>,
     plan: Option<String>,
     status: Option<String>,
+    waiting_for: Option<String>,
+    after: Option<String>,
     est: Option<u32>,
     made: Option<String>,
     link: Option<String>,
+}
+
+/// A word's value as written: a value with spaces is in double quotes, which are taken off.
+fn unquote(value: &str) -> String {
+    value
+        .strip_prefix('"')
+        .and_then(|v| v.strip_suffix('"'))
+        .unwrap_or(value)
+        .trim()
+        .to_string()
+}
+
+/// A value as it is written in a task line: in double quotes when it has spaces. A double quote
+/// inside the text becomes a single quote, so the line can always be read back.
+fn quote(value: &str) -> String {
+    let clean = value.replace('"', "'");
+    let clean = clean.split_whitespace().collect::<Vec<_>>().join(" ");
+    if clean.contains(' ') {
+        format!("\"{clean}\"")
+    } else {
+        clean
+    }
 }
 
 fn split_words(text: &str) -> Words {
@@ -202,16 +248,20 @@ fn split_words(text: &str) -> Words {
         due: None,
         plan: None,
         status: None,
+        waiting_for: None,
+        after: None,
         est: None,
         made: None,
         link: None,
     };
     for c in WORD_RE.captures_iter(text) {
-        let (key, value) = (&c[1], c[2].to_string());
+        let (key, value) = (&c[1], unquote(&c[2]));
         match key {
             "due" if is_date(&value) => w.due = Some(value),
             "plan" if is_date(&value) || value == "later" => w.plan = Some(value),
             "status" => w.status = Some(value.to_lowercase()),
+            "for" if !value.is_empty() => w.waiting_for = Some(value),
+            "after" if !value.is_empty() => w.after = Some(value),
             "est" => w.est = parse_minutes(&value),
             "made" if is_date(&value) => w.made = Some(value),
             _ => {}
@@ -317,6 +367,9 @@ pub fn parse(path: &str, content: &str) -> Vec<Task> {
                 due: w.due,
                 plan: w.plan,
                 status: w.status,
+                waiting_for: w.waiting_for,
+                after: w.after,
+                history: Vec::new(),
                 est_minutes: w.est,
                 steps: Vec::new(),
                 log: Vec::new(),
@@ -429,20 +482,13 @@ fn line_parts(body: &str) -> (String, Vec<String>, Vec<String>) {
         .map(|m| m.as_str().to_string())
         .collect();
     let rest = LINK_RE.replace_all(body, " ");
-    let is_kept = |t: &str| {
-        (t.starts_with('#') && t.len() > 1)
-            || ["due:", "plan:", "status:", "est:", "made:"]
-                .iter()
-                .any(|w| t.starts_with(w) && t.len() > w.len())
-    };
-    let kept = rest
-        .split_whitespace()
-        .filter(|t| is_kept(t))
-        .map(str::to_string)
+    let kept = KEPT_RE
+        .captures_iter(&rest)
+        .map(|c| c[1].to_string())
         .collect();
-    let title = rest
+    let title = KEPT_RE
+        .replace_all(&rest, " ")
         .split_whitespace()
-        .filter(|t| !is_kept(t))
         .collect::<Vec<_>>()
         .join(" ");
     (title, links, kept)
@@ -527,7 +573,7 @@ pub fn set_done(content: &str, line: u32, key: &str, done: bool) -> AppResult<St
     })
 }
 
-/// Changes the `due:` / `plan:` / `status:` / `est:` words of a task line.
+/// Changes the `due:` / `plan:` / `status:` / `est:` / `for:` / `after:` words of a task line.
 pub fn set_meta(content: &str, line: u32, key: &str, patch: &MetaPatch) -> AppResult<String> {
     for v in [&patch.due, &patch.plan].into_iter().flatten().flatten() {
         if !is_date(v) && v != "later" {
@@ -538,16 +584,22 @@ pub fn set_meta(content: &str, line: u32, key: &str, patch: &MetaPatch) -> AppRe
         let mut text = l.to_string();
         let mut change = |word: &str, value: Option<Option<String>>| {
             let Some(value) = value else { return };
-            let re = Regex::new(&format!(r"(^|\s)({word}):\S+")).expect("valid word regex");
+            let re =
+                Regex::new(&format!(r#"(^|\s)({word}):("[^"]*"|\S+)"#)).expect("valid word regex");
             text = re.replace_all(&text, "").trim_end().to_string();
             if let Some(v) = value {
-                text.push_str(&format!(" {word}:{v}"));
+                let v = quote(&v);
+                if !v.is_empty() {
+                    text.push_str(&format!(" {word}:{v}"));
+                }
             }
         };
         change("due", patch.due.clone());
         change("plan", patch.plan.clone());
         change("status", patch.status.clone());
         change("est", patch.est_minutes.map(|m| m.map(format_minutes)));
+        change("for", patch.waiting_for.clone());
+        change("after", patch.after.clone());
         text
     })
 }
@@ -741,13 +793,18 @@ pub fn move_item(content: &str, line: u32, key: &str, up: bool) -> AppResult<Str
         return Err(conflict());
     }
     let tasks = parse("", content);
-    // Blocks as (first, last) line, in order: the tasks of the note, or the steps of one task.
-    let blocks: Vec<(usize, usize)> = if let Some(_t) = tasks.iter().find(|t| t.line == line) {
+    // Blocks as (first, last, done) line, in order: the tasks of the note, or the steps of one
+    // task. `done` is only used for tasks: an open task moves past open tasks only, because the
+    // lists show done tasks last.
+    let mut is_task = false;
+    let blocks: Vec<(usize, usize, bool)> = if let Some(_t) = tasks.iter().find(|t| t.line == line)
+    {
+        is_task = true;
         let indent = indent_of(current);
         tasks
             .iter()
             .filter(|t| indent_of(lines[t.line as usize]) == indent)
-            .map(|t| (t.line as usize, t.end as usize))
+            .map(|t| (t.line as usize, t.end as usize, t.done))
             .collect()
     } else if let Some(t) = tasks
         .iter()
@@ -755,7 +812,7 @@ pub fn move_item(content: &str, line: u32, key: &str, up: bool) -> AppResult<Str
     {
         t.steps
             .iter()
-            .map(|s| (s.line as usize, s.line as usize))
+            .map(|s| (s.line as usize, s.line as usize, false))
             .collect()
     } else {
         return Err(conflict());
@@ -773,6 +830,17 @@ pub fn move_item(content: &str, line: u32, key: &str, up: bool) -> AppResult<Str
     } else {
         return Ok(content.to_string());
     };
+    let skip_done = is_task && !blocks[at].2;
+    if skip_done {
+        let ahead_open = if up {
+            blocks[..at].iter().any(|b| !b.2)
+        } else {
+            blocks[at + 1..].iter().any(|b| !b.2)
+        };
+        if !ahead_open {
+            return Ok(content.to_string());
+        }
+    }
     let (first, second) = if up {
         (blocks[other], blocks[at])
     } else {
@@ -784,7 +852,17 @@ pub fn move_item(content: &str, line: u32, key: &str, up: bool) -> AppResult<Str
     out.extend(&lines[first.1 + 1..second.0]);
     out.extend(&lines[first.0..=first.1]);
     out.extend(&lines[second.1 + 1..]);
-    Ok(out.join("\n"))
+    let moved = out.join("\n");
+    if skip_done && blocks[other].2 {
+        // It jumped over a done task, which looks like nothing happened: go on to the next one.
+        let new_line = if up {
+            first.0
+        } else {
+            first.0 + second.1 - first.1
+        };
+        return move_item(&moved, u32::try_from(new_line).unwrap_or(line), key, up);
+    }
+    Ok(moved)
 }
 
 /// Removes a task, with its steps and log, from the note.
@@ -960,6 +1038,7 @@ mod tests {
             status: Some(Some("doing".into())),
             due: Some(None),
             est_minutes: Some(Some(15)),
+            ..MetaPatch::default()
         };
         let out = set_meta(NOTE, t.line, &t.key, &patch).unwrap();
         let line = out.lines().nth(5).unwrap();
@@ -1090,6 +1169,80 @@ mod tests {
         let t = &parse("n.md", &out)[0];
         assert_eq!(t.note, "A note");
         assert_eq!(t.log.len(), 2);
+    }
+
+    #[test]
+    fn what_a_task_waits_for_is_kept_in_quotes_and_read_back() {
+        let n = "- [ ] Upgrade the gateway #net status:waiting for:\"the customer: reply on the quote\" after:\"IT/Upgrade#Test setup\" est:1h\n";
+        let t = &parse("n.md", n)[0];
+        assert_eq!(t.title, "Upgrade the gateway");
+        assert_eq!(t.status.as_deref(), Some("waiting"));
+        assert_eq!(
+            t.waiting_for.as_deref(),
+            Some("the customer: reply on the quote")
+        );
+        assert_eq!(t.after.as_deref(), Some("IT/Upgrade#Test setup"));
+        assert_eq!(t.est_minutes, Some(60));
+        // A word without spaces needs no quotes.
+        let n2 = "- [ ] Call for:Peter\n";
+        assert_eq!(parse("n.md", n2)[0].waiting_for.as_deref(), Some("Peter"));
+        assert_eq!(parse("n.md", n2)[0].title, "Call");
+        // Writing, replacing and removing the words, and a new title that leaves them in place.
+        let plain = "- [ ] Upgrade the gateway\n";
+        let t = &parse("n.md", plain)[0];
+        let patch = MetaPatch {
+            waiting_for: Some(Some("support: case 48213".into())),
+            status: Some(Some("waiting".into())),
+            ..MetaPatch::default()
+        };
+        let out = set_meta(plain, t.line, &t.key, &patch).unwrap();
+        assert_eq!(
+            out,
+            "- [ ] Upgrade the gateway status:waiting for:\"support: case 48213\"\n"
+        );
+        let t = &parse("n.md", &out)[0];
+        assert_eq!(t.waiting_for.as_deref(), Some("support: case 48213"));
+        let renamed = set_title(&out, t.line, &t.key, "Upgrade the VPN gateway").unwrap();
+        assert_eq!(
+            renamed,
+            "- [ ] Upgrade the VPN gateway status:waiting for:\"support: case 48213\"\n"
+        );
+        let t = &parse("n.md", &renamed)[0];
+        let clear = MetaPatch {
+            waiting_for: Some(None),
+            ..MetaPatch::default()
+        };
+        let cleared = set_meta(&renamed, t.line, &t.key, &clear).unwrap();
+        assert_eq!(cleared, "- [ ] Upgrade the VPN gateway status:waiting\n");
+        // A double quote in the text cannot break the line.
+        let t = &parse("n.md", plain)[0];
+        let odd = MetaPatch {
+            waiting_for: Some(Some("the \"big\" one".into())),
+            ..MetaPatch::default()
+        };
+        let out = set_meta(plain, t.line, &t.key, &odd).unwrap();
+        assert_eq!(
+            parse("n.md", &out)[0].waiting_for.as_deref(),
+            Some("the 'big' one")
+        );
+    }
+
+    #[test]
+    fn an_open_task_moves_past_open_tasks_only() {
+        // The lists show done tasks last, so an arrow must jump over them.
+        let n = "- [ ] A\n- [x] Done one\n- [x] Done two\n- [ ] B\n";
+        let ts = parse("n.md", n);
+        let b = &ts[3];
+        let out = move_item(n, b.line, &b.key, true).unwrap();
+        assert_eq!(out, "- [ ] B\n- [ ] A\n- [x] Done one\n- [x] Done two\n");
+        // Nothing open above it, or below the last open one: it stays.
+        let top = &parse("n.md", &out)[0];
+        assert_eq!(move_item(&out, top.line, &top.key, true).unwrap(), out);
+        let last = &parse("n.md", &out)[1];
+        assert_eq!(move_item(&out, last.line, &last.key, false).unwrap(), out);
+        // Down from the top goes past the other open task, not into the done ones.
+        let back = move_item(&out, top.line, &top.key, false).unwrap();
+        assert_eq!(back, "- [ ] A\n- [ ] B\n- [x] Done one\n- [x] Done two\n");
     }
 
     #[test]

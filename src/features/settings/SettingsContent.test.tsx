@@ -84,8 +84,8 @@ describe("Settings → AI: which AI Mimer uses", () => {
     expect(lines.length).toBeGreaterThanOrEqual(4);
   });
 
-  it("has one AI tab marked Beta, with the set-up folded in sections", async () => {
-    const user = await openAiTab();
+  it("has one AI tab marked Beta, and the set-up sits in the rows, not in folded sections", async () => {
+    await openAiTab();
     const nav = screen.getByRole("navigation", { name: "Settings sections" });
     expect(
       within(nav)
@@ -93,10 +93,11 @@ describe("Settings → AI: which AI Mimer uses", () => {
         .map((b) => b.textContent),
     ).toEqual(["General", "AIBeta", "Version history", "Vault"]);
     expect(screen.getByTestId("ai-beta-note")).toHaveTextContent("still being built");
-    const built = screen.getByRole("button", { name: "Built-in AI: set up" });
-    expect(built).toHaveAttribute("aria-expanded", "false");
-    await user.click(built);
-    expect(built).toHaveAttribute("aria-expanded", "true");
+    expect(screen.queryByRole("button", { name: "Built-in AI: set up" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^More: LM Studio/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Settings of the chosen AI/ })).toBeNull();
+    // The AI in use shows its own setup under its row.
+    expect(screen.getByRole("group", { name: /^Set up / })).toBeInTheDocument();
   });
 
   it("has About me and my notes and a language for the AI's answers, and no base instruction", async () => {
@@ -132,7 +133,7 @@ describe("Settings → AI providers", () => {
       </Dialog>,
     );
     await user.click(screen.getByRole("button", { name: /^AI\s*Beta$/ }));
-    await user.click(screen.getByRole("button", { name: "More: LM Studio and other providers" }));
+    await user.click(screen.getByRole("radio", { name: /LM Studio, or another AI/ }));
     return user;
   };
 
@@ -168,51 +169,18 @@ describe("Settings → AI providers", () => {
     expect(screen.getByText(/Choose a provider on the left/)).toBeInTheDocument();
   });
 
-  it("lists the built-in AI as one entry, whichever engine it uses, next to the other providers", async () => {
-    const withBuiltIns: Settings = {
-      ...stored,
-      ai: {
-        ...stored.ai,
-        providers: [
-          ...stored.ai.providers,
-          {
-            id: "builtin",
-            kind: "builtin",
-            name: "Built-in AI · llama.cpp",
-            baseUrl: "http://127.0.0.1:8080/v1",
-            model: "mimer",
-            location: "local",
-            supportsTools: true,
-            contextTokens: 16384,
-          },
-          {
-            id: "foundry",
-            kind: "foundry_local",
-            name: "Built-in AI · Foundry Local",
-            baseUrl: "http://127.0.0.1:5272/v1",
-            model: "",
-            location: "local",
-            supportsTools: true,
-            contextTokens: 16000,
-          },
-        ],
-      },
-    };
-    useSettingsStore.setState({ settings: withBuiltIns, save });
+  it("lists only the other providers: the built-in engines are set up in their own rows", async () => {
     const user = userEvent.setup();
     render(
       <Dialog open>
-        <SettingsContent stored={withBuiltIns} onClose={() => undefined} />
+        <SettingsContent stored={stored} onClose={() => undefined} />
       </Dialog>,
     );
     await user.click(screen.getByRole("button", { name: /^AI\s*Beta$/ }));
-    await user.click(screen.getByRole("button", { name: "More: LM Studio and other providers" }));
-    expect(screen.getAllByRole("button", { name: /^Built-in AI\s*local/ })).toHaveLength(1);
-    // The other providers are still listed, and the two engines are not listed separately.
+    await user.click(screen.getByRole("radio", { name: /LM Studio, or another AI/ }));
     expect(screen.getByRole("button", { name: /^LM Studio/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Built-in AI\s*local/ })).toBeNull();
     expect(screen.queryByRole("button", { name: /llama\.cpp/ })).toBeNull();
-    await user.click(screen.getByRole("button", { name: /^Built-in AI\s*local/ }));
-    expect(screen.getByRole("button", { name: "Open Built-in AI" })).toBeInTheDocument();
-    expect(screen.queryByText(/Choose a provider on the left/)).toBeNull();
+    expect(screen.getByText(/Choose a provider on the left/)).toBeInTheDocument();
   });
 });

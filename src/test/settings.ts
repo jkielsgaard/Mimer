@@ -23,6 +23,10 @@ function defaults(): Settings {
       aiSpelling: false,
       traceWork: false,
       ownWords: [],
+      lineSpacing: "normal",
+      letterSpacing: "normal",
+      textFont: "system",
+      followLine: false,
     },
     git: { authorName: "M", authorEmail: "m@l", idleCommitMinutes: 5 },
     ai: {
@@ -37,6 +41,12 @@ function defaults(): Settings {
       providers: [],
     },
     backups: {},
+    helper: {
+      enabled: false,
+      keepRunning: true,
+      quickNoteKey: "Ctrl+Alt+N",
+      parkKey: "Ctrl+Alt+P",
+    },
   };
 }
 

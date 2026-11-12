@@ -19,7 +19,10 @@ pub async fn update_settings(
     state: State<'_, AppState>,
     settings: Settings,
 ) -> Result<(), AppError> {
-    match settings::service::apply_update(&state, settings)? {
+    let helper_choice = settings.helper.clone();
+    let action = settings::service::apply_update(&state, settings)?;
+    crate::helper::apply(&app, &helper_choice);
+    match action {
         IndexAction::Keep => {}
         IndexAction::Stop => crate::embeddings::cancel_job(&app),
         IndexAction::Restart { rebuild } => {

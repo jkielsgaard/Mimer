@@ -1,4 +1,5 @@
 use crate::ai::proposals::{self, ApplyResult, ProposalSetView};
+use crate::ai::selftest::{self, AiTestResult};
 use crate::ai::{agent, inline, ChatEvent, ChatRequest, InlineRequest};
 use crate::error::AppError;
 use crate::state::AppState;
@@ -119,4 +120,15 @@ pub async fn discard_proposals(state: State<'_, AppState>, set_id: Uuid) -> Resu
         .map_err(|_| AppError::Io("State lock poisoned".into()))?
         .remove(&set_id);
     Ok(())
+}
+
+/// Asks an AI on this computer one short question (no notes in it), for "Test it" in Settings.
+#[tauri::command]
+pub async fn ai_test(
+    state: State<'_, AppState>,
+    provider_id: String,
+) -> Result<AiTestResult, AppError> {
+    let settings = state.settings_snapshot();
+    let key = crate::settings::keychain::get_key(&provider_id);
+    Ok(selftest::run(&settings, &provider_id, key.as_deref()).await)
 }

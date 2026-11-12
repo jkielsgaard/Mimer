@@ -153,6 +153,9 @@ interface UiState {
   /** The focus screen is open. */
   focusOpen: boolean;
   setFocusOpen: (open: boolean) => void;
+  /** The "In short" window (main points and things to do of the open note) is open. */
+  inShortOpen: boolean;
+  setInShortOpen: (open: boolean) => void;
   findTasksOpen: boolean;
   /** Look for tasks in this text instead of the whole open note (a selection). */
   findTasksIn: string | null;
@@ -330,6 +333,10 @@ export const useUiStore = create<UiState>((set, get) => ({
   focusOpen: false,
   setFocusOpen: (focusOpen) => {
     set({ focusOpen });
+  },
+  inShortOpen: false,
+  setInShortOpen: (inShortOpen) => {
+    set({ inShortOpen });
   },
   findTasksOpen: false,
   findTasksIn: null,

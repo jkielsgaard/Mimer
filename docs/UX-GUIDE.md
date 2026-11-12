@@ -75,4 +75,6 @@ Every control comes from `src/components/ui`, so a change to how one looks is ma
 - **Dialogs**: one question, Cancel as a ghost button, the action as the primary (or destructive) button on the right. Enter saves a one-line field; Ctrl/Cmd+Enter saves a multi-line one; Esc closes.
 - **Text boxes for notes** take Tab and Shift+Tab to indent (`Textarea indent`), like the editor.
 - **Toasts** confirm a finished action, bottom right, with one action (Open, Undo) when it helps. Errors stay longer.
+- **A choice that needs setup shows the setup under its own row** (Settings → AI: the chosen row opens its model list or its address fields). Two places for one choice are not made. Things that are new say **Beta** in a small chip instead of "Recommended".
+- **Lists that grow sort themselves by what is open, not by moving lines:** open items first, done items last under a small **Done · n** label. A folded group of work is a card (name, bar, what is next and what is waited for), and a filter row of chips (All, Doing, Waiting, Next up) narrows the list.
 - **Choices remembered per computer** (time format, start page layout, the start page at launch) are kept in browser storage, wrapped in try/catch, and the screen works without them.

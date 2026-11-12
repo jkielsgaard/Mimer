@@ -3,4 +3,4 @@
 /**
  * What to change in a task's words. `None` leaves a word alone, `Some(None)` removes it.
  */
-export type MetaPatch = { due?: string | null, plan?: string | null, status?: string | null, estMinutes?: number | null, };
+export type MetaPatch = { due?: string | null, plan?: string | null, status?: string | null, estMinutes?: number | null, waitingFor?: string | null, after?: string | null, };

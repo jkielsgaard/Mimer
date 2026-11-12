@@ -27,7 +27,7 @@ interface Props {
 
 const MB = 1_000_000;
 
-/** Settings → Built-in AI → Foundry Local: choose a model, download it, and clean up. */
+/** Settings → AI → Foundry Local: choose a model, download it, and clean up. */
 export function FoundrySettings({ draft, onChange }: Props) {
   const status = useFoundryStore((s) => s.status);
   const catalog = useFoundryStore((s) => s.catalog);

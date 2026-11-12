@@ -111,6 +111,10 @@ pub fn rename_no_commit(
     fs_ops::rename(&v.root, from, to)?;
 
     let mut commit_paths = vec![from.to_string(), to.to_string()];
+    // The pins and what is kept about tasks (`.vault/meta.json`) follow the move.
+    if crate::meta::rename_path(&v.root, from, to) {
+        commit_paths.push(crate::meta::FILE.to_string());
+    }
 
     // Keep project folders in sync.
     let mut projs = v.project_list();
@@ -461,6 +465,19 @@ mod tests {
             })
             .unwrap();
         assert_eq!(hits[0].path, "New.md");
+    }
+
+    #[test]
+    fn a_pinned_note_stays_pinned_when_it_is_renamed() {
+        let d = tempfile::tempdir().unwrap();
+        let v = crate::vault::open_for_test(d.path());
+        write_note(&v, "Work/A.md", "# A\n").unwrap();
+        crate::meta::set_pinned(&v.root, "Work/A.md", true).unwrap();
+        rename_path(&v, "Work/A.md", "Work/B.md", false).unwrap();
+        assert!(crate::meta::is_pinned(&v.root, "Work/B.md"));
+        assert!(!crate::meta::is_pinned(&v.root, "Work/A.md"));
+        rename_path(&v, "Work", "Jobs", false).unwrap();
+        assert!(crate::meta::is_pinned(&v.root, "Jobs/B.md"));
     }
 
     #[test]

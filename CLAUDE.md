@@ -1,6 +1,6 @@
 # Mimer
 
-Mimer is a desktop app (Tauri 2, Rust backend, React 19 + TypeScript frontend) for plain Markdown notes in ordinary folders, with a local AI, Git history of every change, tasks and epics, ideas, meetings and a start page. Version 0.22. The person who owns it does not write code: every change is made by Claude, from a brief, and must be easy to follow and to correct.
+Mimer is a desktop app (Tauri 2, Rust backend, React 19 + TypeScript frontend) for plain Markdown notes in ordinary folders, with a local AI, Git history of every change, tasks and epics, ideas, meetings and a start page. Version 0.23. The person who owns it does not write code: every change is made by Claude, from a brief, and must be easy to follow and to correct.
 
 ## Read first
 
@@ -26,7 +26,7 @@ The skills `/feature` and `/release` in `.claude/skills/` walk through these ste
 - **Never lose user data.** Every write that replaces content is committed before or after; no destructive Git (no reset, force, rebase of published history, moving a published tag). Avoid `rm -rf`.
 - **The AI only proposes.** Nothing the AI produces is written without the user accepting it. Notes only go to a local AI unless the user consented to a cloud AI (`ai.cloudConsent`), never in a project marked Local AI only. `ai::router::select_notes` is the only path to a provider.
 - **Everything that is not AI works without AI.** An AI button is disabled with the reason (`useAiBlocked`), never a broken screen.
-- **Plain files.** A vault stays usable in any Markdown editor. Tags in a note's properties (`epic`, `meeting`, `pinned`) decide what a note is, never the folder.
+- **Plain files.** A vault stays usable in any Markdown editor. Tags in a note's properties (`epic`, `meeting`) decide what a note is, never the folder. What Mimer keeps about a note or task that is not the note's own text (a pin, what a task waits for, the history of its status) is in `.vault/meta.json`, not in the note.
 - **One look everywhere.** Use the shared components (`src/components/`) and tokens; a change to how something looks is made in the shared component, so it changes everywhere unless the brief says otherwise. A new screen follows the UX guide.
 - **Areas stay apart.** A feature area uses shared areas, not another feature's inside files; something two features need moves to a shared area.
 - **Files never differ only by case** (Windows).

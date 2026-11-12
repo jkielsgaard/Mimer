@@ -55,7 +55,7 @@ describe("ProviderEditor help", () => {
     const options = [...document.querySelectorAll("option")];
     expect(options.some((o) => o.value === "foundry_local")).toBe(false);
     render(<Harness start={newProvider("foundry_local")} />);
-    expect(screen.getByTestId("provider-help")).toHaveTextContent("Settings → Built-in AI");
+    expect(screen.getByTestId("provider-help")).toHaveTextContent("Settings → AI");
     expect(screen.queryByRole("button", { name: /Detect/ })).toBeNull();
   });
 });

@@ -50,6 +50,20 @@ describe("EpicPage", () => {
     useUiStore.setState({ centerView: "epic", findTasksOpen: false, focusOpen: false });
   });
 
+  it("lists the open tasks first and the done ones last, under Done", () => {
+    useTaskStore.setState({
+      tasks: [
+        makeTask({ path: epicNote, line: 3, title: "Finished early", done: true }),
+        makeTask({ path: epicNote, line: 4, title: "Still to do" }),
+      ],
+    });
+    render(<EpicPage />);
+    const todo = screen.getByText("Still to do");
+    const finished = screen.getByText("Finished early");
+    expect(todo.compareDocumentPosition(finished) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Done · 1" })).toBeInTheDocument();
+  });
+
   it("shows the epic with its progress, the note it is kept in and where it came from", async () => {
     render(<EpicPage />);
     const user = userEvent.setup();

@@ -16,7 +16,7 @@ import {
   whenChanged,
   type RecentFilter,
 } from "@/lib/startPage";
-import { epicGroups } from "@/lib/taskLogic";
+import { epicGroups, recentLeftOff } from "@/lib/taskLogic";
 import { formatTime } from "@/lib/timeFormat";
 import { useAiBlocked } from "@/lib/useAiBlocked";
 import { cn, dirname, noteTitle } from "@/lib/utils";
@@ -53,6 +53,8 @@ export function ContinueWidget() {
   const timeFormat = useUiStore((s) => s.timeFormat);
   const last = notes[0] ?? null;
   const excerpt = useExcerpt(last);
+  const tasks = useTaskStore((s) => s.tasks);
+  const left = recentLeftOff(tasks);
   if (last === null) return <Empty>The note you work on will be here.</Empty>;
   return (
     <div className="flex items-center gap-4">
@@ -68,6 +70,28 @@ export function ContinueWidget() {
         </p>
         {excerpt !== "" && (
           <p className="line-clamp-2 pt-1 text-sm text-muted-foreground">{excerpt}</p>
+        )}
+        {left !== null && (
+          <div
+            role="note"
+            aria-label="Where you left off"
+            className="mt-1 flex items-center gap-2 rounded-lg bg-accent px-3 py-2 text-accent-foreground"
+          >
+            <div className="min-w-0 flex-1">
+              <span className="section-label text-accent-foreground">Where you left off</span>
+              <p className="truncate text-sm font-semibold">{left.text}</p>
+              <p className="truncate text-xs">{left.task.title}</p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                useTaskStore.getState().open(left.task);
+              }}
+            >
+              Open the task
+            </Button>
+          </div>
         )}
       </div>
       <Button

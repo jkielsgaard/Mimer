@@ -102,6 +102,58 @@ describe("InlineAiPopup", () => {
     expect(screen.getByRole("button", { name: /Copy/ })).toBeInTheDocument();
   });
 
+  it("draws a diagram, and adds it under the text without changing the text", async () => {
+    answer("flowchart LR\n  A[User] --> B[Portal]");
+    const onAccept = vi.fn();
+    render(
+      <InlineAiPopup
+        selection={selection}
+        start={{ id: "diagram" }}
+        notePath="a.md"
+        onAccept={onAccept}
+        onFindTasks={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    await userEvent
+      .setup()
+      .click(await screen.findByRole("button", { name: /Add under the text/ }));
+    expect(onAccept).toHaveBeenCalledWith(
+      "Call 4040 if it fails.\n\n```mermaid\nflowchart LR\n  A[User] --> B[Portal]\n```\n",
+      "Draw as a diagram",
+    );
+  });
+
+  it("says so when the AI answered with words and not a diagram", async () => {
+    answer("Here is a nice diagram for you.");
+    render(
+      <InlineAiPopup
+        selection={selection}
+        start={{ id: "diagram" }}
+        notePath="a.md"
+        onAccept={vi.fn()}
+        onFindTasks={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(await screen.findByText(/did not answer with a diagram/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Add under the text/ })).toBeNull();
+  });
+
+  it("does not offer a diagram in a text field", () => {
+    render(
+      <InlineAiPopup
+        selection={selection}
+        notePath="a.md"
+        allowFindTasks={false}
+        onAccept={vi.fn()}
+        onFindTasks={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole("button", { name: /Draw as a diagram/ })).toBeNull();
+  });
+
   it("closes when you click outside the menu, and with the close button", async () => {
     const onClose = vi.fn();
     render(

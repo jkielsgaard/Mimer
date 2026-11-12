@@ -1,10 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { AppPlatform } from "@/bindings/AppPlatform";
 import type { ProviderConfig } from "@/bindings/ProviderConfig";
 import type { Settings } from "@/bindings/Settings";
-import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
-import { PHI_ID, PHI_PROVIDER, usePhiStatus } from "@/features/engine/PhiSilicaSettings";
+import { BuiltInAiSettings } from "@/features/engine/BuiltInAiSettings";
+import { FoundrySettings } from "@/features/engine/FoundrySettings";
+import {
+  PHI_ID,
+  PHI_PROVIDER,
+  PhiSilicaSettings,
+  usePhiStatus,
+} from "@/features/engine/PhiSilicaSettings";
 import {
   aiOrder,
   cloudConsented,
@@ -17,6 +23,7 @@ import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useEngineStore } from "@/stores/engineStore";
 import { CloudConsentDialog } from "./CloudConsentDialog";
+import { TestAi } from "./TestAi";
 import { PlainButton } from "@/components/ui/plain-button";
 
 /** Where Mimer runs; `null` while it is asked (or outside the app, in tests). */
@@ -56,23 +63,30 @@ const TEXTS: Record<AiOption, string> = {
     "Last resort, when no AI on this computer is good enough. Your notes are sent to the company that runs it. Off until you turn it on.",
 };
 
+/** The built-in AIs are new: their rows say so, and none of them is recommended over the others. */
+const BETA: readonly AiOption[] = ["phi", "foundry", "llama"];
+
 /**
  * Settings → AI: one list of the AIs Mimer can use, in the order that suits where it runs, each
- * with its state here. Choosing a ready one makes it Mimer's AI; the others are set up under
- * Built-in AI or AI providers. A cloud AI needs the user's "I understand" first.
+ * with its state here. Choosing a ready one makes it Mimer's AI. The chosen row shows its own
+ * setup right under it (a model to download, an address to enter), so there is one place for
+ * both. A cloud AI needs the user's "I understand" first.
  */
 export function AiChoice({
   draft,
   onChange,
-  onSetUp,
+  providersPanel,
+  persist,
 }: {
   draft: Settings;
   onChange: (next: Settings) => void;
-  /** Opens the tab where the chosen AI is set up. */
-  onSetUp: (tab: "builtin" | "providers") => void;
+  /** Saves the choices made so far (for "Test it"), without closing Settings. */
+  persist: () => Promise<boolean>;
+  /** The providers of "LM Studio, or another AI" and of the cloud AI: the list and its editor. */
+  providersPanel: ReactNode;
 }) {
   const platform = usePlatform();
-  const [phi] = usePhiStatus();
+  const [phi, setPhi] = usePhiStatus();
   const llamaReady = useEngineStore((s) => s.status?.engine != null && s.status.models.length > 0);
   const current = draft.ai.providers.find((p) => p.id === draft.ai.defaultProviderId);
   const [picked, setPicked] = useState<AiOption | null>(null);
@@ -150,8 +164,41 @@ export function AiChoice({
     makeMimers(o);
   };
 
-  const setUpTab = (o: AiOption): "builtin" | "providers" =>
-    o === "local" || o === "cloud" ? "providers" : "builtin";
+  /** The provider "Test it" asks: the one an AI on this computer stands for, once it is set up. */
+  const testable = (o: AiOption): ProviderConfig | undefined => {
+    if (!ready[o]) return undefined;
+    if (o === "foundry") return draft.ai.providers.find((p) => p.id === "foundry");
+    if (o === "llama") return draft.ai.providers.find((p) => p.id === "builtin");
+    if (o === "local") return locals.find((p) => p.id === localId) ?? locals[0];
+    return undefined;
+  };
+
+  /** The setup of an AI, shown under its row while it is chosen. */
+  const setupOf = (o: AiOption): ReactNode => {
+    switch (o) {
+      case "phi":
+        return phi?.shown === true ? (
+          <PhiSilicaSettings draft={draft} onChange={onChange} status={phi} onStatus={setPhi} />
+        ) : null;
+      case "foundry":
+        return <FoundrySettings draft={draft} onChange={onChange} />;
+      case "llama":
+        return <BuiltInAiSettings draft={draft} onChange={onChange} />;
+      case "local":
+        return providersPanel;
+      case "cloud":
+        return (
+          <div className="flex flex-col gap-2">
+            {!ready.cloud && (
+              <p className="text-xs text-muted-foreground">
+                Add an OpenAI-compatible provider with its address and key below.
+              </p>
+            )}
+            {providersPanel}
+          </div>
+        );
+    }
+  };
 
   return (
     <div className="flex flex-col gap-3">
@@ -165,8 +212,10 @@ export function AiChoice({
               : platform?.os === "linux"
                 ? "Mimer runs here on Linux"
                 : "Mimer runs on this computer"}
-          {phi?.shown === true && phi.device.state !== "warn" ? " on a Copilot+ PC" : ""}. The
-          choices are in the order that suits it best.
+          {phi?.shown === true && phi.device.state !== "warn" ? " on a Copilot+ PC" : ""}. Click a
+          row to use it; the chosen row has its own setup under it. The built-in AIs are in beta and
+          what works best depends on your computer, so try them in turn and keep the one that works
+          best for you.
         </p>
       </div>
       <div role="radiogroup" aria-label="AI for Mimer" className="flex flex-col gap-2">
@@ -175,58 +224,74 @@ export function AiChoice({
           const offText = o === "phi" && phi?.device.state === "warn" ? phi.device.text : null;
           const off = offText !== null;
           return (
-            <PlainButton
+            <div
               key={o}
-              type="button"
-              role="radio"
-              aria-checked={selected === o}
-              disabled={off}
               className={cn(
-                "flex items-start gap-3 rounded-lg border p-3 text-left text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60",
+                "rounded-lg border",
                 cloud && "border-dashed border-warning",
                 selected === o &&
                   (cloud
                     ? "border-2 border-warning bg-warning/10"
                     : "border-2 border-primary bg-accent"),
               )}
-              onClick={() => {
-                choose(o);
-              }}
             >
-              <span
-                className={cn(
-                  "flex size-[22px] shrink-0 items-center justify-center rounded-full border text-xs font-bold",
-                  selected === o && !cloud && "border-primary bg-primary text-primary-foreground",
-                  cloud && "border-warning text-warning",
-                )}
+              <PlainButton
+                type="button"
+                role="radio"
+                aria-checked={selected === o}
+                disabled={off}
+                className="flex w-full items-start gap-3 rounded-lg p-3 text-left text-sm hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={() => {
+                  choose(o);
+                }}
               >
-                {i + 1}
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="flex flex-wrap items-center gap-2 font-semibold">
-                  {TITLES[o]}
-                  {i === 0 && !cloud && (
-                    <span className="rounded-full bg-primary px-2 text-[11px] text-primary-foreground">
-                      Recommended here
-                    </span>
+                <span
+                  className={cn(
+                    "flex size-[22px] shrink-0 items-center justify-center rounded-full border text-xs font-bold",
+                    selected === o && !cloud && "border-primary bg-primary text-primary-foreground",
+                    cloud && "border-warning text-warning",
                   )}
-                  {cloud && (
-                    <span className="rounded-full border border-warning px-2 text-[11px] text-warning">
-                      Notes leave this computer
-                    </span>
-                  )}
+                >
+                  {i + 1}
                 </span>
-                <span className="text-xs text-foreground/80">{offText ?? TEXTS[o]}</span>
-              </span>
-              <span
-                className={cn(
-                  "shrink-0 text-xs",
-                  state(o) === "In use" ? "font-semibold text-success" : "text-muted-foreground",
-                )}
-              >
-                {state(o)}
-              </span>
-            </PlainButton>
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="flex flex-wrap items-center gap-2 font-semibold">
+                    {TITLES[o]}
+                    {BETA.includes(o) && (
+                      <span className="rounded-full bg-warning/25 px-2 text-[11px] font-normal">
+                        Beta
+                      </span>
+                    )}
+                    {cloud && (
+                      <span className="rounded-full border border-warning px-2 text-[11px] text-warning">
+                        Notes leave this computer
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-xs text-foreground/80">{offText ?? TEXTS[o]}</span>
+                </span>
+                <span
+                  className={cn(
+                    "shrink-0 text-xs",
+                    state(o) === "In use" ? "font-semibold text-success" : "text-muted-foreground",
+                  )}
+                >
+                  {state(o)}
+                </span>
+              </PlainButton>
+              {selected === o && !off && (
+                <div
+                  role="group"
+                  aria-label={`Set up ${TITLES[o]}`}
+                  className="border-t bg-background/60 p-3"
+                >
+                  {testable(o) !== undefined && (
+                    <TestAi provider={testable(o) as ProviderConfig} persist={persist} />
+                  )}
+                  {setupOf(o)}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
@@ -271,29 +336,6 @@ export function AiChoice({
           </Select>
         </label>
       )}
-
-      {selected !== null &&
-        (!ready[selected] ||
-          selected === "phi" ||
-          selected === "foundry" ||
-          selected === "llama") && (
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                onSetUp(setUpTab(selected));
-              }}
-            >
-              {ready[selected] ? "Settings of the chosen AI" : "Set up the chosen AI"}
-            </Button>
-            <span className="text-xs text-muted-foreground">
-              {selected === "cloud" && !ready.cloud
-                ? "Add an OpenAI-compatible provider with its address and key under AI providers."
-                : "Opens Built-in AI or AI providers at the right place."}
-            </span>
-          </div>
-        )}
 
       <CloudConsentDialog
         open={asking !== null}

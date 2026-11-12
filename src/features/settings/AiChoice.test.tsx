@@ -5,13 +5,23 @@ import type { ProviderConfig } from "@/bindings/ProviderConfig";
 import type { Settings } from "@/bindings/Settings";
 import { aiOrder } from "@/lib/aiChoice";
 
-const apiMock = vi.hoisted(() => ({ appPlatform: vi.fn(), phiStatus: vi.fn() }));
+const apiMock = vi.hoisted(() => ({ appPlatform: vi.fn(), phiStatus: vi.fn(), aiTest: vi.fn() }));
 vi.mock("@/lib/api", () => ({
   api: apiMock,
   toApiError: (e: unknown) => ({ message: String(e) }),
 }));
 
+vi.mock("@/features/engine/FoundrySettings", () => ({
+  FoundrySettings: () => <p>Foundry setup</p>,
+}));
+vi.mock("@/features/engine/BuiltInAiSettings", () => ({
+  BuiltInAiSettings: () => <p>llama setup</p>,
+}));
+
 import { AiChoice } from "./AiChoice";
+
+const providers = <p>The providers</p>;
+const persist = vi.fn().mockResolvedValue(true);
 
 const lm: ProviderConfig = {
   id: "lmstudio-default",
@@ -65,7 +75,14 @@ describe("Settings → AI → Which AI Mimer uses", () => {
 
   it("turns on a cloud AI only after the box is ticked, and records the agreement", async () => {
     const onChange = vi.fn();
-    render(<AiChoice draft={settings()} onChange={onChange} onSetUp={vi.fn()} />);
+    render(
+      <AiChoice
+        draft={settings()}
+        onChange={onChange}
+        providersPanel={providers}
+        persist={persist}
+      />,
+    );
     const user = userEvent.setup();
     const list = await screen.findByRole("radiogroup", { name: "AI for Mimer" });
     expect(within(list).getByRole("radio", { name: /LM Studio/ })).toHaveTextContent("In use");
@@ -85,23 +102,78 @@ describe("Settings → AI → Which AI Mimer uses", () => {
 
   it("keeps the AI on this computer when the warning is closed", async () => {
     const onChange = vi.fn();
-    render(<AiChoice draft={settings()} onChange={onChange} onSetUp={vi.fn()} />);
+    render(
+      <AiChoice
+        draft={settings()}
+        onChange={onChange}
+        providersPanel={providers}
+        persist={persist}
+      />,
+    );
     const user = userEvent.setup();
     await user.click(await screen.findByRole("radio", { name: /Cloud AI/ }));
     await user.click(screen.getByRole("button", { name: "Keep the AI on this computer" }));
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it("sends an AI that is not set up to the place where it is set up", async () => {
-    const onSetUp = vi.fn();
+  it("shows the setup of the chosen AI right under its row, and only that one", async () => {
     const onChange = vi.fn();
-    render(<AiChoice draft={settings()} onChange={onChange} onSetUp={onSetUp} />);
+    render(
+      <AiChoice
+        draft={settings()}
+        onChange={onChange}
+        providersPanel={providers}
+        persist={persist}
+      />,
+    );
     const user = userEvent.setup();
     const foundry = await screen.findByRole("radio", { name: /Foundry Local/ });
     expect(foundry).toHaveTextContent("Not set up");
+    // The AI in use (LM Studio) shows its providers; the others show nothing yet.
+    expect(screen.getByRole("group", { name: /Set up LM Studio/ })).toHaveTextContent(
+      "The providers",
+    );
+    expect(screen.queryByText("Foundry setup")).toBeNull();
     await user.click(foundry);
+    // Choosing one that is not set up changes nothing: its setup opens instead.
     expect(onChange).not.toHaveBeenCalled();
-    await user.click(screen.getByRole("button", { name: "Set up the chosen AI" }));
-    expect(onSetUp).toHaveBeenCalledWith("builtin");
+    expect(screen.getByRole("group", { name: "Set up Foundry Local" })).toHaveTextContent(
+      "Foundry setup",
+    );
+    expect(screen.queryByText("The providers")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /Set up the chosen AI|Settings of the chosen AI/ }),
+    ).toBeNull();
+  });
+
+  it("has a Test it button under an AI that is set up, and none under one that is not", async () => {
+    render(
+      <AiChoice
+        draft={settings()}
+        onChange={vi.fn()}
+        providersPanel={providers}
+        persist={persist}
+      />,
+    );
+    const user = userEvent.setup();
+    expect(await screen.findByRole("button", { name: "Test it" })).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: /Foundry Local/ }));
+    expect(screen.queryByRole("button", { name: "Test it" })).toBeNull();
+  });
+
+  it("marks the built-in AIs as beta and recommends none of them", async () => {
+    render(
+      <AiChoice
+        draft={settings()}
+        onChange={vi.fn()}
+        providersPanel={providers}
+        persist={persist}
+      />,
+    );
+    const list = await screen.findByRole("radiogroup", { name: "AI for Mimer" });
+    expect(within(list).getByRole("radio", { name: /Foundry Local/ })).toHaveTextContent("Beta");
+    expect(within(list).getByRole("radio", { name: /LM Studio/ })).not.toHaveTextContent("Beta");
+    expect(screen.queryByText(/Recommended here/)).toBeNull();
+    expect(screen.getByText(/in beta/)).toBeInTheDocument();
   });
 });

@@ -10,9 +10,11 @@ pub mod export;
 pub mod external;
 pub mod foundry;
 pub mod git;
+pub mod helper;
 pub mod import;
 pub mod links;
 pub mod markdown;
+pub mod meta;
 pub mod order;
 pub mod phisilica;
 pub mod projects;
@@ -53,19 +55,16 @@ fn init_logging(dir: Option<std::path::PathBuf>) -> LogGuard {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
-            if let Some(w) = app.get_webview_window("main") {
-                let _ = w.unminimize();
-                let _ = w.show();
-                let _ = w.set_focus();
-            }
+            helper::show_main(app);
         }))
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         // The main window remembers its size and place (not whether it is shown: it starts hidden
         // and is shown when the app has loaded); the start screen window is never remembered.
         .plugin(
             tauri_plugin_window_state::Builder::default()
-                .with_denylist(&["splash"])
+                .with_denylist(&["splash", "quick"])
                 .with_state_flags(
                     tauri_plugin_window_state::StateFlags::all()
                         & !tauri_plugin_window_state::StateFlags::VISIBLE,
@@ -93,7 +92,9 @@ pub fn run() {
                     (settings::Settings::default(), Some(e.to_string()))
                 }
             };
+            let helper_choice = loaded.helper.clone();
             app.manage(AppState::new(loaded, settings_path, error));
+            helper::apply(app.handle(), &helper_choice);
             git::autosave::spawn_idle_task(app.handle().clone());
             engine::service::startup(app.handle());
             foundry::service::startup(app.handle());
@@ -112,6 +113,15 @@ pub fn run() {
             }
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 let app = window.app_handle().clone();
+                // With the helper on, closing the window only hides it; Quit is in the icon's menu.
+                if helper::keeps_running(&app)
+                    && !app.state::<AppState>().closing.load(Ordering::SeqCst)
+                {
+                    api.prevent_close();
+                    let _ = window.emit("app://flush", ());
+                    let _ = window.hide();
+                    return;
+                }
                 let state = app.state::<AppState>();
                 if state.current_vault().is_err() {
                     return;
@@ -165,6 +175,12 @@ pub fn run() {
             commands::projects::update_project,
             commands::projects::delete_project,
             commands::settings::get_settings,
+            commands::tasks::task_history_add,
+            commands::meta::meta_migration_status,
+            commands::meta::meta_migrate,
+            commands::helper::helper_status,
+            commands::helper::helper_check_key,
+            commands::helper::quick_close,
             commands::settings::update_settings,
             commands::settings::set_api_key,
             commands::settings::has_api_key,
@@ -174,6 +190,7 @@ pub fn run() {
             commands::ai::ai_chat,
             commands::ai::ai_inline,
             commands::ai::ai_cancel,
+            commands::ai::ai_test,
             commands::ai::get_proposals,
             commands::ai::apply_proposals,
             commands::ai::discard_proposals,
