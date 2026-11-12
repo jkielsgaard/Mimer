@@ -7,6 +7,7 @@ import {
   FolderPlus,
   FolderSearch,
   ListTree,
+  Network,
   Pencil,
   Settings2,
   Trash2,
@@ -167,6 +168,13 @@ function ProjectTree({ project, onAction }: { project: Project; onAction: (a: Ac
             }}
           >
             <ListTree className="size-4" aria-hidden /> Create index page
+          </ContextMenuItem>
+          <ContextMenuItem
+            onSelect={() => {
+              useUiStore.getState().planFromProject(project.folder);
+            }}
+          >
+            <Network className="size-4" aria-hidden /> Make a plan of this project
           </ContextMenuItem>
           <ContextMenuItem
             onSelect={() => {

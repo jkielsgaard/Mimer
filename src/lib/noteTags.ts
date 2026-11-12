@@ -26,12 +26,22 @@ export const NOTE_TAGS: readonly NoteTag[] = [
     label: "Pinned",
     does: "The note is listed under Pinned on the start page.",
   },
+  {
+    tag: "plan",
+    label: "Plan",
+    does: "Its list is the ideas of a plan, shown as an outline or a map under Plans.",
+  },
+  {
+    tag: "plan-finished",
+    label: "Plan finished",
+    does: "The plan is listed under Finished in Plans.",
+  },
 ];
 
 /** The names of Mimer's own tags: the tags that do something. Every other tag is the person's. */
 export const SYSTEM_TAGS: readonly string[] = NOTE_TAGS.map((t) => t.tag);
 
-/** Whether a tag is one of Mimer's own (`meeting`, `epic`, `pinned`). */
+/** Whether a tag is one of Mimer's own (`meeting`, `epic`, `pinned`, `plan`). */
 export function isSystemTag(tag: string): boolean {
   return SYSTEM_TAGS.includes(tag.toLowerCase());
 }

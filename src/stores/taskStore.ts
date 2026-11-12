@@ -77,9 +77,9 @@ interface TaskState {
   /** Opens an epic on its page. */
   openEpic: (path: string) => void;
   /** Makes a new epic (a note in `Tasks/`) and opens it, unless `open` is false. Resolves to its note. */
-  createEpic: (title: string, open?: boolean) => Promise<string | null>;
+  createEpic: (title: string, open?: boolean, folder?: string) => Promise<string | null>;
   /** The epic note for a note: itself when it is in `Tasks/`, else the one made for it. */
-  epicFor: (note: string) => Promise<string | null>;
+  epicFor: (note: string, folder?: string) => Promise<string | null>;
   select: (ref: TaskRef | null) => void;
   /** Opens a task on the task page. */
   open: (t: Task) => void;
@@ -247,10 +247,11 @@ export const useTaskStore = create<TaskState>((set, get) => {
         },
       });
     },
-    createEpic: async (title, open = true) => {
+    createEpic: async (title, open = true, folder) => {
       try {
         await flushPendingWrites();
-        const e = await api.epicCreate(title);
+        const e =
+          folder === undefined ? await api.epicCreate(title) : await api.epicCreate(title, folder);
         set((s) => ({ epics: [...s.epics.filter((x) => x.path !== e.path), e] }));
         await useVaultStore.getState().refreshTree();
         if (open) get().openEpic(e.path);
@@ -260,10 +261,11 @@ export const useTaskStore = create<TaskState>((set, get) => {
         return null;
       }
     },
-    epicFor: async (note) => {
+    epicFor: async (note, folder) => {
       try {
         await flushPendingWrites();
-        const e = await api.epicForNote(note);
+        const e =
+          folder === undefined ? await api.epicForNote(note) : await api.epicForNote(note, folder);
         set((s) => ({ epics: [...s.epics.filter((x) => x.path !== e.path), e] }));
         await useVaultStore.getState().refreshTree();
         return e.path;

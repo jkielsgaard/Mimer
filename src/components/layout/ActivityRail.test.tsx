@@ -14,6 +14,14 @@ describe("ActivityRail", () => {
     });
   });
 
+  it("puts Plans right under the house and Ideas last, and shows each name on hover", () => {
+    render(<ActivityRail />);
+    const names = screen.getAllByRole("tab").map((t) => t.getAttribute("aria-label"));
+    expect(names[0]).toBe("Plans");
+    expect(names[names.length - 1]).toBe("Ideas");
+    expect(screen.getAllByText("Plans").length).toBeGreaterThan(0);
+  });
+
   it("marks the open panel and switches to another", async () => {
     render(<ActivityRail />);
     const user = userEvent.setup();

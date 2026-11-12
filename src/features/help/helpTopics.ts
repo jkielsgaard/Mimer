@@ -10,6 +10,7 @@ import projectsMd from "./topics/projects.md?raw";
 import searchMd from "./topics/search.md?raw";
 import shortcutsMd from "./topics/shortcuts.md?raw";
 import startMd from "./topics/start.md?raw";
+import plansMd from "./topics/plans.md?raw";
 import tasksMd from "./topics/tasks.md?raw";
 import templatesMd from "./topics/templates.md?raw";
 import titleMd from "./topics/title.md?raw";
@@ -63,6 +64,12 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     title: "The built-in AI",
     summary: "Mimer without LM Studio: download, load, unload",
     body: builtinMd,
+  },
+  {
+    id: "plans",
+    title: "Plans",
+    summary: "Break something big down into ideas, epics and tasks",
+    body: plansMd,
   },
   {
     id: "helper",

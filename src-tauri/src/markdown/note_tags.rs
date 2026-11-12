@@ -3,9 +3,10 @@
 
 use super::frontmatter;
 
-/// Mimer's own tags: the tags that do something (an epic, a meeting, a pinned note). Every other
-/// tag belongs to the person. A rewrite of a note by the AI never adds or takes away one of these.
-pub const SYSTEM_TAGS: [&str; 3] = ["meeting", "epic", "pinned"];
+/// Mimer's own tags: the tags that do something (an epic, a meeting, a pinned note, a plan and a
+/// finished plan). Every other tag belongs to the person. A rewrite of a note by the AI never adds
+/// or takes away one of these.
+pub const SYSTEM_TAGS: [&str; 5] = ["meeting", "epic", "pinned", "plan", "plan-finished"];
 
 /// The rewritten note with the same Mimer tags as the original: one the model added is taken off
 /// and one it dropped is put back. The person's own tags are left as the model wrote them.
