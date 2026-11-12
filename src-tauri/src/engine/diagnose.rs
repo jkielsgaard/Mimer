@@ -65,7 +65,7 @@ pub fn diagnose(exit_code: Option<i32>, log: &[String], ctx: &Context) -> Proble
             "The port is already in use",
             &[
                 &format!("Another program is using port {}.", ctx.port),
-                "Press Wake Mimer again: Mimer picks a new free port each time.",
+                "Press Load AI again: Mimer picks a new free port each time.",
                 "If it keeps happening, close programs that listen on network ports, or restart the computer.",
             ],
             details,
@@ -156,7 +156,7 @@ pub fn diagnose(exit_code: Option<i32>, log: &[String], ctx: &Context) -> Proble
             "A Windows runtime file is missing",
             &[
                 "Install \"Microsoft Visual C++ Redistributable 2015-2022\", the 64-bit (x64) version, not x86: https://aka.ms/vs/17/release/vc_redist.x64.exe . The message may name vcruntime140_1.dll or msvcp140.dll; both are in that package. If it is already installed, choose Repair.",
-                "Check in Settings → Apps that the list has \"Microsoft Visual C++ 2015-2022 Redistributable (x64)\" with version 14.3 or higher, then press Wake Mimer again.",
+                "Check in Settings → Apps that the list has \"Microsoft Visual C++ 2015-2022 Redistributable (x64)\" with version 14.3 or higher, then press Load AI again.",
                 "If you use an Nvidia engine, update the Nvidia driver too.",
                 "If it still fails, use Remove files, then download the engine again: an antivirus program may have removed part of it.",
             ],
@@ -182,7 +182,7 @@ pub fn diagnose(exit_code: Option<i32>, log: &[String], ctx: &Context) -> Proble
             "A system library is missing",
             &[
                 &format!("The engine needs a library that is not installed: {lib}"),
-                "Install the package that provides it (the name is in the line above), then press Wake Mimer again.",
+                "Install the package that provides it (the name is in the line above), then press Load AI again.",
                 "For a graphics engine, the graphics driver packages must be installed. \"CPU only\" needs no extra libraries.",
             ],
             details,
@@ -248,7 +248,7 @@ pub fn diagnose(exit_code: Option<i32>, log: &[String], ctx: &Context) -> Proble
             &[
                 "Security software may be blocking the program. Allow \"llama-server\" in your antivirus or security program.",
                 "On Linux, check that the folder is not mounted with the noexec option.",
-                "Then press Wake Mimer again.",
+                "Then press Load AI again.",
             ],
             details,
         );
@@ -257,7 +257,7 @@ pub fn diagnose(exit_code: Option<i32>, log: &[String], ctx: &Context) -> Proble
         return problem(
             "The engine stopped without saying why",
             &[
-                "Press Wake Mimer again.",
+                "Press Load AI again.",
                 "If it keeps happening, open Show details and look at the last lines.",
             ],
             details,
@@ -266,7 +266,7 @@ pub fn diagnose(exit_code: Option<i32>, log: &[String], ctx: &Context) -> Proble
     problem(
         "The engine stopped",
         &[
-            "Press Wake Mimer again.",
+            "Press Load AI again.",
             "Look at the last lines under Show details: they usually say what is wrong.",
             "If a graphics engine fails, try \"CPU only\" in Settings → Built-in AI to see if the model itself works.",
         ],
@@ -292,14 +292,14 @@ pub fn diagnose_spawn(error: &std::io::Error, program: &std::path::Path) -> Prob
             &[
                 "Security software or a folder setting is blocking the program.",
                 "Allow \"llama-server\" in your antivirus program, and on Linux check that the folder is not mounted noexec.",
-                "Then press Wake Mimer again.",
+                "Then press Load AI again.",
             ],
             details,
         ),
         _ => problem(
             "The engine could not be started",
             &[
-                "Press Wake Mimer again.",
+                "Press Load AI again.",
                 "If it keeps happening, use Remove files and download the engine again.",
             ],
             details,

@@ -148,7 +148,7 @@ Download the build for your system from the **Releases** page. There are builds 
 
 ### Option A: the built-in AI (no other program needed)
 
-Open **Settings → AI** and choose the engine. **Foundry Local** (Microsoft; Windows 11 24H2 or later, and Linux; the only engine in the Microsoft Store version) picks the best hardware by itself, including a neural processor (NPU), and offers Qwen, Phi, Gemma and other models. The first time, it asks before it downloads the hardware parts from Microsoft. **llama.cpp** (Windows and Linux, not in the Store version) works with Nvidia, AMD and Intel graphics cards and with Google's Gemma models. Choose a model and press **Download**, then press **Wake** in the status bar. **Sleep Mimer** unloads the model and frees the memory. On a Copilot+ PC, the Store version can also use **Phi Silica**, the small model built into Windows.
+Open **Settings → AI** and choose the engine. **Foundry Local** (Microsoft; Windows 11 24H2 or later, and Linux; the only engine in the Microsoft Store version) picks the best hardware by itself, including a neural processor (NPU), and offers Qwen, Phi, Gemma and other models. The first time, it asks before it downloads the hardware parts from Microsoft. **llama.cpp** (Windows and Linux, not in the Store version) works with Nvidia, AMD and Intel graphics cards and with Google's Gemma models. Choose a model and press **Download**, then press **Wake** in the status bar. **Unload AI** unloads the model and frees the memory. On a Copilot+ PC, the Store version can also use **Phi Silica**, the small model built into Windows.
 
 ### Option B: LM Studio
 

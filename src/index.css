@@ -333,3 +333,15 @@ html[data-follow-line] .cm-content .cm-line {
 html[data-follow-line] .cm-content .cm-line.cm-follow-active {
   opacity: 1;
 }
+
+/* A diagram proposed by the AI, drawn before it is written anywhere. */
+.diagram-preview .cm-mermaid-error {
+  color: var(--destructive);
+  font-size: 12px;
+}
+.diagram-preview pre {
+  margin-top: 6px;
+  font-size: 11px;
+  white-space: pre-wrap;
+  color: var(--muted-foreground);
+}

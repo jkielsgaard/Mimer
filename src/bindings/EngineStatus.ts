@@ -10,7 +10,7 @@ import type { Problem } from "./Problem";
  */
 export type EngineStatus = { state: EngineState, 
 /**
- * One line for the user: "Mimer is asleep", "Loading the model… 12 s", …
+ * One line for the user: "The AI is not loaded", "Loading the model… 12 s", …
  */
 message: string, problem: Problem | null, install: InstallProgress | null, 
 /**

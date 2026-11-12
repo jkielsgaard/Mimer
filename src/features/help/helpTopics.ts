@@ -61,7 +61,7 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
   {
     id: "builtin",
     title: "The built-in AI",
-    summary: "Mimer without LM Studio: download, wake, sleep",
+    summary: "Mimer without LM Studio: download, load, unload",
     body: builtinMd,
   },
   {

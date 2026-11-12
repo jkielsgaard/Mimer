@@ -151,7 +151,7 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 
 ## Use the built-in AI (optional)
 
-Open **Settings → AI**, choose your hardware and a model, press **Download**, and then **Wake** in the status bar. The help (F1) has a topic called The built-in AI.
+Open **Settings → AI**, choose your hardware and a model, press **Download**, and then **Load AI** in the status bar. The help (F1) has a topic called The built-in AI.
 
 ## Start the app (both systems)
 

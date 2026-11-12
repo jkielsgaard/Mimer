@@ -6,10 +6,10 @@
 # through the empty crate in scripts/foundry-native-fetch. Needs Rust and internet.
 #
 #   scripts/fetch-foundry-native.sh                 # the version pinned below
-#   FOUNDRY_LOCAL_RUNTIME_VERSION=2.2.0 scripts/fetch-foundry-native.sh
+#   FOUNDRY_LOCAL_RUNTIME_VERSION=2.4.0 scripts/fetch-foundry-native.sh
 set -euo pipefail
 
-version="${FOUNDRY_LOCAL_RUNTIME_VERSION:-2.1.0}"
+version="${FOUNDRY_LOCAL_RUNTIME_VERSION:-2.4.1}"
 root="$(cd "$(dirname "$0")/.." && pwd)"
 dest="$root/src-tauri/foundry-native"
 manifest="$root/scripts/foundry-native-fetch/Cargo.toml"

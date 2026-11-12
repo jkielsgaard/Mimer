@@ -18,7 +18,7 @@ Run these on the build that is going to be released (the installer or the AppIma
 - [ ] Press **Ctrl+S** or wait: History of the note lists the change; restore the earlier version and then undo it.
 - [ ] Settings → Vault → Backup: choose a folder, **Back up now**: "Backed up today …".
 - [ ] Settings → General → Theme: pick Midnight and Save; restart: the theme stays.
-- [ ] Settings → AI: the engine you chose can **Download** a small model (Windows and Linux installer), then **Wake**; the status bar chip changes.
+- [ ] Settings → AI: the engine you chose can **Download** a small model (Windows and Linux installer), then **Load AI**; the status bar chip changes.
 - [ ] One AI command with its review: select a sentence with a spelling mistake → **Fix**; the change is shown beside the original; **Accept** writes it, and **Undo last AI change** brings it back.
 - [ ] With no AI running, an AI button is greyed out and says why; everything else still works.
 - [ ] Help → **What's new** shows the changes of this version; **Help → Check for new version…** opens the releases page in the browser.
@@ -160,16 +160,16 @@ Check with `git log --oneline` in the vault folder.
 - [ ] Outside the Store version there is no Phi Silica card. In the **Store version on a Copilot+ PC**: a third card **Windows AI · Phi Silica**, llama.cpp greyed out. "Phi Silica on this PC" shows Access, This PC and The model (green, or the reason in plain words with Windows' answer in grey). **Test Phi Silica** answers the test sentence; **Use Phi Silica for my notes** makes it the AI; Fix on a selected paragraph and a chat question about the open note work; the chat says tools are not available. **Copy for a bug report** copies the lines. On a PC that is not Copilot+: the card is greyed out with the reason, and Foundry Local still works.
 - [ ] **Settings → AI**: one list "Which AI Mimer uses", in the order for this computer (Store on Copilot+: Phi Silica, Foundry Local, LM Studio, Cloud AI; Windows installer: llama.cpp first; Linux: llama.cpp, LM Studio, Foundry Local). Each line shows its state; choosing a ready one makes it Mimer's AI; the chosen row shows its own setup right under it. No line says Recommended; the built-in AIs are marked **Beta**. **Test it** (under an AI that is set up) sends one short question and shows the answer, or the error with **Copy for a bug report**.
 - [ ] **Cloud AI**: add an OpenAI-compatible provider with a cloud address and key; choose Cloud AI: the warning lists what is sent, **Use the cloud AI** is greyed out until "I understand…" is ticked; **Keep the AI on this computer** changes nothing. After using it: the status bar shows **Cloud AI**, the chat note is orange ("your notes go to …"), and a chat answer comes from it. A project with **Local AI only** uses a local AI instead. Choose another AI, then Cloud AI again: the warning comes again.
-- [ ] Foundry Local list: every chat model (also "No tools"), each with "good for", maker, size, runs on, reads about N words, licence. Search, Writing/Reasoning/Code, Can use tools, Downloaded, Runs on, Size and Sort work; **All Foundry Local models at Microsoft** opens the browser. Download a model without tools: text commands work, the chat says tools are not available.
+- [ ] Foundry Local list (a drop-down: the chosen model in a box, pressing it opens search, the filters and the list, which scrolls inside the panel; choosing closes it): every chat model (also "No tools"), each with "good for", maker, size, runs on, reads about N words, licence. Search, Writing/Reasoning/Code, Can use tools, Downloaded, Runs on, Size and Sort work; **All Foundry Local models at Microsoft** opens the browser. Download a model without tools: text commands work, the chat says tools are not available.
 - [ ] Translate to English on Danish text (Phi Silica and a Foundry model): the answer is in English.
 - [ ] Foundry Local (Windows 11 24H2 or later; Linux is experimental), on a computer that has never used it (or after **Remove all**): there is no model list, only the question about the hardware parts, and nothing is downloaded. **Use only the processor**: the list shows CPU models, **Find my hardware** is offered, and downloading a model or waking it fetches no hardware parts. **Download and find my hardware**: progress, then the list shows GPU/NPU where the computer can. A small model downloads.
-- [ ] **Wake** in the status bar loads the model; **Sleep** frees the memory (no `llama-server` or helper `mimer` process left). An AI command while asleep wakes it by itself. Closing or killing Mimer stops the engine. **Sleep after** 1 minute works.
+- [ ] **Load AI** (status bar, and in the settings of the AI) loads the model; **Unload AI** frees the memory (no `llama-server` or helper `mimer` process left). An AI command while the AI is not loaded loads it by itself. Closing or killing Mimer stops the engine. **Sleep after** 1 minute works.
 - [ ] A problem (too large a context, missing driver) shows a red box with steps, **Show details** and **Copy details**.
 - [ ] **Remove** a model and all files (with a confirmation) cleans the folder shown in the settings.
 - [ ] Nothing from the built-in AI is reachable from outside: `curl http://127.0.0.1:<port>/v1/models` without a key is refused.
 - [ ] **Settings → AI → LM Studio, or another AI on this computer** → LM Studio: **Load models**, pick one, **Test connection** says connected. An OpenAI-compatible provider with a non-local address shows that it is not used.
 - [ ] An API key shows "Key stored" and is **not** in `settings.json` (it is in the system keychain).
-- [ ] The status bar AI chip: green when ready, grey when asleep (with **Wake**), blue while working (with **Stop**), red with **Fix** on a problem. Clicking it shows the model and where it runs.
+- [ ] The status bar AI chip: green when ready, grey when not loaded (with **Load AI**), blue while working (with **Stop**), red with **Fix** on a problem. Clicking it shows the model and where it runs.
 - [ ] First run with no model: the welcome appears once; **Skip setup** does not bring it back.
 
 ### 11. AI where you work (AI)
@@ -206,7 +206,7 @@ Check with `git log --oneline` in the vault folder.
 
 ### 14. Without an AI
 
-- [ ] No provider chosen (or the built-in AI asleep and not set up): every AI button is greyed out with the reason and **Set up AI**. Notes, search, tasks, ideas, Focus, the calendar, outline, links, history, images, import and export all work; the system spellcheck still underlines.
+- [ ] No provider chosen (or the built-in AI not loaded and not set up): every AI button is greyed out with the reason and **Set up AI**. Notes, search, tasks, ideas, Focus, the calendar, outline, links, history, images, import and export all work; the system spellcheck still underlines.
 
 ### 15. Projects
 
@@ -364,3 +364,4 @@ Check with `git log --oneline` in the vault folder.
 - [ ] **Old vault (a note with `tags: [pinned]`, a task line with `for:"…"`):** opening it asks **Move what Mimer keeps to its own file?** with the counts, and says the next version only reads the new place. **Not now**: nothing changes and the pin and the waiting still work. **Move them now**: the tag and the words are gone from the notes, the pins and the waiting still show, History has the notes as they were, and opening the vault again does not ask.
 - [ ] Break `.vault/meta.json` (type nonsense in it): Mimer starts, pins show as empty, and pinning something says the file cannot be read and leaves it as it is.
 - [ ] The file is in the vault's Git history (File → History of the vault, or `git log -- .vault/meta.json`) after the next autosave.
+- [ ] **Foundry Local crash:** with a model that crashes the engine (some AMD neural-processor models), **Test it** answers within seconds with "the Foundry Local engine crashed", the code `0xC0000005 (access violation …)` and what to try; Mimer is still running, and **Load AI** works again. A model for the graphics card or the processor answers the test.

@@ -66,9 +66,13 @@ pub fn unavailable_reason<R: Runtime>(app: &AppHandle<R>) -> Option<String> {
 
 /// A caution that goes with Foundry Local on this system.
 fn note() -> Option<String> {
-    cfg!(target_os = "linux").then(|| {
-        "Foundry Local on Linux is new. On some systems its engine crashed when a model was downloaded. Mimer itself is not affected when that happens (the engine runs in a separate process); use llama.cpp or LM Studio then.".into()
-    })
+    if cfg!(target_os = "linux") {
+        Some("Foundry Local on Linux is new. On some systems its engine crashed when a model was downloaded. Mimer itself is not affected when that happens (the engine runs in a separate process); use llama.cpp or LM Studio then.".into())
+    } else if cfg!(windows) {
+        Some("On some AMD computers the models for the neural processor (NPU) crash Foundry Local's engine, and some new models do on the graphics card. Mimer is not affected when that happens (the engine runs in a separate process) and says so. A model for the graphics card (GPU) or the processor (CPU) is the safe choice; keep the drivers up to date.".into())
+    } else {
+        None
+    }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -131,8 +135,8 @@ pub fn status<R: Runtime>(app: &AppHandle<R>) -> FoundryStatus {
     } else {
         match st {
             EngineState::NotInstalled => "No Foundry Local model is downloaded yet".into(),
-            EngineState::Asleep => "Mimer is asleep".into(),
-            EngineState::Awake => "Mimer is awake".into(),
+            EngineState::Asleep => "The AI is not loaded".into(),
+            EngineState::Awake => "The AI is loaded".into(),
             _ => String::new(),
         }
     };
@@ -334,20 +338,18 @@ fn problem_from(what: &str, end: JobEnd) -> Option<Problem> {
             }
             if crashed {
                 steps.push(
-                    "The engine stopped without a message. Mimer itself was not affected. Try again; if it repeats, use the built-in AI with llama.cpp or LM Studio instead, and send the details.".into(),
+                    "The engine stopped without a message. Mimer itself was not affected.".into(),
                 );
+                steps.push(
+                    "This is a fault inside Foundry Local or the hardware part it uses (the neural processor or the graphics card driver), not in Mimer. Models for the neural processor (NPU) are the ones that crash most, on some AMD computers. Choose a model that runs on the graphics card (GPU) or the processor (CPU), and update the drivers, including the NPU driver.".into(),
+                );
+                steps.push("If it repeats, use LM Studio instead, and send the details.".into());
             } else {
                 steps.push(
                     "Check the internet connection and that Windows is up to date (Foundry Local needs Windows 11 version 24H2 or later).".into(),
                 );
             }
-            let mut details = format!(
-                "exit: {}",
-                exit.map_or("unknown".into(), |e| format!(
-                    "code {:?}, signal {:?}",
-                    e.code, e.signal
-                ))
-            );
+            let mut details = format!("exit: {}", exit.map_or("unknown".into(), |e| e.describe()));
             details.push('\n');
             details.push_str(&log.join("\n"));
             Some(Problem {
@@ -446,7 +448,7 @@ fn begin_install<R: Runtime>(
             Phase::Installing => return Ok(()),
             Phase::Awake | Phase::Waking | Phase::Sleeping => {
                 return Err(AppError::Conflict(
-                    "Put Mimer to sleep before downloading another model".into(),
+                    "Unload the AI before downloading another model".into(),
                 ))
             }
             Phase::Idle => {}
@@ -746,7 +748,7 @@ async fn wake_task<R: Runtime>(app: &AppHandle<R>, alias: &str, cancel: &Cancell
             }
             with_inner(app, |i| {
                 i.phase = Phase::Awake;
-                i.message = "Mimer is awake".into();
+                i.message = "The AI is loaded".into();
                 i.active_model = Some(alias.to_string());
                 i.active_device = device;
                 i.last_used = Instant::now();
@@ -832,7 +834,7 @@ pub async fn sleep<R: Runtime>(app: &AppHandle<R>) -> AppResult<()> {
         let running = inner.running.clone();
         if running.is_some() {
             inner.phase = Phase::Sleeping;
-            inner.message = "Putting Mimer to sleep…".into();
+            inner.message = "Unloading the AI…".into();
         } else if inner.phase != Phase::Waking {
             inner.phase = Phase::Idle;
             inner.message = String::new();
@@ -847,7 +849,7 @@ pub async fn sleep<R: Runtime>(app: &AppHandle<R>) -> AppResult<()> {
             .map_err(|e| AppError::Io(e.to_string()))?;
         with_inner(app, |i| {
             i.phase = Phase::Idle;
-            i.message = "Mimer is asleep".into();
+            i.message = "The AI is not loaded".into();
         });
     }
     emit(app);
@@ -975,11 +977,10 @@ pub fn require_awake(state: &AppState, provider: &ProviderConfig) -> AppResult<(
     match inner.phase {
         Phase::Awake => Ok(()),
         Phase::Waking => Err(AppError::Provider(
-            "Mimer is still waking up. Wait until the bar says “Mimer is awake”.".into(),
+            "The AI is still loading. Wait until the bar says “The AI is loaded”.".into(),
         )),
         _ => Err(AppError::Provider(
-            "Mimer is asleep. Press “Wake Mimer” in the Mimer tab to load the model, then try again."
-                .into(),
+            "The AI is not loaded. Press “Load AI” in the status bar, then try again.".into(),
         )),
     }
 }
@@ -1074,7 +1075,7 @@ mod tests {
             context_tokens: 8000,
         };
         let err = require_awake(&state, &cfg).unwrap_err().to_string();
-        assert!(err.contains("Wake Mimer"), "{err}");
+        assert!(err.contains("Load AI"), "{err}");
         state.foundry.inner.lock().unwrap().phase = Phase::Awake;
         require_awake(&state, &cfg).unwrap();
         cfg.kind = ProviderKind::LmStudio;

@@ -125,10 +125,40 @@ pub async fn discard_proposals(state: State<'_, AppState>, set_id: Uuid) -> Resu
 /// Asks an AI on this computer one short question (no notes in it), for "Test it" in Settings.
 #[tauri::command]
 pub async fn ai_test(
+    app: AppHandle,
     state: State<'_, AppState>,
     provider_id: String,
 ) -> Result<AiTestResult, AppError> {
     let settings = state.settings_snapshot();
     let key = crate::settings::keychain::get_key(&provider_id);
-    Ok(selftest::run(&settings, &provider_id, key.as_deref()).await)
+    let started = std::time::Instant::now();
+    let test = selftest::run(&settings, &provider_id, key.as_deref());
+    if provider_id != crate::foundry::FOUNDRY_ID {
+        return Ok(test.await);
+    }
+    // Foundry Local's engine runs in a process of its own. If it crashes while the question is
+    // asked, say so at once, and do not wait for the answer that will never come.
+    tokio::select! {
+        result = test => Ok(result),
+        problem = foundry_crash(&app) => Ok(AiTestResult {
+            ok: false,
+            provider: "Built-in AI · Foundry Local".into(),
+            answer: String::new(),
+            error: format!("{}. {}\n{}", problem.title, problem.steps.join(" "), problem.details),
+            millis: u32::try_from(started.elapsed().as_millis()).unwrap_or(u32::MAX),
+        }),
+    }
+}
+
+/// Resolves with the problem when Foundry Local's engine has stopped by itself.
+async fn foundry_crash(app: &AppHandle) -> crate::engine::Problem {
+    loop {
+        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        let status = crate::foundry::service::status(app);
+        if status.state == crate::engine::EngineState::Error {
+            if let Some(problem) = status.problem {
+                return problem;
+            }
+        }
+    }
 }

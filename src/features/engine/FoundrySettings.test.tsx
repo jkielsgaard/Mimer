@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { FoundryModel } from "@/bindings/FoundryModel";
@@ -69,10 +69,14 @@ describe("Settings → AI → Foundry Local", () => {
     });
   });
 
-  it("lists the models with size and where they run, and explains the download", () => {
+  it("lists the models with size and where they run, and explains the download", async () => {
     render(<FoundrySettings draft={settings()} onChange={onChange} />);
-    expect(screen.getByRole("radio", { name: /qwen3-4b/ })).toHaveTextContent("runs on NPU");
-    expect(screen.getByRole("radio", { name: /qwen3-0.6b/ })).toHaveTextContent("593 MB");
+    // The list is a drop-down: closed until the model box is pressed.
+    expect(screen.queryByRole("listbox", { name: "Foundry Local models" })).toBeNull();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Model" }));
+    expect(screen.getByRole("option", { name: /qwen3-4b/ })).toHaveTextContent("runs on NPU");
+    expect(screen.getByRole("option", { name: /qwen3-0.6b/ })).toHaveTextContent("593 MB");
+    expect(screen.getByText("2 of 2 models")).toBeInTheDocument();
     const box = screen.getByTestId("foundry-download-explained");
     expect(box).toHaveTextContent("Foundry Local is part of Mimer");
     expect(box).toHaveTextContent("Nothing is downloaded until you press Download");
@@ -142,7 +146,11 @@ describe("Settings → AI → Foundry Local", () => {
   it("downloads the chosen model, keeps the open Settings from undoing it, and makes it Mimer's", async () => {
     render(<FoundrySettings draft={settings()} onChange={onChange} />);
     const user = userEvent.setup();
-    await user.click(screen.getByRole("radio", { name: /qwen3-4b/ }));
+    await user.click(screen.getByRole("button", { name: "Model" }));
+    await user.click(screen.getByRole("option", { name: /qwen3-4b/ }));
+    // Choosing closes the list, and the model is shown in the box.
+    expect(screen.queryByRole("listbox", { name: "Foundry Local models" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Model" })).toHaveTextContent("qwen3-4b");
     await user.click(screen.getByRole("button", { name: "Download" }));
     expect(install).toHaveBeenCalledWith("qwen3-4b", true);
     const next = onChange.mock.calls[0]?.[0] as Settings;
@@ -220,20 +228,24 @@ describe("Settings → AI → Foundry Local", () => {
       ],
     });
     render(<FoundrySettings draft={settings()} onChange={onChange} />);
-    const r1 = screen.getByRole("radio", { name: /deepseek-r1-7b/ });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Model" }));
+    const r1 = screen.getByRole("option", { name: /deepseek-r1-7b/ });
     expect(r1).toHaveTextContent("No tools");
     expect(r1).toHaveTextContent(/Reasons step by step/);
-    expect(screen.getByRole("radio", { name: /qwen3-4b/ })).toHaveTextContent(
+    expect(screen.getByRole("option", { name: /qwen3-4b/ })).toHaveTextContent(
       "reads about 25k words",
     );
-    const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Code" }));
-    expect(screen.getAllByRole("radio").map((r) => r.textContent)).toEqual([
-      expect.stringContaining("qwen2.5-coder-7b"),
-    ]);
+    const list = screen.getByRole("listbox", { name: "Foundry Local models" });
+    expect(
+      within(list)
+        .getAllByRole("option")
+        .map((r) => r.textContent),
+    ).toEqual([expect.stringContaining("qwen2.5-coder-7b")]);
     await user.click(screen.getByRole("button", { name: "All" }));
     await user.click(screen.getByRole("checkbox", { name: "Can use tools" }));
-    expect(screen.queryByRole("radio", { name: /deepseek/ })).toBeNull();
+    expect(screen.queryByRole("option", { name: /deepseek/ })).toBeNull();
     await user.type(screen.getByLabelText("Find a model"), "nothing like this");
     expect(screen.getByTestId("foundry-no-match")).toBeInTheDocument();
   });

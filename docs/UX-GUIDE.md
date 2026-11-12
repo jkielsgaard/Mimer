@@ -21,7 +21,7 @@ Mimer is a desktop app for Markdown notes with a local AI. It is calm and dense:
 - **English, sentence case** in every button, label and title: "Make an epic", "Pin to the start page", "Open the start page when Mimer starts".
 - **Write from the person's side.** Name things as they see them: "Quick notes", "the hardware parts", "Working on"; never internal names (`captureKind`, EP).
 - **A button says exactly what happens**: "Save task", "Delete", "Download and find my hardware". The toast after it says what was done: "Saved the task in Work." with **Open**.
-- **Short, plain sentences.** No exclamation marks, no emoji, no apologies. An error says what went wrong and what to do: "Put Mimer to sleep before downloading another model".
+- **Short, plain sentences.** No exclamation marks, no emoji, no apologies. An error says what went wrong and what to do: "Unload the AI before downloading another model".
 - **Confirm titles are questions with the name in curly quotes**: "Delete the meeting “Weekly with Mette”?". The description says what goes and what is kept: "…they stay in the version history, so they can be brought back."
 - **Empty states name what will appear and how to add the first**: "No meetings yet. A meeting is a note with the tag `meeting`. Press **New meeting**…".
 - **Help text** lives in a `?` (InfoHint) next to the thing, with "Read more" to the guide. Do not put paragraphs on the screen when a `?` will do.

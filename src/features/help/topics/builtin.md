@@ -9,21 +9,21 @@ Mimer can run its own AI **on this computer**, so you do not need LM Studio. You
 3. Choose a **model**. **Gemma 4 12B** is the recommended one and needs about 12 GB of memory. **E4B** and **E2B** are lighter. You can also add your own `.gguf` file.
 4. Press **Download**. This fetches two things, and nothing is downloaded before you press it: the **engine** (the open-source program llama.cpp, MIT licence) from github.com, and the **model** (Google Gemma 4, Apache-2.0) from huggingface.co. Together they are several GB, shown before you start, and they take about as much disk space. The files are checked after the download and kept in Mimer's own folder. If the connection breaks, press Download again: it continues where it stopped.
 
-## Wake and sleep
+## Load and unload
 
-**Wake** in the status bar loads the model into memory. It takes some seconds to a minute. You do not have to press it first: when you use an AI command or send a question while Mimer is asleep, he is woken by himself. **Sleep Mimer** unloads the model and gives the memory back, so use it when you need the memory for something else. Closing Mimer, or a crash, also stops it. In Settings you can choose that Mimer sleeps by itself after some idle minutes.
+**Load AI** loads the model into memory. It takes some seconds to a minute. The button is in the status bar and in the settings of the AI. You do not have to press it first: when you use an AI command or send a question while the AI is not loaded, Mimer loads it by itself. **Unload AI** (in the same two places) unloads the model and gives the memory back, so use it when you need the memory for something else. Closing Mimer, or a crash, also unloads it. In Settings you can choose that Mimer unloads it by itself after some idle minutes.
 
 ## When something goes wrong
 
-A red box says what happened and what to do, step by step. **Show details** has the engine's own last lines, and **Copy details** copies them. The most common causes are too little memory (lower the context size, use less of the graphics card, or choose a lighter model), an out-of-date graphics driver (update it, or choose CPU only), and security software blocking the engine.
+A red box says what happened and what to do, step by step. If Foundry Local's engine crashes (the code `0xC0000005`, "access violation"), it is a fault inside Foundry Local or the hardware part it uses, and Mimer itself is not affected. Models for the neural processor (NPU) crash most, on some AMD computers: choose a model that runs on the graphics card (GPU) or the processor (CPU), and keep the drivers up to date, including the NPU driver. **Show details** has the engine's own last lines, and **Copy details** copies them. The most common causes are too little memory (lower the context size, use less of the graphics card, or choose a lighter model), an out-of-date graphics driver (update it, or choose CPU only), and security software blocking the engine.
 
 ## Settings
 
-They apply the next time Mimer is woken. If Mimer is awake, the bar tells you to sleep and wake him.
+They apply the next time the AI is loaded. If it is loaded now, press **Unload AI** and then **Load AI**.
 
 - **Context size**: how much text Mimer keeps in mind. More uses much more memory.
 - **Use the graphics card**: automatic, as much as possible, not at all, or a number of layers.
-- **Processor threads**, **Flash attention**, **Let the model think** (slower; off is best for notes), **Sleep after**.
+- **Processor threads**, **Flash attention**, **Let the model think** (slower; off is best for notes), **Unload after**.
 
 ## Files
 

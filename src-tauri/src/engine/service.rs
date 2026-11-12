@@ -188,8 +188,8 @@ pub fn status<R: Runtime>(app: &AppHandle<R>) -> EngineStatus {
     } else {
         match st {
             EngineState::NotInstalled => "The built-in AI is not downloaded yet".into(),
-            EngineState::Asleep => "Mimer is asleep".into(),
-            EngineState::Awake => "Mimer is awake".into(),
+            EngineState::Asleep => "The AI is not loaded".into(),
+            EngineState::Awake => "The AI is loaded".into(),
             _ => String::new(),
         }
     };
@@ -349,7 +349,7 @@ pub fn start_install<R: Runtime>(app: &AppHandle<R>, req: InstallRequest) -> App
         let mut inner = state.engine.inner.lock().map_err(|_| lock_error())?;
         if inner.phase != Phase::Idle {
             return Err(AppError::Conflict(
-                "Wait until Mimer has finished what it is doing, or press Sleep Mimer first".into(),
+                "Wait until Mimer has finished what it is doing, or press Unload AI first".into(),
             ));
         }
         inner.phase = Phase::Installing;
@@ -522,7 +522,7 @@ pub fn add_model<R: Runtime>(app: &AppHandle<R>, source: &str) -> AppResult<()> 
         let mut inner = state.engine.inner.lock().map_err(|_| lock_error())?;
         if inner.phase != Phase::Idle {
             return Err(AppError::Conflict(
-                "Wait until Mimer has finished what it is doing, or press Sleep Mimer first".into(),
+                "Wait until Mimer has finished what it is doing, or press Unload AI first".into(),
             ));
         }
         inner.phase = Phase::Installing;
@@ -788,7 +788,7 @@ async fn wake_task<R: Runtime>(
     }
     with_inner(app, |i| {
         i.phase = Phase::Awake;
-        i.message = "Mimer is awake".into();
+        i.message = "The AI is loaded".into();
         i.active_model = Some(model_id);
         i.last_used = Instant::now();
     });
@@ -871,7 +871,7 @@ pub async fn sleep<R: Runtime>(app: &AppHandle<R>) -> AppResult<()> {
         let running = inner.running.clone();
         if running.is_some() {
             inner.phase = Phase::Sleeping;
-            inner.message = "Putting Mimer to sleep…".into();
+            inner.message = "Unloading the AI…".into();
         } else if inner.phase != Phase::Waking {
             inner.phase = Phase::Idle;
             inner.message = String::new();
@@ -887,7 +887,7 @@ pub async fn sleep<R: Runtime>(app: &AppHandle<R>) -> AppResult<()> {
             .map_err(|e| AppError::Io(e.to_string()))?;
         with_inner(app, |i| {
             i.phase = Phase::Idle;
-            i.message = "Mimer is asleep".into();
+            i.message = "The AI is not loaded".into();
         });
     }
     emit(app);
@@ -1013,11 +1013,10 @@ pub fn require_awake(state: &AppState, provider: &ProviderConfig) -> AppResult<(
     match inner.phase {
         Phase::Awake => Ok(()),
         Phase::Waking => Err(AppError::Provider(
-            "Mimer is still waking up. Wait until the bar says “Mimer is awake”.".into(),
+            "The AI is still loading. Wait until the bar says “The AI is loaded”.".into(),
         )),
         _ => Err(AppError::Provider(
-            "Mimer is asleep. Press “Wake Mimer” in the Mimer tab to load the model, then try again."
-                .into(),
+            "The AI is not loaded. Press “Load AI” in the status bar, then try again.".into(),
         )),
     }
 }
@@ -1179,7 +1178,7 @@ mod tests {
             .cloned()
             .unwrap();
         let err = require_awake(&state, &cfg).unwrap_err().to_string();
-        assert!(err.contains("Wake Mimer"), "{err}");
+        assert!(err.contains("Load AI"), "{err}");
 
         wake(&handle).unwrap();
         let started = Instant::now();

@@ -17,7 +17,7 @@
 
 ## When there is no AI
 
-Everything that is not AI works as always: notes, search, tasks, ideas, the outline, links, history and images. The AI buttons are greyed out and say why (for example "No AI is set up" or "The built-in AI is asleep"), with **Set up AI**. The system spellcheck still works.
+Everything that is not AI works as always: notes, search, tasks, ideas, the outline, links, history and images. The AI buttons are greyed out and say why (for example "No AI is set up" or "The built-in AI is not loaded"), with **Set up AI**. The system spellcheck still works.
 
 ## Ask about my notes
 
@@ -45,7 +45,7 @@ Mimer uses an AI that runs on your own computer: the **built-in AI** (Phi Silica
 
 **Cloud AI, as a last resort.** If no AI on your computer is good enough, an OpenAI-compatible cloud service (added under **Cloud AI** with its address and key) can be Mimer's AI. Mimer asks first: your notes, the text you select and your questions are then sent to that company, under its terms, and it is your responsibility. You must tick "I understand" before it is used. While it is on, the status bar says **Cloud AI** and the chat shows it in orange. A project marked **Local AI only** never uses it, and choosing another AI turns it off again.
 
-**Add provider** asks which kind you want (LM Studio or another server on this computer). The model is chosen in the settings. A built-in AI that is asleep is woken by itself when you ask it something.
+**Add provider** asks which kind you want (LM Studio or another server on this computer). The model is chosen in the settings. A built-in AI that is not loaded is loaded by itself when you ask it something.
 
 ## Preview and Stable
 
