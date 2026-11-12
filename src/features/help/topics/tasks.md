@@ -4,7 +4,7 @@ A task in Mimer is an ordinary line in an ordinary note: `- [ ] Renew the licenc
 
 ### Epics
 
-An **epic** is a note with tasks in it. The list is one outline: each epic is a box with a bar and "2 of 4" that you can **fold** to one line, and **Fold all** / **Unfold all** do every epic at once (Mimer remembers what is folded). A task with steps has a small arrow: unfold it to tick its steps, or add one, right in the list. **+ Add a task to …** at the bottom of an open epic adds a task to it. When every task in an epic is done, it moves to **Done** at the bottom. The left panel lists the epics so they are one click away.
+An **epic** is a note with tasks in it. The list is one outline: each epic is a box with a bar and "2 of 4" that you can **fold**. A folded epic is a small card with how many tasks are being done or waited for, what is **next** and what it is **waiting for**. The buttons **All**, **Doing**, **Waiting** and **Next up** at the top show only those tasks. An epic where nothing has happened for 14 days is listed under **Quiet for 14 days**. and **Fold all** / **Unfold all** do every epic at once (Mimer remembers what is folded). A task with steps has a small arrow: unfold it to tick its steps, or add one, right in the list. **+ Add a task to …** at the bottom of an open epic adds a task to it. Inside an epic the done tasks are last, under **Done**; when every task in an epic is done, the epic moves to **Done** at the bottom. The left panel lists the epics so they are one click away.
 
 **Put things in your own order.** Hold the mouse over an epic, a task or a step: the small arrows move it one place up or down (or press **Alt+↑** / **Alt+↓** on it). A task moves with its steps, note and log, and keeps its place in the note, so the file has the same order. The order of the epics is kept in the vault.
 
@@ -20,7 +20,7 @@ There are no due dates, no Today and no Later: a task is there to keep track of 
 
 ### One task
 
-A task with a status shows it as a small label at the right end of its row in the lists (Doing, Waiting or Dropped); a task without one shows nothing. Press a task to open it. On the left is what you write (the note, the steps and what has happened); the card on the right has the **status** (To do, Doing, Waiting), the day it was **made**, and buttons to its epic and its note. The way back at the top goes to its epic.
+A task with a status shows it as a small label at the right end of its row in the lists (Doing, Waiting or Dropped); a task without one shows nothing. Press a task to open it. On the left is what you write (the note, the steps and what has happened); the card on the right has the **status** (To do, Doing, Waiting), the day it was **made**, and buttons to its epic and its note. When the status is **Waiting**, the card also asks who or what the task **waits for** (a few words, shown in the lists), and lets you pick a **task** it waits for: it says **Ready** when that task is done. The way back at the top goes to its epic.
 
 - **Note** is a few lines about the task that are not part of the log: what it is about, who to ask. It is saved when you leave the box. An epic has a note too.
 - **Steps** are small tasks under the task. The next step is marked. Click a step's text to change it (Enter saves, Esc puts it back), and use the arrows to move it. Press **Break it down** and the AI suggests steps; you choose which ones stay, and nothing is written until you press Add. It needs a local AI that is running.
@@ -38,7 +38,7 @@ A task with a status shows it as a small label at the right end of its row in th
   - 2026-10-16 Waiting for Peter.
 ```
 
-Under a task, indented: plain text is its **note**, checklist lines are its **steps**, and list items that start with a date are **what has happened**. Each is on its own line in any Markdown editor. `status:` is a plain word you can type yourself; `made:` is written by Mimer when it makes a task (a task you write by hand simply has no date). Older files with `>` lines for the note and the log, or words like `due:`, still work: Mimer reads them and leaves them as they are. If you change a task in the note while the list is open, press the Tasks icon again to read the list again.
+Under a task, indented: plain text is its **note**, checklist lines are its **steps**, and list items that start with a date are **what has happened**. Each is on its own line in any Markdown editor. `status:` is a plain word you can type yourself; what a waiting task waits for, and the task it waits for, are not in the note: Mimer keeps them in its own file, `.vault/meta.json`, so the line stays clean; `made:` is written by Mimer when it makes a task (a task you write by hand simply has no date). Older files with `>` lines for the note and the log, or words like `due:`, still work: Mimer reads them and leaves them as they are. If you change a task in the note while the list is open, press the Tasks icon again to read the list again.
 
 ### Find tasks in a note
 
@@ -67,7 +67,7 @@ The **Timer** box at the top turns the timer on and off; it is remembered, and w
 - The timer (15, 25 or 45 minutes) is for you; nothing happens when it ends except a message.
 - **Help me start** is for when you sit and cannot begin. The AI suggests one tiny first step, something under five minutes, for example "open the file and write the heading". It is only added to the task if you press Add it as a step.
 - **Something popped into your head?** Use the same box as above: choose Task, Idea or Quick note and write it. A task goes into the epic you choose (the one in Focus at first). You stay in Focus.
-- **Esc** or **Leave focus** leaves focus.
+- **Esc** or **Leave focus** leaves focus. Mimer then asks **What is the next step?** for the task you worked on (one line, optional). It is written in the task's log as "Left off: …" and shows on the task page and on the start page when you come back. **Do not ask me again** turns the question off; **Settings → General** turns it on again. On Windows the taskbar helper can write the same line from any program (see _The taskbar helper_).
 
 ## Tag a note as an epic or a meeting
 

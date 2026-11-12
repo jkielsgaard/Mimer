@@ -6,7 +6,7 @@ import { MoveButtons, moveKey } from "@/components/MoveButtons";
 import { InlineEdit, RowActions } from "@/components/RowActions";
 import { TaskNoteChip } from "@/features/tasks/TaskNote";
 import { cn } from "@/lib/utils";
-import { noteName, shortDate } from "@/lib/taskLogic";
+import { afterTarget, isOpen, noteName, shortDate, waitersOf } from "@/lib/taskLogic";
 import { useTaskStore } from "@/stores/taskStore";
 import { PlainButton } from "@/components/ui/plain-button";
 import { InlineInput } from "@/components/ui/inline-input";
@@ -81,6 +81,12 @@ export function TaskRow({
   const [editing, setEditing] = useState<"title" | number | null>(null);
   const [deleting, setDeleting] = useState(false);
   const stepsDone = task.steps.filter((s) => s.done).length;
+  // What a waiting task waits for: the person's own words, or the task it waits for.
+  const target = useTaskStore((s) => afterTarget(s.tasks, task));
+  const waitText = task.waitingFor ?? target?.title ?? null;
+  // How many open tasks wait for this one to be done.
+  const waiting = useTaskStore((s) => waitersOf(s.tasks, task).length);
+  const ready = task.status === "waiting" && target !== null && !isOpen(target);
   const dim = task.done || task.status === "dropped";
   const moveUp = () => useTaskStore.getState().move(task.path, task.line, task.key, true);
   const moveDown = () => useTaskStore.getState().move(task.path, task.line, task.key, false);
@@ -171,6 +177,25 @@ export function TaskRow({
           <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
             {facts.join(" · ")}
           </span>
+        )}
+        {!task.done && task.status === "waiting" && waitText !== null && (
+          <span
+            className="hidden min-w-0 max-w-[14rem] truncate text-xs text-muted-foreground md:inline"
+            title={`Waiting for ${waitText}`}
+          >
+            {waitText}
+          </span>
+        )}
+        {!task.done && waiting > 0 && (
+          <span
+            className="shrink-0 text-xs font-semibold text-muted-foreground"
+            title="Tasks that wait for this one to be done"
+          >
+            {waiting} waiting for this
+          </span>
+        )}
+        {!task.done && ready && (
+          <span className="shrink-0 text-xs font-semibold text-success">Ready</span>
         )}
         {!task.done && <StatusChip status={task.status} />}
         {canMove && (

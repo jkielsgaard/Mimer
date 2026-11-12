@@ -30,6 +30,20 @@ export function onCloseRequested(handler: () => void): Promise<UnlistenFn> {
   });
 }
 
+/** The main window is hidden by the taskbar helper: save what is being written. */
+export function onFlushRequested(handler: () => void): Promise<UnlistenFn> {
+  return listen("app://flush", () => {
+    handler();
+  });
+}
+
+/** The helper's small window wrote a task, an idea or a line in a task's log. */
+export function onHelperChanged(handler: () => void): Promise<UnlistenFn> {
+  return listen("helper://changed", () => {
+    handler();
+  });
+}
+
 export function onEngineStatus(
   handler: (e: import("@/bindings/EngineStatus").EngineStatus) => void,
 ): Promise<UnlistenFn> {

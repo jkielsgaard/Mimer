@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { noteName, shortDate, todayIso } from "@/lib/taskLogic";
+import { latestLeftOff, noteName, shortDate, todayIso, waitersOf } from "@/lib/taskLogic";
 import { cn } from "@/lib/utils";
 import { findTask, useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 import { BreakDownDialog } from "./BreakDownDialog";
+import { WaitingFor } from "./WaitingFor";
+import { WaitingForTask } from "./WaitingForTask";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { DeleteButton } from "@/components/DeleteButton";
 import { MoveButtons, moveKey } from "@/components/MoveButtons";
@@ -20,6 +22,7 @@ import { MarkdownField } from "@/features/editor/MarkdownField";
 import { MarkdownText } from "@/components/MarkdownText";
 import { LinkedNote } from "@/features/tasks/TaskNote";
 import type { Task } from "@/bindings/Task";
+import type { TaskHistory } from "@/bindings/TaskHistory";
 import type { TaskLog } from "@/bindings/TaskLog";
 import { useAiBlocked } from "@/lib/useAiBlocked";
 import { PlainButton } from "@/components/ui/plain-button";
@@ -94,6 +97,34 @@ export function statusFacts(task: Task, stepsDone: number): string {
 }
 
 /** One line of the log: its date and text, with buttons to change or remove it. */
+/** A line Mimer wrote about the task (a status, what it waits for): shown with the log, not edited. */
+function HistoryItem({ entry, today }: { entry: TaskHistory; today: string }) {
+  return (
+    <li className="relative pb-4">
+      <span
+        aria-hidden
+        className="absolute -left-[27px] top-1 size-2.5 rounded-full border-2 border-muted-foreground bg-card"
+      />
+      <span className="text-[11px] text-muted-foreground">
+        {entry.date === today ? "Today" : shortDate(entry.date)}
+      </span>
+      <p className="text-sm text-muted-foreground">{entry.text}</p>
+    </li>
+  );
+}
+
+/** The log of a task and its history in one list, newest first. */
+type Moment = { kind: "log"; entry: TaskLog } | { kind: "history"; entry: TaskHistory; at: number };
+
+export function momentsOf(task: Pick<Task, "log" | "history">): Moment[] {
+  const all: Moment[] = [
+    ...[...task.log].reverse().map((entry): Moment => ({ kind: "log", entry })),
+    ...[...task.history].reverse().map((entry, at): Moment => ({ kind: "history", entry, at })),
+  ];
+  // A stable sort: lines of the same day keep the order they were written in.
+  return all.sort((a, b) => b.entry.date.localeCompare(a.entry.date));
+}
+
 function LogItem({ task, entry, today }: { task: Task; entry: TaskLog; today: string }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(entry.text);
@@ -242,6 +273,8 @@ export function TaskPage() {
   }
 
   const stepsDone = task.steps.filter((s) => s.done).length;
+  const leftOff = latestLeftOff(task);
+  const waiters = waitersOf(tasks, task);
   const status = task.status ?? "";
   const toEpic = (): void => {
     useTaskStore.getState().openEpic(task.path);
@@ -324,6 +357,46 @@ export function TaskPage() {
                 )}
               </div>
             </div>
+
+            {leftOff !== null && !task.done && (
+              <div
+                role="note"
+                aria-label="Where you left off"
+                className="rounded-lg bg-accent px-4 py-2 text-accent-foreground"
+              >
+                <span className="section-label text-accent-foreground">Where you left off</span>
+                <p className="text-sm font-semibold">{leftOff.text}</p>
+                <p className="text-xs">{shortDate(leftOff.date)}</p>
+              </div>
+            )}
+
+            {waiters.length > 0 && !task.done && (
+              <section
+                aria-label="Waiting for this task"
+                className="rounded-lg border border-warning/60 bg-warning/10 px-4 py-2"
+              >
+                <h3 className="section-label">Waiting for this task</h3>
+                <ul className="flex flex-col">
+                  {waiters.map((w) => (
+                    <li key={`${w.path}:${String(w.line)}`}>
+                      <PlainButton
+                        type="button"
+                        className="flex w-full items-baseline gap-2 py-1 text-left text-sm hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => {
+                          store.open(w);
+                        }}
+                      >
+                        <span className="font-semibold">{w.title}</span>
+                        <span className="text-xs text-muted-foreground">{noteName(w.path)}</span>
+                      </PlainButton>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-xs text-muted-foreground">
+                  They are marked ready when this task is done.
+                </p>
+              </section>
+            )}
 
             {showMd && <MarkdownOfTask path={task.path} from={task.line} to={task.end} />}
 
@@ -539,13 +612,22 @@ export function TaskPage() {
                   )}
                 />
               )}
-              {task.log.length === 0 ? (
+              {task.log.length === 0 && task.history.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Nothing yet.</p>
               ) : (
                 <ol className="ml-1.5 border-l-2 pl-5">
-                  {[...task.log].reverse().map((l) => (
-                    <LogItem key={l.line} task={task} entry={l} today={today} />
-                  ))}
+                  {momentsOf(task).map((m) =>
+                    m.kind === "log" ? (
+                      <LogItem
+                        key={`l${String(m.entry.line)}`}
+                        task={task}
+                        entry={m.entry}
+                        today={today}
+                      />
+                    ) : (
+                      <HistoryItem key={`h${String(m.at)}`} entry={m.entry} today={today} />
+                    ),
+                  )}
                 </ol>
               )}
             </section>
@@ -579,6 +661,8 @@ export function TaskPage() {
                   </PlainButton>
                 ))}
               </div>
+              {status === "waiting" && <WaitingFor task={task} />}
+              {status === "waiting" && <WaitingForTask task={task} />}
             </div>
             {task.made !== null && (
               <div className="flex flex-col gap-0.5">

@@ -42,6 +42,11 @@ try {
     await page.getByRole("button", { name: /Focus/ }).nth(1).click();
     await shot("focus");
     await page.keyboard.press("Escape");
+    // Leaving Focus asks for the next step: skip it.
+    await page
+      .getByRole("button", { name: "Skip" })
+      .click({ timeout: 3000 })
+      .catch(() => undefined);
     await page.waitForTimeout(600);
     await rail(page, "Tasks");
     await page.getByText("Send the offer to Acme").first().click();

@@ -71,7 +71,11 @@ describe("FocusMode", () => {
     expect(within(marked).getByText("Now")).toBeInTheDocument();
     // It becomes Doing when Focus opens on it.
     await waitFor(() => {
-      expect(apiMock.taskSetMeta).toHaveBeenCalledWith(task.path, 5, "key-1", { status: "doing" });
+      expect(apiMock.taskSetMeta).toHaveBeenCalledWith(task.path, 5, "key-1", {
+        status: "doing",
+        waitingFor: null,
+        after: null,
+      });
     });
     await user.click(screen.getByRole("button", { name: "Done, next step" }));
     expect(apiMock.taskSetDone).toHaveBeenCalledWith(task.path, 7, "s2", true);

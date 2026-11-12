@@ -8,6 +8,25 @@ This list is kept short: it tells what Mimer can do in each version. A small rel
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-11-12
+
+### Added
+
+- **A taskbar helper (Windows).** An icon in the taskbar and keys that work in every program: **Write something down** (Ctrl+Alt+N) opens a small box for a task or an idea, and **Where I left off** (Ctrl+Alt+P) writes one line about the next step on the task you work on. It is off until you turn it on in Settings → General, you choose the keys yourself (and are told if another program already uses them), and Mimer can stay in the taskbar when you close the window. On other systems it is greyed out.
+- **Mimer keeps its own bookkeeping outside your notes.** Which notes are pinned, what a task waits for and the history of its status changes are kept in `.vault/meta.json`: plain text, in your vault's history and backup, and no longer as a tag or as words in the note. Mimer asks before it moves anything from an older vault (**Move them now**, after saving the notes in History); until you do, everything works as before, but the next version only reads the new place.
+- **Say what a task waits for.** On a task that is Waiting you can write who or what it waits for, and pick the task it waits for. That task says which tasks wait for it, and the waiting task says **Ready** when it is done.
+- **A clearer task list.** Filters (All, Doing, Waiting, Next up), folded epics as small cards with what is next and what is waited for, and epics where nothing has happened for 14 days under their own heading.
+- **Where you left off.** When you leave Focus, Mimer asks "What is the next step?" (one line, optional). It shows on the task and on the start page's Continue card the next time you come back.
+- **In short.** AI → In short gives the main points of a long note and the things to do. Nothing is written to the note, and only the things you tick become tasks.
+- **Draw as a diagram.** Select a text that describes a flow, and the AI menu proposes a Mermaid diagram next to it, which you can add under the text or copy.
+- **Reading settings.** Settings → General → Reading changes the space between lines and letters, the font, and **Follow the line**, which dims every line but the one you are in. A choice shows at once, and Cancel puts it back.
+- **Test it.** Under an AI that is set up in Settings → AI: one short question, with none of your notes, and the answer, or the error in plain words that can be copied into a bug report.
+
+### Changed
+
+- **Done tasks sit last in their epic**, under Done, on the task list and on the epic page. The arrows move a task past the open tasks only.
+- **One place to choose and set up the AI.** Each row in Settings → AI has its own setup under it when it is chosen. The built-in AIs are marked Beta, and none is recommended over the others.
+
 ## [0.22.0] - 2026-11-09
 
 ### Added

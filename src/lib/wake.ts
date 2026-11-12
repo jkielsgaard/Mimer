@@ -1,3 +1,4 @@
+import type { ProviderConfig } from "@/bindings/ProviderConfig";
 import { activeAi } from "@/features/chat/useActiveAi";
 import { useEngineStore } from "@/stores/engineStore";
 import { useFoundryStore } from "@/stores/foundryStore";
@@ -14,19 +15,21 @@ const sleep = (ms: number): Promise<void> =>
 
 /**
  * Makes sure the built-in AI (llama.cpp or Foundry Local) is awake before something is asked of
- * it: an asleep AI is woken and waited for, so nobody has to press Wake first. Resolves to null
+ * it: an asleep AI is woken and waited for, so nobody has to press Wake first. It looks at the
+ * AI in use, or at `chosen` (a test of another AI). Resolves to null
  * when the AI is ready (or is not a built-in one), or to a message that says what is wrong.
  */
-export async function wakeIfNeeded(): Promise<string | null> {
-  const { provider } = activeAi(useSettingsStore.getState().settings, useVaultStore.getState());
+export async function wakeIfNeeded(chosen?: ProviderConfig): Promise<string | null> {
+  const provider =
+    chosen ?? activeAi(useSettingsStore.getState().settings, useVaultStore.getState()).provider;
   if (provider?.kind !== "builtin" && provider?.kind !== "foundry_local") return null;
   const foundry = provider.kind === "foundry_local";
   const state = (): string | undefined =>
     foundry ? useFoundryStore.getState().status?.state : useEngineStore.getState().status?.state;
   const message = (): string =>
     state() === "error"
-      ? `${provider.name} has a problem. Open Settings → Built-in AI.`
-      : `${provider.name} is not set up. Open Settings → Built-in AI.`;
+      ? `${provider.name} has a problem. Open Settings → AI.`
+      : `${provider.name} is not set up. Open Settings → AI.`;
   if (state() === "awake") return null;
   if (state() === "asleep") {
     if (foundry) await useFoundryStore.getState().wake();

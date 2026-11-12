@@ -40,13 +40,18 @@ Mimer never looks for updates by itself and sends nothing. Use Help → Check fo
 - Daily notes in a calendar at the top of the file panel, and **Trace my work**: one line a day under "Worked on" for each note and task you worked on (off by default).
 - A **start page** you build yourself from widgets (Continue, Recent, Pinned, Write it down, Search and ask, Next meeting, Working on, To sort, Areas, Changed since yesterday, Epic progress).
 - Eight themes: Light, Dark, Slate, Paper, Mint, Midnight, Graphite and Ember, or follow the computer.
+- **Reading** settings: line spacing, letter spacing, font, and **Follow the line**, which dims every line but the one you are in. A choice shows at once and Cancel puts it back.
 
 **Tasks and ideas**
 
 - A task is a checklist line in any note. Mimer reads them in every note and shows an outline of **epics** you can fold, each with its progress. A note is an epic when it has the tag `epic`.
 - A task has steps (indented checklist lines), a note, a status (Doing, Waiting, Dropped), a day it was made and a log of what happened. **Break it down** lets the AI propose steps you choose from. **Focus** shows one task at a time, with an optional timer and an Ultra focus for a single task.
+- A task that is **Waiting** can say who or what it waits for, and which other task it waits for. That task says which tasks wait for it, and the waiting one says **Ready** when it is done.
+- The task list has filters (All, Doing, Waiting, Next up). Done tasks sit last in their epic, a folded epic is a small card with what is next and what is waited for, and epics where nothing has happened for 14 days are listed apart.
+- **Where you left off:** leaving Focus asks for the next step in one line. It shows on the task and on the start page's Continue card.
 - A task can point at a note with a `[[wiki-link]]` in its own line. Tasks and steps can be put in your own order.
 - **Write it down** from anywhere (`Ctrl/Cmd+Shift+N`): a quick note, a task or an idea, each in its own small box. Ideas are a list you turn into a task or a note later.
+- **A taskbar helper (Windows, off until you turn it on).** An icon in the taskbar and keys that work in every program: write something down, and say where you left off. You choose the keys under Settings → General, and the settings tell you if another program uses them. Mimer can stay in the taskbar when the window is closed. On other systems it is greyed out.
 
 **Meetings**
 
@@ -56,13 +61,14 @@ Mimer never looks for updates by itself and sends nothing. Use Help → Check fo
 
 **Tags and search**
 
-- Tags are written in a note's properties (`tags: [vpn]`) or as `#vpn` in the text, and they are the same tag. You choose your own tags; Mimer has three of its own, **Meeting**, **Epic** and **Pinned**, which change what Mimer does with the note and are shown apart, with what each one does.
+- Tags are written in a note's properties (`tags: [vpn]`) or as `#vpn` in the text, and they are the same tag. You choose your own tags; Mimer has three of its own, **Meeting**, **Epic** and **Pinned**, which change what Mimer does with the note and are shown apart, with what each one does. Meeting and Epic are written in the note; a pin is kept in `.vault/meta.json`.
 - Full-text search with `tag:` and `path:` filters, and optional search by meaning with a local embedding model. **Answer from my notes** answers a question from the notes that fit.
 
 **History and AI**
 
 - Version history per note: compare, restore, recover deleted notes. Every AI change is a commit and can be undone.
-- AI on selected text in a note **and in every text box** (fix spelling, rewrite, shorten, translate and more), AI commands for a whole note or folder (spelling, structure, summary, a title and tags, sort into folders), skills that Mimer carries out note by note, and a chat that searches and reads your notes to answer. Mimer checks every change a skill makes (links, tags, numbers, dates, code) before it is offered.
+- AI on selected text in a note **and in every text box** (fix spelling, rewrite, shorten, translate, explain, draw as a diagram and more), **In short** for a whole note (the main points and the things to do, and you tick which become tasks), AI commands for a whole note or folder (spelling, structure, summary, a title and tags, sort into folders), skills that Mimer carries out note by note, and a chat that searches and reads your notes to answer. Mimer checks every change a skill makes (links, tags, numbers, dates, code) before it is offered.
+- **Test it** under each AI in Settings → AI asks one short question, with none of your notes, and shows the answer or the error in plain words. The built-in AIs are marked Beta.
 - **Spelling help** that marks misspelt words in the language of the text and never changes anything by itself.
 - Projects: a folder with its own tree, its own AI and a note for the AI about the project.
 - Import from a folder (for example a OneNote export, see [docs/IMPORT-ONENOTE.md](docs/IMPORT-ONENOTE.md)) and export to HTML, Word and PDF.
@@ -121,11 +127,11 @@ Pilot group is done. Rollout starts Monday.
 - [ ] Order 20 extra licences made:2026-10-30
 ```
 
-- **Tasks.** `- [ ] Send the offer status:doing made:2026-10-26 #vpn [[Offer to Acme]]`. Indented checklist lines are the steps, indented dated list items (`- 2026-10-28 Called Acme`) are the log, and indented text is the task's note. Mimer changes the note's own lines, so the file stays readable in any editor.
+- **Tasks.** `- [ ] Send the offer status:doing made:2026-10-26 #vpn [[Offer to Acme]]`. Indented checklist lines are the steps, indented dated list items (`- 2026-10-28 Called Acme`) are the log, and indented text is the task's note. Mimer changes the note's own lines, so the file stays readable in any editor. What a waiting task waits for and the history of its status are not in the line: they are in `.vault/meta.json`.
 - **Epics.** A note with the tag `epic`. **Ideas** are dated lines in a hidden note `Ideas.md` in the vault root.
 - **Tags.** In `tags:` or as `#tag` in the text. Mimer's own tags are `meeting`, `epic` and `pinned`; every other tag is yours. A rewrite by the AI never adds or takes away Mimer's tags.
 - **Meetings.** The properties above; `parts:` says which of Agenda, Decisions and Actions the meeting has (a meeting without it has all three).
-- **The vault.** `.vault/` holds the vault's settings, templates and your own order (`order.json`); the saved chats and the embedding index are kept there too but are not committed. The history is a normal Git repository in `.git/`.
+- **The vault.** `.vault/` holds the vault's settings, templates, your own order (`order.json`) and what Mimer keeps outside your notes (`meta.json`: the pinned notes, what tasks wait for and the history of their status), all plain text and committed; the saved chats and the embedding index are kept there too but are not committed. The history is a normal Git repository in `.git/`.
 
 ## Language
 
@@ -142,13 +148,13 @@ Download the build for your system from the **Releases** page. There are builds 
 
 ### Option A: the built-in AI (no other program needed)
 
-Open **Settings → Built-in AI** and choose the engine. **Foundry Local** (Microsoft; Windows 11 24H2 or later, and Linux; the only engine in the Microsoft Store version) picks the best hardware by itself, including a neural processor (NPU), and offers Qwen, Phi, Gemma and other models. The first time, it asks before it downloads the hardware parts from Microsoft. **llama.cpp** (Windows and Linux, not in the Store version) works with Nvidia, AMD and Intel graphics cards and with Google's Gemma models. Choose a model and press **Download**, then press **Wake** in the status bar. **Sleep Mimer** unloads the model and frees the memory. On a Copilot+ PC, the Store version can also use **Phi Silica**, the small model built into Windows.
+Open **Settings → AI** and choose the engine. **Foundry Local** (Microsoft; Windows 11 24H2 or later, and Linux; the only engine in the Microsoft Store version) picks the best hardware by itself, including a neural processor (NPU), and offers Qwen, Phi, Gemma and other models. The first time, it asks before it downloads the hardware parts from Microsoft. **llama.cpp** (Windows and Linux, not in the Store version) works with Nvidia, AMD and Intel graphics cards and with Google's Gemma models. Choose a model and press **Download**, then press **Wake** in the status bar. **Sleep Mimer** unloads the model and frees the memory. On a Copilot+ PC, the Store version can also use **Phi Silica**, the small model built into Windows.
 
 ### Option B: LM Studio
 
 1. Install [LM Studio](https://lmstudio.ai) and download a model that supports tool calling.
 2. In LM Studio's **Developer** tab, load the model and start the local server (`http://localhost:1234/v1`).
-3. In Mimer open **Settings → AI → More: LM Studio and other providers**, load the models, pick one and press **Test connection**.
+3. In Mimer open **Settings → AI → LM Studio, or another AI on this computer**, load the models, pick one and press **Test connection**.
 
 Give the model a context length of at least 16k in LM Studio, and use the same value in Mimer's settings.
 

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { ProviderConfig } from "@/bindings/ProviderConfig";
 import type { Settings } from "@/bindings/Settings";
 import { api, toApiError } from "@/lib/api";
+import { applyReading } from "@/lib/reading";
 import { applyTheme } from "@/lib/themes";
 
 interface SettingsState {
@@ -22,6 +23,7 @@ export function applySettings(s: Settings): void {
   applyTheme(s.theme);
   root.style.setProperty("--editor-font-size", `${s.editor.fontSize}px`);
   root.style.setProperty("--editor-line-width", `${s.editor.lineWidth}px`);
+  applyReading(s.editor);
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({

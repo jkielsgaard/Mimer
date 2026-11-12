@@ -11,6 +11,7 @@ export type InlineActionId =
   | "toDanish"
   | "toEnglish"
   | "explain"
+  | "diagram"
   | "findTasks";
 
 export interface InlineAction {
@@ -23,6 +24,8 @@ export interface InlineAction {
   instruction: string | null;
   /** The answer is shown next to the text; nothing in the note changes. */
   answer?: boolean;
+  /** The answer is a Mermaid diagram, which can be added under the text (the text stays). */
+  diagram?: boolean;
 }
 
 const SAME =
@@ -104,6 +107,16 @@ export const INLINE_ACTIONS: InlineAction[] = [
     instruction:
       "Explain the text in plain words, in two to five short sentences, for someone who is new to the subject. Explain hard words. Answer in the language of the text. Do not repeat the text.",
     answer: true,
+  },
+  {
+    id: "diagram",
+    label: "Draw as a diagram",
+    hint: "Added under the text, as text you can edit",
+    command: "custom",
+    instruction:
+      "Draw what the text describes as a Mermaid flowchart. Answer with the Mermaid code only: no explanation and no code fence. Start with `flowchart LR`. Use short labels (one to four words) in the language of the text, a box for each thing or step, and an arrow for each link between them. Put a label on an arrow only when it adds something. At most 12 boxes. Leave out anything the text does not say.",
+    answer: true,
+    diagram: true,
   },
   {
     id: "findTasks",

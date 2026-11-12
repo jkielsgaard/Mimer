@@ -50,7 +50,7 @@ const model = (alias: string, sizeMb: number, device = "GPU", tools = true): Fou
   contextTokens: 32768,
 });
 
-describe("Settings → Built-in AI → Foundry Local", () => {
+describe("Settings → AI → Foundry Local", () => {
   const install = vi.fn().mockResolvedValue(undefined);
   const remove = vi.fn().mockResolvedValue(undefined);
   const onChange = vi.fn();

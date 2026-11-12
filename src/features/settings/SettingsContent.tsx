@@ -1,5 +1,5 @@
-import { ChevronDown, ChevronRight, Plus } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 import type { Settings } from "@/bindings/Settings";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,10 +19,12 @@ import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { reportError, useUiStore } from "@/stores/uiStore";
 import { ProviderEditor } from "./ProviderEditor";
+import { AskNextStep } from "./AskNextStep";
+import { ReadingSettings } from "./ReadingSettings";
+import { TaskbarHelperSettings } from "./TaskbarHelperSettings";
 import { ThemePicker } from "./ThemePicker";
 import { AddProviderDialog } from "./AddProviderDialog";
 import { AiChoice } from "./AiChoice";
-import { BuiltInAiTab } from "@/features/engine/BuiltInAiTab";
 import { BetaBadge } from "@/components/BetaBadge";
 import { VaultSettingsTab } from "./VaultSettingsTab";
 import { SemanticSearchSettings } from "./SemanticSearchSettings";
@@ -32,44 +34,14 @@ import { PlainButton } from "@/components/ui/plain-button";
 import { Checkbox } from "@/components/ui/checkbox";
 
 /** The one entry in the provider list that stands for both built-in engines. */
-const BUILTIN_ROW = "__builtin__";
 
 type Tab = "general" | "ai" | "history" | "vault";
-type AiSection = "builtin" | "more";
 const TABS: { id: Tab; label: string }[] = [
   { id: "general", label: "General" },
   { id: "ai", label: "AI" },
   { id: "history", label: "Version history" },
   { id: "vault", label: "Vault" },
 ];
-
-/** A folded part of the AI tab: the heading is a button, the body shows when it is open. */
-function Section({
-  title,
-  open,
-  onToggle,
-  children,
-}: {
-  title: string;
-  open: boolean;
-  onToggle: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <section className="rounded-md border">
-      <PlainButton
-        type="button"
-        aria-expanded={open}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-medium hover:bg-muted"
-        onClick={onToggle}
-      >
-        {open ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-        {title}
-      </PlainButton>
-      {open && <div className="border-t p-3">{children}</div>}
-    </section>
-  );
-}
 
 /** The languages offered for the AI's answers. */
 const ANSWER_LANGUAGES = [
@@ -92,10 +64,6 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
     if (wanted === "builtin") return "ai";
     return wanted === "vault" ? "vault" : "general";
   });
-  /** The AI setup section that is open (the others are folded away). */
-  const [section, setSection] = useState<AiSection | null>(() =>
-    useUiStore.getState().settingsTab === "builtin" ? "builtin" : null,
-  );
   const [providerId, setProviderId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const update = (patch: Partial<Settings>): void => {
@@ -113,6 +81,85 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
     }
   };
   const provider = draft.ai.providers.find((p) => p.id === providerId) ?? null;
+  const providersPanel = (
+    <div className="flex gap-4">
+      <div className="flex w-44 shrink-0 flex-col gap-1">
+        {draft.ai.providers
+          .filter(
+            (p) => p.kind !== "builtin" && p.kind !== "foundry_local" && p.kind !== "phi_silica",
+          )
+          .map((p) => (
+            <PlainButton
+              key={p.id}
+              type="button"
+              className={cn(
+                "truncate rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
+                providerId === p.id && "bg-accent",
+              )}
+              onClick={() => {
+                setProviderId(p.id);
+              }}
+            >
+              {p.name}
+              <span className="block text-[11px] text-muted-foreground">
+                {effectiveLocation(p) === "local"
+                  ? "local · Mimer"
+                  : p.kind === "anthropic"
+                    ? "cloud · not used"
+                    : "cloud · needs your OK"}
+              </span>
+            </PlainButton>
+          ))}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setAdding(true);
+          }}
+        >
+          <Plus /> Add provider
+        </Button>
+      </div>
+      <div className="min-w-0 flex-1">
+        {provider ? (
+          <ProviderEditor
+            provider={provider}
+            persist={persist}
+            onChange={(p) => {
+              setDraft({
+                ...draft,
+                ai: {
+                  ...draft.ai,
+                  providers: draft.ai.providers.map((x) => (x.id === p.id ? p : x)),
+                },
+              });
+            }}
+            onRemove={() => {
+              const rest = draft.ai.providers.filter((x) => x.id !== provider.id);
+              const firstLocal = rest.find((x) => effectiveLocation(x) === "local");
+              setDraft({
+                ...draft,
+                ai: {
+                  ...draft.ai,
+                  providers: rest,
+                  defaultProviderId:
+                    draft.ai.defaultProviderId === provider.id
+                      ? (firstLocal?.id ?? "")
+                      : draft.ai.defaultProviderId,
+                },
+              });
+              setProviderId(null);
+            }}
+          />
+        ) : (
+          <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+            <p>Choose a provider on the left to change it, or press Add provider.</p>
+            <p>Mimer only uses an AI that runs on this computer, so your notes never leave it.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <DialogContent className="h-[640px] max-w-4xl">
@@ -182,6 +229,19 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
                   }}
                 />
               </div>
+              <ReadingSettings
+                editor={draft.editor}
+                onChange={(editor) => {
+                  update({ editor });
+                }}
+              />
+              <AskNextStep />
+              <TaskbarHelperSettings
+                helper={draft.helper}
+                onChange={(helper) => {
+                  update({ helper });
+                }}
+              />
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1.5">
                   <Label htmlFor="set-recent">Recent notes shown</Label>
@@ -309,144 +369,9 @@ export function SettingsContent({ stored, onClose }: { stored: Settings; onClose
               <AiChoice
                 draft={draft}
                 onChange={setDraft}
-                onSetUp={(t) => {
-                  setSection(t === "builtin" ? "builtin" : "more");
-                }}
+                providersPanel={providersPanel}
+                persist={persist}
               />
-              <Section
-                title="Built-in AI: set up"
-                open={section === "builtin"}
-                onToggle={() => {
-                  setSection(section === "builtin" ? null : "builtin");
-                }}
-              >
-                <BuiltInAiTab draft={draft} onChange={setDraft} />
-              </Section>
-              <Section
-                title="More: LM Studio and other providers"
-                open={section === "more"}
-                onToggle={() => {
-                  setSection(section === "more" ? null : "more");
-                }}
-              >
-                <div className="flex gap-4">
-                  <div className="flex w-44 shrink-0 flex-col gap-1">
-                    <PlainButton
-                      type="button"
-                      className={cn(
-                        "truncate rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
-                        providerId === BUILTIN_ROW && "bg-accent",
-                      )}
-                      onClick={() => {
-                        setProviderId(BUILTIN_ROW);
-                      }}
-                    >
-                      Built-in AI
-                      <span className="block text-[11px] text-muted-foreground">local · Mimer</span>
-                    </PlainButton>
-                    {draft.ai.providers
-                      .filter(
-                        (p) =>
-                          p.kind !== "builtin" &&
-                          p.kind !== "foundry_local" &&
-                          p.kind !== "phi_silica",
-                      )
-                      .map((p) => (
-                        <PlainButton
-                          key={p.id}
-                          type="button"
-                          className={cn(
-                            "truncate rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
-                            providerId === p.id && "bg-accent",
-                          )}
-                          onClick={() => {
-                            setProviderId(p.id);
-                          }}
-                        >
-                          {p.name}
-                          <span className="block text-[11px] text-muted-foreground">
-                            {effectiveLocation(p) === "local"
-                              ? "local · Mimer"
-                              : p.kind === "anthropic"
-                                ? "cloud · not used"
-                                : "cloud · needs your OK"}
-                          </span>
-                        </PlainButton>
-                      ))}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setAdding(true);
-                      }}
-                    >
-                      <Plus /> Add provider
-                    </Button>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    {providerId === BUILTIN_ROW ? (
-                      <div className="flex flex-col gap-2 text-sm">
-                        <p className="font-medium">Built-in AI</p>
-                        <p className="text-muted-foreground">
-                          This is Mimer's own AI. It runs on this computer, so your notes never
-                          leave it. Choose the engine (Foundry Local, llama.cpp or, in the Store
-                          version, Phi Silica) and the model, and download it, under Built-in AI.
-                          Mimer only uses an AI on this computer.
-                        </p>
-                        <div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSection("builtin");
-                            }}
-                          >
-                            Open Built-in AI
-                          </Button>
-                        </div>
-                      </div>
-                    ) : provider ? (
-                      <ProviderEditor
-                        provider={provider}
-                        persist={persist}
-                        onChange={(p) => {
-                          setDraft({
-                            ...draft,
-                            ai: {
-                              ...draft.ai,
-                              providers: draft.ai.providers.map((x) => (x.id === p.id ? p : x)),
-                            },
-                          });
-                        }}
-                        onRemove={() => {
-                          const rest = draft.ai.providers.filter((x) => x.id !== provider.id);
-                          const firstLocal = rest.find((x) => effectiveLocation(x) === "local");
-                          setDraft({
-                            ...draft,
-                            ai: {
-                              ...draft.ai,
-                              providers: rest,
-                              defaultProviderId:
-                                draft.ai.defaultProviderId === provider.id
-                                  ? (firstLocal?.id ?? "")
-                                  : draft.ai.defaultProviderId,
-                            },
-                          });
-                          setProviderId(null);
-                        }}
-                      />
-                    ) : (
-                      <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-                        <p>Choose a provider on the left to change it, or press Add provider.</p>
-                        <p>
-                          Mimer only uses an AI that runs on this computer, so your notes never
-                          leave it.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Section>
               <label className="flex items-start gap-2 text-sm">
                 <Checkbox
                   className="mt-1"

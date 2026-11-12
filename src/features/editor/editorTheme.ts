@@ -10,8 +10,9 @@ export const editorTheme = EditorView.theme({
   },
   "&.cm-focused": { outline: "none" },
   ".cm-scroller": {
-    fontFamily: "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif",
-    lineHeight: "1.65",
+    fontFamily: "var(--read-font, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif)",
+    lineHeight: "var(--read-line-height, 1.65)",
+    letterSpacing: "var(--read-letter-spacing, normal)",
     overflow: "auto",
   },
   ".cm-content": {

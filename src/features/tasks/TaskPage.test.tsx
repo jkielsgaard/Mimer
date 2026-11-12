@@ -8,6 +8,7 @@ const apiMock = vi.hoisted(() => ({
   taskSetMeta: vi.fn(),
   taskAddStep: vi.fn(),
   taskAddLog: vi.fn(),
+  taskHistoryAdd: vi.fn(),
   taskEditLog: vi.fn(),
   taskDeleteLog: vi.fn(),
   taskSetNote: vi.fn(),
@@ -27,7 +28,7 @@ vi.mock("@/lib/askAi", () => askMock);
 const blocked = vi.hoisted(() => ({ reason: null as string | null }));
 vi.mock("@/lib/useAiBlocked", () => ({ useAiBlocked: () => blocked.reason }));
 
-import { statusFacts, statusLogLines, TaskPage } from "./TaskPage";
+import { momentsOf, statusFacts, statusLogLines, TaskPage } from "./TaskPage";
 import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
@@ -55,6 +56,7 @@ describe("TaskPage", () => {
     apiMock.taskSetMeta.mockResolvedValue([task]);
     apiMock.taskAddStep.mockResolvedValue([task]);
     apiMock.taskAddLog.mockResolvedValue([task]);
+    apiMock.taskHistoryAdd.mockResolvedValue([task]);
     useTaskStore.setState({
       tasks: [task],
       selected: { path: task.path, line: task.line, title: task.title },
@@ -98,14 +100,81 @@ describe("TaskPage", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Doing" }));
     await waitFor(() => {
-      expect(apiMock.taskSetMeta).toHaveBeenCalledWith(task.path, 5, "key-1", { status: "doing" });
+      expect(apiMock.taskSetMeta).toHaveBeenCalledWith(task.path, 5, "key-1", {
+        status: "doing",
+        waitingFor: null,
+        after: null,
+      });
     });
     await waitFor(() => {
-      expect(apiMock.taskAddLog.mock.calls[0]?.[4]).toBe("Status: doing");
+      expect(apiMock.taskHistoryAdd.mock.calls[0]?.[3]).toBe("Status: doing");
     });
     expect(screen.queryByLabelText("How long it takes")).toBeNull();
     expect(screen.queryByLabelText("Due date")).toBeNull();
     expect(screen.queryByRole("button", { name: /today's list/ })).toBeNull();
+  });
+
+  it("asks who or what a waiting task waits for, saves it when the box is left and logs it", async () => {
+    render(<TaskPage />);
+    const user = userEvent.setup();
+    const box = screen.getByRole("textbox", { name: /Waiting for \(optional\)/ });
+    await user.type(box, "the customer: reply on the quote");
+    await user.tab();
+    await waitFor(() => {
+      expect(apiMock.taskSetMeta).toHaveBeenCalledWith(task.path, 5, "key-1", {
+        waitingFor: "the customer: reply on the quote",
+      });
+    });
+    await waitFor(() => {
+      expect(apiMock.taskHistoryAdd.mock.calls[0]?.[3]).toBe(
+        "Waiting for: the customer: reply on the quote",
+      );
+    });
+  });
+
+  it("does not ask what it waits for unless the status is Waiting", () => {
+    useTaskStore.setState({ tasks: [makeTask({ status: "doing" })] });
+    render(<TaskPage />);
+    expect(screen.queryByRole("textbox", { name: /Waiting for/ })).toBeNull();
+  });
+
+  it("shows where you left off at the top, from the latest Left off line of the log", () => {
+    useTaskStore.setState({
+      tasks: [
+        makeTask({
+          status: "doing",
+          log: [
+            {
+              line: 8,
+              date: "2026-10-16",
+              text: "Left off: Ask Peter about a discount",
+              key: "l1",
+            },
+          ],
+        }),
+      ],
+    });
+    render(<TaskPage />);
+    expect(screen.getByRole("note", { name: "Where you left off" })).toHaveTextContent(
+      "Ask Peter about a discount",
+    );
+  });
+
+  it("says which tasks wait for this one to be done", async () => {
+    const other = makeTask({
+      path: "IT/Network.md",
+      line: 3,
+      key: "k2",
+      title: "Upgrade the VPN gateway",
+      status: "waiting",
+      after: "Møder/Acme#Renew the Acme licence",
+    });
+    useTaskStore.setState({ tasks: [task, other] });
+    render(<TaskPage />);
+    const box = screen.getByRole("region", { name: "Waiting for this task" });
+    expect(box).toHaveTextContent("Upgrade the VPN gateway");
+    await userEvent.setup().click(within(box).getByRole("button", { name: /Upgrade the VPN/ }));
+    expect(useTaskStore.getState().selected?.title).toBe("Upgrade the VPN gateway");
   });
 
   it("shows the day the task was made", () => {
@@ -315,5 +384,23 @@ describe("the status line", () => {
     const lines = statusLogLines(makeTask({ log }));
     expect(lines).toHaveLength(10);
     expect(lines[9]?.text).toBe("Line 24");
+  });
+});
+
+describe("the log and the history of a task", () => {
+  it("are shown together, newest first, and a line Mimer wrote is not in the log", () => {
+    const t = makeTask({
+      log: [
+        { line: 1, date: "2026-10-14", text: "Called Peter", key: "a" },
+        { line: 2, date: "2026-10-16", text: "Peter answered", key: "b" },
+      ],
+      history: [
+        { date: "2026-10-15", text: "Status: waiting" },
+        { date: "2026-10-16", text: "Status: doing" },
+      ],
+    });
+    const order = momentsOf(t).map((m) => m.entry.text);
+    expect(order).toEqual(["Peter answered", "Status: doing", "Status: waiting", "Called Peter"]);
+    expect(t.log.map((l) => l.text)).not.toContain("Status: waiting");
   });
 });

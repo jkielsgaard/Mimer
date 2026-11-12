@@ -45,20 +45,18 @@ export const PROVIDER_HELP: Record<ProviderKind, ProviderHelp> = {
     notes: ["Mimer, which reads your notes, never uses a cloud provider."],
   },
   foundry_local: {
-    summary: "Mimer's Foundry Local, set up under Settings → Built-in AI.",
-    steps: ["Open Settings → Built-in AI, choose Foundry Local and press Download."],
+    summary: "Mimer's Foundry Local, set up under Settings → AI.",
+    steps: ["Open Settings → AI, choose Foundry Local and press Download."],
     notes: [],
   },
   phi_silica: {
-    summary: "Phi Silica, built into Windows on Copilot+ PCs, chosen under Settings → Built-in AI.",
-    steps: [
-      "Open Settings → Built-in AI, choose Windows AI · Phi Silica and press Test Phi Silica.",
-    ],
+    summary: "Phi Silica, built into Windows on Copilot+ PCs, chosen under Settings → AI.",
+    steps: ["Open Settings → AI, choose Windows AI · Phi Silica and press Test Phi Silica."],
     notes: ["Only in the Microsoft Store version. It cannot call tools."],
   },
   builtin: {
-    summary: "Mimer's own AI, set up under Settings → Built-in AI.",
-    steps: ["Open Settings → Built-in AI and press Download."],
+    summary: "Mimer's own AI, set up under Settings → AI.",
+    steps: ["Open Settings → AI and press Download."],
     notes: [],
   },
 };

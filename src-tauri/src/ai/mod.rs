@@ -9,6 +9,7 @@ pub mod prompt;
 pub mod proposals;
 pub mod providers;
 pub mod router;
+pub mod selftest;
 pub mod skill_run;
 pub mod tools;
 

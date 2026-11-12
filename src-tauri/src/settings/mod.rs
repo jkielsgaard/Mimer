@@ -53,6 +53,28 @@ pub struct EditorSettings {
     /// Write the day's work (notes written in, tasks made, worked on and finished) under
     /// "Worked on" in today's daily note.
     pub trace_work: bool,
+    /// Space between the lines of text: `normal`, `roomy` or `extra`.
+    pub line_spacing: String,
+    /// Space between the letters: `normal` or `wide`.
+    pub letter_spacing: String,
+    /// The font of the text: `system`, `serif` or `mono`.
+    pub text_font: String,
+    /// The line you are in stays clear and the others are a little dimmer.
+    pub follow_line: bool,
+}
+
+/// The words each reading choice may have, the first is the default.
+const LINE_SPACINGS: [&str; 3] = ["normal", "roomy", "extra"];
+const LETTER_SPACINGS: [&str; 2] = ["normal", "wide"];
+const TEXT_FONTS: [&str; 3] = ["system", "serif", "mono"];
+
+/// `value` when it is one of `allowed`, else the first of them.
+fn one_of(value: &str, allowed: &[&str]) -> String {
+    if allowed.contains(&value) {
+        value.to_string()
+    } else {
+        allowed[0].to_string()
+    }
 }
 
 impl Default for EditorSettings {
@@ -65,6 +87,10 @@ impl Default for EditorSettings {
             ai_spelling: false,
             own_words: Vec::new(),
             trace_work: false,
+            line_spacing: "normal".into(),
+            letter_spacing: "normal".into(),
+            text_font: "system".into(),
+            follow_line: false,
         }
     }
 }
@@ -418,6 +444,37 @@ pub struct Settings {
     /// `.vault/config.json`, which is committed: a folder on this computer must not travel with
     /// the notes.
     pub backups: HashMap<String, VaultBackup>,
+    /// The taskbar helper (Windows only): keys that work in every program, and the icon.
+    pub helper: HelperSettings,
+}
+
+/// The taskbar helper's choices. It does nothing unless `enabled`.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase", default)]
+#[ts(export)]
+pub struct HelperSettings {
+    pub enabled: bool,
+    /// Closing the window hides it and leaves Mimer in the taskbar (Quit is in its menu).
+    pub keep_running: bool,
+    /// The keys that open the small window for writing something down, as `Ctrl+Alt+N`.
+    pub quick_note_key: String,
+    /// The keys that open the small window for "where I left off".
+    pub park_key: String,
+}
+
+/// The keys the helper has until the person chooses others.
+pub const DEFAULT_QUICK_NOTE_KEY: &str = "Ctrl+Alt+N";
+pub const DEFAULT_PARK_KEY: &str = "Ctrl+Alt+P";
+
+impl Default for HelperSettings {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            keep_running: true,
+            quick_note_key: DEFAULT_QUICK_NOTE_KEY.into(),
+            park_key: DEFAULT_PARK_KEY.into(),
+        }
+    }
 }
 
 /// The backup chosen for one vault, and how the last one went.
@@ -446,6 +503,7 @@ impl Default for Settings {
             git: GitSettings::default(),
             ai: AiSettings::default(),
             backups: HashMap::new(),
+            helper: HelperSettings::default(),
         }
     }
 }
@@ -501,6 +559,18 @@ impl Settings {
         self.git.idle_commit_minutes = self.git.idle_commit_minutes.clamp(1, 60);
         self.editor.font_size = self.editor.font_size.clamp(10, 32);
         self.editor.line_width = self.editor.line_width.clamp(400, 2000);
+        for (key, default) in [
+            (&mut self.helper.quick_note_key, DEFAULT_QUICK_NOTE_KEY),
+            (&mut self.helper.park_key, DEFAULT_PARK_KEY),
+        ] {
+            *key = key.split('+').map(str::trim).collect::<Vec<_>>().join("+");
+            if key.is_empty() {
+                *key = default.into();
+            }
+        }
+        self.editor.line_spacing = one_of(&self.editor.line_spacing, &LINE_SPACINGS);
+        self.editor.letter_spacing = one_of(&self.editor.letter_spacing, &LETTER_SPACINGS);
+        self.editor.text_font = one_of(&self.editor.text_font, &TEXT_FONTS);
         self.editor.recent_notes = self.editor.recent_notes.min(MAX_RECENT_NOTES);
         if self.recent_vaults.len() > 10 {
             self.recent_vaults.truncate(10);
@@ -710,6 +780,22 @@ pub fn save(path: &Path, settings: &Settings) -> AppResult<()> {
 
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    fn the_reading_choices_have_defaults_and_unknown_words_fall_back() {
+        let old: Settings =
+            serde_json::from_str(r#"{"schemaVersion":1,"editor":{"fontSize":15}}"#).unwrap();
+        assert_eq!(old.editor.line_spacing, "normal");
+        assert!(!old.editor.follow_line);
+        let mut s = Settings::default();
+        s.editor.line_spacing = "extra".into();
+        s.editor.letter_spacing = "huge".into();
+        s.editor.text_font = "serif".into();
+        s.normalize();
+        assert_eq!(s.editor.line_spacing, "extra");
+        assert_eq!(s.editor.letter_spacing, "normal");
+        assert_eq!(s.editor.text_font, "serif");
+    }
     use super::*;
 
     #[test]

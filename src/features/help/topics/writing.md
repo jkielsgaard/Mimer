@@ -34,7 +34,13 @@ Every note you open gets a tab. Close with the **×** or **Ctrl/Cmd+W**. Press *
 
 Click the **</>** button at the right end of the toolbar (or **Go → Show Markdown source**, or **Ctrl/Cmd+Alt+M**) to see the note exactly as it is stored: every `#`, `**` and `[[...]]` visible, in a monospace font. Click the eye button to go back to the formatted view. Mimer remembers your choice. Nothing in the note changes when you switch.
 
+## Reading comfort
+
+**Settings → General → Reading** changes how the text looks while you read and write: the space between lines (Normal, Roomy, Extra roomy), the space between letters, the font (System, Serif or Monospace) and **Follow the line**, which keeps the line you are in clear and makes the others a little dimmer. A choice shows at once, in an example and in every note, and is kept when you press Save; Cancel puts it back. **Back to the defaults** resets them. The text size and the line width are just above.
+
 ## Diagrams
+
+Select a text that describes a flow and choose **Draw as a diagram** in the AI menu: Mimer proposes a diagram next to the text, and **Add under the text** writes it as the Mermaid block below, which you can edit as text.
 
 A fenced block written with the language `mermaid` (or with no language, when its first line starts a diagram such as `graph TD`) is drawn as a diagram while the cursor is somewhere else; click the picture to edit the code. It is plain Markdown (GitHub draws it too), and it is drawn on this computer. A diagram with a mistake shows what is wrong and its code.
 

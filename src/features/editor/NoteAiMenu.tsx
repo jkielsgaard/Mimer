@@ -74,6 +74,13 @@ const GROUPS: { label: string; entries: Entry[] }[] = [
   {
     label: "Make something from it",
     entries: [
+      {
+        label: "In short",
+        hint: "Main points and things to do; nothing is written",
+        run: () => {
+          useUiStore.getState().setInShortOpen(true);
+        },
+      },
       { label: "Split into notes", hint: "One note per heading", skill: "split" },
       { label: "An e-mail from this note", hint: "Opens as a new note", skill: "email-from-note" },
     ],

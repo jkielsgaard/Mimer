@@ -2,6 +2,7 @@
 import type { AiSettings } from "./AiSettings";
 import type { EditorSettings } from "./EditorSettings";
 import type { GitSettings } from "./GitSettings";
+import type { HelperSettings } from "./HelperSettings";
 import type { Theme } from "./Theme";
 import type { VaultBackup } from "./VaultBackup";
 
@@ -11,4 +12,8 @@ export type Settings = { schemaVersion: number, recentVaults: Array<string>, las
  * `.vault/config.json`, which is committed: a folder on this computer must not travel with
  * the notes.
  */
-backups: { [key in string]: VaultBackup }, };
+backups: { [key in string]: VaultBackup }, 
+/**
+ * The taskbar helper (Windows only): keys that work in every program, and the icon.
+ */
+helper: HelperSettings, };

@@ -17,4 +17,20 @@ ownWords: Array<string>,
  * Write the day's work (notes written in, tasks made, worked on and finished) under
  * "Worked on" in today's daily note.
  */
-traceWork: boolean, };
+traceWork: boolean, 
+/**
+ * Space between the lines of text: `normal`, `roomy` or `extra`.
+ */
+lineSpacing: string, 
+/**
+ * Space between the letters: `normal` or `wide`.
+ */
+letterSpacing: string, 
+/**
+ * The font of the text: `system`, `serif` or `mono`.
+ */
+textFont: string, 
+/**
+ * The line you are in stays clear and the others are a little dimmer.
+ */
+followLine: boolean, };

@@ -36,7 +36,7 @@ const GPUS: { id: GpuVendor; label: string }[] = [
   { id: "none", label: "None: use the processor only" },
 ];
 
-/** Settings → Built-in AI: choose hardware and model, download, tune, and clean up. */
+/** Settings → AI: choose hardware and model, download, tune, and clean up. */
 export function BuiltInAiSettings({ draft, onChange }: Props) {
   const status = useEngineStore((s) => s.status);
   const catalog = useEngineStore((s) => s.catalog);

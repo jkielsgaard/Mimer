@@ -106,7 +106,7 @@ function Line({ name, check }: { name: string; check: PhiCheck }) {
 }
 
 /**
- * Settings → Built-in AI → Windows AI · Phi Silica: what Windows says on this PC, a test, and the
+ * Settings → AI → Windows AI · Phi Silica: what Windows says on this PC, a test, and the
  * button that makes Mimer use it. Nothing is chosen by itself.
  */
 export function PhiSilicaSettings({

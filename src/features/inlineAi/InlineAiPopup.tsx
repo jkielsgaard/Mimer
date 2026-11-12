@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AiOffNote } from "@/components/AiOffNote";
 import { api, toApiError } from "@/lib/api";
 import { missingFacts, factsOf } from "@/lib/facts";
+import { looksLikeDiagram, withDiagram } from "@/lib/diagram";
 import { stripCodeFence } from "@/lib/fence";
 import { wakeIfNeeded } from "@/lib/wake";
 import { cn } from "@/lib/utils";
@@ -54,7 +55,7 @@ const GROUPS: { label: string; ids: InlineActionId[] }[] = [
   { label: "Change the text", ids: ["fix", "clearer", "shorten", "list"] },
   { label: "Rewrite, same meaning", ids: ["simpler", "formal", "friendly"] },
   { label: "Translate", ids: ["toDanish", "toEnglish"] },
-  { label: "Use the text", ids: ["explain", "findTasks"] },
+  { label: "Use the text", ids: ["explain", "diagram", "findTasks"] },
 ];
 
 /**
@@ -117,7 +118,13 @@ export function InlineAiPopup({
               setError(e.error.message);
               setPhase("choose");
             } else if (e.type === "done") {
-              setResult(stripCodeFence(raw.current).trim());
+              const text = stripCodeFence(raw.current).trim();
+              if (a.diagram === true && !looksLikeDiagram(text)) {
+                setError("The AI did not answer with a diagram. Try again.");
+                setPhase("choose");
+                return;
+              }
+              setResult(text);
               setPhase((p) => (p === "running" ? "review" : p));
             }
           },
@@ -144,6 +151,7 @@ export function InlineAiPopup({
   }, [onClose]);
 
   const answerOnly = action?.answer === true;
+  const isDiagram = action?.diagram === true;
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === "Escape") {
@@ -207,7 +215,7 @@ export function InlineAiPopup({
               {g.ids
                 .map((id) => INLINE_ACTIONS.find((a) => a.id === id))
                 .filter((a): a is InlineAction => a !== undefined)
-                .filter((a) => allowFindTasks || a.id !== "findTasks")
+                .filter((a) => allowFindTasks || (a.id !== "findTasks" && !a.diagram))
                 .map((a) => (
                   <PlainButton
                     key={a.id}
@@ -280,15 +288,29 @@ export function InlineAiPopup({
               <RotateCcw /> Try again
             </Button>
             {answerOnly ? (
-              <Button
-                size="sm"
-                disabled={phase === "running" || result === ""}
-                onClick={() => {
-                  void navigator.clipboard.writeText(result).catch(() => undefined);
-                }}
-              >
-                <Copy /> Copy
-              </Button>
+              <>
+                <Button
+                  variant={isDiagram ? "outline" : "default"}
+                  size="sm"
+                  disabled={phase === "running" || result === ""}
+                  onClick={() => {
+                    void navigator.clipboard.writeText(result).catch(() => undefined);
+                  }}
+                >
+                  <Copy /> Copy
+                </Button>
+                {isDiagram && (
+                  <Button
+                    size="sm"
+                    disabled={phase === "running" || result === ""}
+                    onClick={() => {
+                      onAccept(withDiagram(selection.text, result), action.label);
+                    }}
+                  >
+                    <Check /> Add under the text
+                  </Button>
+                )}
+              </>
             ) : (
               <Button
                 size="sm"
@@ -301,7 +323,7 @@ export function InlineAiPopup({
               </Button>
             )}
           </div>
-          {!answerOnly && (
+          {(!answerOnly || isDiagram) && (
             <p className="text-[11px] text-muted-foreground">
               Your note is saved first, so it can be undone from History.
             </p>

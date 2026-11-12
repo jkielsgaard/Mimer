@@ -6,7 +6,10 @@ import { ProjectDialog } from "@/features/projects/ProjectDialog";
 import { ProposalReview } from "@/features/proposals/ProposalReview";
 import { QuickCapture } from "@/features/capture/QuickCapture";
 import { FindTasksDialog } from "@/features/tasks/FindTasksDialog";
+import { InShortDialog } from "@/features/inlineAi/InShortDialog";
+import { MetaMigrationDialog } from "@/features/vaults/MetaMigrationDialog";
 import { FocusMode } from "@/features/tasks/FocusMode";
+import { LeftOffPrompt } from "@/features/tasks/LeftOffPrompt";
 import { FirstRunDialog } from "@/features/welcome/FirstRunDialog";
 import { CommandPalette } from "@/features/quickOpen/CommandPalette";
 import { QuickOpen } from "@/features/quickOpen/QuickOpen";
@@ -35,6 +38,8 @@ import {
 import { api } from "@/lib/api";
 import {
   onCloseRequested,
+  onFlushRequested,
+  onHelperChanged,
   onEmbeddingStatus,
   onEngineStatus,
   onFoundryStatus,
@@ -47,6 +52,8 @@ import { NoticeDialog } from "@/components/NoticeDialog";
 import { NewNoteDialog } from "@/features/fileTree/NewNoteDialog";
 import { useEmbeddingStore } from "@/stores/embeddingStore";
 import { flushPendingWrites } from "@/lib/flush";
+import { useIdeaStore } from "@/stores/ideaStore";
+import { useTaskStore } from "@/stores/taskStore";
 import { applyTheme } from "@/lib/themes";
 import { useShortcuts } from "@/lib/shortcuts";
 import { useSettingsStore } from "@/stores/settingsStore";
@@ -73,6 +80,17 @@ function useBackendEvents(active: boolean): void {
         timer = setTimeout(() => {
           void useVaultStore.getState().refreshTree();
         }, 250);
+      }),
+    );
+    keep(
+      onFlushRequested(() => {
+        void flushPendingWrites();
+      }),
+    );
+    keep(
+      onHelperChanged(() => {
+        void useTaskStore.getState().load();
+        void useIdeaStore.getState().load();
       }),
     );
     keep(
@@ -271,7 +289,10 @@ export function App() {
       <MeetingFocus />
       <FirstRunDialog />
       <FocusMode />
+      <LeftOffPrompt />
       <FindTasksDialog />
+      <InShortDialog />
+      <MetaMigrationDialog />
       <QuickCapture />
       <SettingsDialog />
       <RecoverDeletedDialog />

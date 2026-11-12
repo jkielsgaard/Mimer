@@ -19,10 +19,10 @@ export function aiBlocked(
   const ready = (state: string | undefined): boolean =>
     state === "awake" || state === "asleep" || state === "waking" || state === "installing";
   if (provider.kind === "builtin" && !ready(engineState)) {
-    return "The built-in AI is not set up or has a problem. Open Settings → Built-in AI.";
+    return "The built-in AI is not set up or has a problem. Open Settings → AI.";
   }
   if (provider.kind === "foundry_local" && !ready(foundryState)) {
-    return "Foundry Local is not set up or has a problem. Open Settings → Built-in AI.";
+    return "Foundry Local is not set up or has a problem. Open Settings → AI.";
   }
   return null;
 }

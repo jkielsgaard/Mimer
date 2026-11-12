@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { makeTask } from "@/test/taskFixtures";
 
 const apiMock = vi.hoisted(() => ({
@@ -32,7 +32,14 @@ import { useUiStore } from "@/stores/uiStore";
 import { useVaultStore } from "@/stores/vaultStore";
 
 describe("TasksView", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   beforeEach(() => {
+    // Only the date is fixed, so the epics made on 19 October are not quiet yet.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 25));
     localStorage.clear();
     for (const f of Object.values(apiMock)) f.mockReset();
     apiMock.listTasks.mockResolvedValue([
@@ -93,11 +100,54 @@ describe("TasksView", () => {
     const user = userEvent.setup();
     await screen.findByText("Write the steps");
     await user.click(screen.getByRole("button", { name: "Fold VPN guide" }));
-    expect(screen.queryByText("Write the steps")).toBeNull();
+    // A folded epic is a card: no task list and no add box, but what is next.
+    expect(screen.queryByLabelText("Add a task to VPN guide")).toBeNull();
+    expect(
+      within(screen.getByRole("region", { name: "VPN guide" })).getByText("Next"),
+    ).toBeVisible();
     expect(useTaskStore.getState().folded["Tasks/VPN guide.md"]).toBe(true);
     expect(localStorage.getItem("mimer.foldedEpics")).toContain("Tasks/VPN guide.md");
     await user.click(screen.getByRole("button", { name: "Unfold VPN guide" }));
     expect(screen.getByText("Write the steps")).toBeInTheDocument();
+  });
+
+  it("shows only what a filter asks for, and lists the quiet epics apart", async () => {
+    apiMock.listTasks.mockResolvedValue([
+      makeTask({
+        path: "Tasks/VPN guide.md",
+        line: 3,
+        title: "Write the steps",
+        status: "doing",
+        made: "2026-10-19",
+      }),
+      makeTask({
+        path: "Tasks/VPN guide.md",
+        line: 4,
+        title: "Ask the vendor",
+        status: "waiting",
+        waitingFor: "the vendor: reply",
+        made: "2026-10-19",
+      }),
+      makeTask({ path: "Tasks/Old one.md", line: 2, title: "Forgotten task", made: "2026-09-01" }),
+    ]);
+    apiMock.listEpics.mockResolvedValue([
+      { path: "Tasks/VPN guide.md", title: "VPN guide", source: null },
+      { path: "Tasks/Old one.md", title: "Old one", source: null },
+    ]);
+    render(<TasksView />);
+    const user = userEvent.setup();
+    await screen.findByText("Write the steps");
+    // Nothing has happened in "Old one" for over 14 days: it waits under its own heading.
+    expect(screen.queryByRole("region", { name: "Old one" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: /Quiet for 14 days · 1/ }));
+    expect(screen.getByRole("region", { name: "Old one" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Waiting" }));
+    expect(screen.getByText("Ask the vendor")).toBeInTheDocument();
+    expect(screen.queryByText("Write the steps")).toBeNull();
+    expect(screen.queryByRole("region", { name: "Old one" })).toBeNull();
+    await user.click(screen.getByRole("button", { name: "Next up" }));
+    expect(screen.getByText("Write the steps")).toBeInTheDocument();
+    expect(screen.queryByText("Ask the vendor")).toBeNull();
   });
 
   it("opens an epic, and makes a new one from a name", async () => {
@@ -129,8 +179,8 @@ describe("TasksView", () => {
     const user = userEvent.setup();
     await screen.findByText("Write the steps");
     await user.click(screen.getByRole("button", { name: "Fold all" }));
-    expect(screen.queryByText("Write the steps")).toBeNull();
-    expect(screen.queryByText("Renew the licence")).toBeNull();
+    expect(screen.queryByLabelText("Add a task to VPN guide")).toBeNull();
+    expect(screen.queryByLabelText("Add a task to Acme")).toBeNull();
     await user.click(screen.getByRole("button", { name: "Unfold all" }));
     expect(screen.getByText("Write the steps")).toBeInTheDocument();
   });

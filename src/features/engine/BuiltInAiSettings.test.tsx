@@ -15,7 +15,7 @@ function settings(): Settings {
   return makeSettings();
 }
 
-describe("Settings → Built-in AI", () => {
+describe("Settings → AI", () => {
   const install = vi.fn().mockResolvedValue(undefined);
   const remove = vi.fn().mockResolvedValue(undefined);
   const load = vi.fn().mockResolvedValue(undefined);

@@ -32,7 +32,7 @@ function settings(defaultProviderId = "lm"): Settings {
   return makeSettings({ ai: { defaultProviderId: defaultProviderId } });
 }
 
-describe("Settings → Built-in AI → Phi Silica", () => {
+describe("Settings → AI → Phi Silica", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

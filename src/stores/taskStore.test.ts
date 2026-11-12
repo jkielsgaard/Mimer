@@ -10,6 +10,7 @@ const apiMock = vi.hoisted(() => ({
   taskSetMeta: vi.fn(),
   taskAddStep: vi.fn(),
   taskAddLog: vi.fn(),
+  taskHistoryAdd: vi.fn(),
   setEpicOrder: vi.fn(),
 }));
 vi.mock("@/lib/api", () => ({
@@ -82,16 +83,18 @@ describe("taskStore", () => {
     });
   });
 
-  it("writes a status in the log, using the new line key", async () => {
+  it("writes a status in the task's history, not in the note's log", async () => {
     const t = makeTask();
     apiMock.taskSetMeta.mockResolvedValue([makeTask({ key: "key-2", status: "waiting" })]);
-    apiMock.taskAddLog.mockResolvedValue([makeTask({ key: "key-3", status: "waiting" })]);
+    apiMock.taskHistoryAdd.mockResolvedValue([makeTask({ key: "key-2", status: "waiting" })]);
     await useTaskStore.getState().setStatus(t, "waiting");
     expect(apiMock.taskSetMeta).toHaveBeenCalledWith("Møder/Acme.md", 5, "key-1", {
       status: "waiting",
     });
-    expect(apiMock.taskAddLog.mock.calls[0]?.[2]).toBe("key-2");
-    expect(apiMock.taskAddLog.mock.calls[0]?.[4]).toBe("Status: waiting");
+    expect(apiMock.taskHistoryAdd.mock.calls[0]?.[0]).toBe("Møder/Acme.md");
+    expect(apiMock.taskHistoryAdd.mock.calls[0]?.[1]).toBe("Renew the Acme licence");
+    expect(apiMock.taskHistoryAdd.mock.calls[0]?.[3]).toBe("Status: waiting");
+    expect(apiMock.taskAddLog).not.toHaveBeenCalled();
   });
 
   it("finds a task again when its line moved", () => {

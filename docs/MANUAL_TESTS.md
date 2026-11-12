@@ -18,7 +18,7 @@ Run these on the build that is going to be released (the installer or the AppIma
 - [ ] Press **Ctrl+S** or wait: History of the note lists the change; restore the earlier version and then undo it.
 - [ ] Settings → Vault → Backup: choose a folder, **Back up now**: "Backed up today …".
 - [ ] Settings → General → Theme: pick Midnight and Save; restart: the theme stays.
-- [ ] Settings → Built-in AI: the engine you chose can **Download** a small model (Windows and Linux installer), then **Wake**; the status bar chip changes.
+- [ ] Settings → AI: the engine you chose can **Download** a small model (Windows and Linux installer), then **Wake**; the status bar chip changes.
 - [ ] One AI command with its review: select a sentence with a spelling mistake → **Fix**; the change is shown beside the original; **Accept** writes it, and **Undo last AI change** brings it back.
 - [ ] With no AI running, an AI button is greyed out and says why; everything else still works.
 - [ ] Help → **What's new** shows the changes of this version; **Help → Check for new version…** opens the releases page in the browser.
@@ -121,6 +121,10 @@ Check with `git log --oneline` in the vault folder.
 - [ ] `Ctrl/Cmd+Shift+T` or the Tasks icon: one outline of epics, each a box with "N of M" and a bar; the left panel lists the epics. There is no Today, Later, due date or "Moved from earlier" anywhere.
 - [ ] Fold an epic: only its name and progress are left. **Fold all** and **Unfold all** do every epic. Restart: what was folded is still folded. Finished epics are under **Done · N** at the bottom, folded; the button shows them.
 - [ ] A task with steps has an arrow: unfold it, tick a step and add one (**+ Add a step**) right in the list; the note shows the step.
+- [ ] In an epic with done and open tasks: the open tasks are first and the done ones are last under **Done · N**, on the task list and on the epic page; the note keeps its own order. The arrows on an open task jump over done tasks. Tick an open task: it drops under **Done**.
+- [ ] The buttons **All**, **Doing**, **Waiting** and **Next up** show only those tasks (and only the epics that have them). A folded epic is a card with **Doing n**, **Waiting n**, **Next** and **Waiting for**; the arrow or the name opens it. An epic where nothing was made or written for 14 days is under **Quiet for 14 days**.
+- [ ] Task page, status **Waiting**: **Waiting for (optional)**, type "the customer: reply on the quote" and click away. The file has `status:waiting for:"the customer: reply on the quote"`, the log has "Waiting for: …", and the list shows the text next to **Waiting**. Change the status to Doing: the text and the link are gone from the line.
+- [ ] **Waiting for a task…**: type part of another task's title, choose it. The page shows it with its steps; the file has `after:"<note>#<title>"`. Tick that task: this one says **Ready** (page and list). Rename that task: the link still finds it. Open that other task: it says **Waiting for this task** with the task that waits, and the list shows "1 waiting for this". Press the cross: the link is gone.
 - [ ] **+ Add a task to …** at the bottom of an open epic: type "Print the guide tomorrow" and press Enter. The title is exactly that (no date is read from it) and the file has `made:<today>` at the end of the line; the list shows the day it was made.
 - [ ] **New epic** "Office move": `Tasks/Office move.md` is made and opens. Add three tasks, tick all: the epic moves to **Done**; untick one: it comes back.
 - [ ] Select a line in a note → **As a task**: `Tasks/<note>.md` has a `source:` line and the task (with `made:`); the note is unchanged. The epic page shows **Came from**.
@@ -151,10 +155,10 @@ Check with `git log --oneline` in the vault folder.
 
 ### 10. Setting up the AI
 
-- [ ] **Settings → Built-in AI**: two engine cards, **Foundry Local** and **llama.cpp**; none is chosen for a new user.
+- [ ] **Settings → AI**: two engine cards, **Foundry Local** and **llama.cpp**; none is chosen for a new user.
 - [ ] llama.cpp: the hardware found is shown and pre-selected; a model shows its size and memory; **Download** shows progress, Cancel and continue work; the built-in AI becomes Mimer's provider. **Add my own model file…** copies a `.gguf`.
 - [ ] Outside the Store version there is no Phi Silica card. In the **Store version on a Copilot+ PC**: a third card **Windows AI · Phi Silica**, llama.cpp greyed out. "Phi Silica on this PC" shows Access, This PC and The model (green, or the reason in plain words with Windows' answer in grey). **Test Phi Silica** answers the test sentence; **Use Phi Silica for my notes** makes it the AI; Fix on a selected paragraph and a chat question about the open note work; the chat says tools are not available. **Copy for a bug report** copies the lines. On a PC that is not Copilot+: the card is greyed out with the reason, and Foundry Local still works.
-- [ ] **Settings → AI**: one list "Which AI Mimer uses", in the order for this computer (Store on Copilot+: Phi Silica, Foundry Local, LM Studio, Cloud AI; Windows installer: llama.cpp first; Linux: llama.cpp, LM Studio, Foundry Local). Each line shows its state; choosing a ready one makes it Mimer's AI; a line that is not set up offers **Set up the chosen AI**.
+- [ ] **Settings → AI**: one list "Which AI Mimer uses", in the order for this computer (Store on Copilot+: Phi Silica, Foundry Local, LM Studio, Cloud AI; Windows installer: llama.cpp first; Linux: llama.cpp, LM Studio, Foundry Local). Each line shows its state; choosing a ready one makes it Mimer's AI; the chosen row shows its own setup right under it. No line says Recommended; the built-in AIs are marked **Beta**. **Test it** (under an AI that is set up) sends one short question and shows the answer, or the error with **Copy for a bug report**.
 - [ ] **Cloud AI**: add an OpenAI-compatible provider with a cloud address and key; choose Cloud AI: the warning lists what is sent, **Use the cloud AI** is greyed out until "I understand…" is ticked; **Keep the AI on this computer** changes nothing. After using it: the status bar shows **Cloud AI**, the chat note is orange ("your notes go to …"), and a chat answer comes from it. A project with **Local AI only** uses a local AI instead. Choose another AI, then Cloud AI again: the warning comes again.
 - [ ] Foundry Local list: every chat model (also "No tools"), each with "good for", maker, size, runs on, reads about N words, licence. Search, Writing/Reasoning/Code, Can use tools, Downloaded, Runs on, Size and Sort work; **All Foundry Local models at Microsoft** opens the browser. Download a model without tools: text commands work, the chat says tools are not available.
 - [ ] Translate to English on Danish text (Phi Silica and a Foundry model): the answer is in English.
@@ -163,7 +167,7 @@ Check with `git log --oneline` in the vault folder.
 - [ ] A problem (too large a context, missing driver) shows a red box with steps, **Show details** and **Copy details**.
 - [ ] **Remove** a model and all files (with a confirmation) cleans the folder shown in the settings.
 - [ ] Nothing from the built-in AI is reachable from outside: `curl http://127.0.0.1:<port>/v1/models` without a key is refused.
-- [ ] **Settings → AI → More: LM Studio and other providers** → LM Studio: **Load models**, pick one, **Test connection** says connected. An OpenAI-compatible provider with a non-local address shows that it is not used.
+- [ ] **Settings → AI → LM Studio, or another AI on this computer** → LM Studio: **Load models**, pick one, **Test connection** says connected. An OpenAI-compatible provider with a non-local address shows that it is not used.
 - [ ] An API key shows "Key stored" and is **not** in `settings.json` (it is in the system keychain).
 - [ ] The status bar AI chip: green when ready, grey when asleep (with **Wake**), blue while working (with **Stop**), red with **Fix** on a problem. Clicking it shows the model and where it runs.
 - [ ] First run with no model: the welcome appears once; **Skip setup** does not bring it back.
@@ -221,7 +225,7 @@ Check with `git log --oneline` in the vault folder.
 
 ### 17. Settings
 
-- [ ] **File → Settings…** (`Ctrl/Cmd+,`): General, AI (marked Beta), Version history, Vault. The AI tab has the beta note, the list of AIs, then the folded sections **Built-in AI: set up** and **More: LM Studio and other providers**.
+- [ ] **File → Settings…** (`Ctrl/Cmd+,`): General, AI (marked Beta), Version history, Vault. The AI tab has the beta note, the list of AIs, then the list of AIs; the chosen row has its own setup under it (no folded sections).
 - [ ] **First start** (clear `mimer.betaNoticeSeen`): "Welcome to Mimer" says it is a first version and that the AI is beta; **Got it** is remembered; **Help → About the AI beta…** shows it again. **Beta** marks sit by the editor AI button, the chat title and the AI tab.
 - [ ] **Right-click on selected text**: Cut, Copy, Paste, Select all, then **AI ›**, Add as a task, Add as an idea. Without a selection the system's own menu shows.
 - [ ] General → Theme: eight cards (Light, Dark, Slate, Paper, Mint, Midnight, Graphite, Ember); a click changes Mimer at once, Save keeps it, closing Settings without saving puts the old theme back. **Follow my computer** follows the computer's Light or Dark; unticking it keeps the theme on screen. Look at the editor, a dialog, the Tasks page and the start page in every theme: text readable, panels, the writing area and raised boxes still apart.
@@ -341,3 +345,22 @@ Check with `git log --oneline` in the vault folder.
 - [ ] **Settings → Vault → Backup**: choose an empty folder, press **Back up now**: "Backed up today …" shows, and the folder holds `<vault name>.git`. Change a note, back up again: it works. Run `git clone <folder>/<vault name>.git /some/new/place` and open that folder as a vault: the notes and the history are there.
 - [ ] Choose a folder that holds another backup (of another vault with the same name) and press **Back up now**: "The backup folder holds another history. Choose an empty folder." and nothing in that folder changed.
 - [ ] Tick **Back up when Mimer closes**, change a note and close Mimer: the backup has the change. Disconnect the disk (or rename the folder) and close Mimer: it still closes; start it again and the status bar says "Backup failed" and opens the backup settings when clicked. With a last backup older than seven days the status bar says "Backup is N days old".
+
+### Reading, in short, next step and the taskbar helper
+
+- [ ] **Settings → General → Reading**: Line spacing, Letter spacing, Text font and **Follow the line** change the open note and the example at once; Cancel puts them back, Save keeps them after a restart. With Follow the line on, only the line the cursor is in is clear.
+- [ ] A long note → **AI → In short**: points and things to do; the note is unchanged; tick some and **Add N tasks to the epic**; **Copy** copies Markdown; **Try again** asks again. Without an AI the entry is greyed out with the reason.
+- [ ] Select a text that describes a flow → **AI ▾ → Draw as a diagram**: a diagram code appears next to the text; **Add under the text** adds a ```mermaid block and the diagram is drawn; the original text is unchanged. Not offered in a one-line field.
+- [ ] Focus on a task, then Esc: **What is the next step?**. Type a line, **Save and leave**: the task page shows **Where you left off** and the log has "Left off: …"; the start page's Continue card shows it too (for a week). **Skip** writes nothing. **Do not ask me again** stops the question; Settings → General turns it on again.
+- [ ] **Windows:** Settings → General → **Taskbar helper**. It is off. Turn it on and Save: a Mimer icon is in the taskbar; under each key it says **Works**. **Ctrl+Alt+N** in another program opens the small window: task (the epic box) or idea, Enter saves, the window closes and the item is in Mimer. **Ctrl+Alt+P**: pick the task (the one in progress is first), write a line, Save: it is in the task's log. Esc closes the window without saving. With no vault open it says to open one.
+- [ ] Choose other keys (click the box, press the keys): they work after Save and the old ones do not. Choose keys another program uses: it says **Another program already uses these keys**. The same keys for both: it says they need different keys. **Use Ctrl+Alt+N** puts the standard keys back.
+- [ ] **Keep Mimer running** on: closing the window hides it, the icon stays; click the icon or **Open Mimer** to show it; **Quit Mimer** ends it (the notes are saved). Off: closing ends Mimer as before. Turn the helper off and Save: the icon and the keys are gone.
+- [ ] **Linux** (and anywhere that is not Windows): the Taskbar helper part of Settings → General is greyed out and says it works on Windows only; nothing else changes. Help → The taskbar helper explains it.
+
+### Mimer's own bookkeeping (`.vault/meta.json`)
+
+- [ ] Pin a note (Tags window or its ··· menu): it is on the start page's Pinned, `.vault/meta.json` lists its path and the note's properties have no `pinned`. Rename or move the note in Mimer: it is still pinned. Unpin: gone from the file.
+- [ ] Task page → Waiting: type what it waits for, and choose a task: the lines of the task in the note have no `for:` or `after:`; `.vault/meta.json` has them under `tasks`. Status changes show in "What has happened" (in a grey line), and the note's log has no "Status: …" line. Rename the task or the task it waits for in Mimer: the link and the text follow.
+- [ ] **Old vault (a note with `tags: [pinned]`, a task line with `for:"…"`):** opening it asks **Move what Mimer keeps to its own file?** with the counts, and says the next version only reads the new place. **Not now**: nothing changes and the pin and the waiting still work. **Move them now**: the tag and the words are gone from the notes, the pins and the waiting still show, History has the notes as they were, and opening the vault again does not ask.
+- [ ] Break `.vault/meta.json` (type nonsense in it): Mimer starts, pins show as empty, and pinning something says the file cannot be read and leaves it as it is.
+- [ ] The file is in the vault's Git history (File → History of the vault, or `git log -- .vault/meta.json`) after the next autosave.

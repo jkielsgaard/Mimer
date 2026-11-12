@@ -6,7 +6,7 @@ import { InlineEdit, RowActions } from "@/components/RowActions";
 import { ViewHeader } from "@/components/ViewHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { epicGroups, noteName } from "@/lib/taskLogic";
+import { epicGroups, noteName, openThenDone } from "@/lib/taskLogic";
 import { useAiBlocked } from "@/lib/useAiBlocked";
 import { useTaskStore } from "@/stores/taskStore";
 import { useUiStore } from "@/stores/uiStore";
@@ -51,6 +51,7 @@ export function EpicPage() {
 
   const from = group.source === null ? null : resolver.resolve(group.source);
   const firstOpen = firstOpenTask(group);
+  const parts = openThenDone(group.tasks);
 
   return (
     <section aria-label="Epic" className="flex h-full min-h-0 flex-col bg-background">
@@ -158,7 +159,7 @@ export function EpicPage() {
           <section aria-label="Tasks" className="rounded-lg border bg-card p-2">
             <h3 className="section-label px-2 pb-1 pt-1">Tasks</h3>
             <ul>
-              {group.tasks.map((t, i, all) => (
+              {parts.open.map((t, i, all) => (
                 <TaskRow
                   key={`${t.path}:${String(t.line)}`}
                   task={t}
@@ -167,6 +168,16 @@ export function EpicPage() {
                 />
               ))}
             </ul>
+            {parts.done.length > 0 && (
+              <>
+                <h3 className="section-label px-2 pb-1 pt-3">Done · {parts.done.length}</h3>
+                <ul>
+                  {parts.done.map((t) => (
+                    <TaskRow key={`${t.path}:${String(t.line)}`} task={t} showNote={false} />
+                  ))}
+                </ul>
+              </>
+            )}
             {group.tasks.length === 0 && (
               <p className="px-2 py-2 text-xs text-muted-foreground">
                 No tasks yet. Add one below, or let the AI suggest some from the note.

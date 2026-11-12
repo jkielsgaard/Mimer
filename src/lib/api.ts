@@ -13,6 +13,10 @@ import type { InlineRequest } from "@/bindings/InlineRequest";
 import type { NoteContent } from "@/bindings/NoteContent";
 import type { Project } from "@/bindings/Project";
 import type { ProposalSetView } from "@/bindings/ProposalSetView";
+import type { AiTestResult } from "@/bindings/AiTestResult";
+import type { HelperStatus } from "@/bindings/HelperStatus";
+import type { KeyStatus } from "@/bindings/KeyStatus";
+import type { MigrationCount } from "@/bindings/MigrationCount";
 import type { ProviderTestResult } from "@/bindings/ProviderTestResult";
 import type { RenamePreview } from "@/bindings/RenamePreview";
 import type { RenameResult } from "@/bindings/RenameResult";
@@ -181,6 +185,8 @@ export const api = {
   deleteApiKey: (providerId: string) => call<undefined>("delete_api_key", { providerId }),
   listModels: (providerId: string) => call<string[]>("list_models", { providerId }),
   testProvider: (providerId: string) => call<ProviderTestResult>("test_provider", { providerId }),
+  /** Asks an AI on this computer one short question (no notes in it). */
+  aiTest: (providerId: string) => call<AiTestResult>("ai_test", { providerId }),
 
   // AI
   aiChat: (request: ChatRequest, onEvent: (e: ChatEvent) => void) =>
@@ -222,6 +228,12 @@ export const api = {
   addImages: (notePath: string, files: string[]) =>
     call<string[]>("add_images", { notePath, files }),
   appPlatform: () => call<AppPlatform>("app_platform"),
+  /** The taskbar helper: whether it works here and how its keys went. */
+  helperStatus: () => call<HelperStatus>("helper_status"),
+  /** Whether text typed as a key combination can be used. */
+  helperCheckKey: (text: string) => call<KeyStatus>("helper_check_key", { text }),
+  /** Closes the helper's small window. */
+  quickClose: () => call<undefined>("quick_close"),
   // Phi Silica (only in the Microsoft Store version)
   phiStatus: () => call<PhiStatus>("phi_status"),
   phiEnsureReady: () => call<PhiStatus>("phi_ensure_ready"),
@@ -241,6 +253,13 @@ export const api = {
     call<Task[]>("task_add_step", { path, line, key, text }),
   taskAddLog: (path: string, line: number, key: string, date: string, text: string) =>
     call<Task[]>("task_add_log", { path, line, key, date, text }),
+  /** A line in a task's history ("Status: doing"), kept in `.vault/meta.json`, not in the note. */
+  taskHistoryAdd: (path: string, title: string, date: string, text: string) =>
+    call<Task[]>("task_history_add", { path, title, date, text }),
+  /** TEMPORARY (0.23): how much is still written in the notes the old way. */
+  metaMigrationStatus: () => call<MigrationCount>("meta_migration_status"),
+  /** TEMPORARY (0.23): moves pins and "waiting for" out of the notes, after the person said yes. */
+  metaMigrate: () => call<MigrationCount>("meta_migrate"),
   taskAdd: (text: string, note?: string, steps?: string[], path?: string) =>
     call<Task[]>("task_add", {
       text,

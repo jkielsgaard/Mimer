@@ -6,7 +6,7 @@ import type { TaskLog } from "@/bindings/TaskLog";
 import type { TaskStep } from "@/bindings/TaskStep";
 import { api, toApiError } from "@/lib/api";
 import { flushPendingWrites } from "@/lib/flush";
-import { taskText, todayIso } from "@/lib/taskLogic";
+import { taskRef, taskText, todayIso } from "@/lib/taskLogic";
 import { reportError, useUiStore } from "./uiStore";
 import { useVaultStore } from "./vaultStore";
 
@@ -92,8 +92,17 @@ interface TaskState {
   rename: (path: string, line: number, key: string, title: string) => Promise<void>;
   setDone: (path: string, line: number, key: string, done: boolean) => Promise<void>;
   setMeta: (t: Task, patch: MetaPatch) => Promise<void>;
-  /** Changes the status and writes it in the log. */
+  /** Writes a line in the task's history (what Mimer did: a status, what it waits for). */
+  addHistory: (t: Task, text: string) => Promise<void>;
+  /** Changes the status and writes it in the task's history. */
   setStatus: (t: Task, status: string | null) => Promise<void>;
+  /** Writes who or what a waiting task waits for (`null` removes it) and notes it in the log. */
+  setWaitingFor: (t: Task, text: string | null) => Promise<void>;
+  /**
+   * Makes `t` wait for another task (`null` takes the link off). A task that waits for a task has
+   * the status Waiting, and the choice is written in the log.
+   */
+  setAfter: (t: Task, other: Task | null) => Promise<void>;
   addStep: (t: Task, text: string) => Promise<void>;
   addLog: (t: Task, text: string) => Promise<void>;
   /** Changes the date and text of one line of the log. */
@@ -340,7 +349,9 @@ export const useTaskStore = create<TaskState>((set, get) => {
       }
     },
     rename: async (path, line, key, title) => {
+      // What is kept about the task, and the tasks that wait for it, follow the new title (Rust).
       const fresh = await mutate(path, () => api.taskSetTitle(path, line, key, title));
+      if (fresh !== null && get().tasks.some((t) => t.after !== null)) void get().load();
       const sel = get().selected;
       if (fresh !== null && sel !== null && sel.path === path && sel.line === line) {
         const now = fresh.find((t) => t.line === line);
@@ -355,15 +366,38 @@ export const useTaskStore = create<TaskState>((set, get) => {
     },
     setStatus: async (t, status) => {
       const fresh = await mutate(t.path, () =>
-        api.taskSetMeta(t.path, t.line, t.key, { status: status === "" ? null : status }),
+        api.taskSetMeta(t.path, t.line, t.key, {
+          status: status === "" ? null : status,
+          // What a task waits for only means something while it waits.
+          ...(status === "waiting" ? {} : { waitingFor: null, after: null }),
+        }),
       );
-      const now = fresh?.find((x) => x.line === t.line);
-      if (now && status !== null && status !== "") {
-        await get().addLog(now, `Status: ${status}`);
+      if (fresh !== null && status !== null && status !== "") {
+        await get().addHistory(t, `Status: ${status}`);
+      }
+    },
+    setWaitingFor: async (t, text) => {
+      const fresh = await mutate(t.path, () =>
+        api.taskSetMeta(t.path, t.line, t.key, { waitingFor: text }),
+      );
+      if (fresh !== null && text !== null) await get().addHistory(t, `Waiting for: ${text}`);
+    },
+    setAfter: async (t, other) => {
+      const fresh = await mutate(t.path, () =>
+        api.taskSetMeta(t.path, t.line, t.key, {
+          after: other === null ? null : taskRef(other),
+          ...(other !== null && t.status !== "waiting" ? { status: "waiting" } : {}),
+        }),
+      );
+      if (fresh !== null && other !== null) {
+        await get().addHistory(t, `Waiting for the task: ${other.title}`);
       }
     },
     addStep: async (t, text) => {
       await mutate(t.path, () => api.taskAddStep(t.path, t.line, t.key, text));
+    },
+    addHistory: async (t, text) => {
+      await mutate(t.path, () => api.taskHistoryAdd(t.path, t.title, todayIso(), text));
     },
     addLog: async (t, text) => {
       await mutate(t.path, () => api.taskAddLog(t.path, t.line, t.key, todayIso(), text));
