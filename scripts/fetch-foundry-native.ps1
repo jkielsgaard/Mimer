@@ -22,14 +22,26 @@ $manifest = Join-Path $root "scripts\foundry-native-fetch\Cargo.toml"
 
 Write-Host "Fetching Foundry Local runtime $Version ..."
 $env:FOUNDRY_LOCAL_RUNTIME_VERSION = $Version
-cargo build --release --manifest-path $manifest
-if ($LASTEXITCODE -ne 0) { throw "cargo build failed ($LASTEXITCODE)" }
-
 $target = Join-Path $root "scripts\foundry-native-fetch\target\release\build"
-$out = Get-ChildItem -Path $target -Directory -Filter "foundry-local-sdk-*" |
-  ForEach-Object { Join-Path $_.FullName "out" } |
-  Where-Object { Test-Path (Join-Path $_ "foundry_local.dll") } |
-  Select-Object -Last 1
+$out = $null
+# The SDK's build step only reports a failed download as a warning that cargo hides, so the
+# libraries are looked for afterwards; on a miss its own messages are shown and it is tried again.
+foreach ($attempt in 1..3) {
+  cargo build --release --manifest-path $manifest
+  if ($LASTEXITCODE -ne 0) { throw "cargo build failed ($LASTEXITCODE)" }
+  $out = Get-ChildItem -Path $target -Directory -Filter "foundry-local-sdk-*" |
+    ForEach-Object { Join-Path $_.FullName "out" } |
+    Where-Object { Test-Path (Join-Path $_ "foundry_local.dll") } |
+    Select-Object -Last 1
+  if ($out) { break }
+  Write-Host "Attempt ${attempt}: the native libraries were not found. The SDK's build said:"
+  Get-ChildItem -Path $target -Directory -Filter "foundry-local-sdk-*" | ForEach-Object {
+    $o = Join-Path $_.FullName "output"
+    if (Test-Path $o) { Get-Content $o | Write-Host }
+  }
+  cargo clean --release -p foundry-local-sdk --manifest-path $manifest
+  Start-Sleep -Seconds 15
+}
 if (-not $out) { throw "The native libraries were not found in $target" }
 
 New-Item -ItemType Directory -Path $dest -Force | Out-Null

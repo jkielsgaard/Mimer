@@ -8,7 +8,7 @@ This list is kept short: it tells what Mimer can do in each version. A small rel
 
 ## [Unreleased]
 
-## [0.24.0] - 2026-11-12
+## [0.24.1] - 2026-11-12
 
 ### Added
 

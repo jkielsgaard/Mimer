@@ -15,14 +15,22 @@ dest="$root/src-tauri/foundry-native"
 manifest="$root/scripts/foundry-native-fetch/Cargo.toml"
 
 echo "Fetching Foundry Local runtime $version ..."
-FOUNDRY_LOCAL_RUNTIME_VERSION="$version" cargo build --release --manifest-path "$manifest"
-
 target="$root/scripts/foundry-native-fetch/target/release/build"
 out=""
-for d in "$target"/foundry-local-sdk-*/out; do
-  if [ -f "$d/libfoundry_local.so" ] || [ -f "$d/libfoundry_local.dylib" ]; then
-    out="$d"
-  fi
+# The SDK's build step only reports a failed download as a warning that cargo hides, so the
+# libraries are looked for afterwards; on a miss its own messages are shown and it is tried again.
+for attempt in 1 2 3; do
+  FOUNDRY_LOCAL_RUNTIME_VERSION="$version" cargo build --release --manifest-path "$manifest"
+  for d in "$target"/foundry-local-sdk-*/out; do
+    if [ -f "$d/libfoundry_local.so" ] || [ -f "$d/libfoundry_local.dylib" ]; then
+      out="$d"
+    fi
+  done
+  [ -n "$out" ] && break
+  echo "Attempt $attempt: the native libraries were not found. The SDK's build said:" >&2
+  cat "$target"/foundry-local-sdk-*/output >&2 || true
+  cargo clean --release -p foundry-local-sdk --manifest-path "$manifest" || true
+  sleep 15
 done
 if [ -z "$out" ]; then
   echo "The native libraries were not found in $target" >&2
