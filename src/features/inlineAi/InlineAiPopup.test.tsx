@@ -115,6 +115,9 @@ describe("InlineAiPopup", () => {
         onClose={vi.fn()}
       />,
     );
+    // The proposal is drawn as a diagram, and its code is kept under "Show the code".
+    expect(await screen.findByRole("img", { name: "The diagram" })).toBeInTheDocument();
+    expect(screen.getByText("Show the code")).toBeInTheDocument();
     await userEvent
       .setup()
       .click(await screen.findByRole("button", { name: /Add under the text/ }));
@@ -152,6 +155,30 @@ describe("InlineAiPopup", () => {
       />,
     );
     expect(screen.queryByRole("button", { name: /Draw as a diagram/ })).toBeNull();
+  });
+
+  it("is never taller than the room left on the screen, so every entry can be reached", () => {
+    const high = window.innerHeight;
+    Object.defineProperty(window, "innerHeight", { value: 600, configurable: true });
+    try {
+      render(
+        <InlineAiPopup
+          selection={{ ...selection, y: 590 }}
+          notePath="a.md"
+          onAccept={vi.fn()}
+          onFindTasks={vi.fn()}
+          onClose={vi.fn()}
+        />,
+      );
+      const box = screen.getByRole("dialog", { name: "AI command" });
+      const top = Number.parseFloat(box.style.top);
+      const max = Number.parseFloat(box.style.maxHeight);
+      expect(top).toBeGreaterThanOrEqual(8);
+      expect(top + max).toBeLessThanOrEqual(600);
+      expect(box.style.overflowY).toBe("auto");
+    } finally {
+      Object.defineProperty(window, "innerHeight", { value: high, configurable: true });
+    }
   });
 
   it("closes when you click outside the menu, and with the close button", async () => {

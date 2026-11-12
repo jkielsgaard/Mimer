@@ -26,6 +26,29 @@ pub struct ExitInfo {
     pub signal: Option<i32>,
 }
 
+impl ExitInfo {
+    /// The ending in words: the code as Windows writes it, and what the usual ones mean
+    /// ("exit code 0xC0000005 (access violation: the program crashed)").
+    pub fn describe(&self) -> String {
+        if let Some(c) = self.code {
+            let meaning = match c as u32 {
+                0xC000_0005 => " (access violation: the program crashed)",
+                0xC000_0135 => " (a library the program needs is missing)",
+                0xC000_007B => " (a library does not fit the program)",
+                0xC000_0374 => " (the program's memory was damaged)",
+                0xC000_0409 => " (the program stopped itself after a memory fault)",
+                _ => "",
+            };
+            return format!("exit code 0x{:08X}{meaning}", c as u32);
+        }
+        match self.signal {
+            Some(11) => "signal 11 (segmentation fault: the program crashed)".into(),
+            Some(s) => format!("signal {s}"),
+            None => "no exit code".into(),
+        }
+    }
+}
+
 /// What to start.
 #[derive(Debug, Clone)]
 pub struct Launch {
@@ -355,6 +378,33 @@ pub fn kill_leftover(pid: u32) -> bool {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn an_ending_is_described_in_words() {
+        let crash = ExitInfo {
+            code: Some(-1_073_741_819),
+            signal: None,
+        };
+        assert_eq!(
+            crash.describe(),
+            "exit code 0xC0000005 (access violation: the program crashed)"
+        );
+        let plain = ExitInfo {
+            code: Some(3),
+            signal: None,
+        };
+        assert_eq!(plain.describe(), "exit code 0x00000003");
+        let seg = ExitInfo {
+            code: None,
+            signal: Some(11),
+        };
+        assert!(seg.describe().contains("segmentation fault"));
+        let none = ExitInfo {
+            code: None,
+            signal: None,
+        };
+        assert_eq!(none.describe(), "no exit code");
+    }
+
     use super::*;
     use crate::settings::BuiltInSettings;
 

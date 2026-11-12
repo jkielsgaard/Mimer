@@ -22,7 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
  * "Ask about my notes": a plain chat with the local AI. It reads the open note, and the notes and
  * folders you point at with `/`, and searches your notes to answer; it does not change anything
  * (the AI commands in the app do that). A run started from those commands shows its progress and
- * its review here. A sleeping built-in AI is woken when you send.
+ * its review here. A built-in AI that is not loaded is loaded when you send.
  */
 export function ChatPanel({ onClose }: { onClose?: () => void } = {}) {
   const {

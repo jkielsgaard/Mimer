@@ -1,5 +1,5 @@
 import type { EditorView } from "@codemirror/view";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { reportError } from "@/stores/uiStore";
 import { PlainButton } from "@/components/ui/plain-button";
 
@@ -62,6 +62,18 @@ export function EditorContextMenu({
     };
   }, [onClose]);
 
+  // The menu opens where the mouse is, but is moved up and left so all of it is on the screen.
+  const box = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ x: at.x, y: at.y });
+  useLayoutEffect(() => {
+    const r = box.current?.getBoundingClientRect();
+    if (!r) return;
+    setPos({
+      x: Math.max(8, Math.min(at.x, window.innerWidth - r.width - 8)),
+      y: Math.max(8, Math.min(at.y, window.innerHeight - r.height - 8)),
+    });
+  }, [at.x, at.y]);
+
   const selection = (): string => {
     const s = view.state.selection.main;
     return view.state.sliceDoc(s.from, s.to);
@@ -110,10 +122,11 @@ export function EditorContextMenu({
         }}
       />
       <div
+        ref={box}
         role="menu"
         aria-label="Text"
-        className="fixed z-50 min-w-56 rounded-md border bg-card p-1 shadow-lg"
-        style={{ left: at.x, top: at.y }}
+        className="fixed z-50 min-w-56 overflow-y-auto rounded-md border bg-card p-1 shadow-lg"
+        style={{ left: pos.x, top: pos.y, maxHeight: window.innerHeight - 16 }}
       >
         <Item label="Cut" keys="Ctrl+X" onClick={cut} />
         <Item label="Copy" keys="Ctrl+C" onClick={copy} />

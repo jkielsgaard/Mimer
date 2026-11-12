@@ -1,5 +1,5 @@
 //! The built-in AI: Mimer downloads llama.cpp's `llama-server` and a model the user chose, runs it
-//! on the user's own computer on request ("Wake Mimer"), and stops it again ("Sleep Mimer").
+//! on the user's own computer on request ("Load AI"), and stops it again ("Unload AI").
 //!
 //! Everything here is local: the server listens on `127.0.0.1` only, with a random key. The
 //! built-in AI is one more provider (`ProviderKind::BuiltIn`), so the chat code does not change.
@@ -105,7 +105,7 @@ pub struct InstalledModel {
 #[ts(export)]
 pub struct EngineStatus {
     pub state: EngineState,
-    /// One line for the user: "Mimer is asleep", "Loading the model… 12 s", …
+    /// One line for the user: "The AI is not loaded", "Loading the model… 12 s", …
     pub message: String,
     pub problem: Option<Problem>,
     pub install: Option<InstallProgress>,

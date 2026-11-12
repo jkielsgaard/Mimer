@@ -10,6 +10,7 @@ import { wakeIfNeeded } from "@/lib/wake";
 import { cn } from "@/lib/utils";
 import { useNow } from "@/features/chat/useNow";
 import { AiMistakesNote } from "@/components/AiMistakesNote";
+import { DiagramPreview } from "@/components/DiagramPreview";
 import { DiffView } from "@/components/DiffView";
 import {
   INLINE_ACTIONS,
@@ -50,6 +51,9 @@ interface Props {
 }
 
 type Phase = "choose" | "running" | "review";
+
+/** The least height (px) the menu is given on the screen. */
+const MIN_ROOM = 260;
 
 const GROUPS: { label: string; ids: InlineActionId[] }[] = [
   { label: "Change the text", ids: ["fix", "clearer", "shorten", "list"] },
@@ -95,7 +99,7 @@ export function InlineAiPopup({
       setResult("");
       raw.current = "";
       try {
-        // A sleeping built-in AI is woken first, so nobody has to press Wake.
+        // A built-in AI that is not loaded is loaded first, so nobody has to press Load AI.
         const waking = await wakeIfNeeded();
         if (waking !== null) {
           setError(waking);
@@ -182,7 +186,10 @@ export function InlineAiPopup({
   }, [phase, close]);
 
   const left = Math.max(8, Math.min(selection.x, window.innerWidth - 480));
-  const top = Math.min(selection.y + 24, window.innerHeight - 420);
+  // The menu starts under the selection but never lower than leaves room for a few lines, and it
+  // is no taller than the room that is left, so its last entries can always be reached.
+  const top = Math.max(8, Math.min(selection.y + 24, window.innerHeight - MIN_ROOM));
+  const room = Math.max(MIN_ROOM - 8, window.innerHeight - top - 8);
   const lost = phase === "review" && !answerOnly ? missingFacts(selection.text, result) : [];
   const hadFacts = factsOf(selection.text).length > 0;
 
@@ -192,10 +199,10 @@ export function InlineAiPopup({
       role="dialog"
       aria-label="AI command"
       className="fixed z-[70] w-[460px] max-w-[94vw] rounded-lg border bg-card p-2 shadow-xl"
-      style={{ left, top: Math.max(8, top) }}
+      style={{ left, top, maxHeight: room, overflowY: "auto" }}
     >
       {phase === "choose" && (
-        <div className="flex max-h-[70vh] flex-col overflow-auto">
+        <div className="flex flex-col">
           <div className="flex items-center px-2 pt-0.5">
             <span className="flex-1 text-xs font-semibold">AI</span>
             <PlainButton
@@ -267,10 +274,20 @@ export function InlineAiPopup({
           <div className="max-h-64 overflow-auto rounded border">
             {phase === "review" && !answerOnly ? (
               <DiffView original={selection.text} modified={result} />
+            ) : phase === "review" && isDiagram ? (
+              <DiagramPreview source={result} />
             ) : (
               <p className="whitespace-pre-wrap p-2 text-sm">{result || "…"}</p>
             )}
           </div>
+          {phase === "review" && isDiagram && (
+            <details className="text-xs text-muted-foreground">
+              <summary className="cursor-pointer">Show the code</summary>
+              <pre className="mt-1 max-h-40 overflow-auto rounded border bg-muted/40 p-2 whitespace-pre-wrap">
+                {result}
+              </pre>
+            </details>
+          )}
           <div className="flex items-center justify-end gap-2">
             <AiMistakesNote className="mr-auto" />
             <Button variant="ghost" size="sm" onClick={close}>

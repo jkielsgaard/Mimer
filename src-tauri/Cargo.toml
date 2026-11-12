@@ -1,6 +1,6 @@
 [package]
 name = "mimer"
-version = "0.23.0"
+version = "0.23.1"
 description = "Markdown notes with a built-in local AI assistant"
 authors = ["Jesper Ahasverusen Kielsgaard"]
 license = "AGPL-3.0-only"
@@ -18,8 +18,8 @@ tauri-build = { version = "2", features = [] }
 base64 = "0.23.1"
 chrono = "0.4.45"
 docx-rs = "0.4.22"
-# Microsoft's Foundry Local runtime. A copy with one build dependency changed, see vendor/README.md.
-foundry-local-sdk = { path = "vendor/foundry-local-sdk" }
+# Microsoft's Foundry Local runtime (2.3.1 and later build with the current `zip`).
+foundry-local-sdk = "2.4.1"
 eventsource-stream = "0.2.3"
 flate2 = "1.1.10"
 futures-util = "0.3.34"

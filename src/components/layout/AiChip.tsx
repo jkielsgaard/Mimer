@@ -53,7 +53,7 @@ export function chipState(i: Inputs): ChipState {
         action: null,
       };
     case "asleep":
-      return { tone: "idle", label: `${p.name} · asleep`, action: "wake" };
+      return { tone: "idle", label: `${p.name} · not loaded`, action: "wake" };
     case "waking":
     case "installing":
     case "sleeping":
@@ -73,7 +73,7 @@ const DOT: Record<ChipTone, string> = {
 };
 
 const VERB: Record<ChipAction, string> = {
-  wake: "Wake",
+  wake: "Load AI",
   stop: "Stop",
   fix: "Fix",
   setup: "Set up",
@@ -181,7 +181,7 @@ export function AiChip() {
               <>
                 <dt className="text-muted-foreground">Runs on</dt>
                 <dd className="font-medium">
-                  {device ?? (awake ? "Not reported" : "Wake Mimer to see")}
+                  {device ?? (awake ? "Not reported" : "Load the AI to see")}
                 </dd>
               </>
             )}
@@ -212,11 +212,11 @@ export function AiChip() {
                   else void useEngineStore.getState().sleep();
                 }}
               >
-                Put to sleep
+                Unload AI
               </DropdownMenuItem>
             )}
             {(isBuiltin || isFoundry) && status?.state === "asleep" && (
-              <DropdownMenuItem onSelect={act}>Wake Mimer</DropdownMenuItem>
+              <DropdownMenuItem onSelect={act}>Load AI</DropdownMenuItem>
             )}
             <DropdownMenuItem
               onSelect={() => {
@@ -246,12 +246,12 @@ function headline(state: ChipState, provider: ProviderConfig | undefined): strin
   if (!provider) return "No AI is set up";
   switch (state.tone) {
     case "ok":
-      return `${provider.name} is awake`;
+      return `${provider.name} is loaded`;
     case "busy":
       return state.label;
     case "bad":
       return `${provider.name} has a problem`;
     case "idle":
-      return state.action === "wake" ? `${provider.name} is asleep` : provider.name;
+      return state.action === "wake" ? `${provider.name} is not loaded` : provider.name;
   }
 }

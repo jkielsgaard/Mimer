@@ -12,7 +12,7 @@
 #>
 [CmdletBinding()]
 param(
-  [string]$Version = $(if ($env:FOUNDRY_LOCAL_RUNTIME_VERSION) { $env:FOUNDRY_LOCAL_RUNTIME_VERSION } else { "2.1.0" })
+  [string]$Version = $(if ($env:FOUNDRY_LOCAL_RUNTIME_VERSION) { $env:FOUNDRY_LOCAL_RUNTIME_VERSION } else { "2.4.1" })
 )
 
 $ErrorActionPreference = "Stop"

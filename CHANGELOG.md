@@ -8,6 +8,20 @@ This list is kept short: it tells what Mimer can do in each version. A small rel
 
 ## [Unreleased]
 
+## [0.23.1] - 2026-11-12
+
+### Changed
+
+- **Load AI and Unload AI** replace Wake and Sleep for the built-in AIs, in the status bar, in the settings and in the messages. The settings of Foundry Local and of the built-in AI now have the same two buttons, so a model can be unloaded from there, and "Sleep after" is now "Unload after".
+- **The Foundry Local models are in a drop-down.** The chosen model is shown in a box; pressing it opens a panel with the search, the filters and the list, which scrolls inside the panel, so the settings are no longer a long list.
+- **Foundry Local is updated** (version 2.4.1, with a newer AI engine inside), which is what Microsoft advises for the crashes some AMD computers had with the neural processor (NPU) and with new models. It has not been tried on such a computer yet.
+
+### Fixed
+
+- **A menu that ran off the screen.** The right-click menu in a note and the AI menu over selected text now stay on the screen, and the AI menu scrolls, so the last entries can always be chosen.
+- **Draw as a diagram** now shows the proposal drawn as a diagram, with its code under "Show the code", before you add it under the text.
+- **When Foundry Local's engine crashes** while an AI is tested, Mimer says so at once, with the code in words ("access violation") and what to try (a model for the graphics card or the processor, and updated drivers), instead of waiting two minutes.
+
 ## [0.23.0] - 2026-11-12
 
 ### Added

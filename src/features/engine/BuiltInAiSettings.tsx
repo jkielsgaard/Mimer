@@ -14,6 +14,7 @@ import { Select } from "@/components/ui/select";
 import { formatBytes, percent } from "@/lib/bytes";
 import { pickModelFile } from "@/lib/dialogs";
 import { useEngineStore } from "@/stores/engineStore";
+import { LoadAi } from "./LoadAi";
 import { reportError } from "@/stores/uiStore";
 import { ProblemPanel } from "./ProblemPanel";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -143,10 +144,12 @@ export function BuiltInAiSettings({ draft, onChange }: Props) {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-sm text-muted-foreground">
-        Run Mimer's AI on this computer without LM Studio. Download once; Mimer wakes the model by
-        itself when you use the AI, or press <strong>Wake</strong> in the status bar. Your notes
+        Run Mimer's AI on this computer without LM Studio. Download once; Mimer loads the model by
+        itself when you use the AI, or press <strong>Load AI</strong> in the status bar. Your notes
         never leave this computer.
       </p>
+
+      <LoadAi which="builtin" />
 
       <section className="flex flex-col gap-3" aria-label="Your computer">
         <h3 className="text-sm font-semibold">1. Your computer</h3>
@@ -338,9 +341,9 @@ export function BuiltInAiSettings({ draft, onChange }: Props) {
           <p className="mt-1">
             Nothing is downloaded until you press Download. Every file is checked against a fixed
             checksum and kept in Mimer's own folder (shown below), and it takes about as much disk
-            space as the download. While Mimer is awake the model uses about{" "}
-            {model ? `${String(model.ramGb)} GB` : "several GB"} of memory; Sleep Mimer gives it
-            back. When you use it, your notes stay on this computer.
+            space as the download. While The AI is loaded the model uses about{" "}
+            {model ? `${String(model.ramGb)} GB` : "several GB"} of memory; Unload AI gives it back.
+            When you use it, your notes stay on this computer.
           </p>
         </div>
         <label className="flex items-center gap-2 text-sm">
@@ -416,7 +419,7 @@ export function BuiltInAiSettings({ draft, onChange }: Props) {
           <h3 className="text-sm font-semibold">4. Settings</h3>
           <InfoHint
             label="Built-in AI settings"
-            text="These apply the next time Mimer is woken. If Mimer is awake, press Sleep Mimer and then Wake Mimer."
+            text="These apply the next time the AI is loaded. If it is loaded now, press Unload AI and then Load AI."
             topic="mimer"
           />
         </div>
@@ -489,7 +492,7 @@ export function BuiltInAiSettings({ draft, onChange }: Props) {
           </div>
           {numberField(
             "bi-idle",
-            "Sleep after (minutes without use)",
+            "Unload after (minutes without use)",
             b.idleSleepMinutes,
             0,
             1440,
@@ -561,8 +564,7 @@ export function BuiltInAiSettings({ draft, onChange }: Props) {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          On Windows, uninstalling Mimer also removes this folder. Removing puts Mimer to sleep
-          first.
+          On Windows, uninstalling Mimer also removes this folder. Removing unloads the AI first.
         </p>
       </section>
 

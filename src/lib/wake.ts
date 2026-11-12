@@ -15,7 +15,7 @@ const sleep = (ms: number): Promise<void> =>
 
 /**
  * Makes sure the built-in AI (llama.cpp or Foundry Local) is awake before something is asked of
- * it: an asleep AI is woken and waited for, so nobody has to press Wake first. It looks at the
+ * it: an AI that is not loaded is loaded and waited for, so nobody has to press Load AI first. It looks at the
  * AI in use, or at `chosen` (a test of another AI). Resolves to null
  * when the AI is ready (or is not a built-in one), or to a message that says what is wrong.
  */
@@ -42,5 +42,5 @@ export async function wakeIfNeeded(chosen?: ProviderConfig): Promise<string | nu
     if (s !== "asleep" && s !== "waking" && s !== "installing") return message();
     await sleep(250);
   }
-  return `${provider.name} did not wake up in time. Try again.`;
+  return `${provider.name} did not load in time. Try again.`;
 }

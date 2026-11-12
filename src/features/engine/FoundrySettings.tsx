@@ -4,17 +4,10 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { formatBytes } from "@/lib/bytes";
 import { openLink } from "@/lib/openLink";
-import { cn } from "@/lib/utils";
 import { useFoundryStore } from "@/stores/foundryStore";
-import {
-  filterModels,
-  FOUNDRY_MODELS_URL,
-  goodFor,
-  NO_FILTER,
-  readsLabel,
-  type ModelFilter,
-} from "./foundryModels";
-import { ModelFilters } from "./ModelFilters";
+import { LoadAi } from "./LoadAi";
+import { filterModels, FOUNDRY_MODELS_URL, NO_FILTER, type ModelFilter } from "./foundryModels";
+import { ModelPicker } from "./ModelPicker";
 import { ProblemPanel } from "./ProblemPanel";
 import { PlainButton } from "@/components/ui/plain-button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -83,9 +76,11 @@ export function FoundrySettings({ draft, onChange }: Props) {
       <p className="text-sm text-muted-foreground">
         Foundry Local is Microsoft's runtime for AI models on this computer. It chooses the best
         hardware by itself: a neural processor (NPU) if there is one, otherwise the graphics card or
-        the processor. Download once; Mimer wakes the model by itself when you use the AI, or press{" "}
-        <strong>Wake</strong> in the status bar. Your notes never leave this computer.
+        the processor. Download once; Mimer loads the model by itself when you use the AI, or press{" "}
+        <strong>Load AI</strong> in the status bar. Your notes never leave this computer.
       </p>
+
+      <LoadAi which="foundry" />
 
       {!available && (
         <p
@@ -215,7 +210,6 @@ export function FoundrySettings({ draft, onChange }: Props) {
               </>
             )}
           </p>
-          {catalog && catalog.length > 0 && <ModelFilters filter={filter} onChange={setFilter} />}
           {catalogLoading && (
             <p className="text-xs text-muted-foreground" role="status">
               Reading the model list from Microsoft… this can take a minute.
@@ -229,67 +223,18 @@ export function FoundrySettings({ draft, onChange }: Props) {
           {catalog && catalog.length === 0 && (
             <p className="text-xs text-muted-foreground">No chat model was found.</p>
           )}
-          {catalog && catalog.length > 0 && shown.length === 0 && (
-            <p className="text-xs text-muted-foreground" data-testid="foundry-no-match">
-              No model matches. Change the filters, or check the name on Microsoft's list.
-            </p>
-          )}
-          {shown.length > 0 && (
-            <ul
-              role="radiogroup"
-              aria-label="Foundry Local models"
-              className="flex flex-col gap-1.5"
-            >
-              {shown.map((m) => {
-                const has = installedAliases.has(m.alias);
-                const facts = [
-                  m.sizeMb > 0 ? formatBytes(m.sizeMb * MB) : "size unknown",
-                  `runs on ${m.device || "?"}`,
-                  readsLabel(m.contextTokens),
-                  m.license,
-                  has ? "downloaded" : null,
-                ].filter((x) => x !== null && x !== "");
-                return (
-                  <li key={m.alias}>
-                    <PlainButton
-                      type="button"
-                      role="radio"
-                      aria-checked={alias === m.alias}
-                      disabled={busy}
-                      className={cn(
-                        "flex w-full flex-col gap-0.5 rounded-md border px-3 py-2 text-left text-sm hover:bg-muted",
-                        alias === m.alias && "border-primary bg-accent",
-                      )}
-                      onClick={() => {
-                        setChosen(m.alias);
-                      }}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span className="font-semibold">{m.name}</span>
-                        {m.publisher && (
-                          <span className="text-xs text-muted-foreground">{m.publisher}</span>
-                        )}
-                        <span className="grow" />
-                        <span
-                          className={cn(
-                            "rounded-full px-2 text-[11px] font-semibold",
-                            m.tools
-                              ? "bg-success/15 text-success"
-                              : "border border-warning text-warning",
-                          )}
-                        >
-                          {m.tools ? "Can use tools" : "No tools"}
-                        </span>
-                      </span>
-                      <span className="text-xs text-foreground/80">{goodFor(m).text}</span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {facts.join(" · ")}
-                      </span>
-                    </PlainButton>
-                  </li>
-                );
-              })}
-            </ul>
+          {catalog && catalog.length > 0 && (
+            <ModelPicker
+              models={shown}
+              total={catalog.length}
+              chosen={alias}
+              selected={model}
+              installed={installedAliases}
+              filter={filter}
+              onFilter={setFilter}
+              onPick={setChosen}
+              disabled={busy}
+            />
           )}
         </section>
       )}
@@ -314,7 +259,7 @@ export function FoundrySettings({ draft, onChange }: Props) {
             </p>
             <p className="mt-1">
               Nothing is downloaded until you press Download. The files are kept in Mimer's own
-              folder, and while Mimer is awake the model uses memory; Sleep Mimer gives it back.
+              folder, and while The AI is loaded the model uses memory; Unload AI gives it back.
               When you use it, your notes stay on this computer.
             </p>
           </div>
@@ -365,7 +310,7 @@ export function FoundrySettings({ draft, onChange }: Props) {
               </Button>
               {awake && (
                 <span className="text-xs text-muted-foreground">
-                  Put Mimer to sleep before downloading.
+                  Unload the AI before downloading.
                 </span>
               )}
             </div>
@@ -430,8 +375,7 @@ export function FoundrySettings({ draft, onChange }: Props) {
             Remove all Foundry Local files
           </Button>
           <p className="mt-1 text-xs text-muted-foreground">
-            On Windows, uninstalling Mimer also removes this folder. Removing puts Mimer to sleep
-            first.
+            On Windows, uninstalling Mimer also removes this folder. Removing unloads the AI first.
           </p>
         </div>
       </section>

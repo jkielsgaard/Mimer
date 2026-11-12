@@ -30,6 +30,44 @@ describe("EditorContextMenu", () => {
     return props;
   }
 
+  it("is moved up and left when it would run off the screen", () => {
+    const high = window.innerHeight;
+    const wide = window.innerWidth;
+    Object.defineProperty(window, "innerHeight", { value: 600, configurable: true });
+    Object.defineProperty(window, "innerWidth", { value: 800, configurable: true });
+    const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+      width: 224,
+      height: 320,
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 224,
+      bottom: 320,
+      toJSON: () => ({}),
+    });
+    try {
+      render(
+        <EditorContextMenu
+          at={{ x: 780, y: 580 }}
+          view={view()}
+          aiOff={null}
+          onAi={vi.fn()}
+          onCapture={vi.fn()}
+          onClose={vi.fn()}
+        />,
+      );
+      const menu = screen.getByRole("menu", { name: "Text" });
+      expect(menu.style.left).toBe("568px");
+      expect(menu.style.top).toBe("272px");
+      expect(menu.style.maxHeight).toBe("584px");
+    } finally {
+      rect.mockRestore();
+      Object.defineProperty(window, "innerHeight", { value: high, configurable: true });
+      Object.defineProperty(window, "innerWidth", { value: wide, configurable: true });
+    }
+  });
+
   it("starts with the usual text commands and has the AI as one line", () => {
     show(view());
     const names = screen.getAllByRole("menuitem").map((i) => i.textContent);
