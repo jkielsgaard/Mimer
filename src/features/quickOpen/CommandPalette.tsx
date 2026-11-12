@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import { Input } from "@/components/ui/input";
 import { newNoteInCurrentFolder, openDailyNote, openFile } from "@/lib/actions";
 import { api } from "@/lib/api";
+import { PLANS_LABEL } from "@/lib/planTree";
 import { basename, cn, dirname, isMarkdown } from "@/lib/utils";
 import { formatShortcut } from "@/lib/shortcuts";
 import { runSkillOn } from "@/lib/skills";
@@ -119,6 +120,9 @@ export function CommandPalette() {
       ),
       act("ideas", "Ideas", () => {
         ui().openArea("ideas");
+      }),
+      act("plans", PLANS_LABEL, () => {
+        ui().openArea("plans");
       }),
       act("find-tasks", "Find tasks in this note (AI)", () => {
         ui().setFindTasksOpen(true);

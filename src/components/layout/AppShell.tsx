@@ -10,6 +10,8 @@ import { IdeasPanel } from "@/features/capture/IdeasPanel";
 import { IdeasView } from "@/features/capture/IdeasView";
 import { MeetingsPanel } from "@/features/meetings/MeetingsPanel";
 import { MeetingsView } from "@/features/meetings/MeetingsView";
+import { PlansPanel } from "@/features/plans/PlansPanel";
+import { PlansView } from "@/features/plans/PlansView";
 import { NotesPage } from "@/features/start/NotesPage";
 import { StartPage } from "@/features/start/StartPage";
 import { EpicPage } from "@/features/tasks/EpicPage";
@@ -110,6 +112,7 @@ export function AppShell() {
               {ui.leftTab === "tasks" && <TasksPanel />}
               {ui.leftTab === "ideas" && <IdeasPanel />}
               {ui.leftTab === "meetings" && <MeetingsPanel />}
+              {ui.leftTab === "plans" && <PlansPanel />}
             </div>
           </Panel>
           <PanelResizeHandle className="w-px bg-border transition-colors hover:bg-primary data-[resize-handle-active]:bg-primary" />
@@ -124,6 +127,7 @@ export function AppShell() {
               {ui.centerView === "task" && <TaskPage />}
               {ui.centerView === "ideas" && <IdeasView />}
               {ui.centerView === "meetings" && <MeetingsView />}
+              {ui.centerView === "plans" && <PlansView />}
               {showStart && <StartPage />}
               {showNoteList && <NotesPage />}
             </main>

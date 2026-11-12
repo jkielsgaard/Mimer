@@ -29,7 +29,7 @@ Mimer is a desktop app for Markdown notes with a local AI. It is calm and dense:
 
 ## The window
 
-Header (`sidebar`) on top, status bar at the bottom. Left edge: the icon rail (`rail-width`, Start first, then Files, Search, Ideas, Tasks, Meetings, Settings at the bottom). Then the left panel, the middle, the right panel and the right rail (note panels and the chat). Panels are resizable and remember their size.
+Header (`sidebar`) on top, status bar at the bottom. Left edge: the icon rail (`rail-width`, Start first, then Plans, Files, Search, Tasks, Meetings, Ideas, Settings at the bottom; resting the mouse on an icon shows its name). Then the left panel, the middle, the right panel and the right rail (note panels and the chat). Panels are resizable and remember their size.
 
 - **An area** (Tasks, Ideas, Meetings) is its rail icon + a left panel (`PanelHeader`, lists) + a middle page (`ViewHeader`, the chosen thing). A click in the panel shows the thing in the middle.
 - **The start page** (the house) fills the window: both side panels hide while it is shown and come back as they were.
@@ -49,7 +49,7 @@ Header (`sidebar`) on top, status bar at the bottom. Left edge: the icon rail (`
 
 ## Iconography
 
-Icons are `lucide-react`, 16px (`icon`), stroke style, in `currentColor`, before the label in a button. Reused meanings: House = Start, Files, Search, Lightbulb = Ideas, ListChecks = Tasks, CalendarClock = Meetings, Plus = new/add, Pencil = edit, Trash2 = delete, X = close/remove, ChevronUp/Down = move, MoreHorizontal (···) = more for this thing, Star = pinned, Target = Focus, Sparkles = AI, Presentation = Start meeting. No emoji.
+Icons are `lucide-react`, 16px (`icon`), stroke style, in `currentColor`, before the label in a button. Reused meanings: House = Start, Files, Search, Lightbulb = Ideas, Network = Plans, ListChecks = Tasks, CalendarClock = Meetings, Plus = new/add, Pencil = edit, Trash2 = delete, X = close/remove, ChevronUp/Down = move, MoreHorizontal (···) = more for this thing, Star = pinned, Target = Focus, Sparkles = AI, Presentation = Start meeting. No emoji.
 
 ## Themes
 

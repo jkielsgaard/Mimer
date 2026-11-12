@@ -8,6 +8,13 @@ This list is kept short: it tells what Mimer can do in each version. A small rel
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-11-12
+
+### Added
+
+- **Plans.** A new area for breaking something big down. A plan is an ordinary note (with the tag `plan`, in the folder Plans) whose list is a tree of ideas, shown as an **outline** or as a **map**. **Break it down** takes you through three short steps (what is it, what are the parts, where to start), the AI can **suggest parts** for you to tick, and an idea can be made into an **epic** (its sub-ideas become tasks), a **task**, or tied to a **note**. **Repeat these steps for…** gives every supplier, product or customer its own branch (and epic) with the same steps. A plan can be **finished**, or the open ideas carried over to a new plan. There is no timer. Every tie can be an existing epic, task or note, or a new one, and **Repeat these steps for…** makes one task for each name in the epic of the plan, with the steps as the steps of that task. The map is drawn from the top down, with right-click menus. You can write a whole tree down at once: **Enter** adds an idea, **Tab** makes the next one a smaller part, **Shift+Tab** goes back up, and a pasted indented list becomes a tree; nothing has to be tied to anything until you want to. A new plan can get **a project of its own**: a folder with the name of the plan, with the plan note in it, and the epics and notes made from the plan kept in its `Epics` and `Notes` folders. A project that is there can be made a plan too (**Plan from a project…**, or right-click it in Files), with its notes and epics as ideas to start from; a project never becomes a plan by itself. Plans are marked **Beta**: still being built.
+- **Names on the icons.** Rest the mouse on an icon in the left bar and its name shows next to it. Plans now sits under the house, and Ideas is last.
+
 ## [0.23.1] - 2026-11-12
 
 ### Changed

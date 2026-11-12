@@ -6,9 +6,10 @@ import { toApiError } from "@/lib/api";
 import { clampMinutes, FOCUS_DEFAULT } from "@/lib/focusTime";
 import type { TimeFormat } from "@/lib/timeFormat";
 
-export type LeftTab = "files" | "search" | "tasks" | "ideas" | "meetings";
+export type LeftTab = "files" | "search" | "tasks" | "ideas" | "meetings" | "plans";
 /** What fills the middle of the window. */
-export type CenterView = "notes" | "tasks" | "epic" | "task" | "ideas" | "meetings" | "start";
+export type CenterView =
+  "notes" | "tasks" | "epic" | "task" | "ideas" | "meetings" | "plans" | "start";
 
 /** The task list, an epic or a task: all of them are the Tasks area. */
 export function isTasksView(v: CenterView): boolean {
@@ -143,7 +144,7 @@ interface UiState {
   setCenterView: (v: CenterView) => void;
   /** Where "open the note" came from, so the note can offer a way back to the task or epic. */
   /** Shows the tasks or the ideas: their own panel on the left and their page in the middle. */
-  openArea: (area: "tasks" | "ideas" | "meetings") => void;
+  openArea: (area: "tasks" | "ideas" | "meetings" | "plans") => void;
   /** Shows the start page in the middle (the left panel stays as it is). */
   openStart: () => void;
   /** The window for writing one thing down: that kind's box, or "choose" first (Ctrl+Shift+N). */
@@ -222,6 +223,11 @@ interface UiState {
   setSettingsOpen: (open: boolean) => void;
   setRecoverOpen: (open: boolean) => void;
   openProjectDialog: (state: ProjectDialogState | null) => void;
+  /** A project (its folder) that should be made a plan; Plans picks this up when it opens. */
+  planFromProjectFolder: string | null;
+  /** Opens Plans with the window that makes a plan of the project in `folder`. */
+  planFromProject: (folder: string) => void;
+  clearPlanFromProject: () => void;
   focusChat: () => void;
   focusSearch: (seed?: string) => void;
   toast: (message: string, kind?: Toast["kind"], action?: Toast["action"]) => void;
@@ -325,7 +331,10 @@ export const useUiStore = create<UiState>((set, get) => ({
       centerView,
       leftTab:
         centerView === "notes" &&
-        (s.leftTab === "tasks" || s.leftTab === "ideas" || s.leftTab === "meetings")
+        (s.leftTab === "tasks" ||
+          s.leftTab === "ideas" ||
+          s.leftTab === "meetings" ||
+          s.leftTab === "plans")
           ? "files"
           : s.leftTab,
     }));
@@ -455,6 +464,14 @@ export const useUiStore = create<UiState>((set, get) => ({
   },
   openProjectDialog: (projectDialog) => {
     set({ projectDialog });
+  },
+  planFromProjectFolder: null,
+  planFromProject: (folder) => {
+    set({ planFromProjectFolder: folder });
+    get().openArea("plans");
+  },
+  clearPlanFromProject: () => {
+    set({ planFromProjectFolder: null });
   },
   focusChat: () => {
     set((s) => ({ askOpen: true, focusChatNonce: s.focusChatNonce + 1 }));

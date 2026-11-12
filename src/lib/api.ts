@@ -282,8 +282,10 @@ export const api = {
     call<string[]>("note_set_tag", { path, tag, on }),
   taggedNotes: (tag: string) => call<NoteContent[]>("tagged_notes", { tag }),
   epicAdopt: (path: string) => call<Epic>("epic_adopt", { path }),
-  epicCreate: (title: string) => call<Epic>("epic_create", { title }),
-  epicForNote: (note: string) => call<Epic>("epic_for_note_cmd", { note }),
+  epicCreate: (title: string, folder?: string) =>
+    call<Epic>("epic_create", { title, folder: folder ?? null }),
+  epicForNote: (note: string, folder?: string) =>
+    call<Epic>("epic_for_note_cmd", { note, folder: folder ?? null }),
   listDailyDates: () => call<string[]>("list_daily_dates"),
   taskMove: (path: string, line: number, key: string, up: boolean) =>
     call<Task[]>("task_move", { path, line, key, up }),
